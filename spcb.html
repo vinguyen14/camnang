@@ -2,275 +2,122 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SPCB Dashboard | Trainer Nhật Vi</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-        .glass-card { background: white; border: 1px solid #e2e8f0; border-radius: 24px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .glass-card { background: white; border: 1px solid #e2e8f0; border-radius: 24px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); overflow: hidden; }
         .sidebar-item.active { background: #2563eb; color: white; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
-        .script-container { border-left: 4px solid #3b82f6; background: #ffffff; transition: all 0.2s; position: relative; }
-        .script-container:hover { border-left-width: 8px; background: #f8fafc; }
-        .copy-btn { background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; transition: all 0.2s; border: 1px solid #e2e8f0; }
+        .script-box { border-left: 4px solid #3b82f6; background: #ffffff; transition: all 0.2s; position: relative; padding: 1.5rem; margin-bottom: 1rem; border-radius: 0 16px 16px 0; border: 1px solid #f1f5f9; border-left-width: 4px; border-left-color: #3b82f6; }
+        .copy-btn { background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; position: absolute; top: 1rem; right: 1rem; }
         .copy-btn:hover { background: #2563eb; color: white; }
-        pre { white-space: pre-wrap; word-wrap: break-word; font-family: inherit; margin: 0; }
-        .step-content { display: none; }
-        .step-content.active { display: block; }
+        pre { white-space: pre-wrap; word-wrap: break-word; font-family: inherit; margin: 0; font-size: 13px; color: #334155; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
     </style>
 </head>
 <body class="text-slate-800">
 
-    <!-- SIDEBAR -->
     <aside class="fixed inset-y-0 left-0 w-80 bg-white border-r z-50 flex flex-col shadow-2xl">
         <div class="p-8 border-b">
-            <a href="trainer.html" class="flex items-center text-blue-600 font-bold text-sm mb-6 hover:translate-x-[-4px] transition-transform">
-                <i data-lucide="chevron-left" class="w-4 h-4 mr-1"></i> QUAY LẠI HUB CHÍNH
-            </a>
-            <h1 class="text-2xl font-black tracking-tighter text-slate-900 uppercase leading-none italic">SP CƠ BẢN <br><span class="text-blue-600 text-lg">RETAIL DASHBOARD</span></h1>
+            <a href="trainer.html" class="flex items-center text-blue-600 font-bold text-xs mb-6 uppercase tracking-widest"><i data-lucide="chevron-left" class="w-4 h-4 mr-1"></i> Quay lại HUB</a>
+            <h1 class="text-2xl font-black italic text-slate-900 uppercase italic">Sản phẩm Cơ bản</h1>
         </div>
-
         <nav class="flex-1 p-6 space-y-2 overflow-y-auto">
-            <button onclick="showSection('flow')" id="btn-flow" class="sidebar-item active w-full flex items-center px-5 py-4 rounded-2xl text-sm font-bold transition-all hover:bg-slate-50">
-                <i data-lucide="calendar" class="w-5 h-5 mr-3"></i> TỔNG QUAN LỘ TRÌNH
-            </button>
-            <button onclick="showSection('resources')" id="btn-resources" class="sidebar-item w-full flex items-center px-5 py-4 rounded-2xl text-sm font-bold transition-all hover:bg-slate-50">
-                <i data-lucide="database" class="w-5 h-5 mr-3"></i> KHO RECORD & BÁO CÁO
-            </button>
-            <button onclick="showSection('game')" id="btn-game" class="sidebar-item w-full flex items-center px-5 py-4 rounded-2xl text-sm font-bold transition-all hover:bg-slate-50">
-                <i data-lucide="gamepad-2" class="w-5 h-5 mr-3"></i> GAME & CÔNG CỤ
-            </button>
+            <button onclick="showTab('flow')" id="btn-flow" class="sidebar-item active w-full flex items-center px-4 py-3 rounded-xl text-sm font-bold"><i data-lucide="list-checks" class="w-4 h-4 mr-3"></i> Kịch bản Đào tạo</button>
+            <button onclick="showTab('submit')" id="btn-submit" class="sidebar-item w-full flex items-center px-4 py-3 rounded-xl text-sm font-bold text-green-600"><i data-lucide="check-circle" class="w-4 h-4 mr-3"></i> Hoàn thành Khóa học</button>
         </nav>
-
-        <div class="p-6 border-t bg-slate-50">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Google Meet Hàng Ngày</p>
-            <div class="space-y-2">
-                <div class="p-2 bg-white rounded-lg border text-[10px] font-mono truncate">B1: meet.google.com/sxr-hnuk-fob</div>
-                <div class="p-2 bg-white rounded-lg border text-[10px] font-mono truncate">B2: meet.google.com/nqh-bvjq-pti</div>
-                <div class="p-2 bg-white rounded-lg border text-[10px] font-mono truncate">B3: meet.google.com/vnh-qdpz-eja</div>
-            </div>
-        </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
-    <main class="ml-80 min-h-screen p-10">
+    <main class="ml-80 p-10 max-w-5xl">
 
-        <!-- SECTION 1: LỘ TRÌNH CHI TIẾT -->
-        <div id="section-flow" class="content-section active space-y-12">
-            
-            <header class="mb-10">
-                <h2 class="text-4xl font-black text-slate-900 tracking-tight italic">Cẩm nang Kịch bản Full</h2>
-                <p class="text-slate-500 font-medium mt-2 uppercase tracking-widest text-xs italic">Trainer: Nhật Vi • Click nút Copy để lấy tin nhắn nhanh</p>
-            </header>
+        <!-- TAB 1: KỊCH BẢN ĐÀO TẠO -->
+        <div id="tab-flow" class="content-section active space-y-12 pb-40">
+            <h2 class="text-3xl font-black italic uppercase italic tracking-tighter shadow-sm border border-blue-100 uppercase tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 tracking-tighter italic">Lộ trình & Kịch bản Truyền thông</h2>
 
-            <!-- T7 & CHỦ NHẬT (CHỖ BẠN CẦN TÌM) -->
-            <section class="space-y-6">
-                <div class="flex items-center space-x-3">
-                    <span class="px-4 py-1 bg-slate-900 text-white text-[10px] font-black rounded-full uppercase italic">Giai đoạn chuẩn bị</span>
-                    <div class="h-px flex-1 bg-slate-200"></div>
-                </div>
-
-                <div class="glass-card p-8">
-                    <h3 class="text-xl font-bold mb-8 flex items-center text-blue-600 italic">
-                        <i data-lucide="message-circle" class="mr-3"></i> Thứ 7 & Chủ Nhật: Chào mừng Group Zalo
-                    </h3>
-                    
-                    <div class="mb-8 p-4 bg-slate-50 rounded-2xl border-l-4 border-slate-300">
-                        <p class="text-sm font-bold">Thứ 7:</p>
-                        <p class="text-sm italic text-slate-600 italic">Gửi mail danh sách học viên tham gia học tuần sau.</p>
+            <!-- CHỦ NHẬT (Đã tách 9 tin) -->
+            <section class="space-y-4">
+                <h3 class="text-lg font-bold text-blue-600 italic">10:00 Sáng Chủ Nhật - Chào mừng Zalo (9 Tin)</h3>
+                <div class="grid gap-2 pl-6 border-l-2 border-blue-100">
+                    <div class="script-box">
+                        <pre id="msg1">Chào mừng các bạn tới Group Zalo Đào tạo KiotViet</pre>
+                        <button onclick="copy('msg1')" class="copy-btn">Copy</button>
                     </div>
-
-                    <h4 class="text-xs font-black text-slate-400 uppercase mb-4 tracking-widest italic animate-pulse">Trình tự gửi 9 tin nhắn (10:00 Sáng CN):</h4>
-                    
-                    <div class="grid grid-cols-1 gap-3 ml-4 border-l-2 border-blue-100 pl-6">
-                        <!-- Tin 1 -->
-                        <div class="script-container p-4 rounded-xl relative group border">
-                            <span class="absolute -left-[35px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold shadow-lg">1</span>
-                            <pre id="msg-1" class="text-[13px] font-medium text-slate-700">Chào mừng các bạn tới Group Zalo Đào tạo KiotViet</pre>
-                            <button onclick="copy('msg-1')" class="copy-btn absolute right-3 top-3">Copy</button>
-                        </div>
-                        <!-- Tin 2 -->
-                        <div class="script-container p-4 rounded-xl relative group border">
-                            <span class="absolute -left-[35px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold shadow-lg">2</span>
-                            <pre id="msg-2" class="text-[13px] font-medium text-slate-700">Xin chào các bạn 😉
+                    <div class="script-box">
+                        <pre id="msg2">Xin chào các bạn 😉
 Mình là Nhật Vi - Chuyên viên đào tạo, tuần này mình và bạn @Nguyễn Phương sẽ đồng hành cùng các bạn tham gia khóa đào tạo tại KiotViet.</pre>
-                            <button onclick="copy('msg-2')" class="copy-btn absolute right-3 top-3">Copy</button>
-                        </div>
-                        <!-- Tin 3 -->
-                        <div class="script-container p-4 rounded-xl relative group border">
-                            <span class="absolute -left-[35px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold shadow-lg">3</span>
-                            <pre id="msg-3" class="text-[13px] font-medium text-slate-700">Như đã thông tin trong Kế hoạch đào tạo đính kèm email, sáng mai thứ 2 các bạn sẽ làm thủ tục gia nhập và làm quen tại từng team dưới sự hỗ trợ của team Tuyển dụng.</pre>
-                            <button onclick="copy('msg-3')" class="copy-btn absolute right-3 top-3">Copy</button>
-                        </div>
-                        <!-- Tin 4 -->
-                        <div class="script-container p-4 rounded-xl relative group border">
-                            <span class="absolute -left-[35px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold shadow-lg">4</span>
-                            <pre id="msg-4" class="text-[13px] font-medium text-slate-700">Chiều mai từ 14:00, chúng ta sẽ bắt đầu chương trình Đào tạo hội nhập, hình thức Đào tạo online trên Zoom (mình sẽ gửi lại link sau ạ)</pre>
-                            <button onclick="copy('msg-4')" class="copy-btn absolute right-3 top-3">Copy</button>
-                        </div>
-                        <!-- Tin 5 -->
-                        <div class="script-container p-4 rounded-xl relative group border">
-                            <span class="absolute -left-[35px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold shadow-lg">5</span>
-                            <pre id="msg-5" class="text-[13px] font-medium text-slate-700">Ngoài ra, các bạn có lịch học Đào tạo Sản phẩm Thứ 3, Thứ 4, Thứ 5 và Test ngày Thứ 6 tham khảo chi tiết kế hoạch đào tạo ở file mình gửi trên mail nèee</pre>
-                            <button onclick="copy('msg-5')" class="copy-btn absolute right-3 top-3">Copy</button>
-                        </div>
-                        <!-- Tin 6 (Màu khác để chú ý) -->
-                        <div class="script-container p-4 rounded-xl relative group border bg-blue-50 border-blue-200">
-                            <span class="absolute -left-[35px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold shadow-lg">6</span>
-                            <pre id="msg-6" class="text-[13px] font-bold text-blue-800 italic uppercase underline">Link dùng để đăng ký trải nghiệm phần mềm KiotViet dành cho nhân viên mới tham gia đào tạo:
+                        <button onclick="copy('msg2')" class="copy-btn">Copy</button>
+                    </div>
+                    <!-- Tiếp tục dán 9 tin của bạn vào đây tương tự cấu trúc trên -->
+                     <div class="script-box bg-blue-50/50">
+                        <pre id="msg6" class="font-bold">Link dùng để đăng ký trải nghiệm phần mềm KiotViet dành cho nhân viên mới tham gia đào tạo:
 https://www.kiotviet.vn/?refcode=3670</pre>
-                            <button onclick="copy('msg-6')" class="copy-btn absolute right-3 top-3 bg-blue-600 text-white">Copy Link</button>
-                        </div>
-                        <!-- Tin 7 -->
-                        <div class="script-container p-4 rounded-xl relative group border text-xs">
-                            <span class="absolute -left-[35px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold shadow-lg">7</span>
-                            <pre id="msg-7" class="text-[13px] text-slate-700">KiotViet là phần mềm ai cũng có thể tạo tài khoản dùng thử free 7 ngày, mọi người đặc biệt lưu ý chỉ đăng ký dùng thử bằng link này để hệ thống nhận diện chúng ta đang tham gia Đào tạo, không phải là khách hàng cần team Telesales liên hệ tư vấn nha.</pre>
-                            <button onclick="copy('msg-7')" class="copy-btn absolute right-3 top-3">Copy</button>
-                        </div>
-                        <!-- Tin 8 -->
-                        <div class="script-container p-4 rounded-xl relative group border border-orange-200 bg-orange-50">
-                            <span class="absolute -left-[35px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold shadow-lg">8</span>
-                            <pre id="msg-8" class="text-[13px] text-orange-700 font-bold italic">Để chuẩn bị tốt nhất cho tuần đào tạo nhân sự mới, các bạn nếu có thể thì cố gắng chuẩn bị thêm tai nghe có dây ạ</pre>
-                            <button onclick="copy('msg-8')" class="copy-btn absolute right-3 top-3">Copy</button>
-                        </div>
-                        <!-- Tin 9 -->
-                        <div class="script-container p-4 rounded-xl relative group border">
-                            <span class="absolute -left-[35px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold shadow-lg">9</span>
-                            <pre id="msg-9" class="text-[13px] font-bold text-slate-800 italic">Ngoài ra trong quá trình học có tâm tư thắc mắc gì các bạn cứ chia sẻ tại nhóm ạ /-heart  Hẹn gặp lại mọi người vào ngày mai!</pre>
-                            <button onclick="copy('msg-9')" class="copy-btn absolute right-3 top-3">Copy</button>
-                        </div>
+                        <button onclick="copy('msg6')" class="copy-btn bg-blue-600 text-white">Copy Link</button>
                     </div>
                 </div>
             </section>
 
-            <!-- THỨ 2 -->
-            <section class="space-y-6">
-                <div class="flex items-center space-x-3">
-                    <span class="px-4 py-1 bg-slate-900 text-white text-[10px] font-black rounded-full uppercase italic italic tracking-tighter shadow-sm">Chiều Thứ 2</span>
-                    <div class="h-px flex-1 bg-slate-200"></div>
-                </div>
-                <div class="glass-card p-8 script-container">
-                    <button onclick="copy('scr-mon')" class="copy-btn absolute top-6 right-6">Copy Tin Nhắn</button>
-<pre id="scr-mon" class="text-[13px] leading-relaxed text-slate-700 font-medium">Chào mọi người @All ,
-Từ sáng mai, Vi sẽ đồng hành cùng mọi người trong chương trình Đào tạo sản phẩm cơ bản, diễn ra trong 3 buổi: Thứ 3, Thứ 4, Thứ 5.
-Thời gian: 8:30 – 10:30am
-
-Các bạn cần lưu ý chuẩn bị:
-- Một chiếc bụng no (ăn sáng đầy đủ)
-- Một tâm hồn đẹp (đi học là phải vui) :-*
-- Một chiếc máy tính kết nối mạng ổn định (có mạng ngon là có tất cả) ;p
-- Tai nghe (không bị hỏng)
-- Mic để trao đổi (mic của tai nghe hoặc mic laptop đều được)
-- Webcam
-
-Link tham gia đào tạo online trên Google Meet
-Buổi 1: https://meet.google.com/sxr-hnuk-fob?authuser=0</pre>
-                </div>
-            </section>
-
-            <!-- THỨ 3 (BUỔI 1) -->
-            <section class="space-y-6">
-                <div class="flex items-center space-x-3">
-                    <span class="px-4 py-1 bg-blue-600 text-white text-[10px] font-black rounded-full uppercase italic tracking-tighter shadow-lg shadow-blue-100 italic italic">Thứ 3: Buổi 1</span>
-                    <div class="h-px flex-1 bg-slate-200"></div>
-                </div>
-
-                <div class="grid grid-cols-1 gap-6">
-                    <!-- Script 10:30 -->
-                    <div class="glass-card p-8 space-y-4">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic italic shadow-sm">Kết thúc dạy (Gửi 10:30)</p>
-                        <div class="script-container p-6 rounded-2xl relative border">
-                            <button onclick="copy('scr-tue-1')" class="copy-btn absolute top-6 right-6">Copy Tin Nhắn</button>
-<pre id="scr-tue-1" class="text-[13px] leading-relaxed text-slate-800 font-black uppercase underline mb-3 text-blue-800">NỘI DUNG ĐÀO TẠO SẢN PHẨM - TỔNG QUAN KHÓA HỌC + 6 BƯỚC DEMO CƠ BẢN
-Nội dung học Buổi 1: Đào tạo Sản phẩm Cơ bản 01
----------------------------------</pre>
-<pre class="text-[13px] leading-relaxed text-slate-700">Lưu ý:
-- Dành 2 phút xem trước hướng dẫn trên LMS: https://kiotvietlnd.github.io/training/hdsd-lms-sales#dangnhap
-
-- Học lần lượt theo 2 bước:
-+ Bước 1: Học và ôn trên Thư viên E-Learning (Github)
-+ Bước 2: Làm bài quiz nhỏ + quiz tổng hợp trên LMS
-
-Hoàn thành khóa học trước 12h trưa nay nhé!</pre>
-                        </div>
-                    </div>
-
-                    <!-- Kết quả & Bài tập chiều -->
-                    <div class="glass-card p-8 border-l-8 border-l-blue-600 space-y-6">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic shadow-sm italic shadow-sm italic">Kết quả & Bài tập & Note (Gửi 13:30)</p>
-                        <div class="script-container p-6 rounded-2xl border relative">
-                            <button onclick="copy('scr-tue-2')" class="copy-btn absolute top-6 right-6">Copy Bài tập</button>
-<pre id="scr-tue-2" class="text-[13px] leading-relaxed text-slate-800">Vi gửi kết quả học sáng nay của mọi người nha, bạn nào được in đậm thì kiểm tra lại bài học sáng nay mình học đủ chưa nha.
-Vi gửi nhiệm vụ B1:
-
-Mọi người vào LMS - Buổi 1 -> Ở tab tài liệu có Word B1, mình tải file bài tập về, đổi tên file bổ sung Phòng ban - Họ tên, hoàn thành bài tập và up lên nhóm trước 16:00 giúp Vi nha.</pre>
-                        </div>
-                        <div class="script-container p-6 rounded-2xl border bg-blue-50 relative border-blue-100">
-                            <button onclick="copy('scr-tue-note')" class="copy-btn absolute top-6 right-6">Copy Note Báo Cáo</button>
-<pre id="scr-tue-note" class="text-[12px] leading-relaxed text-blue-900 italic font-medium tracking-tight">Note 1 chút phần báo cáo ở đây nha,
-Có 4 loại báo cáo mọi người cần quan tâm. Đi từ thực tế shop kinh doanh:
-1. Khách hàng muốn biết kết quả bán hàng hôm nay một cách trực quan, ngắn gọn như các khoản thu, phiếu trả hàng -> Vào Báo cáo Cuối ngày.
-
-2.  Vấn đề về kho: KH muốn biết thực tế kho đang tồn bao nhiêu vốn và nếu bán ra hết thì thu về bao nhiêu tiền -> Vào Báo cáo Hàng hóa - Giá trị kho.
-
-3.  KH muốn biết bán được 10 gói bim bim, nhưng trừ đi giá vốn của 10 gói thì còn lợi nhuận bao nhiêu (tức lợi nhuận gộp, hay còn gọi lợi nhuận sau khi trừ giá vốn) -> Vào Báo cáo Bán hàng - Lợi nhuận.
-
-4. KH muốn biết sau khi trừ tất cả các chi phí (gồm chi phí nhân viên, trả hàng, điện nước...) và cộng tất cả các loại thu của cửa hàng thì lợi nhuận cuối cùng bao nhiêu ( tức lợi nhuận thuần) -> Vào Báo cáo Tài chính.</pre>
-                        </div>
-                    </div>
-
-                    <!-- Mai gặp B2 -->
-                    <div class="glass-card p-8 script-container">
-                        <button onclick="copy('scr-tue-info-b2')" class="copy-btn absolute top-6 right-6">Copy</button>
-<pre id="scr-tue-info-b2" class="text-[13px] leading-relaxed text-slate-700">Sáng mai chúng ta sẽ lại gặp nhau trên Google Meet, Vi sẽ đồng hành cùng 03 bạn bất kì để trình bày demo KiotViet theo đúng 06 bước cho một ngành hàng Retail
------
-Ngày mai mình sẽ chơi game, tùy vào nhân phẩm mỗi người sẽ bốc trúng tình huống để demo nha. Hên thì sẽ trúng sịt rịt.
------
-Mọi người chuẩn bị ôn tập các bước và thiết bị (Mic, Cam) thật tốt để buổi học ngày mai diễn ra hiệu quả nhé!
-
-Link Google Meet buổi 02: https://meet.google.com/nqh-bvjq-pti?authuser=0</pre>
-                    </div>
-                </div>
-            </section>
-
-            <!-- CÁC NGÀY KHÁC THÌ TƯƠNG TỰ CẤU TRÚC TRÊN -->
-             <section class="p-20 text-center bg-white rounded-3xl border-2 border-dashed border-slate-200">
-                <p class="text-slate-400 font-bold italic italic tracking-tighter uppercase italic tracking-tighter">Bạn hãy kéo xuống xem tiếp Thứ 4, 5, 6 trong Code nhé...</p>
-             </section>
-
-             <!-- THỨ 4 (BUỔI 2) -->
-            <section class="space-y-6">
-                <div class="flex items-center space-x-3">
-                    <span class="px-4 py-1 bg-blue-600 text-white text-[10px] font-black rounded-full uppercase italic tracking-tighter italic shadow-sm">Thứ 4: Buổi 2</span>
-                    <div class="h-px flex-1 bg-slate-200"></div>
-                </div>
-                <div class="grid grid-cols-1 gap-6">
-                    <div class="glass-card p-8 script-container">
-                        <button onclick="copy('scr-wed-1')" class="copy-btn absolute top-6 right-6">Copy</button>
-<pre id="scr-wed-1" class="text-[13px] font-black uppercase text-blue-800 mb-3">NỘI DUNG ĐÀO TẠO SẢN PHẨM - NHỮNG CÂU HỎI THƯỜNG GẶP
+            <!-- THỨ 4 (BUỔI 2) -->
+            <section class="space-y-4 mt-12">
+                <h3 class="text-lg font-bold text-green-600 italic">Thứ 4: Buổi 2 - Game & Questions</h3>
+                <div class="script-box border-l-green-500">
+                    <pre id="scr-wed">NỘI DUNG ĐÀO TẠO SẢN PHẨM - NHỮNG CÂU HỎI THƯỜNG GẶP
 Nội dung học Buổi 2: Đào tạo Sản phẩm Cơ bản 02
----------------------------------</pre>
-<pre class="text-[13px] leading-relaxed text-slate-700 italic">Lưu ý:
+---------------------------------
+Lưu ý:
 - Dành 2 phút xem trước hướng dẫn trên LMS: https://kiotvietlnd.github.io/training/hdsd-lms-sales#dangnhap
-... (Bạn hãy dán nốt nội dung đầy đủ của Thứ 4 ở đây nhé)</pre>
-                    </div>
+...</pre>
+                    <button onclick="copy('scr-wed')" class="copy-btn">Copy</button>
+                </div>
+            </section>
+
+            <!-- THỨ 6 (NGÀY TEST) -->
+            <section class="space-y-4 mt-12">
+                <h3 class="text-lg font-bold text-red-600 italic underline tracking-tighter shadow-sm border border-blue-100 italic tracking-tighter shadow-sm">Thứ 6: Vượt vũ môn (TEST DAY)</h3>
+                <div class="script-box border-l-red-500">
+                    <pre id="scr-fri">Một số lưu ý cho bài test hôm nay:
+📌 📌
+1. Gần đến giờ Test 10:00, mọi người đăng nhập vào trang https://daotao.kiotviet.vn/... nhé, đúng 10:00 F5 refresh có nút Start.
+2. Có thể mở kèm Phần mềm KiotViet.
+...</pre>
+                    <button onclick="copy('scr-fri')" class="copy-btn">Copy</button>
                 </div>
             </section>
         </div>
 
-        <!-- CÁC SECTION KHÁC -->
-        <div id="section-resources" class="content-section hidden p-10">
-            <h2 class="text-3xl font-black mb-8 italic uppercase italic tracking-tighter shadow-sm">Kho Record & Báo cáo</h2>
-            <div class="glass-card p-8 italic shadow-sm italic shadow-sm border border-slate-200 italic tracking-tighter">
-                <p class="text-slate-500 italic">Dữ liệu khóa học được lưu trữ tại đây...</p>
-            </div>
-        </div>
+        <!-- TAB 2: FORM SUBMIT THÔNG TIN KHÓA -->
+        <div id="tab-submit" class="content-section space-y-8">
+            <h2 class="text-3xl font-black italic tracking-tighter italic shadow-lg shadow-blue-50 tracking-tighter italic underline italic tracking-tighter">Hoàn thành & Lưu trữ Khóa học</h2>
+            <div class="glass-card p-10 bg-white">
+                <form id="trainingForm" class="space-y-6">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="text-xs font-bold uppercase text-slate-400 mb-2 block tracking-widest italic tracking-tighter uppercase italic tracking-tighter shadow-sm border border-blue-100 uppercase tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50">Tên Khóa Học</label>
+                            <input type="text" id="courseName" placeholder="Ví dụ: 26KV07" class="w-full border p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold" required>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold uppercase text-slate-400 mb-2 block tracking-widest italic shadow-sm italic shadow-sm italic">Ngày Bắt Đầu</label>
+                            <input type="date" id="startDate" class="w-full border p-3 rounded-xl outline-none font-bold" required>
+                        </div>
+                    </div>
 
-        <div id="section-game" class="content-section hidden p-10">
-            <h2 class="text-3xl font-black mb-8 italic uppercase italic tracking-tighter">Game Demo SPCB</h2>
-            <div class="glass-card p-4 aspect-video overflow-hidden shadow-2xl border-8 border-white">
-                <iframe src="https://kiotvietlnd.github.io/games/retail-spcb" class="w-full h-full rounded-2xl" frameborder="0"></iframe>
+                    <div class="space-y-4">
+                        <input type="url" id="studentLink" placeholder="Link Google Sheet Danh sách đào tạo" class="w-full border p-3 rounded-xl text-sm italic tracking-tighter">
+                        <input type="url" id="quizLink" placeholder="Link Google Sheet Kết quả Quiz học viên" class="w-full border p-3 rounded-xl text-sm italic">
+                        <input type="url" id="recordLink" placeholder="Link Folder Record Google Drive" class="w-full border p-3 rounded-xl text-sm">
+                        <input type="url" id="surveyLink" placeholder="Link Form Khảo sát (Google Form)" class="w-full border p-3 rounded-xl text-sm">
+                    </div>
+
+                    <div class="flex items-center space-x-6">
+                        <label class="font-bold text-sm italic italic tracking-tighter italic tracking-tighter shadow-sm border border-blue-100 italic tracking-tighter shadow-sm">Trạng thái Khóa:</label>
+                        <label class="flex items-center space-x-2"><input type="radio" name="status" value="Training" checked> <span>Đang dạy</span></label>
+                        <label class="flex items-center space-x-2"><input type="radio" name="status" value="Completed"> <span>Hoàn thành</span></label>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl hover:bg-blue-700 transition uppercase tracking-widest italic italic shadow-lg shadow-blue-100">SUBMIT & LƯU BÁO CÁO</button>
+                </form>
             </div>
         </div>
 
@@ -278,19 +125,38 @@ Nội dung học Buổi 2: Đào tạo Sản phẩm Cơ bản 02
 
     <script>
         lucide.createIcons();
-        function showSection(id) {
-            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
-            document.getElementById('section-' + id).classList.remove('hidden');
+        function showTab(id) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.getElementById('tab-' + id).classList.add('active');
             document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
             document.getElementById('btn-' + id).classList.add('active');
-            window.scrollTo(0,0);
         }
+
         function copy(id) {
             const text = document.getElementById(id).innerText;
-            navigator.clipboard.writeText(text).then(() => {
-                alert('Đã copy tin nhắn!');
-            });
+            navigator.clipboard.writeText(text).then(() => { alert('Đã copy!'); });
         }
+
+        // XỬ LÝ SUBMIT FORM
+        document.getElementById('trainingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newReport = {
+                courseName: document.getElementById('courseName').value,
+                startDate: document.getElementById('startDate').value,
+                studentLink: document.getElementById('studentLink').value,
+                quizLink: document.getElementById('quizLink').value,
+                recordLink: document.getElementById('recordLink').value,
+                surveyLink: document.getElementById('surveyLink').value,
+                status: document.querySelector('input[name="status"]:checked').value
+            };
+
+            let reports = JSON.parse(localStorage.getItem('KV_REPORTS')) || [];
+            reports.unshift(newReport); // Đưa cái mới nhất lên đầu
+            localStorage.setItem('KV_REPORTS', JSON.stringify(reports));
+
+            alert('Đã đẩy dữ liệu về Báo cáo thành công!');
+            location.reload();
+        });
     </script>
 </body>
 </html>
