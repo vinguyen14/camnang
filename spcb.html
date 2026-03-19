@@ -3,107 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPCB Handook | Full Content</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>SPCB Dashboard | Full Script Nhật Vi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
-        .sidebar-item.active { background-color: #2563eb; color: white; box-shadow: 0 4px 10px rgba(37,99,235,0.2); }
-        .script-card { background: white; border: 1px solid #eef2f6; border-radius: 16px; padding: 1.5rem; border-left: 5px solid #2563eb; position: relative; margin-bottom: 0.8rem; transition: all 0.2s; }
-        .copy-btn { position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 700; background: #f8fafc; color: #64748b; padding: 5px 10px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow-x: hidden; }
+        .sidebar-item.active { background-color: #2563eb; color: white; font-weight: 700; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+        .script-card { background: white; border: 1px solid #eef2f6; border-radius: 16px; padding: 1.5rem; border-left: 5px solid #2563eb; position: relative; margin-bottom: 1rem; transition: all 0.2s; }
+        .script-card:hover { border-left-width: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .copy-btn { position: absolute; top: 12px; right: 12px; font-size: 11px; font-weight: 700; background: #f8fafc; color: #64748b; padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; }
         .copy-btn:hover { background: #2563eb; color: white; border-color: #2563eb; }
-        pre { white-space: pre-wrap; font-family: inherit; font-size: 14px; line-height: 1.6; color: #334155; margin: 0; }
+        pre { white-space: pre-wrap; word-wrap: break-word; font-family: inherit; font-size: 14px; line-height: 1.6; color: #334155; margin: 0; }
         .step-content { display: none; }
         .step-content.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .form-input { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; outline: none; transition: all 0.2s; }
+        /* Form Styling */
+        .form-label { display: block; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.025em; }
+        .form-input { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; outline: none; transition: all 0.2s; background: #ffffff; }
         .form-input:focus { border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.05); }
+        .modal-overlay { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
     </style>
 </head>
 <body class="antialiased">
 
+    <!-- SIDEBAR -->
     <aside class="fixed inset-y-0 left-0 w-72 bg-white border-r z-50 flex flex-col shadow-sm">
         <div class="p-6 border-b">
-            <a href="trainer.html" class="flex items-center text-blue-600 font-bold text-xs mb-4 hover:-translate-x-1 transition-transform italic underline decoration-blue-200">
+            <a href="trainer.html" class="flex items-center text-blue-600 font-bold text-xs mb-4 hover:-translate-x-1 transition-transform">
                 <i data-lucide="chevron-left" class="w-4 h-4 mr-1"></i> DASHBOARD CHÍNH
             </a>
             <h1 class="text-xl font-extrabold text-slate-800">SP Cơ Bản <span class="text-blue-600 underline">Flow</span></h1>
         </div>
-        <nav class="flex-1 p-4 space-y-1 overflow-y-auto text-sm font-semibold text-slate-500 uppercase tracking-tight">
-            <button onclick="showStep('weekend')" id="btn-weekend" class="sidebar-item active w-full flex items-center px-5 py-4 rounded-2xl transition-all"><i data-lucide="calendar" class="w-4 h-4 mr-3 italic shadow-sm"></i> T7 - Chủ Nhật</button>
-            <button onclick="showStep('monday')" id="btn-monday" class="sidebar-item w-full flex items-center px-5 py-4 rounded-2xl transition-all"><i data-lucide="send" class="w-4 h-4 mr-3 italic shadow-sm"></i> Thứ 2</button>
-            <button onclick="showStep('tuesday')" id="btn-tuesday" class="sidebar-item w-full flex items-center px-5 py-4 rounded-2xl transition-all"><i data-lucide="book-open" class="w-4 h-4 mr-3 italic shadow-sm"></i> Thứ 3 (B1)</button>
-            <button onclick="showStep('wednesday')" id="btn-wednesday" class="sidebar-item w-full flex items-center px-5 py-4 rounded-2xl transition-all"><i data-lucide="gamepad" class="w-4 h-4 mr-3 italic shadow-sm"></i> Thứ 4 (B2)</button>
-            <button onclick="showStep('thursday')" id="btn-thursday" class="sidebar-item w-full flex items-center px-5 py-4 rounded-2xl transition-all"><i data-lucide="smartphone" class="w-4 h-4 mr-3 italic shadow-sm"></i> Thứ 5 (B3)</button>
-            <button onclick="showStep('friday')" id="btn-friday" class="sidebar-item w-full flex items-center px-5 py-4 rounded-2xl text-red-500 transition-all font-bold shadow-sm italic shadow-sm shadow-inner italic uppercase tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50"><i data-lucide="award" class="w-4 h-4 mr-3 shadow-sm italic shadow-sm shadow-inner italic uppercase tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50"></i> Thứ 6 (TEST)</button>
-            <div class="h-px bg-slate-100 my-6 shadow-sm shadow-inner italic shadow-sm border border-slate-200 uppercase tracking-tighter shadow-sm border border-slate-200 uppercase tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50"></div>
-            <button onclick="showStep('finalize')" id="btn-finalize" class="w-full flex items-center px-5 py-4 rounded-2xl text-green-600 bg-green-50 border border-green-100 font-bold tracking-tighter shadow-sm italic shadow-sm shadow-inner italic uppercase tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50"><i data-lucide="check-circle-2" class="w-4 h-4 mr-3 shadow-sm italic shadow-sm shadow-inner italic uppercase tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50"></i> HOÀN THÀNH KHÓA</button>
+        <nav class="flex-1 p-4 space-y-1 overflow-y-auto text-[13px] font-semibold text-slate-500">
+            <button onclick="showStep('weekend')" id="btn-weekend" class="sidebar-item active w-full flex items-center px-4 py-3 rounded-xl transition-all"><i data-lucide="calendar" class="w-4 h-4 mr-3"></i> T7 - Chủ Nhật</button>
+            <button onclick="showStep('monday')" id="btn-monday" class="sidebar-item w-full flex items-center px-4 py-3 rounded-xl transition-all"><i data-lucide="send" class="w-4 h-4 mr-3"></i> Thứ 2</button>
+            <button onclick="showStep('tuesday')" id="btn-tuesday" class="sidebar-item w-full flex items-center px-4 py-3 rounded-xl transition-all"><i data-lucide="book-open" class="w-4 h-4 mr-3"></i> Thứ 3 (Buổi 1)</button>
+            <button onclick="showStep('wednesday')" id="btn-wednesday" class="sidebar-item w-full flex items-center px-4 py-3 rounded-xl transition-all"><i data-lucide="help-circle" class="w-4 h-4 mr-3"></i> Thứ 4 (Buổi 2)</button>
+            <button onclick="showStep('thursday')" id="btn-thursday" class="sidebar-item w-full flex items-center px-4 py-3 rounded-xl transition-all"><i data-lucide="smartphone" class="w-4 h-4 mr-3"></i> Thứ 5 (Buổi 3)</button>
+            <button onclick="showStep('friday')" id="btn-friday" class="sidebar-item w-full flex items-center px-4 py-3 rounded-xl text-red-500 transition-all"><i data-lucide="award" class="w-4 h-4 mr-3"></i> Thứ 6 (TEST)</button>
+            <div class="h-px bg-slate-100 my-4"></div>
+            <button onclick="showStep('tools')" id="btn-tools" class="sidebar-item w-full flex items-center px-4 py-3 rounded-xl text-blue-600 transition-all font-bold"><i data-lucide="gamepad-2" class="w-4 h-4 mr-3"></i> Checklist & Game</button>
+            <button onclick="showStep('finalize')" id="btn-finalize" class="w-full flex items-center px-4 py-4 rounded-xl text-green-600 bg-green-50 border border-green-100 hover:bg-green-100 transition-all font-bold"><i data-lucide="check-circle-2" class="w-4 h-4 mr-3"></i> HOÀN THÀNH KHÓA</button>
         </nav>
     </aside>
 
+    <!-- MAIN CONTENT -->
     <main class="ml-72 p-12 min-h-screen">
 
-        <!-- THỨ 7 - CN -->
-        <div id="weekend" class="step-content active space-y-6">
+        <!-- CHỦ NHẬT (FULL 9 TIN) -->
+        <div id="weekend" class="step-content active space-y-4">
             <h2 class="text-2xl font-bold mb-8">Chào mừng Group Zalo (10:00 Sáng CN)</h2>
-            <div class="grid grid-cols-1 gap-3 pl-8 border-l-2 border-blue-100">
-                <div class="script-card relative"><span class="absolute -left-[42px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold shadow-md">1</span><pre id="m1">Chào mừng các bạn tới Group Zalo Đào tạo KiotViet</pre><button onclick="copy('m1')" class="copy-btn">Copy</button></div>
-                <div class="script-card relative"><span class="absolute -left-[42px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold shadow-md">2</span><pre id="m2">Xin chào các bạn 😉
+            <div class="ml-4 border-l-2 border-blue-200 pl-8 space-y-4">
+                <div class="script-card"><span class="absolute -left-[42px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold">1</span><pre id="m1">Chào mừng các bạn tới Group Zalo Đào tạo KiotViet</pre><button onclick="copy('m1')" class="copy-btn">Copy</button></div>
+                <div class="script-card"><span class="absolute -left-[42px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold">2</span><pre id="m2">Xin chào các bạn 😉
 Mình là Nhật Vi - Chuyên viên đào tạo, tuần này mình và bạn @Nguyễn Phương sẽ đồng hành cùng các bạn tham gia khóa đào tạo tại KiotViet.</pre><button onclick="copy('m2')" class="copy-btn">Copy</button></div>
-                <!-- ... BẠN HÃY DÁN NỐT 9 TIN CỦA CHỦ NHẬT VÀO ĐÂY THEO MẪU TRÊN ... -->
+                <div class="script-card"><span class="absolute -left-[42px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold">3</span><pre id="m3">Như đã thông tin trong Kế hoạch đào tạo đính kèm email, sáng mai thứ 2 các bạn sẽ làm thủ tục gia nhập và làm quen tại từng team dưới sự hỗ trợ của team Tuyển dụng.</pre><button onclick="copy('m3')" class="copy-btn">Copy</button></div>
+                <div class="script-card"><span class="absolute -left-[42px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold">4</span><pre id="m4">Chiều mai từ 14:00, chúng ta sẽ bắt đầu chương trình Đào tạo hội nhập, hình thức Đào tạo online trên Zoom (mình sẽ gửi lại link sau ạ)</pre><button onclick="copy('m4')" class="copy-btn">Copy</button></div>
+                <div class="script-card"><span class="absolute -left-[42px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold">5</span><pre id="m5">Ngoài ra, các bạn có lịch học Đào tạo Sản phẩm Thứ 3, Thứ 4, Thứ 5 và Test ngày Thứ 6 tham khảo chi tiết kế hoạch đào tạo ở file mình gửi trên mail nèee</pre><button onclick="copy('m5')" class="copy-btn">Copy</button></div>
+                <div class="script-card bg-blue-50 border-l-blue-600"><span class="absolute -left-[42px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold">6</span><pre id="m6" class="font-bold text-blue-800">Link dùng để đăng ký trải nghiệm phần mềm KiotViet dành cho nhân viên mới tham gia đào tạo:
+https://www.kiotviet.vn/?refcode=3670</pre><button onclick="copy('m6')" class="copy-btn">Copy</button></div>
+                <div class="script-card text-[13px]"><span class="absolute -left-[42px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold">7</span><pre id="m7">KiotViet là phần mềm ai cũng có thể tạo tài khoản dùng thử free 7 ngày, mọi người đặc biệt lưu ý chỉ đăng ký dùng thử bằng link này để hệ thống nhận diện chúng ta đang tham gia Đào tạo, không phải là khách hàng cần team Telesales liên hệ tư vấn nha.</pre><button onclick="copy('m7')" class="copy-btn">Copy</button></div>
+                <div class="script-card bg-orange-50 border-l-orange-400 font-medium text-orange-800 italic"><span class="absolute -left-[42px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold">8</span><pre id="m8">Để chuẩn bị tốt nhất cho tuần đào tạo nhân sự mới, các bạn nếu có thể thì cố gắng chuẩn bị thêm tai nghe có dây ạ</pre><button onclick="copy('m8')" class="copy-btn">Copy</button></div>
+                <div class="script-card font-bold italic"><span class="absolute -left-[42px] top-4 w-6 h-6 bg-blue-600 text-white text-[10px] flex items-center justify-center rounded-full font-bold">9</span><pre id="m9">Ngoài ra trong quá trình học có tâm tư thắc mắc gì các bạn cứ chia sẻ tại nhóm ạ /-heart  Hẹn gặp lại mọi người vào ngày mai!</pre><button onclick="copy('m9')" class="copy-btn">Copy</button></div>
             </div>
         </div>
 
         <!-- THỨ 2 -->
         <div id="monday" class="step-content space-y-6">
-            <h2 class="text-2xl font-bold mb-8 italic">Thứ 2: Nhắc lịch Đào tạo Sản phẩm</h2>
+            <h2 class="text-2xl font-bold mb-8">Chiều Thứ 2: Nhắc lịch Đào tạo Sản phẩm</h2>
             <div class="script-card">
-                <pre id="mon">Chào mọi người @All ,
+                <pre id="mon-script">Chào mọi người @All ,
 Từ sáng mai, Vi sẽ đồng hành cùng mọi người trong chương trình Đào tạo sản phẩm cơ bản, diễn ra trong 3 buổi: Thứ 3, Thứ 4, Thứ 5.
 Thời gian: 8:30 – 10:30am
-(Dán full nội dung của bạn vào đây...)</pre>
-                <button onclick="copy('mon')" class="copy-btn">Copy</button>
+
+Các bạn cần lưu ý chuẩn bị:
+- Một chiếc bụng no (ăn sáng đầy đủ)
+- Một tâm hồn đẹp (đi học là phải vui) :-*
+- Một chiếc máy tính kết nối mạng ổn định (có mạng ngon là có tất cả) ;p
+- Tai nghe (không bị hỏng)
+- Mic để trao đổi (mic của tai nghe hoặc mic laptop đều được)
+- Webcam
+
+Link tham gia đào tạo online trên Google Meet
+Buổi 1: https://meet.google.com/sxr-hnuk-fob?authuser=0</pre>
+                <button onclick="copy('mon-script')" class="copy-btn">Copy</button>
             </div>
         </div>
 
-        <!-- THỨ 3 (BỔ SUNG NOTE BÁO CÁO) -->
-        <div id="tuesday" class="step-content space-y-8">
-            <h2 class="text-2xl font-bold mb-8">Thứ 3: Buổi 1 - Demo 6 Bước</h2>
-            <div class="script-card border-l-orange-400 bg-orange-50/20 shadow-sm italic shadow-sm shadow-inner italic uppercase tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50">
-                <p class="text-[10px] font-bold text-slate-400 mb-2 uppercase italic shadow-sm shadow-inner italic uppercase tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50">Note 4 Loại Báo Cáo (Gửi 13:30)</p>
-                <pre id="t-note">Note 1 chút phần báo cáo ở đây nha, Có 4 loại báo cáo mọi người cần quan tâm... (Dán full nội dung của bạn)</pre>
-                <button onclick="copy('t-note')" class="copy-btn">Copy Note</button>
+        <!-- THỨ 3 (BUỔI 1) -->
+        <div id="tuesday" class="step-content space-y-6">
+            <h2 class="text-2xl font-bold mb-8">Thứ 3: Buổi 1 - Tổng quan & 6 Bước Demo</h2>
+            <div class="script-card border-l-blue-600">
+                <p class="form-label text-[10px] mb-2">Gửi 10:30 (Sau khi kết thúc dạy)</p>
+                <pre id="t3-1" class="font-bold text-blue-800 uppercase underline">NỘI DUNG ĐÀO TẠO SẢN PHẨM - TỔNG QUAN KHÓA HỌC + 6 BƯỚC DEMO CƠ BẢN
+Nội dung học Buổi 1: Đào tạo Sản phẩm Cơ bản 01
+---------------------------------</pre>
+                <pre id="t3-2">Lưu ý:
+- Dành 2 phút xem trước hướng dẫn trên LMS: https://kiotvietlnd.github.io/training/hdsd-lms-sales#dangnhap
+
+- Học lần lượt theo 2 bước:
++ Bước 1: Học và ôn trên Thư viên E-Learning (Github)
++ Bước 2: Làm bài quiz nhỏ + quiz tổng hợp trên LMS
+
+Hoàn thành khóa học trước 12h trưa nay nhé!</pre>
+                <button onclick="copyTwo('t3-1','t3-2')" class="copy-btn">Copy Full</button>
+            </div>
+            
+            <div class="script-card">
+                <p class="form-label text-[10px] mb-2">Gửi 13:30 (Kết quả & Bài tập)</p>
+                <pre id="t3-hw">Vi gửi kết quả học sáng nay của mọi người nha... (Kết quả in đậm kiểm tra lại)
+Vi gửi nhiệm vụ B1: Mọi người vào LMS - Buổi 1 -> Tab tài liệu tải file Word B1... hoàn thành bài tập và up lên nhóm trước 16:00 nhé.</pre>
+                <button onclick="copy('t3-hw')" class="copy-btn">Copy</button>
+            </div>
+
+            <div class="script-card bg-slate-50 border-l-indigo-500">
+                <p class="form-label text-[10px] mb-2">Note 4 Loại Báo cáo quan trọng</p>
+                <pre id="t3-note">Note 1 chút phần báo cáo ở đây nha, Có 4 loại báo cáo cần quan tâm:
+1. Báo cáo Cuối ngày (trực quan, ngắn gọn).
+2. Báo cáo Hàng hóa - Giá trị kho (vốn đang tồn, thu về nếu bán hết).
+3. Báo cáo Bán hàng - Lợi nhuận (lợi nhuận gộp sau khi trừ giá vốn).
+4. Báo cáo Tài chính (lợi nhuận thuần sau khi trừ tất cả chi phí: điện nước, nhân viên...).</pre>
+                <button onclick="copy('t3-note')" class="copy-btn">Copy Note</button>
             </div>
         </div>
 
-        <!-- FORM HOÀN THÀNH (SỬA LẠI UX ĐẸP MƯỢT) -->
-        <div id="finalize" class="step-content">
-            <h2 class="text-3xl font-bold mb-10 text-green-700 tracking-tight italic">Xác nhận hoàn thành & Lưu trữ</h2>
-            <div class="bg-white p-10 rounded-[32px] border border-slate-100 shadow-sm space-y-8 max-w-4xl shadow-sm border border-slate-200 uppercase tracking-tighter shadow-sm border border-slate-200 uppercase tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 shadow-sm border border-slate-200 uppercase tracking-tighter shadow-sm border border-slate-200 uppercase tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-2">Mã Khóa (26KV...)</label>
-                        <input type="text" id="courseId" class="form-input font-bold text-blue-600">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-2">Nhóm Khóa</label>
-                        <select id="groupName" class="form-input font-bold italic shadow-sm shadow-inner italic uppercase shadow-sm border border-slate-200 uppercase tracking-tighter shadow-sm border border-slate-200 uppercase tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50 shadow-inner italic uppercase italic tracking-tighter font-black italic tracking-tighter italic shadow-lg shadow-blue-50 font-black italic tracking-tighter uppercase italic tracking-tighter italic shadow-sm border border-blue-100 italic tracking-tighter uppercase tracking-tighter italic shadow-lg shadow-blue-50">
-                            <option value="SPCB">SPCB Retail</option>
-                            <option value="KV1">SP KV1</option>
-                            <option value="HĐĐT">HĐĐT - Thuế</option>
-                            <option value="FNB">KiotViet FNB</option>
-                        </select>
+        <!-- THỨ 4 (BUỔI 2) -->
+        <div id="wednesday" class="step-content space-y-6">
+            <h2 class="text-2xl font-bold mb-8">Thứ 4: Buổi 2 - Câu hỏi thường gặp</h2>
+            <div class="script-card border-l-blue-600">
+                <pre id="w1" class="font-bold text-blue-800 uppercase underline">NỘI DUNG ĐÀO TẠO SẢN PHẨM - NHỮNG CÂU HỎI THƯỜNG GẶP
+Nội dung học Buổi 2: Đào tạo Sản phẩm Cơ bản 02
+---------------------------------</pre>
+                <pre id="w1-body">Lưu ý: Dành 2 phút xem hướng dẫn LMS... Hoàn thành khóa học trước 12h trưa nay nhé!</pre>
+                <button onclick="copyTwo('w1','w1-body')" class="copy-btn">Copy</button>
+            </div>
+            <div class="script-card bg-green-50 border-l-green-600">
+                <p class="form-label text-[10px] mb-2 text-green-700">Note Nhóm Khách Hàng (3 Loại)</p>
+                <pre id="w-note">Có 1 vài bạn đang hiểu chưa đúng phần tạo Nhóm khách hàng, Vi diễn giải lại 1 chút phần này nha:
+1. Thêm theo điều kiện: Khách đủ điều kiện được thêm tự động, nhưng không tự động loại ra nếu sau này hết đủ điều kiện.
+2. Cập nhật lại theo điều kiện: Phần mềm liên tục cập nhật danh sách (đủ thì thêm, không đủ thì loại).
+3. Không cập nhật lại: Danh sách thành viên được giữ nguyên bất kể thay đổi điều kiện sau này.</pre>
+                <button onclick="copy('w-note')" class="copy-btn">Copy Note</button>
+            </div>
+        </div>
+
+        <!-- THỨ 5 (BUỔI 3) -->
+        <div id="thursday" class="step-content space-y-6">
+            <h2 class="text-2xl font-bold mb-8">Thứ 5: Buổi 3 - Mobile App & Dặn dò TEST</h2>
+            <div class="script-card border-l-blue-600">
+                <pre id="h-lms" class="font-bold text-blue-800 uppercase underline">NỘI DUNG ĐÀO TẠO SẢN PHẨM - LUỒNG CƠ BẢN 06 BƯỚC (MOBILE APP) + PHẦN CỨNG
+Nội dung học Buổi 3: Đào tạo Sản phẩm Cơ bản 03
+---------------------------------</pre>
+                <button onclick="copy('h-lms')" class="copy-btn">Copy</button>
+            </div>
+            <div class="script-card bg-blue-50 border-l-orange-500">
+                <p class="form-label text-[10px] mb-2 text-orange-700">Tài liệu ôn thi quan trọng</p>
+                <pre id="h-test">📌 [QUAN TRỌNG] TÀI LIỆU & HƯỚNG DẪN ÔN TẬP SẢN PHẨM CƠ BẢN
+Hình thức: Online 30p - 30 câu (80% Pass). Được mở phần mềm thao tác.
+1. Ôn lý thuyết trên Github (B1-B2-B3).
+2. Ôn Quiz trên LMS.
+3. Xem Record khóa 26KV06: https://drive.google.com/drive/folders/15ghXFGcR67ErIxB_SPIaSrHt3QiNhfJh</pre>
+                <button onclick="copy('h-test')" class="copy-btn">Copy</button>
+            </div>
+        </div>
+
+        <!-- THỨ 6 (TEST & KẾT THÚC) -->
+        <div id="friday" class="step-content space-y-6">
+            <h2 class="text-2xl font-bold mb-8 text-red-600">Thứ 6: Ngày TEST & Tổng kết khóa</h2>
+            <div class="script-card border-l-orange-400">
+                <pre id="f-feng">Yếu tố phong thủy chọn món ăn đi thi may mắn: https://www.bachhoaxanh.com/kinh-nghiem-hay/di-thi-thi-dung-an-nhung-mon-nay-keo-bi-tu-de-1175082</pre>
+                <button onclick="copy('f-feng')" class="copy-btn">Copy</button>
+            </div>
+            <div class="script-card border-l-green-600 bg-green-50">
+                <p class="form-label text-[10px] mb-2 text-green-700">Sau khi PASS - Kết thúc khóa</p>
+                <pre id="f-end">Sau khi PASS bài kiểm tra, chương trình Đào tạo Cơ bản kết thúc!
+- Khối Non-Sale: Điền khảo sát và OUT NHÓM.
+- Khối Sale: Ở lại chờ thông tin khóa COC-CRM.
+- Link Group chat "Xóm Đào": https://chat.google.com/room/AAAAEOKr7G8?cls=4
+- Link khảo sát: https://docs.google.com/forms/d/1_LhtIYlk-nMqcdZLIpn_wFitwj6K6-LeVOF1b9-TY9k/preview</pre>
+                <button onclick="copy('f-end')" class="copy-btn">Copy All</button>
+            </div>
+        </div>
+
+        <!-- TAB CHECKLIST & GAME (DỜI TỪ TRAINER SANG) -->
+        <div id="tools" class="step-content space-y-12">
+            <h2 class="text-2xl font-bold mb-8">Công cụ hỗ trợ giảng dạy SPCB</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Checklist -->
+                <div class="bg-slate-900 rounded-3xl p-10 text-white shadow-xl h-fit">
+                    <h3 class="text-lg font-bold mb-8 flex items-center"><i data-lucide="check-square" class="mr-3 text-blue-400"></i>Tiến độ chuẩn bị</h3>
+                    <div class="space-y-4" id="checklist">
+                        <label class="flex items-center p-4 bg-white/5 border border-white/10 rounded-2xl cursor-pointer hover:bg-white/10">
+                            <input type="checkbox" onchange="checkTask(0)" class="w-5 h-5 rounded border-none bg-white/20 mr-4">
+                            <span class="text-sm">Gửi mail danh sách học viên (Sáng T7)</span>
+                        </label>
+                        <label class="flex items-center p-4 bg-white/5 border border-white/10 rounded-2xl cursor-pointer hover:bg-white/10">
+                            <input type="checkbox" onchange="checkTask(1)" class="w-5 h-5 rounded border-none bg-white/20 mr-4">
+                            <span class="text-sm">Tạo group Zalo & Gửi 9 tin chào mừng</span>
+                        </label>
+                        <label class="flex items-center p-4 bg-white/5 border border-white/10 rounded-2xl cursor-pointer hover:bg-white/10">
+                            <input type="checkbox" onchange="checkTask(2)" class="w-5 h-5 rounded border-none bg-white/20 mr-4">
+                            <span class="text-sm">Mở Zoom/Meet & Bấm Record buổi học</span>
+                        </label>
                     </div>
                 </div>
-                <!-- Dán nốt các trường input khác tương tự cấu trúc này -->
-                <button onclick="submitData()" class="w-full bg-blue-600 text-white font-bold py-5 rounded-3xl shadow-xl hover:bg-blue-700 transition transform hover:scale-[1.02]">GỬI DỮ LIỆU BÁO CÁO →</button>
+                <!-- Game -->
+                <div class="bg-blue-50 border-2 border-dashed border-blue-200 rounded-3xl p-10 text-center flex flex-col items-center justify-center">
+                    <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm"><i data-lucide="gamepad-2" class="text-blue-600"></i></div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2 italic">Game Demo Retail SPCB</h3>
+                    <p class="text-sm text-slate-500 mb-8 font-medium">Bốc thăm tình huống demo trực quan dành cho Buổi 2 và Buổi 3.</p>
+                    <a href="https://kiotvietlnd.github.io/games/retail-spcb" target="_blank" class="bg-blue-600 text-white px-10 py-3 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition">MỞ GAME NGAY</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORM HOÀN THÀNH (DESIGN XỊN) -->
+        <div id="finalize" class="step-content">
+            <div class="max-w-4xl mx-auto space-y-10">
+                <div class="text-center">
+                    <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Xác nhận hoàn thành khóa</h2>
+                    <p class="text-slate-400 mt-2 font-medium">Dữ liệu sẽ được đẩy trực tiếp về Dashboard báo cáo chính.</p>
+                </div>
+                
+                <div class="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div><label class="form-label">Mã Khóa (26KV...)</label><input type="text" id="courseId" placeholder="VD: 26KV07" class="form-input font-bold text-blue-600"></div>
+                        <div><label class="form-label">Tháng dạy</label><select id="month" class="form-input font-semibold"><option value="1">Tháng 1</option><option value="2">Tháng 2</option><option value="3">Tháng 3</option><option value="4">Tháng 4</option><option value="5">Tháng 5</option><option value="6">Tháng 6</option><option value="7">Tháng 7</option><option value="8">Tháng 8</option><option value="9">Tháng 9</option><option value="10">Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option></select></div>
+                        <div><label class="form-label">Trạng thái</label><select id="status" onchange="toggleReason()" class="form-input font-bold"><option value="Hoàn thành">Hoàn thành</option><option value="Đang diễn ra">Đang diễn ra</option><option value="Hủy">Hủy</option><option value="Dời lịch">Dời lịch</option><option value="Khác">Khác</option></select></div>
+                    </div>
+                    
+                    <div id="reasonBox" class="hidden"><label class="form-label">Lý do cụ thể</label><input type="text" id="reason" placeholder="Nhập lý do dời/hủy..." class="form-input italic bg-slate-50"></div>
+
+                    <div class="grid grid-cols-2 gap-6">
+                        <div><label class="form-label">Ngày bắt đầu</label><input type="date" id="start" class="form-input"></div>
+                        <div><label class="form-label">Ngày kết thúc</label><input type="date" id="finish" class="form-input"></div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <label class="form-label">Lưu trữ Links dữ liệu</label>
+                        <input type="url" id="listLink" placeholder="Link danh sách học viên (Google Sheet)" class="form-input">
+                        <input type="url" id="quizLink" placeholder="Link kết quả Quiz (Google Sheet)" class="form-input">
+                        <input type="url" id="recordLink" placeholder="Link Folder Record (Drive)" class="form-input">
+                    </div>
+
+                    <button onclick="submitFinal()" class="w-full bg-blue-600 text-white font-bold py-5 rounded-3xl shadow-xl hover:bg-blue-700 transition transform hover:scale-[1.01] uppercase tracking-wider text-sm shadow-blue-100">Gửi dữ liệu về Dashboard Trainer Hub</button>
+                </div>
             </div>
         </div>
 
     </main>
 
+    <!-- SUCCESS MODAL -->
+    <div id="successModal" class="hidden fixed inset-0 z-[100] modal-overlay flex items-center justify-center p-6">
+        <div class="bg-white rounded-[32px] p-12 max-w-sm w-full text-center shadow-2xl">
+            <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"><i data-lucide="check-circle-2" class="w-10 h-10"></i></div>
+            <h3 class="text-2xl font-bold text-slate-900 mb-2">Đã Submit!</h3>
+            <p class="text-sm text-slate-400 font-medium mb-10 leading-relaxed">Dữ liệu khóa học đã được cập nhật vào báo cáo Master Hub.</p>
+            <div class="flex flex-col gap-3">
+                <a href="trainer.html" class="bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition">Về Dashboard Báo cáo</a>
+                <button onclick="location.reload()" class="text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-slate-600 transition">Tiếp tục ở lại</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        lucide.createIcons();
+
         function showStep(id) {
             document.querySelectorAll('.step-content').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
@@ -111,14 +277,53 @@ Thời gian: 8:30 – 10:30am
             document.getElementById('btn-' + id).classList.add('active');
             window.scrollTo(0,0);
         }
+
+        function toggleReason() {
+            const s = document.getElementById('status').value;
+            document.getElementById('reasonBox').classList.toggle('hidden', !['Hủy','Dời lịch','Khác'].includes(s));
+        }
+
         function copy(id) {
             const t = document.getElementById(id).innerText;
             navigator.clipboard.writeText(t).then(() => alert('Copied Content!'));
         }
-        function submitData() {
-            // Lấy dữ liệu và lưu vào kv_master_db
-            alert('Submit thành công!');
-            window.location.href = 'trainer.html';
+
+        function copyTwo(id1, id2) {
+            const t = document.getElementById(id1).innerText + "\n" + document.getElementById(id2).innerText;
+            navigator.clipboard.writeText(t).then(() => alert('Copied Full Content!'));
+        }
+
+        // Checklist Logic
+        function checkTask(i) {
+            let data = JSON.parse(localStorage.getItem('trainer_checklists')) || { SPCB: { completed: false, steps: {} } };
+            data.SPCB.steps[i] = !data.SPCB.steps[i];
+            const allChecked = Object.values(data.SPCB.steps).filter(v => v).length >= 3; // Ví dụ 3 bước
+            data.SPCB.completed = allChecked;
+            localStorage.setItem('trainer_checklists', JSON.stringify(data));
+        }
+
+        // SUBMIT TO TRAINER HUB
+        function submitFinal() {
+            const newEntry = {
+                groupName: 'SPCB Retail',
+                courseId: document.getElementById('courseId').value,
+                month: document.getElementById('month').value,
+                status: document.getElementById('status').value,
+                reason: document.getElementById('reason').value,
+                startDate: document.getElementById('start').value,
+                finishDate: document.getElementById('finish').value,
+                listLink: document.getElementById('listLink').value || '#',
+                quizLink: document.getElementById('quizLink').value || '#',
+                recordLink: document.getElementById('recordLink').value || '#'
+            };
+
+            if(!newEntry.courseId || !newEntry.finishDate) return alert('Vui lòng nhập Mã khóa và Ngày kết thúc!');
+
+            let db = JSON.parse(localStorage.getItem('kv_master_db')) || [];
+            db.push(newEntry);
+            localStorage.setItem('kv_master_db', JSON.stringify(db));
+            
+            document.getElementById('successModal').classList.remove('hidden');
         }
     </script>
 </body>
