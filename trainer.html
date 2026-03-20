@@ -3,180 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trainer Hub | KiotViet Professional</title>
+    <title>Trainer Hub | KiotViet Management</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #fcfcfd; color: #1e293b; }
-        .course-card { background: white; border: 1px solid #f1f5f9; border-radius: 20px; transition: all 0.3s ease; position: relative; }
-        .course-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px -10px rgba(0,0,0,0.05); border-color: #e2e8f0; }
-        .nav-link { color: #64748b; font-weight: 600; padding-bottom: 4px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .course-card { background: white; border: 1px solid #f1f5f9; border-radius: 24px; transition: all 0.3s ease; position: relative; }
+        .course-card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px -10px rgba(0,0,0,0.08); border-color: #cbd5e1; }
+        
+        /* Nav & Buttons Hover Logic */
+        .nav-link { color: #64748b; font-weight: 600; transition: all 0.2s; padding: 4px 0; border-bottom: 2px solid transparent; }
         .nav-link:hover { color: #2563eb; border-bottom-color: #2563eb; }
-        /* Chuông nhắc lịch */
-        .bell-box { position: absolute; top: 16px; right: 16px; cursor: pointer; }
-        .reminder-popover { visibility: hidden; opacity: 0; position: absolute; right: 0; top: 30px; width: 220px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); z-index: 50; transition: all 0.2s; }
-        .bell-box:hover .reminder-popover { visibility: visible; opacity: 1; top: 40px; }
-        /* Status Pill */
-        .pill { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
-        .btn-neutral { border: 1px solid #e2e8f0; color: #64748b; background: white; transition: all 0.2s; }
-        .btn-neutral:hover { background: #2563eb; color: white; border-color: #2563eb; }
-        table th { white-space: nowrap; }
+        .btn-action { border: 1px solid #e2e8f0; color: #64748b; background: white; transition: all 0.2s; }
+        .btn-action:hover { border-color: #2563eb; color: #2563eb; background: #eff6ff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+
+        /* Chuông & Popup thông minh */
+        .notification-zone { position: absolute; top: 20px; right: 20px; z-index: 10; }
+        .popup-remind { visibility: hidden; opacity: 0; position: absolute; right: 0; top: 35px; width: 240px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); transition: all 0.2s ease; }
+        .notification-zone:hover .popup-remind { visibility: visible; opacity: 1; top: 45px; }
+        
+        .status-pill { padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        table th { white-space: nowrap; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+        .icon-link { color: #cbd5e1; transition: color 0.2s; }
+        .icon-link:hover { color: #2563eb; transform: scale(1.1); }
+        .icon-delete { color: #cbd5e1; transition: color 0.2s; }
+        .icon-delete:hover { color: #ef4444; }
     </style>
 </head>
 <body class="antialiased">
 
-    <nav class="bg-white border-b sticky top-0 z-50">
+    <nav class="bg-white/90 backdrop-blur-md border-b sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">KiotViet</div>
-                <span class="text-xl font-bold tracking-tight text-slate-800">Trainer Hub</span>
+                <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold italic shadow-lg shadow-blue-200">K</div>
+                <span class="text-xl font-bold tracking-tighter text-slate-800">Trainer Hub</span>
             </div>
             <div class="hidden md:flex space-x-8 text-[13px]">
                 <a href="#sales" class="nav-link">Đào tạo Sales</a>
                 <a href="#dvkh" class="nav-link">Đào tạo DVKH</a>
-                <a href="#reports" class="nav-lin">Báo cáo & Record</a>
+                <a href="#reports" class="nav-link">Báo cáo & Record</a>
             </div>
         </div>
     </nav>
 
-    <header class="py-16 border-b bg-white">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-12">
+    <header class="py-20 border-b bg-white">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-16">
             <div class="flex-1">
-                <h1 class="text-4xl font-extrabold text-slate-900 leading-tight mb-4">Hi Vi ! <br>Cẩm "nan giải"</h1>
-                <p class="text-slate-500 text-lg mb-8 leading-relaxed max-w-xl">Quản lý đào tạo, lưu trữ record và truy xuất báo cáo khóa học.</p>
-                <div class="flex flex-wrap gap-3">
-                    <a href="https://sites.google.com/kiotviet.com/daotaokiotviet/l%E1%BB%8Bch-%C4%91%C3%A0o-t%E1%BA%A1o-sales-2026" target="_blank" class="btn-neutral px-5 py-3 rounded-xl font-bold text-sm flex items-center shadow-sm">
-                        <i class="far fa-calendar-alt mr-2"></i> Lịch Đào tạo 2026
+                <h1 class="text-4xl font-black text-slate-900 leading-tight mb-4 tracking-tight">Hi Ve ! <br>Cẩm "nan giải" của Ve Ve</h1>
+                <p class="text-slate-500 text-lg mb-10 max-w-lg font-medium leading-relaxed">Nền tảng tập trung kịch bản giảng dạy và tự động hóa báo cáo khóa học KiotViet.</p>
+                <div class="flex flex-wrap gap-4">
+                    <a href="https://sites.google.com/kiotviet.com/daotaokiotviet/l%E1%BB%8Bch-%C4%91%C3%A0o-t%E1%BA%A1o-sales-2026" target="_blank" class="btn-action px-6 py-3 rounded-2xl font-bold text-sm flex items-center">
+                        <i class="far fa-calendar-alt mr-3"></i> Lịch Đào tạo 2026
                     </a>
-                    <a href="https://sites.google.com/view/kiotviet-trainer-notes/copy-email" target="_blank" class="btn-neutral px-5 py-3 rounded-xl font-bold text-sm flex items-center shadow-sm">
-                        <i class="far fa-envelope mr-2"></i> Tool Copy Email
+                    <a href="https://sites.google.com/view/kiotviet-trainer-notes/copy-email" target="_blank" class="btn-action px-6 py-3 rounded-2xl font-bold text-sm flex items-center">
+                        <i class="far fa-envelope mr-3"></i> Tool Copy Email
                     </a>
                 </div>
             </div>
-            <div class="w-40 h-40 bg-blue-50 rounded-[40px] flex items-center justify-center shadow-inner">
+            <div class="w-40 h-40 bg-blue-50 rounded-[40px] flex items-center justify-center shadow-inner border border-blue-100/50">
                 <i class="fas fa-graduation-cap text-6xl text-blue-500"></i>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-6 py-20 space-y-24">
+    <main class="max-w-7xl mx-auto px-6 py-20 space-y-32">
 
         <!-- KHOÁ HỌC SALES -->
         <section id="sales">
-            <h2 class="text-2xl font-bold text-slate-900 mb-10 border-l-4 border-blue-600 pl-4">Đào tạo Sales</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="courseGrid">
+            <div class="flex items-center space-x-3 mb-12">
+                <div class="w-1.5 h-8 bg-blue-600 rounded-full"></div>
+                <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Hạng mục Đào tạo Sales</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="courseGrid">
                 
                 <!-- Box SPCB -->
-                <div class="course-card p-8 flex flex-col h-full">
-                    <div class="bell-box" id="bell-SPCB">
-                        <i class="fas fa-bell text-red-500 animate-bounce"></i>
-                        <div class="reminder-popover text-xs">
-                            <p class="font-bold text-slate-800 mb-2">Sắp tới lịch dạy SPCB!</p>
-                            <p class="text-slate-500 mb-2 italic">Dựa theo lịch ĐT 2026</p>
-                            <ul class="space-y-1 text-slate-600">
-                                <li>• Gửi mail danh sách (T7)</li>
-                                <li>• Tạo group Zalo (CN)</li>
-                            </ul>
-                        </div>
+                <div class="course-card p-10 flex flex-col h-full border-l-4 border-l-blue-600">
+                    <div class="notification-zone" id="notif-SPCB">
+                        <!-- JS Render Bell/Check here -->
                     </div>
-                    <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-4">Core Product</span>
-                    <h3 class="text-lg font-bold text-slate-800 mb-3">Sản phẩm Cơ bản (Retail)</h3>
-                    <p class="text-sm text-slate-500 leading-relaxed mb-8">Lộ trình 3 buổi: Tổng quan, 6 bước demo và Mobile App.</p>
+                    <span class="text-[11px] font-bold text-blue-500 uppercase tracking-widest mb-4">Core Product</span>
+                    <h3 class="text-xl font-extrabold text-slate-800 mb-3">Sản phẩm Cơ bản (Retail)</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed mb-10 font-medium">Lộ trình 3 buổi: Tổng quan hệ thống, 6 bước demo chuẩn và Mobile App.</p>
                     <div class="mt-auto pt-6 border-t flex justify-between items-center">
-                        <span class="text-xs text-slate-400 font-bold">3 Sessions</span>
-                        <a href="spcb.html" class="text-blue-600 font-bold text-sm flex items-center">Vào giảng dạy <i class="fas fa-chevron-right ml-2 text-[10px]"></i></a>
+                        <span class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">3 Sessions</span>
+                        <a href="spcb.html" class="text-blue-600 font-bold text-sm flex items-center hover:underline">Vào giảng dạy <i class="fas fa-chevron-right ml-2 text-[10px]"></i></a>
                     </div>
                 </div>
 
                 <!-- Box KV1 -->
-                <div class="course-card p-8 flex flex-col h-full">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Advanced</span>
-                    <h3 class="text-lg font-bold text-slate-800 mb-3">Sản phẩm KV1</h3>
-                    <p class="text-sm text-slate-500 leading-relaxed mb-8">Nâng cao kiến thức sau 1 tháng gia nhập, xử lý nghiệp vụ khó.</p>
-                    <div class="mt-auto pt-6 border-t text-slate-400 font-medium text-xs italic">Đang cập nhật...</div>
-                        <span class="text-xs text-slate-400 font-bold">1 Sessions</span>
-                        <a href="kv1.html" class="text-blue-600 font-bold text-sm flex items-center">Vào giảng dạy <i class="fas fa-chevron-right ml-2 text-[10px]"></i></a>
+                <div class="course-card p-10 flex flex-col h-full border-l-4 border-l-slate-400">
+                    <div class="notification-zone" id="notif-KV1"></div>
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">Advanced</span>
+                    <h3 class="text-xl font-extrabold text-slate-800 mb-3">Sản phẩm KV1</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed mb-10 font-medium">Nâng cao kỹ năng quản lý và xử lý các tình huống nghiệp vụ phức tạp sau 1 tháng.</p>
+                    <div class="mt-auto pt-6 border-t text-slate-400 font-bold text-[11px] italic uppercase tracking-widest">Tính năng nâng cao ngành Retail.</div>
+                        <span class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">1 Sessions</span>
+                        <a href="kv1.html" class="text-blue-600 font-bold text-sm flex items-center hover:underline">Vào giảng dạy <i class="fas fa-chevron-right ml-2 text-[10px]"></i></a>
                 </div>
 
                 <!-- Box HĐĐT -->
-                <div class="course-card p-8 flex flex-col h-full border-l-4 border-l-orange-400">
-                    <span class="text-[10px] font-bold text-orange-500 uppercase tracking-widest mb-4">Specialist</span>
-                    <h3 class="text-lg font-bold text-slate-800 mb-3">HĐĐT - Thuế - Kế toán</h3>
-                    <p class="text-sm text-slate-500 leading-relaxed mb-8">Kiến thức chuyên sâu về tài chính và hóa đơn điện tử.</p>
-                    <div class="mt-auto pt-6 border-t text-slate-400 font-medium text-xs italic">Đang cập nhật...</div>
+                <div class="course-card p-10 flex flex-col h-full border-l-4 border-l-orange-400">
+                    <div class="notification-zone" id="notif-TAX"></div>
+                    <span class="text-[11px] font-bold text-orange-500 uppercase tracking-widest mb-4">Specialist</span>
+                    <h3 class="text-xl font-extrabold text-slate-800 mb-3">HĐĐT - Thuế - Kế toán</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed mb-10 font-medium">Kiến thức chuyên sâu về tài chính, hóa đơn điện tử và các quy chuẩn thuế mới.</p>
+                    <div class="mt-auto pt-6 border-t text-slate-400 font-bold text-[11px] italic uppercase tracking-widest">Đang cập nhật nội dung...</div>
                 </div>
 
-                <!-- FNB -->
-                <div class="course-card p-8 flex flex-col h-full border-l-4 border-l-green-500">
-                    <span class="text-[10px] font-bold text-green-500 uppercase tracking-widest mb-4">Industry</span>
-                    <h3 class="text-lg font-bold text-slate-800 mb-3">KiotViet FNB</h3>
-                    <p class="text-sm text-slate-500 leading-relaxed mb-8">Nghiệp vụ dành riêng cho ngành hàng Nhà hàng, Cafe.</p>
-                    <div class="mt-auto pt-6 border-t text-slate-400 font-medium text-xs italic">Đang cập nhật...</div>
+                <!-- Box FNB -->
+                <div class="course-card p-10 flex flex-col h-full border-l-4 border-l-green-500">
+                    <span class="text-[11px] font-bold text-green-500 uppercase tracking-widest mb-4">Industry</span>
+                    <h3 class="text-xl font-extrabold text-slate-800 mb-3">KiotViet FNB</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed mb-10 font-medium">Nghiệp vụ dành riêng cho ngành hàng Nhà hàng, Cafe & Bar.</p>
+                    <div class="mt-auto pt-6 border-t text-slate-400 font-bold text-[11px] italic uppercase tracking-widest">Đang cập nhật nội dung...</div>
                 </div>
 
-                <!-- SALON -->
-                <div class="course-card p-8 flex flex-col h-full border-l-4 border-l-pink-400">
-                    <span class="text-[10px] font-bold text-pink-500 uppercase tracking-widest mb-4">Industry</span>
-                    <h3 class="text-lg font-bold text-slate-800 mb-3">KiotViet Salon</h3>
-                    <p class="text-sm text-slate-500 leading-relaxed mb-8">Nghiệp vụ dành riêng cho ngành làm đẹp, Spa.</p>
-                    <div class="mt-auto pt-6 border-t text-slate-400 font-medium text-xs italic">Đang cập nhật...</div>
+                <!-- Box SALON -->
+                <div class="course-card p-10 flex flex-col h-full border-l-4 border-l-pink-400">
+                    <span class="text-[11px] font-bold text-pink-500 uppercase tracking-widest mb-4">Industry</span>
+                    <h3 class="text-xl font-extrabold text-slate-800 mb-3">KiotViet Salon</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed mb-10 font-medium">Nghiệp vụ quản lý tiệm Spa, Làm đẹp và Hair Salon.</p>
+                    <div class="mt-auto pt-6 border-t text-slate-400 font-bold text-[11px] italic uppercase tracking-widest">Đang cập nhật nội dung...</div>
                 </div>
 
-                <!-- HOTEL -->
-                <div class="course-card p-8 flex flex-col h-full border-l-4 border-l-indigo-400">
-                    <span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-4">Industry</span>
-                    <h3 class="text-lg font-bold text-slate-800 mb-3">KiotViet Hotel</h3>
-                    <p class="text-sm text-slate-500 leading-relaxed mb-8">Nghiệp vụ dành cho lưu trú, khách sạn.</p>
-                    <div class="mt-auto pt-6 border-t text-slate-400 font-medium text-xs italic">Đang cập nhật...</div>
+                <!-- Box HOTEL -->
+                <div class="course-card p-10 flex flex-col h-full border-l-4 border-l-indigo-400">
+                    <span class="text-[11px] font-bold text-indigo-500 uppercase tracking-widest mb-4">Industry</span>
+                    <h3 class="text-xl font-extrabold text-slate-800 mb-3">KiotViet Hotel</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed mb-10 font-medium">Giải pháp quản lý cơ sở lưu trú, khách sạn và homestay.</p>
+                    <div class="mt-auto pt-6 border-t text-slate-400 font-bold text-[11px] italic uppercase tracking-widest">Đang cập nhật nội dung...</div>
                 </div>
-
             </div>
         </section>
 
         <!-- BÁO CÁO DASHBOARD -->
-        <section id="reports" class="bg-white rounded-[32px] border border-slate-100 p-10 shadow-sm overflow-hidden">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+        <section id="reports" class="bg-white rounded-[40px] border border-slate-100 p-12 shadow-sm overflow-hidden">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-8 border-b border-slate-50 pb-10">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Báo cáo & Truy xuất khóa học</h2>
-                    <p class="text-sm text-slate-400 font-medium mt-1 italic">Dữ liệu được ghi nhận tự động sau khi bạn submit từ file giảng dạy.</p>
+                    <h2 class="text-3xl font-bold text-slate-900 tracking-tight">Báo cáo & Truy xuất khóa học</h2>
+                    <p class="text-sm text-slate-400 font-medium mt-1">Ghi nhận dữ liệu chính xác từ quy trình giảng dạy thực tế.</p>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="exportCSV()" class="btn-neutral px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm">
-                        <i class="fas fa-file-excel mr-2"></i> Xuất Excel (CSV)
+                    <button onclick="exportCSV()" class="btn-action px-6 py-2.5 rounded-2xl text-xs font-bold shadow-sm">
+                        <i class="fas fa-file-csv mr-2 text-green-500"></i> Xuất Báo Cáo (CSV)
                     </button>
-                    <label class="btn-neutral px-5 py-2.5 rounded-xl text-xs font-bold cursor-pointer shadow-sm">
-                        <i class="fas fa-file-import mr-2"></i> Nhập Dữ liệu <input type="file" onchange="importData(event)" class="hidden">
-                    </label>
+                    <button onclick="clearAllData()" class="text-red-400 text-[10px] font-bold uppercase hover:underline ml-4">Xóa sạch dữ liệu</button>
                 </div>
             </div>
 
-            <div class="overflow-x-auto rounded-xl border border-slate-100">
+            <div class="overflow-x-auto rounded-2xl border border-slate-50">
                 <table class="w-full text-left text-[13px] font-medium">
-                    <thead class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <thead class="bg-slate-50/50">
                         <tr>
-                            <th class="px-6 py-5">STT</th>
-                            <th class="px-6 py-5">Nhóm Khóa</th>
-                            <th class="px-6 py-5">Mã Khóa</th>
-                            <th class="px-6 py-5">Tháng</th>
-                            <th class="px-6 py-5">Ngày Bắt Đầu</th>
-                            <th class="px-6 py-5">Ngày Kết Thúc</th>
-                            <th class="px-6 py-5 text-center">Tài liệu/Record</th>
-                            <th class="px-6 py-5 text-center">Trạng thái</th>
-                            <th class="px-6 py-5 text-right">Thao tác</th>
+                            <th class="px-8 py-5">STT</th>
+                            <th class="px-8 py-5">Nhóm Khóa</th>
+                            <th class="px-8 py-5">Mã Khóa</th>
+                            <th class="px-8 py-5">Tháng</th>
+                            <th class="px-8 py-5 text-center">Bắt đầu / Kết thúc</th>
+                            <th class="px-8 py-5 text-center">Lưu trữ Links</th>
+                            <th class="px-8 py-5 text-center">Trạng thái</th>
+                            <th class="px-8 py-5 text-right">Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody id="reportBody" class="divide-y divide-slate-100">
-                        <!-- Data rows here -->
+                    <tbody id="reportBody" class="divide-y divide-slate-50">
+                        <!-- Render by JS -->
                     </tbody>
                 </table>
             </div>
         </section>
-
     </main>
 
+    <footer class="bg-slate-900 py-16 text-center">
+        <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">© 2024 Nhật Vi Trainer Hub • Internal System</p>
+    </footer>
+
     <script>
-        // QUẢN LÝ DỮ LIỆU BÁO CÁO
+        // MẢNG LỊCH ĐÀO TẠO 2026 (Giả lập ngày bắt đầu dạy theo logic calendar của bạn)
+        // Cấu trúc: { khóa: 'SPCB', ngày: 'YYYY-MM-DD' }
+        const trainingSchedule = [
+            { id: 'SPCB', name: 'Sản phẩm cơ bản', dates: ['2026-01-05', '2026-02-02', '2026-03-02', '2026-04-06'] },
+            { id: 'KV1', name: 'Sản phẩm KV1', dates: ['2026-01-15', '2026-02-15', '2026-03-15'] },
+            { id: 'TAX', name: 'Thuế - HĐĐT', dates: ['2026-01-09', '2026-02-13', '2026-03-13'] }
+        ];
+
         function renderTable() {
             const data = JSON.parse(localStorage.getItem('kv_master_db')) || [];
             const tbody = document.getElementById('reportBody');
@@ -185,79 +196,96 @@
             data.forEach((item, index) => {
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50/80 transition">
-                        <td class="px-6 py-5 text-slate-400 font-bold">${index + 1}</td>
-                        <td class="px-6 py-5 text-slate-800 font-bold">${item.groupName || 'SPCB'}</td>
-                        <td class="px-6 py-5 text-blue-600 font-extrabold">${item.courseId}</td>
-                        <td class="px-6 py-5 text-slate-500 font-bold">Tháng ${item.month}</td>
-                        <td class="px-6 py-5 text-slate-400">${item.startDate || '--'}</td>
-                        <td class="px-6 py-5 text-slate-400">${item.finishDate}</td>
-                        <td class="px-6 py-5 text-center">
-                            <div class="flex justify-center space-x-4">
-                                <a href="${item.listLink}" target="_blank"><i class="fas fa-users text-green-500 hover:scale-110 transition"></i></a>
-                                <a href="${item.quizLink}" target="_blank"><i class="fas fa-poll text-orange-500 hover:scale-110 transition"></i></a>
-                                <a href="${item.recordLink}" target="_blank"><i class="fab fa-google-drive text-red-500 hover:scale-110 transition"></i></a>
+                        <td class="px-8 py-6 text-slate-400 font-bold">${index + 1}</td>
+                        <td class="px-8 py-6 font-bold text-slate-900 uppercase tracking-tighter">${item.groupName}</td>
+                        <td class="px-8 py-6 font-extrabold text-blue-600 italic tracking-tight underline decoration-blue-100">${item.courseId}</td>
+                        <td class="px-8 py-6 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Tháng ${item.month}</td>
+                        <td class="px-8 py-6 text-center text-slate-400 text-xs">${item.startDate || '--'} / ${item.finishDate}</td>
+                        <td class="px-8 py-6 text-center">
+                            <div class="flex justify-center space-x-5">
+                                <a href="${item.listLink}" target="_blank" title="Sheet Danh sách" class="icon-link"><i class="fas fa-file-excel fa-lg"></i></a>
+                                <a href="${item.quizLink}" target="_blank" title="Sheet Quiz" class="icon-link"><i class="fas fa-poll fa-lg"></i></a>
+                                <a href="${item.recordLink}" target="_blank" title="Drive Record" class="icon-link"><i class="fab fa-google-drive fa-lg"></i></a>
                             </div>
                         </td>
-                        <td class="px-6 py-5 text-center">
-                            <span class="pill ${getStatusColor(item.status)}">${item.status}</span>
+                        <td class="px-8 py-6 text-center">
+                            <span class="pill ${getStatusColor(item.status)}">${item.status}${item.reason ? ': ' + item.reason : ''}</span>
                         </td>
-                        <td class="px-6 py-5 text-right">
-                            <button onclick="deleteItem(${index})" class="text-slate-300 hover:text-red-600 transition"><i class="fas fa-trash-alt"></i></button>
+                        <td class="px-8 py-6 text-right">
+                            <button onclick="deleteItem(${index})" class="icon-delete"><i class="fas fa-trash-alt"></i></button>
                         </td>
                     </tr>
                 `;
             });
-            updateBellStates();
+            initBells(data);
         }
 
         function getStatusColor(s) {
             if(s === 'Hoàn thành') return 'bg-green-100 text-green-700';
             if(s === 'Đang diễn ra') return 'bg-blue-100 text-blue-700';
+            if(s === 'Dời lịch') return 'bg-orange-50 text-orange-600';
             if(s === 'Hủy') return 'bg-red-50 text-red-600';
             return 'bg-slate-100 text-slate-600';
         }
 
-        function deleteItem(i) {
-            if(confirm('Xóa bản ghi này?')) {
-                let d = JSON.parse(localStorage.getItem('kv_master_db'));
-                d.splice(i, 1);
-                localStorage.setItem('kv_master_db', JSON.stringify(d));
-                renderTable();
-            }
+        // HỆ THỐNG CHUÔNG THÔNG MINH
+        function initBells(submittedData) {
+            const today = new Date();
+            trainingSchedule.forEach(course => {
+                const zone = document.getElementById('notif-' + course.id);
+                if(!zone) return;
+
+                // Tìm ngày dạy gần nhất sắp tới
+                const nextDateStr = course.dates.find(d => new Date(d) > today);
+                if(!nextDateStr) return;
+                
+                const nextDate = new Date(nextDateStr);
+                const diffTime = nextDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                // Kiểm tra xem khóa này đã được submit hoàn thành trong tháng này chưa
+                const isDone = submittedData.some(d => d.groupName.includes(course.id) && d.month == (nextDate.getMonth() + 1));
+
+                if(isDone) {
+                    zone.innerHTML = `
+                        <i class="fas fa-check-circle text-green-500 opacity-60 text-lg"></i>
+                        <div class="popup-remind shadow-2xl">
+                            <p class="font-bold text-green-600 mb-1">Xác nhận hoàn thành!</p>
+                            <p class="text-slate-400 text-[11px] leading-relaxed">Bạn đã hoàn thành đào tạo khóa ${course.id} trong tháng này.</p>
+                        </div>
+                    `;
+                } else if(diffDays <= 5) {
+                    zone.innerHTML = `
+                        <i class="fas fa-bell text-red-500 animate-bounce text-lg"></i>
+                        <div class="popup-remind border-red-100">
+                            <p class="font-bold text-red-600 mb-1 italic uppercase underline italic uppercase italic uppercase underline decoration-red-200">Nhắc lịch dạy: ${course.id}</p>
+                            <p class="text-slate-700 text-[12px] font-bold mb-3">Ngày bắt đầu: ${nextDate.toLocaleDateString('vi-VN')}</p>
+                            <p class="text-slate-400 text-[10px] uppercase font-black mb-2 tracking-widest">Checklist cần làm:</p>
+                            <ul class="text-[11px] text-slate-500 space-y-1">
+                                <li>• Gửi mail danh sách học viên (T7)</li>
+                                <li>• Tạo group Zalo đào tạo (CN)</li>
+                                <li>• Gửi link Zoom/Meet buổi 1</li>
+                            </ul>
+                        </div>
+                    `;
+                }
+            });
         }
 
-        function updateBellStates() {
-            // Logic chuông: Nếu checklist khóa đó hoàn thành 100% trong tháng, chuông đỏ -> tích xanh
-            const checklists = JSON.parse(localStorage.getItem('trainer_checklists')) || {};
-            // Đây là ví dụ cho SPCB
-            if(checklists['SPCB'] && checklists['SPCB'].completed) {
-                const bell = document.getElementById('bell-SPCB');
-                bell.innerHTML = '<i class="fas fa-check-circle text-green-500 text-lg"></i>';
-                bell.className = 'absolute top-4 right-4';
-            }
-        }
-
+        function deleteItem(i) { if(confirm('Xóa bản ghi này?')) { let d = JSON.parse(localStorage.getItem('kv_master_db')); d.splice(i, 1); localStorage.setItem('kv_master_db', JSON.stringify(d)); renderTable(); } }
+        function clearAllData() { if(confirm('Xóa sạch báo cáo?')) { localStorage.removeItem('kv_master_db'); renderTable(); } }
         function exportCSV() {
             const data = JSON.parse(localStorage.getItem('kv_master_db')) || [];
-            if(!data.length) return alert('Chưa có dữ liệu!');
-            let csv = "\uFEFFSTT,Nhom Khoa,Ma Khoa,Thang,Bat Dau,Ket Thuc,Trang Thai,Link Record\n";
-            data.forEach((i, idx) => {
-                csv += `${idx+1},${i.groupName},${i.courseId},${i.month},${i.startDate},${i.finishDate},${i.status},${i.recordLink}\n`;
-            });
+            if(!data.length) return alert('Không có dữ liệu!');
+            let csv = "\uFEFFSTT,Nhom Khoa,Ma Khoa,Thang,Bat Dau,Ket Thuc,Trang Thai\n";
+            data.forEach((i, idx) => { csv += `${idx+1},${i.groupName},${i.courseId},${i.month},${i.startDate},${i.finishDate},${i.status}\n`; });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.setAttribute("download", "Bao_Cao_Dao_Tao_Master.csv");
-            link.click();
+            link.href = URL.createObjectURL(blob); link.setAttribute("download", "Bao_Cao_Trainer_KiotViet.csv"); link.click();
         }
-
         function importData(e) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                localStorage.setItem('kv_master_db', evt.target.result);
-                renderTable(); alert('Dữ liệu đã được nạp thành công!');
-            };
+            const file = e.target.files[0]; const reader = new FileReader();
+            reader.onload = (evt) => { localStorage.setItem('kv_master_db', evt.target.result); renderTable(); alert('Import thành công!'); };
             reader.readAsText(file);
         }
 
