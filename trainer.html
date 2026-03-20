@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Thêm thư viện Chart.js cho Dashboard -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #fcfcfd; color: #1e293b; }
         .course-card { background: white; border: 1px solid #f1f5f9; border-radius: 24px; transition: all 0.3s ease; position: relative; }
@@ -25,23 +27,35 @@
         
         .status-pill { padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; white-space: nowrap; }
         table th { white-space: nowrap; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
-        .icon-link { color: #cbd5e1; transition: color 0.2s; }
-        .icon-link:hover { color: #2563eb; transform: scale(1.1); }
-        .icon-delete { color: #cbd5e1; transition: color 0.2s; }
-        .icon-delete:hover { color: #ef4444; }
+        
+        /* Chỉnh màu sắc Icons theo yêu cầu */
+        .icon-link { transition: all 0.2s; display: inline-block; }
+        .icon-link:hover { transform: scale(1.15); }
+        .icon-excel { color: #107c41; } /* Xanh lá Excel */
+        .icon-quiz { color: #8b5cf6; } /* Tím Quiz */
+        .icon-drive { color: #3b82f6; } /* Xanh Drive */
+        
+        .action-icon { transition: all 0.2s; cursor: pointer; padding: 4px; }
+        .action-icon:hover { transform: scale(1.15); }
+        .icon-edit { color: #f59e0b; } /* Cam Sửa */
+        .icon-delete { color: #ef4444; } /* Đỏ Xóa */
+
+        /* Modal ẩn hiện */
+        .modal { display: none; }
+        .modal.active { display: flex; }
     </style>
 </head>
 <body class="antialiased">
 
+    <!-- NAVBAR YÊU CẦU 5 & 6 -->
     <nav class="bg-white/90 backdrop-blur-md border-b sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold italic shadow-lg shadow-blue-200">K</div>
-                <span class="text-xl font-bold tracking-tighter text-slate-800">Trainer Hub</span>
+            <div class="flex items-center space-x-3">
+                <img src="https://logo.kiotviet.vn/KiotViet-Logo-Horizontal.svg" alt="KiotViet Logo" class="h-7">
+                <span class="text-xl font-bold tracking-tighter text-slate-800 border-l-2 border-slate-200 pl-3">Trainer Hub</span>
             </div>
             <div class="hidden md:flex space-x-8 text-[13px]">
                 <a href="#sales" class="nav-link">Đào tạo Sales</a>
-                <a href="#dvkh" class="nav-link">Đào tạo DVKH</a>
                 <a href="#reports" class="nav-link">Báo cáo & Record</a>
             </div>
         </div>
@@ -77,12 +91,9 @@
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="courseGrid">
-                
                 <!-- Box SPCB -->
                 <div class="course-card p-10 flex flex-col h-full border-l-4 border-l-blue-600">
-                    <div class="notification-zone" id="notif-SPCB">
-                        <!-- JS Render Bell/Check here -->
-                    </div>
+                    <div class="notification-zone" id="notif-SPCB"></div>
                     <span class="text-[11px] font-bold text-blue-500 uppercase tracking-widest mb-4">Core Product</span>
                     <h3 class="text-xl font-extrabold text-slate-800 mb-3">Sản phẩm Cơ bản (Retail)</h3>
                     <p class="text-sm text-slate-500 leading-relaxed mb-10 font-medium">Lộ trình 3 buổi: Tổng quan hệ thống, 6 bước demo chuẩn và Mobile App.</p>
@@ -98,9 +109,10 @@
                     <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">Advanced</span>
                     <h3 class="text-xl font-extrabold text-slate-800 mb-3">Sản phẩm KV1</h3>
                     <p class="text-sm text-slate-500 leading-relaxed mb-10 font-medium">Nâng cao kỹ năng quản lý và xử lý các tình huống nghiệp vụ phức tạp sau 1 tháng.</p>
-                    <div class="mt-auto pt-6 border-t text-slate-400 font-bold text-[11px] italic uppercase tracking-widest"></div>
+                    <div class="mt-auto pt-6 border-t flex justify-between items-center">
                         <span class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">1 Sessions</span>
                         <a href="kv1.html" class="text-blue-600 font-bold text-sm flex items-center hover:underline">Vào giảng dạy <i class="fas fa-chevron-right ml-2 text-[10px]"></i></a>
+                    </div>
                 </div>
 
                 <!-- Box HĐĐT -->
@@ -138,33 +150,58 @@
             </div>
         </section>
 
-        <!-- BÁO CÁO DASHBOARD -->
-        <section id="reports" class="bg-white rounded-[40px] border border-slate-100 p-12 shadow-sm overflow-hidden">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-8 border-b border-slate-50 pb-10">
+        <!-- DASHBOARD & BÁO CÁO YÊU CẦU 7 -->
+        <section id="reports" class="bg-white rounded-[40px] border border-slate-100 p-8 md:p-12 shadow-sm overflow-hidden">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-8 border-b border-slate-50 pb-8">
                 <div>
                     <h2 class="text-3xl font-bold text-slate-900 tracking-tight">Báo cáo & Truy xuất khóa học</h2>
-                    <p class="text-sm text-slate-400 font-medium mt-1">Ghi nhận dữ liệu chính xác từ quy trình giảng dạy thực tế.</p>
+                    <p class="text-sm text-slate-400 font-medium mt-1">Ghi nhận dữ liệu thực tế và lưu trữ an toàn trong 3 tháng.</p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap items-center gap-3">
+                    <select id="monthFilter" onchange="renderAll()" class="border border-slate-200 text-slate-600 text-sm rounded-xl px-4 py-2 focus:outline-none focus:border-blue-500 font-medium">
+                        <option value="all">Tất cả các tháng</option>
+                        <option value="1">Tháng 1</option>
+                        <option value="2">Tháng 2</option>
+                        <option value="3">Tháng 3</option>
+                        <option value="4">Tháng 4</option>
+                    </select>
                     <button onclick="exportCSV()" class="btn-action px-6 py-2.5 rounded-2xl text-xs font-bold shadow-sm">
-                        <i class="fas fa-file-csv mr-2 text-green-500"></i> Xuất Báo Cáo (CSV)
+                        <i class="fas fa-file-csv mr-2 text-green-500"></i> Xuất Báo Cáo
                     </button>
-                    <button onclick="clearAllData()" class="text-red-400 text-[10px] font-bold uppercase hover:underline ml-4">Xóa sạch dữ liệu</button>
+                    <button onclick="clearAllData()" class="text-red-400 text-[10px] font-bold uppercase hover:underline ml-2">Xóa dữ liệu</button>
                 </div>
             </div>
 
-            <div class="overflow-x-auto rounded-2xl border border-slate-50">
+            <!-- KHUNG DASHBOARD -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+                <div class="flex flex-col justify-center space-y-4">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                        <p class="text-xs text-slate-400 font-bold uppercase mb-1 tracking-widest">Tổng số lớp</p>
+                        <h4 class="text-3xl font-black text-blue-600" id="stat-total">0</h4>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                        <p class="text-xs text-slate-400 font-bold uppercase mb-1 tracking-widest">Đã hoàn thành</p>
+                        <h4 class="text-3xl font-black text-green-500" id="stat-done">0</h4>
+                    </div>
+                </div>
+                <div class="col-span-1 md:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center h-48">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+
+            <!-- BẢNG BÁO CÁO -->
+            <div class="overflow-x-auto rounded-2xl border border-slate-100">
                 <table class="w-full text-left text-[13px] font-medium">
-                    <thead class="bg-slate-50/50">
+                    <thead class="bg-slate-50">
                         <tr>
-                            <th class="px-8 py-5">STT</th>
-                            <th class="px-8 py-5">Nhóm Khóa</th>
-                            <th class="px-8 py-5">Mã Khóa</th>
-                            <th class="px-8 py-5">Tháng</th>
-                            <th class="px-8 py-5 text-center">Bắt đầu / Kết thúc</th>
-                            <th class="px-8 py-5 text-center">Lưu trữ Links</th>
-                            <th class="px-8 py-5 text-center">Trạng thái</th>
-                            <th class="px-8 py-5 text-right">Thao tác</th>
+                            <th class="px-6 py-4">STT</th>
+                            <th class="px-6 py-4">Nhóm Khóa</th>
+                            <th class="px-6 py-4">Mã Khóa</th>
+                            <th class="px-6 py-4 text-center">Tháng</th>
+                            <th class="px-6 py-4 text-center">Bắt đầu / Kết thúc</th>
+                            <th class="px-6 py-4 text-center">Lưu trữ Links</th>
+                            <th class="px-6 py-4 text-center">Trạng thái</th>
+                            <th class="px-6 py-4 text-right">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="reportBody" class="divide-y divide-slate-50">
@@ -179,45 +216,169 @@
         <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">© 2026 Trainer Hub • Internal System</p>
     </footer>
 
+    <!-- MODAL SỬA THÔNG TIN YÊU CẦU 1 -->
+    <div id="editModal" class="modal fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] items-center justify-center">
+        <div class="bg-white w-full max-w-md rounded-[32px] p-8 shadow-2xl transform transition-all">
+            <h3 class="text-xl font-bold text-slate-800 mb-6 border-b pb-4">Điều chỉnh thông tin</h3>
+            <input type="hidden" id="editIndex">
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Trạng thái</label>
+                    <select id="editStatus" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
+                        <option value="Hoàn thành">Hoàn thành</option>
+                        <option value="Đang diễn ra">Đang diễn ra</option>
+                        <option value="Dời lịch">Dời lịch</option>
+                        <option value="Hủy">Hủy</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Ngày bắt đầu</label>
+                        <input type="date" id="editStart" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Ngày kết thúc</label>
+                        <input type="date" id="editFinish" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Link Danh sách</label>
+                    <input type="text" id="editListLink" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500" placeholder="https://...">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Link Record Drive</label>
+                    <input type="text" id="editRecordLink" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500" placeholder="https://...">
+                </div>
+            </div>
+            
+            <div class="mt-8 flex justify-end gap-3">
+                <button onclick="closeModal()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 transition">Hủy</button>
+                <button onclick="saveEdit()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-lg shadow-blue-200">Cập nhật</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // MẢNG LỊCH ĐÀO TẠO 2026 (Giả lập ngày bắt đầu dạy theo logic calendar của bạn)
-        // Cấu trúc: { khóa: 'SPCB', ngày: 'YYYY-MM-DD' }
         const trainingSchedule = [
             { id: 'SPCB', name: 'Sản phẩm cơ bản', dates: ['2026-01-05', '2026-02-02', '2026-03-02', '2026-04-06'] },
             { id: 'KV1', name: 'Sản phẩm KV1', dates: ['2026-01-15', '2026-02-15', '2026-03-15'] },
             { id: 'TAX', name: 'Thuế - HĐĐT', dates: ['2026-01-09', '2026-02-13', '2026-03-13'] }
         ];
 
-        function renderTable() {
-            const data = JSON.parse(localStorage.getItem('kv_master_db')) || [];
+        let statusChartInstance = null; // Biến lưu trữ biểu đồ
+
+        // YÊU CẦU 4: Logic load dữ liệu & Tự động dọn dẹp data cũ hơn 3 tháng (90 ngày)
+        function loadDB() {
+            let data = JSON.parse(localStorage.getItem('kv_master_db')) || [];
+            const now = new Date().getTime();
+            const ninetyDaysInMs = 90 * 24 * 60 * 60 * 1000;
+            
+            let isChanged = false;
+            data = data.filter(item => {
+                if (!item.timestamp) {
+                    item.timestamp = now; // Nếu data cũ chưa có mốc thời gian, tự động gắn thời gian hiện tại
+                    isChanged = true;
+                }
+                // Giữ lại nếu chưa quá 90 ngày
+                return (now - item.timestamp) <= ninetyDaysInMs;
+            });
+
+            if (isChanged) {
+                localStorage.setItem('kv_master_db', JSON.stringify(data));
+            }
+            return data;
+        }
+
+        function renderAll() {
+            const allData = loadDB();
+            const filterMonth = document.getElementById('monthFilter').value;
+            
+            // Lọc data theo tháng nếu có
+            const filteredData = filterMonth === 'all' 
+                ? allData 
+                : allData.filter(d => d.month == filterMonth);
+
+            renderTable(filteredData, allData); // Truyền allData để tính toán chuông thông minh
+            renderDashboard(filteredData);
+        }
+
+        function renderTable(displayData, allData) {
             const tbody = document.getElementById('reportBody');
             tbody.innerHTML = '';
             
-            data.forEach((item, index) => {
+            if(displayData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-slate-400 italic">Chưa có dữ liệu báo cáo trong tháng này.</td></tr>`;
+            }
+
+            // Render Table (YÊU CẦU 1: Đổi màu icon link, thêm icon sửa)
+            displayData.forEach((item, displayIndex) => {
+                // Tìm index gốc trong DB để thao tác Xóa/Sửa chính xác
+                const realIndex = allData.findIndex(d => d.courseId === item.courseId && d.timestamp === item.timestamp);
+                
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50/80 transition">
-                        <td class="px-8 py-6 text-slate-400 font-bold">${index + 1}</td>
-                        <td class="px-8 py-6 font-bold text-slate-900 uppercase tracking-tighter">${item.groupName}</td>
-                        <td class="px-8 py-6 font-extrabold text-blue-600 italic tracking-tight underline decoration-blue-100">${item.courseId}</td>
-                        <td class="px-8 py-6 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Tháng ${item.month}</td>
-                        <td class="px-8 py-6 text-center text-slate-400 text-xs">${item.startDate || '--'} / ${item.finishDate}</td>
-                        <td class="px-8 py-6 text-center">
-                            <div class="flex justify-center space-x-5">
-                                <a href="${item.listLink}" target="_blank" title="Sheet Danh sách" class="icon-link"><i class="fas fa-file-excel fa-lg"></i></a>
-                                <a href="${item.quizLink}" target="_blank" title="Sheet Quiz" class="icon-link"><i class="fas fa-poll fa-lg"></i></a>
-                                <a href="${item.recordLink}" target="_blank" title="Drive Record" class="icon-link"><i class="fab fa-google-drive fa-lg"></i></a>
+                        <td class="px-6 py-5 text-slate-400 font-bold">${displayIndex + 1}</td>
+                        <td class="px-6 py-5 font-bold text-slate-900 uppercase tracking-tighter">${item.groupName}</td>
+                        <td class="px-6 py-5 font-extrabold text-blue-600 italic tracking-tight underline decoration-blue-100">${item.courseId}</td>
+                        <td class="px-6 py-5 text-center font-bold text-slate-500 uppercase tracking-widest text-[11px]">Tháng ${item.month}</td>
+                        <td class="px-6 py-5 text-center text-slate-500 text-xs">${item.startDate || '--'} <br><span class="text-slate-300">đến</span><br> ${item.finishDate || '--'}</td>
+                        <td class="px-6 py-5 text-center">
+                            <div class="flex justify-center space-x-4">
+                                ${item.listLink ? `<a href="${item.listLink}" target="_blank" title="Sheet Danh sách" class="icon-link icon-excel"><i class="fas fa-file-excel fa-lg"></i></a>` : `<span class="text-slate-200"><i class="fas fa-file-excel fa-lg"></i></span>`}
+                                ${item.quizLink ? `<a href="${item.quizLink}" target="_blank" title="Sheet Quiz" class="icon-link icon-quiz"><i class="fas fa-poll fa-lg"></i></a>` : `<span class="text-slate-200"><i class="fas fa-poll fa-lg"></i></span>`}
+                                ${item.recordLink ? `<a href="${item.recordLink}" target="_blank" title="Drive Record" class="icon-link icon-drive"><i class="fab fa-google-drive fa-lg"></i></a>` : `<span class="text-slate-200"><i class="fab fa-google-drive fa-lg"></i></span>`}
                             </div>
                         </td>
-                        <td class="px-8 py-6 text-center">
-                            <span class="pill ${getStatusColor(item.status)}">${item.status}${item.reason ? ': ' + item.reason : ''}</span>
+                        <td class="px-6 py-5 text-center">
+                            <span class="status-pill ${getStatusColor(item.status)}">${item.status}</span>
                         </td>
-                        <td class="px-8 py-6 text-right">
-                            <button onclick="deleteItem(${index})" class="icon-delete"><i class="fas fa-trash-alt"></i></button>
+                        <td class="px-6 py-5 text-right space-x-2">
+                            <button onclick="openModal(${realIndex})" class="action-icon icon-edit" title="Sửa"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteItem(${realIndex})" class="action-icon icon-delete" title="Xóa"><i class="fas fa-trash-alt"></i></button>
                         </td>
                     </tr>
                 `;
             });
-            initBells(data);
+
+            initBells(allData);
+        }
+
+        // YÊU CẦU 7: Vẽ biểu đồ Dashboard
+        function renderDashboard(data) {
+            document.getElementById('stat-total').innerText = data.length;
+            document.getElementById('stat-done').innerText = data.filter(d => d.status === 'Hoàn thành').length;
+
+            const statusCounts = {
+                'Hoàn thành': 0, 'Đang diễn ra': 0, 'Dời lịch': 0, 'Hủy': 0
+            };
+            data.forEach(item => { if(statusCounts[item.status] !== undefined) statusCounts[item.status]++; });
+
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            
+            // Hủy chart cũ nếu đã tồn tại để tránh lỗi đè canvas
+            if(statusChartInstance) { statusChartInstance.destroy(); }
+
+            statusChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Hoàn thành', 'Đang diễn ra', 'Dời lịch', 'Hủy'],
+                    datasets: [{
+                        data: [statusCounts['Hoàn thành'], statusCounts['Đang diễn ra'], statusCounts['Dời lịch'], statusCounts['Hủy']],
+                        backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { boxWidth: 12, font: { family: 'Inter', size: 11 } } }
+                    },
+                    cutout: '70%'
+                }
+            });
         }
 
         function getStatusColor(s) {
@@ -228,68 +389,115 @@
             return 'bg-slate-100 text-slate-600';
         }
 
-        // HỆ THỐNG CHUÔNG THÔNG MINH
-        function initBells(submittedData) {
+        function initBells(allData) {
             const today = new Date();
             trainingSchedule.forEach(course => {
                 const zone = document.getElementById('notif-' + course.id);
                 if(!zone) return;
 
-                // Tìm ngày dạy gần nhất sắp tới
                 const nextDateStr = course.dates.find(d => new Date(d) > today);
                 if(!nextDateStr) return;
                 
                 const nextDate = new Date(nextDateStr);
                 const diffTime = nextDate - today;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                // Kiểm tra xem khóa này đã được submit hoàn thành trong tháng này chưa
-                const isDone = submittedData.some(d => d.groupName.includes(course.id) && d.month == (nextDate.getMonth() + 1));
+                const isDone = allData.some(d => d.groupName.includes(course.id) && d.month == (nextDate.getMonth() + 1));
 
                 if(isDone) {
-                    zone.innerHTML = `
-                        <i class="fas fa-check-circle text-green-500 opacity-60 text-lg"></i>
+                    zone.innerHTML = `<i class="fas fa-check-circle text-green-500 opacity-60 text-lg"></i>
                         <div class="popup-remind shadow-2xl">
-                            <p class="font-bold text-green-600 mb-1">Xác nhận hoàn thành!</p>
-                            <p class="text-slate-400 text-[11px] leading-relaxed">Bạn đã hoàn thành đào tạo khóa ${course.id} trong tháng này.</p>
-                        </div>
-                    `;
+                            <p class="font-bold text-green-600 mb-1">Đã hoàn thành!</p>
+                            <p class="text-slate-400 text-[11px]">Đào tạo khóa ${course.id} tháng này đã ghi nhận.</p>
+                        </div>`;
                 } else if(diffDays <= 5) {
-                    zone.innerHTML = `
-                        <i class="fas fa-bell text-red-500 animate-bounce text-lg"></i>
+                    zone.innerHTML = `<i class="fas fa-bell text-red-500 animate-bounce text-lg"></i>
                         <div class="popup-remind border-red-100">
-                            <p class="font-bold text-red-600 mb-1 italic uppercase underline italic uppercase italic uppercase underline decoration-red-200">Nhắc lịch dạy: ${course.id}</p>
-                            <p class="text-slate-700 text-[12px] font-bold mb-3">Ngày bắt đầu: ${nextDate.toLocaleDateString('vi-VN')}</p>
-                            <p class="text-slate-400 text-[10px] uppercase font-black mb-2 tracking-widest">Checklist cần làm:</p>
+                            <p class="font-bold text-red-600 mb-1 italic underline uppercase text-[11px]">Nhắc lịch dạy: ${course.id}</p>
+                            <p class="text-slate-700 text-[12px] font-bold mb-2">Ngày: ${nextDate.toLocaleDateString('vi-VN')}</p>
                             <ul class="text-[11px] text-slate-500 space-y-1">
-                                <li>• Gửi mail danh sách học viên (T7)</li>
-                                <li>• Tạo group Zalo đào tạo (CN)</li>
-                                <li>• Gửi link Zoom/Meet buổi 1</li>
+                                <li>• Gửi mail HV</li><li>• Tạo Zalo nhóm</li><li>• Gửi link Zoom</li>
                             </ul>
-                        </div>
-                    `;
+                        </div>`;
                 }
             });
         }
 
-        function deleteItem(i) { if(confirm('Xóa bản ghi này?')) { let d = JSON.parse(localStorage.getItem('kv_master_db')); d.splice(i, 1); localStorage.setItem('kv_master_db', JSON.stringify(d)); renderTable(); } }
-        function clearAllData() { if(confirm('Xóa sạch báo cáo?')) { localStorage.removeItem('kv_master_db'); renderTable(); } }
-        function exportCSV() {
-            const data = JSON.parse(localStorage.getItem('kv_master_db')) || [];
-            if(!data.length) return alert('Không có dữ liệu!');
-            let csv = "\uFEFFSTT,Nhom Khoa,Ma Khoa,Thang,Bat Dau,Ket Thuc,Trang Thai\n";
-            data.forEach((i, idx) => { csv += `${idx+1},${i.groupName},${i.courseId},${i.month},${i.startDate},${i.finishDate},${i.status}\n`; });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob); link.setAttribute("download", "Bao_Cao_Trainer_KiotViet.csv"); link.click();
-        }
-        function importData(e) {
-            const file = e.target.files[0]; const reader = new FileReader();
-            reader.onload = (evt) => { localStorage.setItem('kv_master_db', evt.target.result); renderTable(); alert('Import thành công!'); };
-            reader.readAsText(file);
+        // --- CÁC HÀM TƯƠNG TÁC DỮ LIỆU ---
+
+        function deleteItem(realIndex) { 
+            if(confirm('Bạn có chắc chắn muốn xóa bản ghi này?')) { 
+                let d = loadDB(); 
+                d.splice(realIndex, 1); 
+                localStorage.setItem('kv_master_db', JSON.stringify(d)); 
+                renderAll(); 
+            } 
         }
 
-        window.onload = renderTable;
+        function clearAllData() { 
+            if(confirm('Cảnh báo: Hành động này sẽ xóa sạch toàn bộ báo cáo hiện tại. Tiếp tục?')) { 
+                localStorage.removeItem('kv_master_db'); 
+                renderAll(); 
+            } 
+        }
+
+        // YÊU CẦU 2 & 3: Xuất file CSV có dấu tiếng Việt, và FULL cột Link
+        function exportCSV() {
+            const data = loadDB();
+            if(!data.length) return alert('Không có dữ liệu để xuất!');
+            
+            // \uFEFF giúp Excel đọc đúng font Tiếng Việt có dấu chuẩn UTF-8
+            let csv = "\uFEFFSTT,Nhóm Khóa,Mã Khóa,Tháng,Ngày Bắt Đầu,Ngày Kết Thúc,Trạng Thái,Link Danh Sách,Link Quiz,Link Record Drive\n";
+            
+            data.forEach((i, idx) => { 
+                // Xử lý các link nếu rỗng thì thay bằng chuỗi trống
+                const linkDS = i.listLink || '';
+                const linkQ = i.quizLink || '';
+                const linkR = i.recordLink || '';
+                
+                csv += `${idx+1},${i.groupName},${i.courseId},${i.month},${i.startDate},${i.finishDate},${i.status},${linkDS},${linkQ},${linkR}\n`; 
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob); 
+            link.setAttribute("download", `Bao_Cao_Trainer_KiotViet_${new Date().toLocaleDateString('vi-VN')}.csv`); 
+            link.click();
+        }
+
+        // --- LOGIC MODAL SỬA (YÊU CẦU 1) ---
+        function openModal(realIndex) {
+            const d = loadDB()[realIndex];
+            document.getElementById('editIndex').value = realIndex;
+            document.getElementById('editStatus').value = d.status || 'Hoàn thành';
+            document.getElementById('editStart').value = d.startDate || '';
+            document.getElementById('editFinish').value = d.finishDate || '';
+            document.getElementById('editListLink').value = d.listLink || '';
+            document.getElementById('editRecordLink').value = d.recordLink || '';
+            
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function saveEdit() {
+            const idx = document.getElementById('editIndex').value;
+            let d = loadDB();
+            
+            d[idx].status = document.getElementById('editStatus').value;
+            d[idx].startDate = document.getElementById('editStart').value;
+            d[idx].finishDate = document.getElementById('editFinish').value;
+            d[idx].listLink = document.getElementById('editListLink').value;
+            d[idx].recordLink = document.getElementById('editRecordLink').value;
+
+            localStorage.setItem('kv_master_db', JSON.stringify(d));
+            closeModal();
+            renderAll();
+        }
+
+        // Khởi chạy khi load web
+        window.onload = renderAll;
     </script>
 </body>
 </html>
