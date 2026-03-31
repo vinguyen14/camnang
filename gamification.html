@@ -27,8 +27,9 @@
         .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 25px; display: flex; flex-direction: column; overflow: hidden; }
         textarea { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; color: var(--accent); padding: 15px; font-size: 14px; outline: none; margin-bottom: 15px; }
         .winner-display { font-family: 'Orbitron', sans-serif; font-size: 40px; font-weight: 900; text-align: center; margin-bottom: 20px; min-height: 60px; color: #fff; text-shadow: 0 0 20px var(--primary); }
-        .spin-btn { width: 150px; height: 150px; border-radius: 50%; border: 8px solid var(--glass); background: linear-gradient(135deg, var(--secondary), var(--primary)); color: white; font-family: 'Orbitron'; font-size: 16px; font-weight: 900; cursor: pointer; align-self: center; transition: 0.3s; }
-        .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .spin-btn { width: 150px; height: 150px; border-radius: 50%; border: 8px solid var(--glass); background: linear-gradient(135deg, var(--secondary), var(--primary)); color: white; font-family: 'Orbitron'; font-size: 16px; font-weight: 900; cursor: pointer; align-self: center; transition: 0.3s; box-shadow: 0 0 20px rgba(0, 210, 255, 0.3); }
+        .spin-btn:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(0, 210, 255, 0.6); }
+        .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: scale(1); box-shadow: none; }
         #actionArea { margin-top: 15px; display: none; }
         .comment-box { width: 100%; height: 80px; background: rgba(255,255,255,0.08); border: 1px solid var(--primary); border-radius: 12px; color: #fff; padding: 15px; font-size: 14px; margin-bottom: 10px; outline: none; resize: none; }
         .sc-card { background: rgba(255,255,255,0.02); border-radius: 16px; padding: 20px; flex: 1; overflow-y: auto; border: 1px solid rgba(255,255,255,0.05); }
@@ -53,11 +54,33 @@
         .report-item { background: rgba(0, 210, 255, 0.1); border: 1px solid var(--primary); padding: 8px; border-radius: 8px; font-size: 11px; text-align: center; color: var(--primary); font-weight: 700; }
         .history-item { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; border-radius: 8px; margin-bottom: 5px; }
         .history-item:hover { background: rgba(0,210,255,0.1); }
+        
+        /* Modals Standard */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-content { background: #171c28; width: 550px; max-height: 85vh; border-radius: 24px; border: 1px solid var(--primary); padding: 30px; position: relative; overflow-y: auto; }
+        
+        /* Bổ sung: GAME LẬT THẺ BÀI (CARD FLIP) */
+        #gameModal { flex-direction: column; z-index: 10000; perspective: 1000px; }
+        .card-scene { width: 400px; height: 550px; perspective: 1000px; margin-top: 20px; }
+        .game-card { width: 100%; height: 100%; position: relative; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; cursor: pointer; }
+        .game-card.is-flipped { transform: rotateY(180deg); }
+        .game-card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 20px; display: flex; flex-direction: column; overflow-y: auto; border: 2px solid var(--primary); box-shadow: 0 10px 40px rgba(0,210,255,0.3); }
+        
+        .game-card-front { background: linear-gradient(145deg, #171c28 0%, #0b0e14 100%); align-items: center; justify-content: center; text-align: center; }
+        .game-card-front .card-icon { font-size: 90px; filter: drop-shadow(0 0 20px var(--primary)); margin-bottom: 20px; }
+        .game-card-front h2 { font-family: 'Orbitron', sans-serif; font-size: 26px; color: var(--primary); text-shadow: 0 0 15px var(--primary); margin-bottom: 10px; }
+        .game-card-front p { color: #64748b; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; animation: pulse 1.5s infinite; }
+        
+        .game-card-back { background: var(--panel); transform: rotateY(180deg); padding: 25px; display: block; }
+        .game-card-back::-webkit-scrollbar { width: 6px; }
+        .game-card-back::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+        
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
         .btn-group { display: flex; gap: 10px; }
         .btn { padding: 10px 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--glass); color: #fff; cursor: pointer; font-size: 11px; font-weight: 700; transition: 0.2s; }
-        .btn-primary { background: var(--primary); color: #000; border: none; }
+        .btn-primary { background: var(--primary); color: #000; border: none; font-weight: 900; }
+        .btn-primary:hover { box-shadow: 0 0 15px var(--primary); }
         .btn-accent { border-color: var(--accent); color: var(--accent); }
     </style>
 </head>
@@ -107,7 +130,25 @@
         </div>
     </div>
 
-    <!-- Modals -->
+    <!-- MỚI: Modal Game Lật Thẻ Bài -->
+    <div id="gameModal" class="modal">
+        <h2 id="gameWinnerName" style="font-family:'Orbitron'; color:#fff; font-size:35px; text-shadow: 0 0 20px var(--primary); letter-spacing: 2px;">TÊN HỌC VIÊN</h2>
+        <div class="card-scene">
+            <div class="game-card" id="theGameCard" onclick="flipCard()">
+                <div class="game-card-face game-card-front">
+                    <div class="card-icon">🃏</div>
+                    <h2>THẺ TÌNH HUỐNG</h2>
+                    <p>Nhấn vào để lật thẻ</p>
+                </div>
+                <div class="game-card-face game-card-back" id="cardBackContent">
+                    <!-- Nội dung kịch bản sẽ được đẩy vào đây -->
+                </div>
+            </div>
+        </div>
+        <button id="closeGameBtn" class="btn btn-primary" style="margin-top: 30px; padding: 15px 40px; font-size: 14px; opacity: 0; pointer-events: none; transition: 0.5s;" onclick="closeGameModal()">BẮT ĐẦU XỬ LÝ</button>
+    </div>
+
+    <!-- Modals Cũ (History & Cập nhật) -->
     <div id="historyModal" class="modal">
         <div class="modal-content">
             <span style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:24px" onclick="closeModal()">×</span>
@@ -130,150 +171,56 @@
         let scripts = {
             buoi1: [
                 {
-                    tag: "B1-S1", 
-                    biz: "Thời trang Nem Luxury", 
-                    goal: "Nhiệm vụ: Lắng nghe vấn đề và trình bày giải pháp vận hành 6 bước.", 
+                    tag: "B1-S1", biz: "Thời trang Nem Luxury", goal: "Nhiệm vụ: Lắng nghe vấn đề và trình bày giải pháp vận hành 6 bước.", 
                     customerVoice: "Dạo gần đây cửa hàng tôi rất lộn xộn. Có một mẫu Váy lụa mới về, nhân viên báo trên phần mềm còn hàng nhưng vô kho tìm thì toàn sai kích cỡ hoặc màu khách cần. Chưa kể hôm qua có khách mua 2 cái váy, trả 1 ít tiền mặt, còn lại chuyển khoản, nay họ lại mang 1 cái ra đòi trả lại lấy tiền. Nhân viên tôi loạn xì ngầu lên không biết ghi chép sao cho dòng tiền với kho không bị lệch. Bạn tư vấn giúp tôi phần mềm xử lý chuyện này thế nào?", 
-                    trainerNotes: {
-                        analysis: "Học viên cần nhận diện được 2 bài toán: Quản lý Thuộc tính (Size/Màu) và Quản lý thanh toán đa hình thức + Xử lý Trả hàng.",
-                        hints: [
-                            "Em sẽ thiết lập mặt hàng Váy lụa này như thế nào để kho không bị lẫn lộn giữa các màu/size?",
-                            "Khách thanh toán 2 hình thức (Tiền mặt + CK), ở màn hình bán hàng em xử lý sao?",
-                            "Khi làm thao tác Trả hàng, làm sao để hệ thống tự biết trừ tiền trong Két/Tài khoản và tự cộng lại tồn kho váy?"
-                        ]
-                    }
+                    trainerNotes: { analysis: "Học viên cần nhận diện được 2 bài toán: Quản lý Thuộc tính (Size/Màu) và Quản lý thanh toán đa hình thức + Xử lý Trả hàng.", hints: ["Em sẽ thiết lập mặt hàng Váy lụa này như thế nào để kho không bị lẫn lộn giữa các màu/size?", "Khách thanh toán 2 hình thức (Tiền mặt + CK), ở màn hình bán hàng em xử lý sao?", "Khi làm thao tác Trả hàng, làm sao để hệ thống tự biết trừ tiền trong Két/Tài khoản và tự cộng lại tồn kho váy?"] }
                 },
                 {
-                    tag: "B1-S2", 
-                    biz: "Tạp hóa An Bình", 
-                    goal: "Nhiệm vụ: Lắng nghe vấn đề và trình bày giải pháp vận hành 6 bước.", 
+                    tag: "B1-S2", biz: "Tạp hóa An Bình", goal: "Nhiệm vụ: Lắng nghe vấn đề và trình bày giải pháp vận hành 6 bước.", 
                     customerVoice: "Tôi mở tiệm tạp hóa, bia với nước ngọt tôi nhập từ đại lý toàn tính bằng Thùng, nhưng khách ở xóm thì hay mua lẻ vài Lon. Cứ bán 1 thời gian là kho lệch tè le. Đau đầu nhất là khách quen toàn mua chịu (ghi sổ), tôi thì cũng mua thiếu của đại lý. Cuốn sổ nợ của tôi giờ chằng chịt, cuối tháng đi đối soát thu tiền với trả tiền mệt mỏi vô cùng. Phần mềm có tự động tính toán được mấy cái này không?", 
-                    trainerNotes: {
-                        analysis: "Học viên cần nhận diện bài toán: Đơn vị quy đổi và Quản lý công nợ hai chiều (Khách hàng & Nhà cung cấp).",
-                        hints: [
-                            "Làm sao để phần mềm hiểu 1 Thùng có bao nhiêu Lon để tự trừ kho dù anh Bình bán theo đơn vị nào?",
-                            "Khi nhập hàng mua chịu của đại lý, em sẽ thao tác thế nào ở Phiếu nhập kho?",
-                            "Khách mua chịu hôm nay, tuần sau ra trả tiền, luồng thao tác trên phần mềm sẽ đi như thế nào?"
-                        ]
-                    }
+                    trainerNotes: { analysis: "Học viên cần nhận diện bài toán: Đơn vị quy đổi và Quản lý công nợ hai chiều (Khách hàng & Nhà cung cấp).", hints: ["Làm sao để phần mềm hiểu 1 Thùng có bao nhiêu Lon để tự trừ kho dù anh Bình bán theo đơn vị nào?", "Khi nhập hàng mua chịu của đại lý, em sẽ thao tác thế nào ở Phiếu nhập kho?", "Khách mua chịu hôm nay, tuần sau ra trả tiền, luồng thao tác trên phần mềm sẽ đi như thế nào?"] }
                 },
                 {
-                    tag: "B1-S3", 
-                    biz: "Mỹ phẩm Guardian", 
-                    goal: "Nhiệm vụ: Lắng nghe vấn đề và trình bày giải pháp vận hành 6 bước.", 
+                    tag: "B1-S3", biz: "Mỹ phẩm Guardian", goal: "Nhiệm vụ: Lắng nghe vấn đề và trình bày giải pháp vận hành 6 bước.", 
                     customerVoice: "Đặc thù ngành son phấn của tôi là khách hay đổi trả. Họ mua cây son màu Đỏ về mở ra xem không ưng, xong đem ra tiệm bắt trả lại tiền. Cứ mỗi lần vậy, nhân viên của tôi rút tiền mặt trong két ra thối cho khách. Cuối ngày chốt ca, đếm tiền thật trong két lúc nào cũng hụt so với doanh thu trên phần mềm báo. Có cách nào giải quyết dứt điểm tình trạng nhân viên thối tiền trả hàng làm lệch két không bạn?", 
-                    trainerNotes: {
-                        analysis: "Học viên cần nhận diện bài toán: Thao tác đúng nghiệp vụ Trả hàng để quản lý dòng tiền mặt (Sổ quỹ/Két tiền).",
-                        hints: [
-                            "Lý do đếm tiền thực tế bị hụt so với phần mềm là do nhân viên đã bỏ qua thao tác gì trên máy?",
-                            "Em hãy demo 1 luồng chuẩn: Bán 1 cây son thu tiền mặt -> Khách quay lại Trả hàng. Hãy chỉ cho khách thấy két tiền trên hệ thống biến động chính xác như thế nào."
-                        ]
-                    }
+                    trainerNotes: { analysis: "Học viên cần nhận diện bài toán: Thao tác đúng nghiệp vụ Trả hàng để quản lý dòng tiền mặt (Sổ quỹ/Két tiền).", hints: ["Lý do đếm tiền thực tế bị hụt so với phần mềm là do nhân viên đã bỏ qua thao tác gì trên máy?", "Em hãy demo 1 luồng chuẩn: Bán 1 cây son thu tiền mặt -> Khách quay lại Trả hàng. Hãy chỉ cho khách thấy két tiền trên hệ thống biến động chính xác như thế nào."] }
                 }
             ],
             buoi2: [
                 {
-                    tag: "B2-S1", 
-                    biz: "Anh Minh (Cửa hàng Đồ chơi)", 
-                    goal: "Mục tiêu: Phân quyền - Giá sỉ - Dịch vụ - Thêm hàng nhanh", 
+                    tag: "B2-S1", biz: "Anh Minh (Cửa hàng Đồ chơi)", goal: "Mục tiêu: Phân quyền - Giá sỉ - Dịch vụ - Thêm hàng nhanh", 
                     customerVoice: "Cửa hàng tôi có bạn nhân viên tên Vân, tôi muốn bạn ấy phụ thu ngân nhưng tuyệt đối không cho xem báo cáo doanh thu. Khách sỉ đến mua nhiều tôi thường giảm 10% nhưng cứ phải bấm máy tính tay hoài. Tiện thể, thỉnh thoảng tôi có nhận gói quà hộ khách và thu thêm 30k tiền công. Và nhiều lúc lúc đang kiểm đếm nhập hàng từ xe tải xuống, có mấy món lặt vặt như Pin AA chưa có trong máy, tôi muốn thêm nhanh luôn chứ thoát ra vào lại danh mục lâu quá. Có cách nào làm mượt mấy việc này không?", 
-                    trainerNotes: {
-                        analysis: "Học viên cần xử lý: 1. Tạo & Phân quyền nhân viên (khóa báo cáo). 2. Thiết lập Bảng giá (Khách sỉ -10%). 3. Hàng hóa dịch vụ (Gói quà 30k). 4. Thêm hàng hóa nhanh ngay tại màn hình Phiếu Nhập.",
-                        hints: [
-                            "Vào đâu để phân quyền cho bạn Vân không xem được báo cáo?",
-                            "Mặt hàng 'Gói quà' là hàng hóa thường hay loại gì? Cài đặt sao để không bị tính tồn kho?",
-                            "Thiết lập Bảng giá Sỉ thao tác ở mục nào? Làm sao áp dụng nó cho 1 khách hàng mới?",
-                            "Lúc đang làm phiếu nhập hàng, nút nào cho phép thêm mặt hàng Pin AA ngay lập tức?"
-                        ]
-                    }
+                    trainerNotes: { analysis: "Học viên cần xử lý: 1. Tạo & Phân quyền nhân viên. 2. Bảng giá (Khách sỉ). 3. Hàng hóa dịch vụ. 4. Thêm hàng hóa nhanh.", hints: ["Vào đâu để phân quyền cho bạn Vân?", "Mặt hàng 'Gói quà' cài đặt sao để không bị tính tồn kho?", "Thiết lập Bảng giá Sỉ ở mục nào?", "Nút nào cho phép thêm Pin AA ngay tại phiếu nhập?"] }
                 },
                 {
-                    tag: "B2-S2", 
-                    biz: "Chị Lan (Cửa hàng Gia dụng)", 
-                    goal: "Mục tiêu: Giá vốn MAC - Đổi giá bán - Tra cứu nâng cao", 
-                    customerVoice: "Đợt trước tôi nhập 20 cái Chảo chống dính giá 1 triệu/cái, đợt này NCC sale nên 2 cái sau tôi nhập được giá 800k. Vậy phần mềm tính giá vốn kho của tôi thế nào? Khi đang làm phiếu nhập lô mới này, tôi muốn tiện tay đổi luôn giá bán từ 1.5 triệu xuống 1.4 triệu cho đợt kích cầu. Lúc ra quầy bán, đồ gia dụng nhà tôi quá nhiều, tìm theo tên không nổi, muốn lọc theo nhóm hàng hoặc xem nhanh trong kho còn bao nhiêu cái thì thao tác thế nào cho nhanh?", 
-                    trainerNotes: {
-                        analysis: "Học viên cần xử lý: 1. Giải thích & thao tác cơ chế tính Giá vốn trung bình (MAC) sau 2 lần nhập. 2. Thay đổi giá bán trực tiếp trên phiếu nhập. 3. Tra cứu nâng cao & xem tồn kho trực tiếp trên màn hình POS.",
-                        hints: [
-                            "Công thức tính giá vốn trung bình (MAC) hoạt động ra sao sau khi nhập lô thứ 2? (Gợi ý: [20*1tr + 2*800k] / 22).",
-                            "Ở màn hình phiếu nhập, làm sao để sửa luôn giá bán của hàng hóa?",
-                            "Khi ở màn hình thu ngân (POS), phím tắt hoặc thanh công cụ nào để xem tồn kho hoặc lọc hiển thị theo Nhóm hàng?"
-                        ]
-                    }
+                    tag: "B2-S2", biz: "Chị Lan (Cửa hàng Gia dụng)", goal: "Mục tiêu: Giá vốn MAC - Đổi giá bán - Tra cứu nâng cao", 
+                    customerVoice: "Đợt trước tôi nhập 20 cái Chảo giá 1 triệu/cái, đợt này NCC sale nên 2 cái sau nhập giá 800k. Phần mềm tính giá vốn sao? Đang làm phiếu nhập lô mới này, tôi muốn tiện tay đổi luôn giá bán từ 1.5tr xuống 1.4tr. Lúc ra quầy bán, muốn lọc theo nhóm hàng hoặc xem nhanh tồn kho thì thao tác thế nào?", 
+                    trainerNotes: { analysis: "Học viên cần xử lý: 1. Giải thích MAC. 2. Thay đổi giá bán trực tiếp. 3. Tra cứu POS.", hints: ["Công thức MAC hoạt động ra sao? ([20*1tr + 2*800k] / 22).", "Ở màn hình phiếu nhập, làm sao để sửa luôn giá bán?", "Khi ở thu ngân (POS), phím tắt nào để xem tồn kho?"] }
                 },
                 {
-                    tag: "B2-S3", 
-                    biz: "Anh Hoàng (Cửa hàng Phụ tùng xe)", 
-                    goal: "Mục tiêu: Bán nhanh MHBH - Thu nợ POS - CS Đổi trả", 
-                    customerVoice: "Nhiều lúc đang đứng ở quầy bán, có khách hỏi mua cái Lốp xe mới tinh chưa có trên hệ thống, tôi muốn thêm mã lốp đó cực nhanh để in bill luôn. Khách quen ra mua sẵn tiện trả luôn cục nợ cũ thì thu tiền kiểu gì cho lẹ, khỏi vào sổ sách loằng ngoằng? Ác nhất là nhiều người mua về xong đem ra trả nhưng làm mất hóa đơn. Thêm nữa, tôi muốn cài quy định cứng trên máy là chỉ cho trả hàng trong vòng 7 ngày thôi thì phần mềm có chặn được không?", 
-                    trainerNotes: {
-                        analysis: "Học viên cần xử lý: 1. Thêm hàng hóa nhanh ngay trên Màn Hình Bán Hàng (POS). 2. Thu nợ khách hàng trực tiếp tại quầy POS. 3. Thao tác Trả hàng nhanh (không cần hóa đơn gốc). 4. Thiết lập hệ thống (Giới hạn thời gian đổi trả).",
-                        hints: [
-                            "Nút thêm hàng hóa (+) trên màn hình bán hàng (POS) nằm ở đâu?",
-                            "Làm sao để thu nợ trên POS mà không cần thoát ra tab Quản lý -> Đối tác?",
-                            "Thao tác trả hàng nhanh (không có bill) khác gì trả hàng theo hóa đơn gốc?",
-                            "Thiết lập giới hạn 'Cho phép trả hàng trong vòng 7 ngày' nằm ở phần cài đặt hệ thống nào?"
-                        ]
-                    }
+                    tag: "B2-S3", biz: "Anh Hoàng (Cửa hàng Phụ tùng)", goal: "Mục tiêu: Bán nhanh MHBH - Thu nợ POS - CS Đổi trả", 
+                    customerVoice: "Đang đứng ở quầy bán, khách hỏi mua cái Lốp xe chưa có trên máy, tôi muốn thêm cực nhanh để in bill luôn. Khách quen ra mua sẵn tiện trả nợ cũ thì thu kiểu gì cho lẹ? Ác nhất là khách hay trả hàng nhưng làm mất hóa đơn. Thêm nữa, cài quy định trên máy chỉ cho trả hàng trong 7 ngày thì làm sao?", 
+                    trainerNotes: { analysis: "Học viên cần xử lý: 1. Thêm hàng POS. 2. Thu nợ POS. 3. Trả hàng nhanh. 4. Thiết lập hệ thống (7 ngày).", hints: ["Nút thêm hàng hóa (+) trên POS nằm ở đâu?", "Làm sao thu nợ trên POS mà không cần thoát ra?", "Thao tác trả hàng nhanh khác gì hóa đơn gốc?", "Thiết lập 'Cho phép trả hàng 7 ngày' nằm ở đâu?"] }
                 },
                 {
-                    tag: "B2-S4", 
-                    biz: "Chị Hà (Cửa hàng Nội thất)", 
-                    goal: "Mục tiêu: Khách VIP (Tự động) - Kiểm kho - Sổ quỹ & Ngân hàng", 
-                    customerVoice: "Tôi muốn tự động hóa chăm sóc khách: cứ ai mua tích lũy đủ 5 triệu là hệ thống tự đưa lên nhóm VIP và được giảm 10% mãi mãi, nhưng nếu lâu ngày không mua rớt doanh thu thì tự rớt hạng. Về quản lý kho, tôi nghi ngờ số lượng 'Đèn ngủ' bị sai nên muốn đi đếm lại số lượng thực tế xem có khớp máy không và cân bằng lại. Chiều nay tôi xuất tiền trả tiền điện 500k bằng cách chuyển khoản qua số Vietcombank của cửa hàng, tôi phải ghi chép vụ này vào đâu để cuối tháng tính ra lãi ròng chính xác?", 
-                    trainerNotes: {
-                        analysis: "Học viên cần xử lý: 1. Thiết lập nhóm khách hàng VIP (Tự động cập nhật dựa trên điều kiện Doanh thu). 2. Nghiệp vụ Kiểm kho (Tạo phiếu kiểm kê). 3. Khai báo Tài khoản ngân hàng. 4. Lập phiếu chi Sổ quỹ (Tiền điện).",
-                        hints: [
-                            "Khi tạo nhóm khách hàng, làm sao để thiết lập điều kiện 'Tự động cập nhật' khi đạt 5 triệu?",
-                            "Phiếu kiểm kho thao tác như thế nào để cân bằng từ số liệu máy sang số liệu đếm thực tế?",
-                            "Khai báo số tài khoản Vietcombank ở đâu trên hệ thống?",
-                            "Thao tác lập Phiếu chi để trả tiền điện nằm ở phần nào? Chọn loại chứng từ gì?"
-                        ]
-                    }
+                    tag: "B2-S4", biz: "Chị Hà (Cửa hàng Nội thất)", goal: "Mục tiêu: Khách VIP (Tự động) - Kiểm kho - Sổ quỹ & Ngân hàng", 
+                    customerVoice: "Tôi muốn tự động hóa: ai mua đủ 5 triệu tự đưa lên VIP giảm 10%, không mua tự rớt. Về kho, nghi ngờ số 'Đèn ngủ' sai nên muốn đếm lại và cân bằng. Chiều nay tôi chuyển khoản Vietcombank trả tiền điện 500k, ghi chép vụ này vào đâu để tính lãi ròng?", 
+                    trainerNotes: { analysis: "Học viên cần xử lý: 1. Nhóm KH VIP (Tự động). 2. Kiểm kho. 3. Ngân hàng. 4. Phiếu chi (Tiền điện).", hints: ["Làm sao thiết lập điều kiện 'Tự động cập nhật'?", "Phiếu kiểm kho thao tác như thế nào?", "Khai báo số tài khoản Vietcombank ở đâu?", "Lập Phiếu chi trả tiền điện chọn loại chứng từ gì?"] }
                 },
                 {
-                    tag: "B2-S5", 
-                    biz: "Chị My (Cửa hàng Quà tặng)", 
-                    goal: "Mục tiêu: ÔN TẬP LUỒNG TỔNG HỢP (Nhập hàng - Bán lẻ - Trả hàng - Công nợ)", 
-                    customerVoice: "Hôm nay cửa hàng tôi nhập 100 chiếc lồng đèn gỗ (giá gốc 50k, dự định bán 120k). Tôi trả trước cho xưởng 50% tiền, còn lại ghi nợ. Chiều có chị Vân ghé mua 2 cái trả tiền mặt, nhưng hôm sau bả mang 1 cái ra trả lại vì bị xước vỡ nên tôi thối lại tiền cho bả. Cuối tuần rảnh rỗi, tôi xuất quỹ trả nốt 50% tiền nợ cho xưởng. Bạn hãy chỉ tôi cách làm đúng trình tự toàn bộ quá trình này từ A-Z, và mở xem các báo cáo để thấy rõ tôi đang lời lỗ, tồn kho ra sao nhé.", 
-                    trainerNotes: {
-                        analysis: "Học viên cần Demo mượt mà luồng chuẩn: Thêm mới HH -> Nhập hàng (Nợ NCC) -> Bán hàng (Thu tiền mặt) -> Trả hàng (Hoàn tiền mặt) -> Lập phiếu chi thanh toán công nợ NCC -> Đọc các Báo cáo tổng quan.",
-                        hints: [
-                            "Khi làm phiếu nhập hàng nợ 50%, ghi chú vào ô 'Tiền trả NCC' như thế nào?",
-                            "Xử lý trả hàng 1 cái lồng đèn thao tác ra sao để tiền mặt trong két giảm xuống đúng với số đã thối cho chị Vân?",
-                            "Khi trả nợ NCC, vào phần Đối tác hay Sổ quỹ để làm phiếu chi cho chuẩn nghiệp vụ?",
-                            "Mở 3 báo cáo để chứng minh cho khách thấy: Cuối ngày (Doanh thu), Hàng hóa (Tồn kho), Tài chính (Lợi nhuận)."
-                        ]
-                    }
+                    tag: "B2-S5", biz: "Chị My (Cửa hàng Quà tặng)", goal: "Mục tiêu: ÔN TẬP LUỒNG TỔNG HỢP", 
+                    customerVoice: "Tôi nhập 100 chiếc lồng đèn gỗ (gốc 50k, bán 120k). Trả trước 50% tiền, còn lại ghi nợ. Chiều có khách mua 2 cái trả tiền mặt, hôm sau mang 1 cái ra trả lại vì xước, tôi thối lại tiền. Cuối tuần tôi xuất quỹ trả nốt nợ cho xưởng. Chỉ tôi cách làm từ A-Z và mở báo cáo xem lời lỗ.", 
+                    trainerNotes: { analysis: "Luồng chuẩn: Thêm mới HH -> Nhập hàng (Nợ) -> Bán hàng (Thu TM) -> Trả hàng (Hoàn TM) -> Chi thanh toán NCC -> Báo cáo.", hints: ["Làm phiếu nhập nợ 50% thao tác sao?", "Xử lý trả hàng để két tiền giảm đúng số thối cho khách?", "Trả nợ NCC vào Sổ quỹ hay Đối tác?", "Mở 3 báo cáo: Cuối ngày, Hàng hóa, Tài chính."] }
                 },
                 {
-                    tag: "B2-S6", 
-                    biz: "Anh Long (Đại lý Tạp hóa)", 
-                    goal: "Mục tiêu: ÔN TẬP LUỒNG TỔNG HỢP (Hàng Quy Đổi & Thuộc Tính)", 
-                    customerVoice: "Tôi bán bánh Oishi, nhập về thì tính theo Lốc (20 gói) nhưng bán lẻ thì theo Gói. Bánh này có vị Tôm với Mực. Hôm nay tôi nhập nợ 100% của xưởng 50 Lốc bánh. Lát sau có anh Khánh vô mua 5 gói (vị Tôm) tiền mặt, nhưng 1 tiếng sau mang 2 gói ra bắt đền vì bao bì bị rách. Tôi nhận lại 2 gói rách, trả lại tiền cho anh Khánh. Sau vụ lùm xùm đó, tôi quyết định chuyển khoản thanh toán hết công nợ cho xưởng luôn cho xong. Bạn xử lý giúp tôi từ đầu đến cuối xem kho bánh Oishi tự động trừ/cộng thế nào nhé.", 
-                    trainerNotes: {
-                        analysis: "Học viên cần Demo luồng khó: Tạo HH (Đơn vị quy đổi + Thuộc tính) -> Nhập hàng nợ 100% (Đơn vị Lốc) -> Bán lẻ (Đơn vị Gói) -> Trả hàng lẻ -> Thanh toán công nợ NCC qua Chuyển Khoản -> Xem báo cáo.",
-                        hints: [
-                            "Cài đặt mặt hàng bánh Oishi thế nào để có cả Đơn vị cơ bản (Gói), Đơn vị quy đổi (Lốc) và Thuộc tính (Vị)?",
-                            "Khi nhập 50 Lốc, giá vốn khai báo là giá của 1 Lốc hay 1 Gói?",
-                            "Khi bán và trả hàng đơn vị 'Gói', kho tự động quy đổi ra sao?",
-                            "Thanh toán nợ cho xưởng bằng 'Chuyển khoản' thay vì Tiền mặt thì chọn ở đâu?"
-                        ]
-                    }
+                    tag: "B2-S6", biz: "Anh Long (Đại lý Tạp hóa)", goal: "Mục tiêu: LUỒNG TỔNG HỢP (Quy Đổi & Thuộc Tính)", 
+                    customerVoice: "Bánh Oishi nhập theo Lốc (20 gói), bán lẻ theo Gói. Có vị Tôm với Mực. Tôi nhập nợ 100% 50 Lốc bánh. Lát sau khách mua 5 gói (vị Tôm) tiền mặt, nhưng 1 tiếng sau mang 2 gói ra bắt đền vì rách. Tôi nhận lại, trả tiền. Sau đó, tôi CK thanh toán hết nợ cho xưởng. Bạn làm giúp tôi luồng này.", 
+                    trainerNotes: { analysis: "Luồng: Tạo HH (Quy đổi + Thuộc tính) -> Nhập nợ 100% (Lốc) -> Bán lẻ (Gói) -> Trả hàng lẻ -> Thanh toán NCC (CK) -> Báo cáo.", hints: ["Cài đặt HH thế nào để có cơ bản, quy đổi và thuộc tính?", "Nhập 50 Lốc, giá vốn là giá 1 Lốc hay 1 Gói?", "Thanh toán nợ bằng CK thay vì Tiền mặt chọn ở đâu?"] }
                 },
                 {
-                    tag: "B2-S7", 
-                    biz: "Anh Tuấn (Shop Mẹ & Bé)", 
-                    goal: "Mục tiêu: ÔN TẬP LUỒNG TỔNG HỢP (Thanh toán đa hình thức & Khách nợ)", 
-                    customerVoice: "Bên tôi bán Quần áo sơ sinh đủ size, đủ màu. Hôm qua có chị khách mua đơn hàng 2 triệu, bả quẹt thẻ 1 triệu, đưa tiền mặt 500k, còn thiếu 500k bả xin nợ hẹn tuần sau chuyển khoản trả. Khổ nỗi sáng nay bả mang 1 bộ trị giá 200k ra đổi lấy màu khác nhưng kho tôi hết màu đó, thế là bả giận đòi trả hàng. Tôi phải rút tiền mặt 200k đưa lại cho bả. Chuyện thu nợ, thanh toán chéo thế này làm tôi nhức cả đầu, phần mềm xử lý sao cho dòng tiền không bị loạn?", 
-                    trainerNotes: {
-                        analysis: "Học viên cần Demo luồng: Quản lý hàng Thuộc tính -> Bán hàng (Thanh toán đa hình thức: Thẻ + Tiền mặt + Ghi nợ) -> Trả hàng (Hoàn tiền mặt) -> Thu nợ khách hàng bằng Chuyển khoản.",
-                        hints: [
-                            "Ở màn hình thu ngân, thao tác thế nào để ghi nhận 3 hình thức thanh toán (Thẻ, TM, Nợ) trên cùng 1 hóa đơn?",
-                            "Khi khách trả hàng và nhận lại 200k tiền mặt, phần mềm sẽ hiển thị luồng tiền trả khách ở đâu?",
-                            "Tuần sau khách Chuyển khoản trả 500k tiền nợ, vào phần Khách hàng thu nợ chọn phương thức gì để dòng tiền vào đúng tài khoản?"
-                        ]
-                    }
+                    tag: "B2-S7", biz: "Anh Tuấn (Shop Mẹ & Bé)", goal: "Mục tiêu: LUỒNG TỔNG HỢP (Thanh toán đa hình thức & Khách nợ)", 
+                    customerVoice: "Khách mua đơn 2 triệu: quẹt thẻ 1tr, tiền mặt 500k, nợ 500k. Sáng nay bả mang 1 bộ 200k ra đổi màu nhưng kho hết, bả trả hàng, tôi phải rút tiền mặt 200k đưa lại. Tuần sau bả CK trả 500k tiền nợ. Phần mềm xử lý sao cho dòng tiền khỏi loạn?", 
+                    trainerNotes: { analysis: "Luồng: Bán hàng (Thẻ + TM + Nợ) -> Trả hàng (Hoàn TM) -> Thu nợ bằng CK.", hints: ["Ghi nhận 3 hình thức thanh toán trên cùng 1 bill thế nào?", "Khách trả hàng nhận TM, phần mềm hiển thị luồng tiền ở đâu?", "Thu nợ khách hàng bằng CK chọn phương thức gì?"] }
                 }
             ]
         };
@@ -317,11 +264,12 @@
                 if(mode !== 'script') {
                     document.getElementById('winner').innerText = state.names[Math.floor(Math.random()*state.names.length)];
                 }
-                if(++i > 12) { clearInterval(t); finalize(mode); }
+                if(++i > 15) { clearInterval(t); finalize(mode); }
             }, 60);
         }
 
         function finalize(mode) {
+            // Rút danh sách
             if(mode === 'full' || mode === 'user') {
                 let idx = Math.floor(Math.random()*state.names.length);
                 state.curW = state.names[idx];
@@ -330,6 +278,7 @@
                 document.getElementById('c').innerText = state.names.length;
             }
 
+            // Rút đề bài
             if(mode === 'full' || mode === 'script') {
                 if(state.sess == 1) {
                     state.curT = scripts.buoi1[Math.floor(Math.random()*scripts.buoi1.length)];
@@ -340,33 +289,73 @@
             }
 
             document.getElementById('winner').innerText = state.curW;
-            renderScript(state.curT, 'scBox');
+            
+            // Xử lý giao diện Popup Thẻ bài nếu lấy kịch bản mới
+            if (mode === 'full' || mode === 'script') {
+                // Đặt lại state cho Modal Game
+                const card = document.getElementById('theGameCard');
+                card.classList.remove('is-flipped');
+                const btn = document.getElementById('closeGameBtn');
+                btn.style.opacity = '0';
+                btn.style.pointerEvents = 'none';
+
+                document.getElementById('gameWinnerName').innerText = "HỌC VIÊN: " + state.curW;
+                
+                // Render vào Mặt sau của Thẻ bài
+                renderScript(state.curT, 'cardBackContent');
+                
+                // Render vào Màn hình gốc (bị ẩn dưới lớp nền) để lát tắt popup là có sẵn
+                renderScript(state.curT, 'scBox');
+                
+                // Hiện Modal Lật Thẻ
+                document.getElementById('gameModal').style.display = 'flex';
+            } else {
+                // Chỉ gọi người khác, giữ nguyên đề bài cũ trên main panel
+                confetti({ particleCount:100, spread:70, origin: { y: 0.6 } });
+            }
             
             document.getElementById('spin').disabled = false;
             document.getElementById('actionArea').style.display = 'block';
             document.getElementById('quickBtns').style.display = 'flex';
             state.spinning = false;
-            
-            if(mode === 'full') confetti({ particleCount:100, spread:70, origin: { y: 0.6 } });
         }
 
+        // --- CÁC HÀM GAME LẬT THẺ BÀI --- //
+        function flipCard() {
+            const card = document.getElementById('theGameCard');
+            if (!card.classList.contains('is-flipped')) {
+                card.classList.add('is-flipped');
+                // Nổ pháo hoa lúc thẻ lật ra (Cực ngầu)
+                confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 }, zIndex: 10001 });
+                
+                // Trì hoãn hiện nút Bắt đầu để học viên đọc xíu
+                setTimeout(() => {
+                    const btn = document.getElementById('closeGameBtn');
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                }, 800);
+            }
+        }
+
+        function closeGameModal() {
+            document.getElementById('gameModal').style.display = 'none';
+        }
+        // -------------------------------- //
+
+        // Truyền thêm param idSuffix để tránh trùng lặp ID khi render 2 nơi (Thẻ bài và Box màn hình chính)
         function toggleTrainerNotes(id) {
             const el = document.getElementById(id);
-            if (el.style.display === "none" || el.style.display === "") {
-                el.style.display = "block";
-            } else {
-                el.style.display = "none";
-            }
+            if(el) { el.style.display = (el.style.display === "none" || el.style.display === "") ? "block" : "none"; }
         }
 
         function renderScript(obj, containerId) {
             if(!obj) return;
-            
             let contentHtml = "";
 
-            // Xử lý hiển thị đồng nhất giao diện Problem Solving
             if(obj.customerVoice) {
                 let hintsHtml = obj.trainerNotes.hints.map(h => `<li>${h}</li>`).join('');
+                // Tạo ID unique dựa trên containerId để popup thẻ bài & màn hình gốc không đụng nhau
+                let uniqueId = `tnote_${obj.tag}_${containerId}`;
                 
                 contentHtml = `
                     <div class="sc-biz"><span class="sc-tag">${obj.tag}</span>${obj.biz}</div>
@@ -377,12 +366,12 @@
                         "${obj.customerVoice}"
                     </div>
 
-                    <button class="trainer-toggle" onclick="toggleTrainerNotes('tnote_${obj.tag}')">
-                        <span>👁️ GÓC CỦA TRAINER (Nhấn để xem phân tích)</span>
+                    <button class="trainer-toggle" onclick="toggleTrainerNotes('${uniqueId}')">
+                        <span>👁️ GÓC CỦA TRAINER (Nhấn để xem)</span>
                         <span>▼</span>
                     </button>
                     
-                    <div id="tnote_${obj.tag}" class="trainer-notes">
+                    <div id="${uniqueId}" class="trainer-notes">
                         <b>🎯 Phân tích trọng tâm:</b><br>
                         ${obj.trainerNotes.analysis}<br><br>
                         <b>💡 Câu hỏi khơi gợi (Coach):</b>
@@ -390,8 +379,8 @@
                     </div>
                 `;
             } 
-            // Fallback an toàn nếu sau này có data cũ chèn vào
             else {
+                // Fallback cho data cũ
                 let reportsHtml = "";
                 if(obj.reports && obj.reports.length > 0) {
                     reportsHtml = `
