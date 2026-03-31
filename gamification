@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>THE CHOSEN ONE V7.5 - PROBLEM SOLVING</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@300;400;600;800;italic&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary: #00d2ff; --secondary: #3a7bd5; --accent: #00ff88;
+            --bg: #0b0e14; --panel: rgba(23, 28, 40, 0.95); --border: rgba(0, 210, 255, 0.2);
+            --danger: #ff4757; --glass: rgba(255, 255, 255, 0.05);
+            --warning: #fbc531;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif; background: var(--bg); color: #fff;
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #1a202c 0%, #0b0e14 100%);
+        }
+        header { padding: 15px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(11, 14, 20, 0.98); }
+        .logo { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; color: var(--primary); }
+        .session-tabs { display: flex; background: var(--glass); padding: 5px; border-radius: 12px; border: 1px solid var(--border); }
+        .tab { padding: 10px 25px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 800; color: #64748b; border: none; background: none; transition: 0.3s; }
+        .tab.active { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
+        .main-grid { display: grid; grid-template-columns: 320px 1fr 450px; gap: 20px; padding: 20px; flex: 1; overflow: hidden; }
+        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 25px; display: flex; flex-direction: column; overflow: hidden; }
+        textarea { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; color: var(--accent); padding: 15px; font-size: 14px; outline: none; margin-bottom: 15px; }
+        .winner-display { font-family: 'Orbitron', sans-serif; font-size: 40px; font-weight: 900; text-align: center; margin-bottom: 20px; min-height: 60px; color: #fff; text-shadow: 0 0 20px var(--primary); }
+        .spin-btn { width: 150px; height: 150px; border-radius: 50%; border: 8px solid var(--glass); background: linear-gradient(135deg, var(--secondary), var(--primary)); color: white; font-family: 'Orbitron'; font-size: 16px; font-weight: 900; cursor: pointer; align-self: center; transition: 0.3s; }
+        .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        #actionArea { margin-top: 15px; display: none; }
+        .comment-box { width: 100%; height: 80px; background: rgba(255,255,255,0.08); border: 1px solid var(--primary); border-radius: 12px; color: #fff; padding: 15px; font-size: 14px; margin-bottom: 10px; outline: none; resize: none; }
+        .sc-card { background: rgba(255,255,255,0.02); border-radius: 16px; padding: 20px; flex: 1; overflow-y: auto; border: 1px solid rgba(255,255,255,0.05); }
+        .sc-tag { display: inline-block; background: var(--primary); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900; font-size: 12px; margin-right: 8px; vertical-align: middle; }
+        .sc-biz { font-size: 19px; font-weight: 800; color: #fff; margin-bottom: 5px; }
+        .sc-goal { font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        
+        /* Styles for Problem Solving Approach */
+        .sc-customer-voice { background: rgba(255, 255, 255, 0.05); border-left: 4px solid var(--primary); padding: 15px; font-size: 14px; color: #e2e8f0; margin-bottom: 15px; line-height: 1.6; font-style: italic; border-radius: 0 8px 8px 0; }
+        .sc-customer-voice b { color: var(--primary); font-style: normal; display: block; margin-bottom: 5px; font-size: 12px; text-transform: uppercase;}
+        
+        .trainer-toggle { background: rgba(251, 197, 49, 0.1); border: 1px dashed var(--warning); color: var(--warning); padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; width: 100%; text-align: left; margin-top: 10px; transition: 0.3s; display: flex; justify-content: space-between; align-items: center; }
+        .trainer-toggle:hover { background: rgba(251, 197, 49, 0.2); }
+        .trainer-notes { display: none; background: rgba(0,0,0,0.5); border: 1px solid var(--warning); padding: 15px; border-radius: 8px; margin-top: 10px; font-size: 13px; line-height: 1.5; color: #dcdde1; }
+        .trainer-notes b { color: var(--warning); }
+        .trainer-notes ul { margin-left: 20px; margin-top: 5px; margin-bottom: 10px; }
+        .trainer-notes li { margin-bottom: 5px; }
+
+        .sc-step { font-size: 13px; margin-bottom: 8px; color: #cbd5e1; display: flex; gap: 10px; line-height: 1.5; }
+        .sc-step b { color: var(--primary); min-width: 15px; }
+        .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
+        .report-item { background: rgba(0, 210, 255, 0.1); border: 1px solid var(--primary); padding: 8px; border-radius: 8px; font-size: 11px; text-align: center; color: var(--primary); font-weight: 700; }
+        .history-item { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; border-radius: 8px; margin-bottom: 5px; }
+        .history-item:hover { background: rgba(0,210,255,0.1); }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-content { background: #171c28; width: 550px; max-height: 85vh; border-radius: 24px; border: 1px solid var(--primary); padding: 30px; position: relative; overflow-y: auto; }
+        .btn-group { display: flex; gap: 10px; }
+        .btn { padding: 10px 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--glass); color: #fff; cursor: pointer; font-size: 11px; font-weight: 700; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: #000; border: none; }
+        .btn-accent { border-color: var(--accent); color: var(--accent); }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">THE CHOSEN ONE V7.5</div>
+        <div class="session-tabs">
+            <button id="t1" class="tab active" onclick="setSess(1)">BUỔI 1: CƠ BẢN</button>
+            <button id="t2" class="tab" onclick="setSess(2)">BUỔI 2: NÂNG CAO</button>
+        </div>
+        <div class="btn-group">
+            <button class="btn" onclick="toggleEditModal()">⚙️ CẬP NHẬT KỊCH BẢN</button>
+            <button class="btn" onclick="exportExcel()" style="color:var(--accent)">📥 EXCEL</button>
+        </div>
+    </header>
+
+    <div class="main-grid">
+        <div class="panel">
+            <h3 style="color:var(--primary); font-size:11px; margin-bottom:10px">HỌC VIÊN (<span id="c">0</span>)</h3>
+            <textarea id="names" placeholder="Dán danh sách học viên..."></textarea>
+            <button class="btn btn-primary" onclick="save()">LƯU DANH SÁCH GỐC</button>
+        </div>
+
+        <div class="panel" style="justify-content:center">
+            <div id="winner" class="winner-display">READY?</div>
+            <div style="display:flex; flex-direction:column; gap:15px; align-items:center">
+                <button id="spin" class="spin-btn" onclick="start('full')">TRIỆU HỒI</button>
+                <div id="quickBtns" style="display:none; gap:10px">
+                    <button class="btn btn-accent" onclick="start('script')">♻️ ĐỔI TÌNH HUỐNG</button>
+                    <button class="btn btn-accent" onclick="start('user')">👥 GỌI NGƯỜI KHÁC</button>
+                </div>
+            </div>
+            <div id="actionArea">
+                <textarea id="cmt" class="comment-box" placeholder="Nhận xét cách học viên phân tích và xử lý luồng..."></textarea>
+                <div class="btn-group">
+                    <button class="btn" style="background:var(--danger); flex:1" onclick="done('Vắng')">VẮNG</button>
+                    <button class="btn btn-primary" style="flex:2" onclick="done('Hoàn thành')">XÁC NHẬN</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3 style="color:var(--accent); font-size:11px; margin-bottom:10px">ĐỀ BÀI</h3>
+            <div id="scBox" class="sc-card"><div style="text-align:center; color:#64748b; margin-top:50px">Sẵn sàng...</div></div>
+            <h3 style="color:var(--primary); font-size:11px; margin-top:15px; margin-bottom:5px">LỊCH SỬ</h3>
+            <div id="histList" style="flex:0.8; overflow-y:auto; border-top:1px solid #333; padding-top:10px"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <span style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:24px" onclick="closeModal()">×</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content" style="width: 80%; max-width: 900px;">
+            <h2 style="margin-bottom: 15px; color: var(--primary);">CẬP NHẬT DỮ LIỆU KỊCH BẢN (JSON)</h2>
+            <textarea id="jsonEditor" style="height: 450px; font-family: monospace; color: #fff;"></textarea>
+            <div class="btn-group" style="justify-content: flex-end; margin-top: 15px;">
+                <button class="btn" onclick="toggleEditModal()">HỦY</button>
+                <button class="btn btn-primary" onclick="updateScripts()">LƯU THAY ĐỔI</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scripts = {
+            buoi1: [
+                {
+                    tag: "B1-S1", 
+                    biz: "Thời trang Nem Luxury", 
+                    goal: "Nhiệm vụ: Lắng nghe vấn đề và trình bày giải pháp vận hành 6 bước.", 
+                    customerVoice: "Dạo gần đây cửa hàng tôi rất lộn xộn. Có một mẫu Váy lụa mới về, nhân viên báo trên phần mềm còn hàng nhưng vô kho tìm thì toàn sai kích cỡ hoặc màu khách cần. Chưa kể hôm qua có khách mua 2 cái váy, trả 1 ít tiền mặt, còn lại chuyển khoản, nay họ lại mang 1 cái ra đòi trả lại lấy tiền. Nhân viên tôi loạn xì ngầu lên không biết ghi chép sao cho dòng tiền với kho không bị lệch. Bạn tư vấn giúp tôi phần mềm xử lý chuyện này thế nào?", 
+                    trainerNotes: {
+                        analysis: "Học viên cần nhận diện được 2 bài toán: Quản lý Thuộc tính (Size/Màu) và Quản lý thanh toán đa hình thức + Xử lý Trả hàng.",
+                        hints: [
+                            "Em sẽ thiết lập mặt hàng Váy lụa này như thế nào để kho không bị lẫn lộn giữa các màu/size?",
+                            "Khách thanh toán 2 hình thức (Tiền mặt + CK), ở màn hình bán hàng em xử lý sao?",
+                            "Khi làm thao tác Trả hàng, làm sao để hệ thống tự biết trừ tiền trong Két/Tài khoản và tự cộng lại tồn kho váy?"
+                        ]
+                    }
+                },
+                {
+                    tag: "B1-S2", 
+                    biz: "Tạp hóa An Bình", 
+                    goal: "Nhiệm vụ: Lắng nghe vấn đề và trình bày giải pháp vận hành 6 bước.", 
+                    customerVoice: "Tôi mở tiệm tạp hóa, bia với nước ngọt tôi nhập từ đại lý toàn tính bằng Thùng, nhưng khách ở xóm thì hay mua lẻ vài Lon. Cứ bán 1 thời gian là kho lệch tè le. Đau đầu nhất là khách quen toàn mua chịu (ghi sổ), tôi thì cũng mua thiếu của đại lý. Cuốn sổ nợ của tôi giờ chằng chịt, cuối tháng đi đối soát thu tiền với trả tiền mệt mỏi vô cùng. Phần mềm có tự động tính toán được mấy cái này không?", 
+                    trainerNotes: {
+                        analysis: "Học viên cần nhận diện bài toán: Đơn vị quy đổi và Quản lý công nợ hai chiều (Khách hàng & Nhà cung cấp).",
+                        hints: [
+                            "Làm sao để phần mềm hiểu 1 Thùng có bao nhiêu Lon để tự trừ kho dù anh Bình bán theo đơn vị nào?",
+                            "Khi nhập hàng mua chịu của đại lý, em sẽ thao tác thế nào ở Phiếu nhập kho?",
+                            "Khách mua chịu hôm nay, tuần sau ra trả tiền, luồng thao tác trên phần mềm sẽ đi như thế nào?"
+                        ]
+                    }
+                },
+                {
+                    tag: "B1-S3", 
+                    biz: "Mỹ phẩm Guardian", 
+                    goal: "Nhiệm vụ: Lắng nghe vấn đề và trình bày giải pháp vận hành 6 bước.", 
+                    customerVoice: "Đặc thù ngành son phấn của tôi là khách hay đổi trả. Họ mua cây son màu Đỏ về mở ra xem không ưng, xong đem ra tiệm bắt trả lại tiền. Cứ mỗi lần vậy, nhân viên của tôi rút tiền mặt trong két ra thối cho khách. Cuối ngày chốt ca, đếm tiền thật trong két lúc nào cũng hụt so với doanh thu trên phần mềm báo. Có cách nào giải quyết dứt điểm tình trạng nhân viên thối tiền trả hàng làm lệch két không bạn?", 
+                    trainerNotes: {
+                        analysis: "Học viên cần nhận diện bài toán: Thao tác đúng nghiệp vụ Trả hàng để quản lý dòng tiền mặt (Sổ quỹ/Két tiền).",
+                        hints: [
+                            "Lý do đếm tiền thực tế bị hụt so với phần mềm là do nhân viên đã bỏ qua thao tác gì trên máy?",
+                            "Em hãy demo 1 luồng chuẩn: Bán 1 cây son thu tiền mặt -> Khách quay lại Trả hàng. Hãy chỉ cho khách thấy két tiền trên hệ thống biến động chính xác như thế nào."
+                        ]
+                    }
+                }
+            ],
+            buoi2: [
+                {
+                    tag: "B2-S1", 
+                    biz: "Anh Minh (Cửa hàng Đồ chơi)", 
+                    goal: "Mục tiêu: Phân quyền - Giá sỉ - Dịch vụ - Thêm hàng nhanh", 
+                    customerVoice: "Cửa hàng tôi có bạn nhân viên tên Vân, tôi muốn bạn ấy phụ thu ngân nhưng tuyệt đối không cho xem báo cáo doanh thu. Khách sỉ đến mua nhiều tôi thường giảm 10% nhưng cứ phải bấm máy tính tay hoài. Tiện thể, thỉnh thoảng tôi có nhận gói quà hộ khách và thu thêm 30k tiền công. Và nhiều lúc lúc đang kiểm đếm nhập hàng từ xe tải xuống, có mấy món lặt vặt như Pin AA chưa có trong máy, tôi muốn thêm nhanh luôn chứ thoát ra vào lại danh mục lâu quá. Có cách nào làm mượt mấy việc này không?", 
+                    trainerNotes: {
+                        analysis: "Học viên cần xử lý: 1. Tạo & Phân quyền nhân viên (khóa báo cáo). 2. Thiết lập Bảng giá (Khách sỉ -10%). 3. Hàng hóa dịch vụ (Gói quà 30k). 4. Thêm hàng hóa nhanh ngay tại màn hình Phiếu Nhập.",
+                        hints: [
+                            "Vào đâu để phân quyền cho bạn Vân không xem được báo cáo?",
+                            "Mặt hàng 'Gói quà' là hàng hóa thường hay loại gì? Cài đặt sao để không bị tính tồn kho?",
+                            "Thiết lập Bảng giá Sỉ thao tác ở mục nào? Làm sao áp dụng nó cho 1 khách hàng mới?",
+                            "Lúc đang làm phiếu nhập hàng, nút nào cho phép thêm mặt hàng Pin AA ngay lập tức?"
+                        ]
+                    }
+                },
+                {
+                    tag: "B2-S2", 
+                    biz: "Chị Lan (Cửa hàng Gia dụng)", 
+                    goal: "Mục tiêu: Giá vốn MAC - Đổi giá bán - Tra cứu nâng cao", 
+                    customerVoice: "Đợt trước tôi nhập 20 cái Chảo chống dính giá 1 triệu/cái, đợt này NCC sale nên 2 cái sau tôi nhập được giá 800k. Vậy phần mềm tính giá vốn kho của tôi thế nào? Khi đang làm phiếu nhập lô mới này, tôi muốn tiện tay đổi luôn giá bán từ 1.5 triệu xuống 1.4 triệu cho đợt kích cầu. Lúc ra quầy bán, đồ gia dụng nhà tôi quá nhiều, tìm theo tên không nổi, muốn lọc theo nhóm hàng hoặc xem nhanh trong kho còn bao nhiêu cái thì thao tác thế nào cho nhanh?", 
+                    trainerNotes: {
+                        analysis: "Học viên cần xử lý: 1. Giải thích & thao tác cơ chế tính Giá vốn trung bình (MAC) sau 2 lần nhập. 2. Thay đổi giá bán trực tiếp trên phiếu nhập. 3. Tra cứu nâng cao & xem tồn kho trực tiếp trên màn hình POS.",
+                        hints: [
+                            "Công thức tính giá vốn trung bình (MAC) hoạt động ra sao sau khi nhập lô thứ 2? (Gợi ý: [20*1tr + 2*800k] / 22).",
+                            "Ở màn hình phiếu nhập, làm sao để sửa luôn giá bán của hàng hóa?",
+                            "Khi ở màn hình thu ngân (POS), phím tắt hoặc thanh công cụ nào để xem tồn kho hoặc lọc hiển thị theo Nhóm hàng?"
+                        ]
+                    }
+                },
+                {
+                    tag: "B2-S3", 
+                    biz: "Anh Hoàng (Cửa hàng Phụ tùng xe)", 
+                    goal: "Mục tiêu: Bán nhanh MHBH - Thu nợ POS - CS Đổi trả", 
+                    customerVoice: "Nhiều lúc đang đứng ở quầy bán, có khách hỏi mua cái Lốp xe mới tinh chưa có trên hệ thống, tôi muốn thêm mã lốp đó cực nhanh để in bill luôn. Khách quen ra mua sẵn tiện trả luôn cục nợ cũ thì thu tiền kiểu gì cho lẹ, khỏi vào sổ sách loằng ngoằng? Ác nhất là nhiều người mua về xong đem ra trả nhưng làm mất hóa đơn. Thêm nữa, tôi muốn cài quy định cứng trên máy là chỉ cho trả hàng trong vòng 7 ngày thôi thì phần mềm có chặn được không?", 
+                    trainerNotes: {
+                        analysis: "Học viên cần xử lý: 1. Thêm hàng hóa nhanh ngay trên Màn Hình Bán Hàng (POS). 2. Thu nợ khách hàng trực tiếp tại quầy POS. 3. Thao tác Trả hàng nhanh (không cần hóa đơn gốc). 4. Thiết lập hệ thống (Giới hạn thời gian đổi trả).",
+                        hints: [
+                            "Nút thêm hàng hóa (+) trên màn hình bán hàng (POS) nằm ở đâu?",
+                            "Làm sao để thu nợ trên POS mà không cần thoát ra tab Quản lý -> Đối tác?",
+                            "Thao tác trả hàng nhanh (không có bill) khác gì trả hàng theo hóa đơn gốc?",
+                            "Thiết lập giới hạn 'Cho phép trả hàng trong vòng 7 ngày' nằm ở phần cài đặt hệ thống nào?"
+                        ]
+                    }
+                },
+                {
+                    tag: "B2-S4", 
+                    biz: "Chị Hà (Cửa hàng Nội thất)", 
+                    goal: "Mục tiêu: Khách VIP (Tự động) - Kiểm kho - Sổ quỹ & Ngân hàng", 
+                    customerVoice: "Tôi muốn tự động hóa chăm sóc khách: cứ ai mua tích lũy đủ 5 triệu là hệ thống tự đưa lên nhóm VIP và được giảm 10% mãi mãi, nhưng nếu lâu ngày không mua rớt doanh thu thì tự rớt hạng. Về quản lý kho, tôi nghi ngờ số lượng 'Đèn ngủ' bị sai nên muốn đi đếm lại số lượng thực tế xem có khớp máy không và cân bằng lại. Chiều nay tôi xuất tiền trả tiền điện 500k bằng cách chuyển khoản qua số Vietcombank của cửa hàng, tôi phải ghi chép vụ này vào đâu để cuối tháng tính ra lãi ròng chính xác?", 
+                    trainerNotes: {
+                        analysis: "Học viên cần xử lý: 1. Thiết lập nhóm khách hàng VIP (Tự động cập nhật dựa trên điều kiện Doanh thu). 2. Nghiệp vụ Kiểm kho (Tạo phiếu kiểm kê). 3. Khai báo Tài khoản ngân hàng. 4. Lập phiếu chi Sổ quỹ (Tiền điện).",
+                        hints: [
+                            "Khi tạo nhóm khách hàng, làm sao để thiết lập điều kiện 'Tự động cập nhật' khi đạt 5 triệu?",
+                            "Phiếu kiểm kho thao tác như thế nào để cân bằng từ số liệu máy sang số liệu đếm thực tế?",
+                            "Khai báo số tài khoản Vietcombank ở đâu trên hệ thống?",
+                            "Thao tác lập Phiếu chi để trả tiền điện nằm ở phần nào? Chọn loại chứng từ gì?"
+                        ]
+                    }
+                },
+                {
+                    tag: "B2-S5", 
+                    biz: "Chị My (Cửa hàng Quà tặng)", 
+                    goal: "Mục tiêu: ÔN TẬP LUỒNG TỔNG HỢP (Nhập hàng - Bán lẻ - Trả hàng - Công nợ)", 
+                    customerVoice: "Hôm nay cửa hàng tôi nhập 100 chiếc lồng đèn gỗ (giá gốc 50k, dự định bán 120k). Tôi trả trước cho xưởng 50% tiền, còn lại ghi nợ. Chiều có chị Vân ghé mua 2 cái trả tiền mặt, nhưng hôm sau bả mang 1 cái ra trả lại vì bị xước vỡ nên tôi thối lại tiền cho bả. Cuối tuần rảnh rỗi, tôi xuất quỹ trả nốt 50% tiền nợ cho xưởng. Bạn hãy chỉ tôi cách làm đúng trình tự toàn bộ quá trình này từ A-Z, và mở xem các báo cáo để thấy rõ tôi đang lời lỗ, tồn kho ra sao nhé.", 
+                    trainerNotes: {
+                        analysis: "Học viên cần Demo mượt mà luồng chuẩn: Thêm mới HH -> Nhập hàng (Nợ NCC) -> Bán hàng (Thu tiền mặt) -> Trả hàng (Hoàn tiền mặt) -> Lập phiếu chi thanh toán công nợ NCC -> Đọc các Báo cáo tổng quan.",
+                        hints: [
+                            "Khi làm phiếu nhập hàng nợ 50%, ghi chú vào ô 'Tiền trả NCC' như thế nào?",
+                            "Xử lý trả hàng 1 cái lồng đèn thao tác ra sao để tiền mặt trong két giảm xuống đúng với số đã thối cho chị Vân?",
+                            "Khi trả nợ NCC, vào phần Đối tác hay Sổ quỹ để làm phiếu chi cho chuẩn nghiệp vụ?",
+                            "Mở 3 báo cáo để chứng minh cho khách thấy: Cuối ngày (Doanh thu), Hàng hóa (Tồn kho), Tài chính (Lợi nhuận)."
+                        ]
+                    }
+                },
+                {
+                    tag: "B2-S6", 
+                    biz: "Anh Long (Đại lý Tạp hóa)", 
+                    goal: "Mục tiêu: ÔN TẬP LUỒNG TỔNG HỢP (Hàng Quy Đổi & Thuộc Tính)", 
+                    customerVoice: "Tôi bán bánh Oishi, nhập về thì tính theo Lốc (20 gói) nhưng bán lẻ thì theo Gói. Bánh này có vị Tôm với Mực. Hôm nay tôi nhập nợ 100% của xưởng 50 Lốc bánh. Lát sau có anh Khánh vô mua 5 gói (vị Tôm) tiền mặt, nhưng 1 tiếng sau mang 2 gói ra bắt đền vì bao bì bị rách. Tôi nhận lại 2 gói rách, trả lại tiền cho anh Khánh. Sau vụ lùm xùm đó, tôi quyết định chuyển khoản thanh toán hết công nợ cho xưởng luôn cho xong. Bạn xử lý giúp tôi từ đầu đến cuối xem kho bánh Oishi tự động trừ/cộng thế nào nhé.", 
+                    trainerNotes: {
+                        analysis: "Học viên cần Demo luồng khó: Tạo HH (Đơn vị quy đổi + Thuộc tính) -> Nhập hàng nợ 100% (Đơn vị Lốc) -> Bán lẻ (Đơn vị Gói) -> Trả hàng lẻ -> Thanh toán công nợ NCC qua Chuyển Khoản -> Xem báo cáo.",
+                        hints: [
+                            "Cài đặt mặt hàng bánh Oishi thế nào để có cả Đơn vị cơ bản (Gói), Đơn vị quy đổi (Lốc) và Thuộc tính (Vị)?",
+                            "Khi nhập 50 Lốc, giá vốn khai báo là giá của 1 Lốc hay 1 Gói?",
+                            "Khi bán và trả hàng đơn vị 'Gói', kho tự động quy đổi ra sao?",
+                            "Thanh toán nợ cho xưởng bằng 'Chuyển khoản' thay vì Tiền mặt thì chọn ở đâu?"
+                        ]
+                    }
+                },
+                {
+                    tag: "B2-S7", 
+                    biz: "Anh Tuấn (Shop Mẹ & Bé)", 
+                    goal: "Mục tiêu: ÔN TẬP LUỒNG TỔNG HỢP (Thanh toán đa hình thức & Khách nợ)", 
+                    customerVoice: "Bên tôi bán Quần áo sơ sinh đủ size, đủ màu. Hôm qua có chị khách mua đơn hàng 2 triệu, bả quẹt thẻ 1 triệu, đưa tiền mặt 500k, còn thiếu 500k bả xin nợ hẹn tuần sau chuyển khoản trả. Khổ nỗi sáng nay bả mang 1 bộ trị giá 200k ra đổi lấy màu khác nhưng kho tôi hết màu đó, thế là bả giận đòi trả hàng. Tôi phải rút tiền mặt 200k đưa lại cho bả. Chuyện thu nợ, thanh toán chéo thế này làm tôi nhức cả đầu, phần mềm xử lý sao cho dòng tiền không bị loạn?", 
+                    trainerNotes: {
+                        analysis: "Học viên cần Demo luồng: Quản lý hàng Thuộc tính -> Bán hàng (Thanh toán đa hình thức: Thẻ + Tiền mặt + Ghi nợ) -> Trả hàng (Hoàn tiền mặt) -> Thu nợ khách hàng bằng Chuyển khoản.",
+                        hints: [
+                            "Ở màn hình thu ngân, thao tác thế nào để ghi nhận 3 hình thức thanh toán (Thẻ, TM, Nợ) trên cùng 1 hóa đơn?",
+                            "Khi khách trả hàng và nhận lại 200k tiền mặt, phần mềm sẽ hiển thị luồng tiền trả khách ở đâu?",
+                            "Tuần sau khách Chuyển khoản trả 500k tiền nợ, vào phần Khách hàng thu nợ chọn phương thức gì để dòng tiền vào đúng tài khoản?"
+                        ]
+                    }
+                }
+            ]
+        };
+
+        let state = { sess:1, ptr:0, names:[], logs:[], curW:"", curT:null, spinning: false };
+
+        window.onload = () => {
+            const saved = localStorage.getItem('bk_names_v75_problem');
+            if(saved) {
+                document.getElementById('names').value = saved;
+                updateCount();
+            }
+        };
+
+        function updateCount() {
+            if(state.spinning) return;
+            let n = document.getElementById('names').value.split('\n').filter(x=>x.trim()!=="");
+            document.getElementById('c').innerText = n.length;
+            state.names = n;
+        }
+
+        setInterval(updateCount, 1000);
+
+        function setSess(n) {
+            state.sess = n; 
+            state.ptr = 0;
+            document.getElementById('t1').className = n==1?'tab active':'tab';
+            document.getElementById('t2').className = n==2?'tab active':'tab';
+        }
+
+        function start(mode) {
+            if(state.names.length===0 && mode !== 'script') return alert("Nhập danh sách học viên!");
+            state.spinning = true;
+            document.getElementById('cmt').value = "";
+            document.getElementById('spin').disabled = true;
+            document.getElementById('actionArea').style.display = 'none';
+            document.getElementById('quickBtns').style.display = 'none';
+
+            let i = 0;
+            let t = setInterval(() => {
+                if(mode !== 'script') {
+                    document.getElementById('winner').innerText = state.names[Math.floor(Math.random()*state.names.length)];
+                }
+                if(++i > 12) { clearInterval(t); finalize(mode); }
+            }, 60);
+        }
+
+        function finalize(mode) {
+            if(mode === 'full' || mode === 'user') {
+                let idx = Math.floor(Math.random()*state.names.length);
+                state.curW = state.names[idx];
+                state.names.splice(idx, 1);
+                document.getElementById('names').value = state.names.join('\n');
+                document.getElementById('c').innerText = state.names.length;
+            }
+
+            if(mode === 'full' || mode === 'script') {
+                if(state.sess == 1) {
+                    state.curT = scripts.buoi1[Math.floor(Math.random()*scripts.buoi1.length)];
+                } else {
+                    state.curT = scripts.buoi2[state.ptr];
+                    state.ptr = (state.ptr + 1) % scripts.buoi2.length;
+                }
+            }
+
+            document.getElementById('winner').innerText = state.curW;
+            renderScript(state.curT, 'scBox');
+            
+            document.getElementById('spin').disabled = false;
+            document.getElementById('actionArea').style.display = 'block';
+            document.getElementById('quickBtns').style.display = 'flex';
+            state.spinning = false;
+            
+            if(mode === 'full') confetti({ particleCount:100, spread:70, origin: { y: 0.6 } });
+        }
+
+        function toggleTrainerNotes(id) {
+            const el = document.getElementById(id);
+            if (el.style.display === "none" || el.style.display === "") {
+                el.style.display = "block";
+            } else {
+                el.style.display = "none";
+            }
+        }
+
+        function renderScript(obj, containerId) {
+            if(!obj) return;
+            
+            let contentHtml = "";
+
+            // Xử lý hiển thị đồng nhất giao diện Problem Solving
+            if(obj.customerVoice) {
+                let hintsHtml = obj.trainerNotes.hints.map(h => `<li>${h}</li>`).join('');
+                
+                contentHtml = `
+                    <div class="sc-biz"><span class="sc-tag">${obj.tag}</span>${obj.biz}</div>
+                    <div class="sc-goal">${obj.goal}</div>
+                    
+                    <div class="sc-customer-voice">
+                        <b>👤 Khách hàng than phiền:</b>
+                        "${obj.customerVoice}"
+                    </div>
+
+                    <button class="trainer-toggle" onclick="toggleTrainerNotes('tnote_${obj.tag}')">
+                        <span>👁️ GÓC CỦA TRAINER (Nhấn để xem phân tích)</span>
+                        <span>▼</span>
+                    </button>
+                    
+                    <div id="tnote_${obj.tag}" class="trainer-notes">
+                        <b>🎯 Phân tích trọng tâm:</b><br>
+                        ${obj.trainerNotes.analysis}<br><br>
+                        <b>💡 Câu hỏi khơi gợi (Coach):</b>
+                        <ul>${hintsHtml}</ul>
+                    </div>
+                `;
+            } 
+            // Fallback an toàn nếu sau này có data cũ chèn vào
+            else {
+                let reportsHtml = "";
+                if(obj.reports && obj.reports.length > 0) {
+                    reportsHtml = `
+                        <b style="font-size:11px; color:var(--primary); margin-top:10px; display:block">📊 BÁO CÁO CẦN XEM:</b>
+                        <div class="report-grid">
+                            ${obj.reports.map(r => `<div class="report-item">${r}</div>`).join('')}
+                        </div>`;
+                }
+
+                contentHtml = `
+                    <div class="sc-biz"><span class="sc-tag">${obj.tag}</span>${obj.biz}</div>
+                    <div class="sc-goal">${obj.goal}</div>
+                    <div class="sc-customer-voice" style="border-left-color: var(--danger)"><b>TÌNH HUỐNG:</b> ${obj.prob}</div>
+                    <div style="margin-bottom:15px">
+                        <b style="font-size:11px; color:var(--accent); text-transform:uppercase">Các bước thực hiện:</b>
+                        ${obj.steps.map((step, i) => `<div class="sc-step"><b>${i+1}.</b> ${step}</div>`).join('')}
+                    </div>
+                    ${reportsHtml}`;
+            }
+
+            document.getElementById(containerId).innerHTML = contentHtml;
+        }
+
+        function done(res) {
+            const entry = { 
+                id: Date.now(), time: new Date().toLocaleTimeString('vi-VN'), 
+                name: state.curW, taskObj: JSON.parse(JSON.stringify(state.curT)), 
+                res: res, note: document.getElementById('cmt').value || "Không có nhận xét" 
+            };
+            state.logs.unshift(entry);
+            renderHistory();
+            document.getElementById('actionArea').style.display = 'none';
+            document.getElementById('quickBtns').style.display = 'none';
+            document.getElementById('winner').innerText = "XONG!";
+            document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:#64748b; margin-top:50px">Sẵn sàng...</div>';
+        }
+
+        function renderHistory() { 
+            document.getElementById('histList').innerHTML = state.logs.map(l => `
+                <div class="history-item" onclick="openModal(${l.id})">
+                    <div style="display:flex; justify-content:space-between">
+                        <b style="color:${l.res=='Vắng'?'#ff4757':'#00ff88'}">${l.name}</b>
+                        <span style="font-size:10px; color:var(--primary); font-weight:800">${l.taskObj.tag}</span>
+                    </div>
+                </div>`).join(''); 
+        }
+
+        function openModal(id) {
+            const item = state.logs.find(l => l.id === id);
+            if(!item) return;
+            document.getElementById('modalBody').innerHTML = `
+                <h2 style="color:var(--primary); font-family:'Orbitron'">${item.name}</h2>
+                <div style="color:#64748b; font-size:12px; margin-bottom:15px">${item.time} | Kết quả: <b style="color:${item.res=='Vắng'?'#ff4757':'#00ff88'}">${item.res}</b></div>
+                <div id="modalScript"></div>
+                <div style="margin-top:15px; padding:15px; background:rgba(255,255,255,0.05); border-radius:12px; border:1px solid var(--border)">
+                    <b style="color:var(--accent); font-size:12px">NHẬN XÉT:</b>
+                    <p style="font-size:13px; color:#cbd5e1; margin-top:5px">${item.note}</p>
+                </div>`;
+            renderScript(item.taskObj, 'modalScript');
+            document.getElementById('historyModal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
+        function toggleEditModal() { const m = document.getElementById('editModal'); if(m.style.display === 'flex') m.style.display = 'none'; else { document.getElementById('jsonEditor').value = JSON.stringify(scripts, null, 4); m.style.display = 'flex'; } }
+        function updateScripts() { try { scripts = JSON.parse(document.getElementById('jsonEditor').value); alert("Thành công!"); toggleEditModal(); } catch(e) { alert("Lỗi JSON!"); } }
+        
+        function exportExcel() {
+            if(state.logs.length === 0) return alert("Chưa có dữ liệu!");
+            let csv = "\uFEFFGiờ,Học viên,Mã kịch bản,Cửa hàng,Kết quả,Nhận xét\n";
+            state.logs.forEach(l => { 
+                let n = l.note.replace(/(\r\n|\n|\r)/gm, " ").replace(/,/g, ";"); 
+                csv += `${l.time},${l.name},${l.taskObj.tag},${l.taskObj.biz},${l.res},${n}\n`; 
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `Bao_cao.csv`; a.click();
+        }
+
+        function save() { 
+            localStorage.setItem('bk_names_v75_problem', document.getElementById('names').value); 
+            alert("Đã lưu danh sách học viên!"); 
+        }
+    </script>
+</body>
+</html>
