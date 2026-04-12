@@ -3,115 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trainer Hub | KiotViet Management</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Trainer Hub | Analytics & Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; } /* Đổi nền sáng hơn chút để nổi bật thẻ trắng */
-        .course-card { background: white; border: 1px solid #e2e8f0; border-radius: 20px; transition: all 0.3s ease; position: relative; }
-        .course-card:hover { box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01); border-color: #cbd5e1; }
+        /* 5D & Fluid UI Core Variables */
+        html { scroll-behavior: smooth; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f4f7f9; 
+            color: #0f172a; 
+            background-image: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.04), transparent 25%), radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.04), transparent 25%);
+        }
         
-        .nav-link { color: #64748b; font-weight: 600; transition: all 0.2s; padding: 4px 0; border-bottom: 2px solid transparent; }
-        .nav-link:hover { color: #2563eb; border-bottom-color: #2563eb; }
-        .btn-action { border: 1px solid #e2e8f0; color: #64748b; background: white; transition: all 0.2s; cursor: pointer; }
-        .btn-action:hover { border-color: #2563eb; color: #2563eb; background: #eff6ff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        /* Glassmorphism & 5D Hover Effects */
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); }
+        .hover-5d { transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.15); }
+        .hover-5d:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 25px 40px -10px rgba(0,0,0,0.08), 0 10px 15px -5px rgba(0,0,0,0.03); border-color: #e2e8f0; }
+        
+        /* Dashboard Stat Cards 5D Effects */
+        .stat-card { position: relative; overflow: hidden; transition: all 0.4s ease; }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 20px 30px -10px rgba(59, 130, 246, 0.15); }
+        .stat-card::after { content: ''; position: absolute; top: 0; right: 0; width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; transform: translate(30%, -30%); opacity: 0.5; pointer-events: none; }
 
-        .notification-zone { position: absolute; top: 20px; right: 20px; z-index: 10; }
-        .popup-remind { visibility: hidden; opacity: 0; position: absolute; right: 0; top: 35px; width: 240px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); transition: all 0.2s ease; }
-        .notification-zone:hover .popup-remind { visibility: visible; opacity: 1; top: 45px; }
+        .btn-action { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+
+        .status-pill { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.05em; }
         
-        .status-pill { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.05em;}
-        table th { white-space: nowrap; font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; transition: color 0.2s; border-bottom: 2px solid #f1f5f9; }
+        table th { white-space: nowrap; font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; transition: color 0.2s; border-bottom: 2px solid #e2e8f0; }
         table th.sortable:hover { color: #2563eb; cursor: pointer; } 
-        table td { white-space: nowrap; } /* YÊU CẦU 3 & 7: Ngăn vỡ layout khi thêm nhiều cột */
+        table td { white-space: nowrap; transition: all 0.2s; } 
+        tr.table-row-5d { transition: all 0.3s ease; }
+        tr.table-row-5d:hover { background-color: #f8fafc; transform: scale(1.001); box-shadow: inset 2px 0 0 0 #3b82f6; }
         
-        .icon-link { transition: all 0.2s; display: inline-block; opacity: 0.8;}
-        .icon-link:hover { transform: translateY(-2px); opacity: 1;}
-        .icon-excel { color: #107c41; } 
-        .icon-quiz { color: #8b5cf6; } 
-        .icon-drive { color: #3b82f6; } 
+        .icon-link { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0.8;}
+        .icon-link:hover { transform: translateY(-3px) scale(1.1); opacity: 1;}
+        .icon-excel { color: #107c41; } .icon-quiz { color: #8b5cf6; } .icon-drive { color: #3b82f6; } 
         
-        .action-icon { transition: all 0.2s; cursor: pointer; padding: 6px; border-radius: 6px; }
-        .action-icon:hover { background: #f1f5f9; }
-        .icon-edit { color: #f59e0b; } 
-        .icon-delete { color: #ef4444; } 
+        .action-icon { transition: all 0.2s; cursor: pointer; padding: 6px; border-radius: 8px; }
+        .action-icon:hover { background: #f1f5f9; transform: scale(1.1); }
+        .icon-edit { color: #f59e0b; } .icon-delete { color: #ef4444; } 
 
-        .modal { display: none; }
-        .modal.active { display: flex; animation: fadeIn 0.2s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .modal.active { display: flex; opacity: 1; }
+        .modal-content { transform: scale(0.95) translateY(20px); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1); }
+        .modal.active .modal-content { transform: scale(1) translateY(0); opacity: 1; }
         
-        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
     </style>
 </head>
 <body class="antialiased">
 
-    <!-- HEADER & NAV -->
-    <nav class="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-50">
+    <!-- HEADER NAVIGATION -->
+    <nav class="glass-panel border-b border-slate-200/60 sticky top-0 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <div class="flex items-center space-x-3">
-                <img src="https://logo.kiotviet.vn/KiotViet-Logo-Horizontal.svg" alt="KiotViet Logo" class="h-6">
-                <span class="text-lg font-bold tracking-tight text-slate-800 border-l-2 border-slate-200 pl-3">Trainer Hub</span>
+                <img src="https://logo.kiotviet.vn/KiotViet-Logo-Horizontal.svg" alt="KiotViet Logo" class="h-6 filter drop-shadow-sm">
+                <span class="text-lg font-black tracking-tight text-slate-800 border-l-2 border-slate-200 pl-3">Trainer Hub</span>
             </div>
             <div class="hidden md:flex space-x-8 text-[13px]">
-                <a href="#sales" class="nav-link">Đào tạo Sales</a>
-                <a href="#reports" class="nav-link text-blue-600 border-b-2 border-blue-600">Báo cáo & Analytics</a>
+                <a href="#sales" class="nav-link font-bold">Đào tạo Sales</a>
+                <a href="#reports" class="nav-link text-blue-600 border-b-2 border-blue-600 font-bold">Analytics & Report</a>
             </div>
         </div>
     </nav>
 
-    <header class="py-16 bg-white border-b border-slate-100">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-12">
+    <!-- HERO SECTION 5D -->
+    <header class="py-20 relative overflow-hidden">
+        <!-- Floating Blur Orbs -->
+        <div class="absolute top-0 right-10 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-[80px] opacity-20 animate-pulse"></div>
+        <div class="absolute top-20 right-40 w-72 h-72 bg-indigo-400 rounded-full mix-blend-multiply filter blur-[80px] opacity-20 animate-pulse" style="animation-delay: 2s;"></div>
+
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
             <div class="flex-1">
-                <h1 class="text-4xl font-black text-slate-900 leading-tight mb-3 tracking-tight">Hi Ve ! <br>Cẩm "nan giải" của Ve Ve</h1>
-                <p class="text-slate-500 text-base mb-8 max-w-lg font-medium leading-relaxed">Nền tảng tập trung kịch bản giảng dạy và tự động hóa báo cáo khóa học KiotViet.</p>
-                <div class="flex flex-wrap gap-3">
-                    <a href="https://sites.google.com/kiotviet.com/daotaokiotviet/l%E1%BB%8Bch-%C4%91%C3%A0o-t%E1%BA%A1o-sales-2026" target="_blank" class="btn-action px-5 py-2.5 rounded-xl font-bold text-xs flex items-center shadow-sm">
-                        <i class="far fa-calendar-alt mr-2 text-blue-500"></i> Lịch Đào tạo
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-[10px] font-bold uppercase tracking-widest mb-6 shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-blue-500 animate-ping"></span> Hệ thống quản trị tự động
+                </div>
+                <h1 class="text-5xl font-black text-slate-900 leading-tight mb-4 tracking-tighter drop-shadow-sm">Hi Ve! <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">Cẩm "nan giải" của Ve Ve</span></h1>
+                <p class="text-slate-500 text-lg mb-10 max-w-lg font-medium leading-relaxed">Trung tâm điều khiển kịch bản giảng dạy và báo cáo hiệu suất theo thời gian thực.</p>
+                <div class="flex flex-wrap gap-4">
+                    <a href="https://sites.google.com/kiotviet.com/daotaokiotviet/l%E1%BB%8Bch-%C4%91%C3%A0o-t%E1%BA%A1o-sales-2026" target="_blank" class="glass-panel px-6 py-3 rounded-2xl font-bold text-sm flex items-center hover-5d text-slate-700">
+                        <i class="far fa-calendar-alt mr-2 text-blue-500 text-lg"></i> Lịch Đào tạo 2026
                     </a>
-                    <!-- ĐÃ THÊM LẠI TOOL COPY EMAIL -->
-                    <a href="https://sites.google.com/view/kiotviet-trainer-notes/copy-email" target="_blank" class="btn-action px-5 py-2.5 rounded-xl font-bold text-xs flex items-center shadow-sm">
-                        <i class="far fa-envelope mr-2 text-indigo-500"></i> Tool Copy Email
+                    <a href="https://sites.google.com/view/kiotviet-trainer-notes/copy-email" target="_blank" class="glass-panel px-6 py-3 rounded-2xl font-bold text-sm flex items-center hover-5d text-slate-700">
+                        <i class="far fa-envelope mr-2 text-indigo-500 text-lg"></i> Tool Copy Email
                     </a>
                 </div>
             </div>
-            <div class="w-32 h-32 bg-gradient-to-tr from-blue-50 to-indigo-50 rounded-[32px] flex items-center justify-center shadow-inner border border-white">
-                <i class="fas fa-chart-pie text-5xl text-blue-600/80"></i>
+            <div class="w-40 h-40 bg-white/60 backdrop-blur-xl rounded-[40px] flex items-center justify-center shadow-[0_20px_40px_-15px_rgba(59,130,246,0.3)] border border-white relative hover-5d">
+                <i class="fas fa-chart-pie text-6xl text-transparent bg-clip-text bg-gradient-to-br from-blue-500 to-indigo-600"></i>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-6 py-16 space-y-24">
+    <main class="max-w-7xl mx-auto px-6 py-10 space-y-32">
 
         <!-- KHOÁ HỌC SALES -->
         <section id="sales">
             <div class="flex items-center space-x-3 mb-10">
-                <div class="w-1.5 h-6 bg-blue-600 rounded-full"></div>
-                <h2 class="text-xl font-bold text-slate-900 tracking-tight">Hạng mục Đào tạo</h2>
+                <div class="w-2 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full shadow-lg shadow-blue-200"></div>
+                <h2 class="text-2xl font-black text-slate-900 tracking-tight">Cấu trúc Khóa học</h2>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="courseGrid"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="courseGrid"></div>
         </section>
 
-        <!-- DASHBOARD & BÁO CÁO MỚI -->
-        <section id="reports" class="scroll-mt-24">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4">
+        <!-- DASHBOARD & BÁO CÁO MỚI (5D SAAS STYLE) -->
+        <section id="reports" class="scroll-mt-24 relative">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Analytics & Report</h2>
-                    <p class="text-[13px] text-slate-500 font-medium mt-1" id="dynamicSubtitle">Phân tích dữ liệu thực tế 1 năm qua.</p>
+                    <h2 class="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                        Hiệu suất Đào tạo <i class="fas fa-satellite-dish text-blue-500 animate-pulse text-xl"></i>
+                    </h2>
+                    <p class="text-sm text-slate-500 font-medium mt-1" id="dynamicSubtitle">Đồng bộ và tính toán dữ liệu trong 365 ngày qua.</p>
                 </div>
                 
-                <div class="flex flex-wrap items-center gap-2">
-                    <!-- YÊU CẦU 9: Tìm kiếm tức thì với oninput thay vì onkeyup -->
+                <div class="flex flex-wrap items-center gap-3 glass-panel p-2 rounded-2xl">
                     <div class="relative">
-                        <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-                        <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Tìm mã khóa, nhóm..." class="border border-slate-200 bg-white text-slate-700 text-xs rounded-lg pl-8 pr-3 py-2 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium w-48 transition-all hover:w-56 outline-none shadow-sm">
+                        <i class="fas fa-search absolute left-4 top-3 text-slate-400"></i>
+                        <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Tra cứu mã, nhóm khóa..." class="bg-slate-50 border-none text-slate-700 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-blue-200 w-56 transition-all outline-none font-medium">
                     </div>
                     
-                    <select id="monthFilter" onchange="renderAll()" class="border border-slate-200 bg-white text-slate-700 text-xs rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-100 outline-none font-medium cursor-pointer shadow-sm">
+                    <select id="monthFilter" onchange="renderAll()" class="bg-slate-50 border-none text-slate-700 text-sm rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-200 outline-none font-medium cursor-pointer">
                         <option value="all">Tất cả tháng</option>
                         <option value="1">Tháng 1</option><option value="2">Tháng 2</option><option value="3">Tháng 3</option>
                         <option value="4">Tháng 4</option><option value="5">Tháng 5</option><option value="6">Tháng 6</option>
@@ -119,262 +137,226 @@
                         <option value="10">Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option>
                     </select>
 
-                    <!-- YÊU CẦU 8: Nút bỏ bộ lọc -->
-                    <button onclick="clearFilters()" class="btn-action px-3 py-2 rounded-lg text-[11px] font-bold shadow-sm" title="Xóa tất cả bộ lọc">
-                        <i class="fas fa-filter-circle-xmark text-slate-400"></i>
+                    <button onclick="clearFilters()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-200 text-slate-500 transition" title="Xóa bộ lọc">
+                        <i class="fas fa-filter-circle-xmark"></i>
                     </button>
 
-                    <button onclick="exportCSV()" class="btn-action px-4 py-2 rounded-lg text-xs font-bold shadow-sm bg-green-50 text-green-700 border-green-200 hover:bg-green-100">
-                        <i class="fas fa-download mr-1.5"></i> Export
+                    <button onclick="exportCSV()" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition shadow-sm border border-emerald-100 flex items-center gap-2">
+                        <i class="fas fa-file-export"></i> Xuất Excel
                     </button>
                     
-                    <button onclick="requestDelete(-1)" class="w-8 h-8 flex items-center justify-center rounded-lg border border-red-100 text-red-400 bg-white hover:bg-red-50 hover:text-red-600 transition ml-1" title="Dọn sạch dữ liệu">
-                        <i class="fas fa-trash-alt text-xs"></i>
+                    <button onclick="requestDelete(-1)" class="w-10 h-10 flex items-center justify-center rounded-xl border border-red-100 text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition shadow-sm" title="Dọn sạch dữ liệu">
+                        <i class="fas fa-trash-alt"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- YÊU CẦU 1 & 4: DASHBOARD HIỆN ĐẠI (KIỂU SAAS) -->
-            <!-- Hàng 1: Thẻ thông số (Thu gọn Box AI) -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                    <div id="filterIndicator" class="absolute top-0 right-0 w-2 h-full bg-blue-500 hidden"></div>
-                    <div class="flex justify-between items-start mb-2">
-                        <p class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Tổng Lớp</p>
-                        <i class="fas fa-chalkboard-teacher text-slate-300"></i>
-                    </div>
-                    <h4 class="text-3xl font-black text-slate-800" id="stat-total">0</h4>
+            <!-- DASHBOARD NUMBERS (5D Glass Cards) -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                <div class="glass-panel stat-card p-6 rounded-[24px]">
+                    <div id="filterIndicator" class="absolute top-4 right-4 text-[9px] bg-blue-500 text-white font-bold px-2 py-1 rounded-md hidden shadow-lg shadow-blue-200">Đang lọc</div>
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-xl mb-4 shadow-inner border border-blue-100"><i class="fas fa-chalkboard"></i></div>
+                    <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-1">Tổng Khóa Học</p>
+                    <h4 class="text-4xl font-black text-slate-800 tracking-tight" id="stat-total">0</h4>
                 </div>
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <div class="flex justify-between items-start mb-2">
-                        <p class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Tổng HV</p>
-                        <i class="fas fa-users text-slate-300"></i>
-                    </div>
-                    <h4 class="text-3xl font-black text-slate-800" id="stat-trainees">0</h4>
+                
+                <div class="glass-panel stat-card p-6 rounded-[24px]">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center text-xl mb-4 shadow-inner border border-indigo-100"><i class="fas fa-user-graduate"></i></div>
+                    <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-1">Tổng Học Viên</p>
+                    <h4 class="text-4xl font-black text-slate-800 tracking-tight" id="stat-trainees">0</h4>
                 </div>
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <div class="flex justify-between items-start mb-2">
-                        <p class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Tỷ lệ Pass</p>
-                        <i class="fas fa-check-circle text-green-300"></i>
-                    </div>
-                    <h4 class="text-3xl font-black text-green-600" id="stat-passrate">0%</h4>
+                
+                <div class="glass-panel stat-card p-6 rounded-[24px]">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-xl mb-4 shadow-inner border border-emerald-100"><i class="fas fa-check-double"></i></div>
+                    <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-1">Tỷ lệ Hoàn thành</p>
+                    <h4 class="text-4xl font-black text-emerald-500 tracking-tight" id="stat-passrate">0%</h4>
                 </div>
-                <!-- BOX AI MỚI: Nhỏ gọn, tinh tế -->
-                <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-5 rounded-2xl border border-slate-700 shadow-lg text-white relative">
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5"><i class="fas fa-bolt text-yellow-400 mr-1"></i> Insight</p>
-                    <p class="text-[12px] font-medium leading-snug text-slate-200 line-clamp-3" id="ai-suggestion">Đang thu thập dữ liệu...</p>
+
+                <div class="stat-card p-6 rounded-[24px] bg-slate-900 text-white shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] border border-slate-700">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-800 text-yellow-400 flex items-center justify-center text-xl shadow-inner border border-slate-600"><i class="fas fa-lightbulb"></i></div>
+                        <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest">AI Insight</p>
+                    </div>
+                    <p class="text-[13px] font-medium leading-relaxed text-slate-200" id="ai-suggestion">Phân tích tín hiệu...</p>
                 </div>
             </div>
 
-            <!-- Hàng 2: Biểu đồ -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <!-- Chart 1 -->
-                <div class="col-span-1 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center h-64 relative group">
-                    <p class="text-[11px] text-slate-500 font-bold uppercase w-full text-left mb-2">Trạng thái khóa</p>
-                    <div class="w-full h-44"><canvas id="statusChart"></canvas></div>
+            <!-- CHARTS SECTION -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="col-span-1 glass-panel p-6 rounded-[24px] flex flex-col items-center justify-center h-72 relative group hover-5d">
+                    <p class="text-[11px] text-slate-400 font-bold uppercase w-full text-left mb-4 tracking-widest"><i class="fas fa-circle-notch mr-2"></i>Tiến độ khóa</p>
+                    <div class="w-full h-48"><canvas id="statusChart"></canvas></div>
                 </div>
-                <!-- Chart 2 -->
-                <div class="col-span-1 md:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center h-64 relative">
-                    <p class="text-[11px] text-slate-500 font-bold uppercase w-full text-left mb-2">Chất lượng học viên (Pass/Fail)</p>
-                    <div class="w-full h-48"><canvas id="performanceChart"></canvas></div>
+                <div class="col-span-1 md:col-span-2 glass-panel p-6 rounded-[24px] flex flex-col justify-center h-72 relative hover-5d">
+                    <p class="text-[11px] text-slate-400 font-bold uppercase w-full text-left mb-4 tracking-widest"><i class="fas fa-chart-column mr-2"></i>Biểu đồ Hiệu suất Đạt/Fail</p>
+                    <div class="w-full h-52"><canvas id="performanceChart"></canvas></div>
                 </div>
             </div>
 
-            <!-- BẢNG BÁO CÁO (YÊU CẦU 3 & 7: Tách cột, Thêm cột HV) -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <!-- TABLE BÁO CÁO 5D -->
+            <div class="glass-panel rounded-[24px] overflow-hidden shadow-sm">
                 <div class="overflow-x-auto custom-scrollbar">
-                    <table class="w-full text-left text-[12px] font-medium">
+                    <table class="w-full text-left text-[13px] font-medium">
                         <thead class="bg-slate-50/80">
                             <tr>
-                                <th class="px-4 py-4 text-center">#</th>
-                                <th class="px-4 py-4 sortable" onclick="handleSort('groupName')">Nhóm <i class="fas fa-sort ml-1 opacity-50"></i></th>
-                                <th class="px-4 py-4 sortable" onclick="handleSort('courseId')">Mã Khóa <i class="fas fa-sort ml-1 opacity-50"></i></th>
-                                <th class="px-4 py-4 text-center sortable" onclick="handleSort('month')">Tháng <i class="fas fa-sort ml-1 opacity-50"></i></th>
-                                <th class="px-4 py-4 text-center">Bắt đầu</th>
-                                <th class="px-4 py-4 text-center">Kết thúc</th>
-                                <th class="px-4 py-4 text-center text-indigo-600 bg-indigo-50/50">Tổng HV</th>
-                                <th class="px-4 py-4 text-center text-green-600 bg-green-50/50">Đạt</th>
-                                <th class="px-4 py-4 text-center text-red-500 bg-red-50/50">Fail</th>
-                                <th class="px-4 py-4 text-center">Tỷ lệ</th>
-                                <th class="px-4 py-4 text-center">Tài nguyên</th>
-                                <th class="px-4 py-4 text-center sortable" onclick="handleSort('status')">Trạng thái <i class="fas fa-sort ml-1 opacity-50"></i></th>
-                                <th class="px-4 py-4 text-center">Hành động</th>
+                                <th class="px-5 py-5 text-center">#</th>
+                                <th class="px-5 py-5 sortable" onclick="handleSort('groupName')">Nhóm <i class="fas fa-sort ml-1 opacity-40"></i></th>
+                                <th class="px-5 py-5 sortable" onclick="handleSort('courseId')">Mã Khóa <i class="fas fa-sort ml-1 opacity-40"></i></th>
+                                <th class="px-5 py-5 text-center sortable" onclick="handleSort('month')">Tháng <i class="fas fa-sort ml-1 opacity-40"></i></th>
+                                <th class="px-5 py-5 text-center">Bắt đầu</th>
+                                <th class="px-5 py-5 text-center">Kết thúc</th>
+                                <th class="px-5 py-5 text-center text-indigo-600 bg-indigo-50/30"><i class="fas fa-users"></i> Tổng</th>
+                                <th class="px-5 py-5 text-center text-emerald-600 bg-emerald-50/30"><i class="fas fa-check"></i> Đạt</th>
+                                <th class="px-5 py-5 text-center text-red-500 bg-red-50/30"><i class="fas fa-times"></i> Fail</th>
+                                <th class="px-5 py-5 text-center">Tỷ lệ</th>
+                                <th class="px-5 py-5 text-center">Tài nguyên</th>
+                                <th class="px-5 py-5 text-center sortable" onclick="handleSort('status')">Trạng thái <i class="fas fa-sort ml-1 opacity-40"></i></th>
+                                <th class="px-5 py-5 text-center">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="reportBody" class="divide-y divide-slate-100 text-slate-600"></tbody>
+                        <tbody id="reportBody" class="divide-y divide-slate-100/50 text-slate-600"></tbody>
                     </table>
                 </div>
 
-                <!-- YÊU CẦU 2: PHÂN TRANG GỌN GÀNG BÊN DƯỚI -->
-                <div class="bg-slate-50/50 border-t border-slate-100 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4" id="paginationZone">
-                    <p class="text-xs text-slate-500 font-medium" id="pageInfo">Hiển thị 0 - 0 trong 0 kết quả</p>
-                    
-                    <div class="flex items-center space-x-3 bg-white rounded-lg border border-slate-200 p-1 shadow-sm">
-                        <div class="flex space-x-1 px-1" id="pageButtons"></div>
-                        <div class="border-l border-slate-200 pl-2">
-                            <select id="pageSizeFilter" onchange="handlePageSize(this.value)" class="text-[11px] font-bold text-slate-600 border-none bg-transparent py-1 pr-6 focus:ring-0 cursor-pointer outline-none">
-                                <option value="10">10 / trang</option>
-                                <option value="20">20 / trang</option>
-                                <option value="30">30 / trang</option>
-                                <option value="50">50 / trang</option>
-                            </select>
-                        </div>
+                <!-- PHÂN TRANG -->
+                <div class="bg-white/50 border-t border-slate-100 px-6 py-5 flex justify-between items-center" id="paginationZone">
+                    <p class="text-xs text-slate-500 font-bold" id="pageInfo">Hiển thị 0 - 0 trong 0 kết quả</p>
+                    <div class="flex items-center space-x-4">
+                        <div class="flex space-x-1" id="pageButtons"></div>
+                        <select id="pageSizeFilter" onchange="handlePageSize(this.value)" class="text-xs font-bold text-slate-600 border border-slate-200 bg-white rounded-lg px-3 py-1.5 focus:ring-2 outline-none cursor-pointer">
+                            <option value="10">10 dòng</option><option value="20">20 dòng</option><option value="30">30 dòng</option><option value="50">50 dòng</option>
+                        </select>
                     </div>
                 </div>
             </div>
         </section>
     </main>
 
-    <footer class="bg-slate-900 py-12 text-center mt-20">
-        <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">© 2026 Trainer Hub • Internal Analytics</p>
+    <footer class="bg-slate-900 py-16 text-center mt-20 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+        <p class="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] relative z-10">© 2026 Trainer Hub • Automated Analytics System</p>
     </footer>
 
-    <!-- MODAL SỬA THÔNG TIN -->
-    <div id="editModal" class="modal fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] items-center justify-center p-4">
-        <div class="bg-white w-full max-w-3xl rounded-[24px] shadow-2xl relative flex flex-col max-h-[95vh]">
+    <!-- MODAL SỬA THÔNG TIN 5D -->
+    <div id="editModal" class="modal fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-4xl rounded-[32px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.4)] relative flex flex-col max-h-[90vh] overflow-hidden border border-white">
             
-            <!-- YÊU CẦU 6: Nút X đóng cửa sổ -->
-            <button onclick="closeModal('editModal')" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center transition z-10">
+            <button onclick="closeModal('editModal')" class="absolute top-6 right-6 text-slate-400 hover:text-rose-500 hover:bg-rose-50 w-10 h-10 rounded-full flex items-center justify-center transition-all z-10 text-xl shadow-sm bg-slate-50 border border-slate-100">
                 <i class="fas fa-times"></i>
             </button>
 
-            <div class="p-6 md:p-8 border-b border-slate-100 flex-shrink-0">
-                <h3 class="text-xl font-bold text-slate-800">Cập nhật Báo cáo Khóa học</h3>
-                <p class="text-xs text-slate-500 mt-1">Hệ thống sẽ tự động tính toán Tháng dựa trên Ngày bắt đầu.</p>
+            <div class="px-10 py-8 bg-slate-50/50 border-b border-slate-100 flex-shrink-0">
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight">Cập nhật Báo cáo</h3>
+                <p class="text-xs text-slate-500 mt-2 font-medium"><i class="fas fa-info-circle text-blue-500 mr-1"></i> Dữ liệu "Tháng" sẽ tự động đồng bộ theo "Ngày Bắt Đầu" để đảm bảo tính chính xác.</p>
             </div>
             
-            <div class="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-grow">
+            <div class="px-10 py-8 overflow-y-auto custom-scrollbar flex-grow bg-white">
                 <input type="hidden" id="editIndex">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Cột 1 -->
-                    <div class="space-y-5">
-                        <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <!-- Column 1: Config -->
+                    <div class="space-y-6">
+                        <div class="bg-blue-50/30 p-5 rounded-2xl border border-blue-50 space-y-4">
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">Nhóm Khóa</label>
-                                <select id="editGroupName" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-[13px] font-medium outline-none focus:bg-white focus:border-blue-400 transition">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Nhóm Khóa</label>
+                                <select id="editGroupName" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition shadow-sm cursor-pointer">
                                     <option value="SPCB">Sản phẩm Cơ bản</option><option value="KV1">Sản phẩm KV1</option>
                                     <option value="TAX">HĐĐT - Thuế</option><option value="FNB">KiotViet FNB</option>
                                     <option value="SALON">KiotViet Salon</option><option value="HOTEL">KiotViet Hotel</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">Trạng thái</label>
-                                <select id="editStatus" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-[13px] font-medium outline-none focus:bg-white focus:border-blue-400 transition">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Mã Khóa Nhận Diện</label>
+                                <input type="text" id="editCourseId" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-blue-600 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition uppercase shadow-sm placeholder-slate-300" placeholder="VD: SPCB-01-HCM">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Trạng thái</label>
+                                <select id="editStatus" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition shadow-sm cursor-pointer">
                                     <option value="Hoàn thành">Hoàn thành</option><option value="Đang diễn ra">Đang diễn ra</option>
                                     <option value="Dời lịch">Dời lịch</option><option value="Hủy">Hủy</option>
                                 </select>
                             </div>
                         </div>
-                        
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">Mã Khóa (VD: SPCB-01-HCM)</label>
-                            <input type="text" id="editCourseId" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-[13px] font-medium outline-none focus:bg-white focus:border-blue-400 transition uppercase">
-                        </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">Bắt đầu</label>
-                                <input type="date" id="editStart" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-[13px] font-medium outline-none focus:bg-white focus:border-blue-400 transition cursor-pointer">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Ngày Bắt Đầu</label>
+                                <input type="date" id="editStart" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition shadow-sm cursor-pointer">
                             </div>
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">Kết thúc</label>
-                                <input type="date" id="editFinish" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-[13px] font-medium outline-none focus:bg-white focus:border-blue-400 transition cursor-pointer">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Ngày Kết Thúc</label>
+                                <input type="date" id="editFinish" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition shadow-sm cursor-pointer">
                             </div>
-                        </div>
-
-                        <!-- YÊU CẦU 5: Tự hiểu Tháng (Readonly để thấy kết quả sync) -->
-                        <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100 flex justify-between items-center">
-                            <label class="text-[11px] font-bold text-blue-600 uppercase">Tháng ghi nhận</label>
-                            <input type="number" id="editMonth" class="w-16 bg-transparent border-none text-right font-bold text-blue-700 outline-none" readonly>
                         </div>
                     </div>
 
-                    <!-- Cột 2 -->
-                    <div class="space-y-5">
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
-                            <p class="text-[11px] font-bold text-slate-700 uppercase tracking-widest"><i class="fas fa-chart-line mr-1 text-slate-400"></i> Số liệu Học viên</p>
+                    <!-- Column 2: Performance & Links -->
+                    <div class="space-y-6">
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 shadow-inner">
+                            <p class="text-[11px] font-black text-slate-700 uppercase tracking-widest mb-4 flex items-center"><i class="fas fa-chart-line mr-2 text-indigo-500 text-lg"></i> Hiệu suất đầu ra</p>
                             <div class="grid grid-cols-3 gap-3">
-                                <div><label class="text-[10px] font-bold text-slate-500 mb-1 block">Tổng HV</label><input type="number" id="editTotal" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-blue-400 text-center"></div>
-                                <div><label class="text-[10px] font-bold text-green-600 mb-1 block">Pass</label><input type="number" id="editPass" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-green-600 outline-none focus:border-green-400 text-center"></div>
-                                <div><label class="text-[10px] font-bold text-red-500 mb-1 block">Fail</label><input type="number" id="editFail" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-red-500 outline-none focus:border-red-400 text-center"></div>
+                                <div><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Tổng HV</label><input type="number" id="editTotal" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-3 text-lg font-black text-slate-700 outline-none focus:border-blue-400 text-center shadow-sm"></div>
+                                <div><label class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-2 block">Số lượng Đạt</label><input type="number" id="editPass" class="w-full bg-white border border-emerald-200 rounded-xl px-3 py-3 text-lg font-black text-emerald-600 outline-none focus:border-emerald-400 text-center shadow-sm"></div>
+                                <div><label class="text-[10px] font-bold text-rose-500 uppercase tracking-wider mb-2 block">Số lượng Fail</label><input type="number" id="editFail" class="w-full bg-white border border-rose-200 rounded-xl px-3 py-3 text-lg font-black text-rose-500 outline-none focus:border-rose-400 text-center shadow-sm"></div>
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5"><i class="fas fa-file-excel mr-1 text-green-600"></i> Link Sheet Điểm</label>
-                            <input type="text" id="editListLink" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-medium outline-none focus:bg-white focus:border-blue-400" placeholder="https://...">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5"><i class="fas fa-poll mr-1 text-purple-500"></i> Link Quiz</label>
-                            <input type="text" id="editQuizLink" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-medium outline-none focus:bg-white focus:border-blue-400" placeholder="https://...">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5"><i class="fab fa-google-drive mr-1 text-blue-500"></i> Link Record (G-Drive)</label>
-                            <input type="text" id="editRecordLink" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-medium outline-none focus:bg-white focus:border-blue-400" placeholder="https://...">
+                        <div class="space-y-3">
+                            <div class="relative">
+                                <i class="fas fa-file-excel absolute left-4 top-4 text-emerald-600"></i>
+                                <input type="text" id="editListLink" class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-xs font-medium outline-none focus:border-blue-400 shadow-sm" placeholder="Link Spreadsheet Danh sách...">
+                            </div>
+                            <div class="relative">
+                                <i class="fas fa-poll absolute left-4 top-4 text-purple-500"></i>
+                                <input type="text" id="editQuizLink" class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-xs font-medium outline-none focus:border-blue-400 shadow-sm" placeholder="Link Bài Test / Quiz...">
+                            </div>
+                            <div class="relative">
+                                <i class="fab fa-google-drive absolute left-4 top-4 text-blue-500"></i>
+                                <input type="text" id="editRecordLink" class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-xs font-medium outline-none focus:border-blue-400 shadow-sm" placeholder="Link Google Drive Record Camera...">
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="p-6 md:p-8 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 rounded-b-[24px] flex-shrink-0">
-                <button onclick="closeModal('editModal')" class="px-6 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200 transition">Hủy bỏ</button>
-                <button onclick="saveEdit()" class="px-8 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-lg shadow-blue-200">Cập nhật Báo cáo</button>
+            <div class="px-10 py-6 bg-slate-50/50 border-t border-slate-100 flex justify-end gap-4 rounded-b-[32px] flex-shrink-0">
+                <button onclick="closeModal('editModal')" class="px-6 py-3 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-200 transition">Hủy thao tác</button>
+                <button onclick="saveEdit()" class="px-8 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition shadow-[0_10px_20px_-10px_rgba(59,130,246,0.6)] transform hover:-translate-y-0.5">Lưu thay đổi</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL PASSWORD -->
-    <div id="authModal" class="modal fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[200] items-center justify-center p-4">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center relative">
-            <button onclick="closeModal('authModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
-            <div class="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-xl border border-red-100"><i class="fas fa-shield-alt"></i></div>
-            <h3 class="text-lg font-bold text-slate-800 mb-1">Xác thực Quyền</h3>
-            <p class="text-[11px] text-slate-500 mb-6 px-4">Nhập mật khẩu an toàn để thực thi lệnh xóa dữ liệu.</p>
+    <!-- MODAL PASSWORD BẢO MẬT -->
+    <div id="authModal" class="modal fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[200] items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-sm rounded-[32px] p-8 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] text-center relative border border-white">
+            <button onclick="closeModal('authModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full hover:bg-slate-100"><i class="fas fa-times"></i></button>
             
-            <input type="password" id="authPassword" placeholder="••••••" class="w-full text-center border-2 border-slate-100 rounded-xl px-4 py-3 font-mono text-xl tracking-[0.5em] focus:border-red-400 focus:bg-red-50/30 outline-none mb-6 transition">
+            <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl border border-rose-100 shadow-inner"><i class="fas fa-shield-alt"></i></div>
+            <h3 class="text-xl font-black text-slate-800 mb-2 tracking-tight">Xác thực Bảo mật</h3>
+            <p class="text-xs text-slate-500 mb-8 px-2 font-medium">Bạn đang yêu cầu xóa dữ liệu. Vui lòng nhập mã PIN an toàn và <b class="text-slate-700">nhấn Enter</b>.</p>
             
-            <button onclick="executeDelete()" class="w-full py-3 rounded-xl text-xs font-bold text-white bg-red-500 hover:bg-red-600 transition shadow-lg shadow-red-200">Xác nhận Xóa</button>
+            <!-- YÊU CẦU 1: onkeypress Enter -->
+            <input type="password" id="authPassword" onkeypress="handleAuthKeyPress(event)" placeholder="••••••" class="w-full text-center border-2 border-slate-100 bg-slate-50 rounded-2xl px-4 py-4 font-mono text-2xl tracking-[0.5em] focus:border-rose-400 focus:bg-white outline-none mb-8 transition shadow-inner">
+            
+            <button onclick="executeDelete()" class="w-full py-4 rounded-2xl text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 transition shadow-[0_10px_20px_-10px_rgba(244,63,94,0.6)] transform hover:-translate-y-0.5 uppercase tracking-wider">Thực thi Xóa</button>
         </div>
     </div>
 
     <script>
-        // CẤU HÌNH DATA
         const courseConfig = [
             { id: 'SPCB', label: 'Retail', title: 'Sản phẩm Cơ bản', desc: 'Lộ trình 3 buổi: Tổng quan, 6 bước demo và App.', sessions: 3, border: 'border-l-blue-500', color: 'text-blue-500', link: 'spcb.html' },
-            { id: 'KV1', label: 'Advanced', title: 'Sản phẩm KV1', desc: 'Nâng cao kỹ năng quản lý tình huống nghiệp vụ.', sessions: 1, border: 'border-l-indigo-600', color: 'text-indigo-600', link: 'kv1.html' },
-            { id: 'TAX', label: 'Specialist', title: 'HĐĐT - Thuế', desc: 'Kiến thức chuyên sâu về hóa đơn điện tử.', sessions: 0, border: 'border-l-slate-500', color: 'text-slate-500', link: '' },
+            { id: 'KV1', label: 'Advanced', title: 'Sản phẩm KV1', desc: 'Nâng cao kỹ năng quản lý tình huống nghiệp vụ.', sessions: 1, border: 'border-l-indigo-500', color: 'text-indigo-500', link: 'kv1.html' },
+            { id: 'TAX', label: 'Specialist', title: 'HĐĐT - Thuế', desc: 'Kiến thức chuyên sâu về hóa đơn điện tử.', sessions: 0, border: 'border-l-slate-400', color: 'text-slate-500', link: '' },
             { id: 'FNB', label: 'Industry', title: 'KiotViet FNB', desc: 'Nghiệp vụ dành riêng cho Nhà hàng, Cafe.', sessions: 0, border: 'border-l-orange-500', color: 'text-orange-500', link: '' },
             { id: 'SALON', label: 'Industry', title: 'KiotViet Salon', desc: 'Nghiệp vụ quản lý tiệm Spa, Hair Salon.', sessions: 0, border: 'border-l-fuchsia-500', color: 'text-fuchsia-500', link: '' },
             { id: 'HOTEL', label: 'Industry', title: 'KiotViet Hotel', desc: 'Giải pháp quản lý cơ sở lưu trú, khách sạn.', sessions: 0, border: 'border-l-emerald-500', color: 'text-emerald-500', link: '' }
         ];
 
-        let statusChartInstance = null; 
-        let perfChartInstance = null;
-        let deleteTargetIndex = null;
+        let statusChartInstance = null, perfChartInstance = null, deleteTargetIndex = null;
         const SECRET_KEY = "014023"; 
 
-        const AppState = {
-            filters: { month: 'all', search: '', status: '' },
-            sort: { col: '', asc: true },
-            pagination: { page: 1, limit: 10 }
-        };
+        const AppState = { filters: { month: 'all', search: '', status: '' }, sort: { col: '', asc: true }, pagination: { page: 1, limit: 10 } };
 
-        // YÊU CẦU 5: Tự động điền Tháng dựa trên Ngày Bắt Đầu
-        document.getElementById('editStart').addEventListener('change', function(e) {
-            if(e.target.value) {
-                const date = new Date(e.target.value);
-                document.getElementById('editMonth').value = date.getMonth() + 1; // getMonth() trả về 0-11
-            }
-        });
-
-        // YÊU CẦU 8: Xóa bộ lọc
-        function clearFilters() {
-            AppState.filters = { month: 'all', search: '', status: '' };
-            AppState.pagination.page = 1;
-            document.getElementById('searchInput').value = '';
-            document.getElementById('monthFilter').value = 'all';
-            renderAll();
-        }
+        function clearFilters() { AppState.filters = { month: 'all', search: '', status: '' }; AppState.pagination.page = 1; document.getElementById('searchInput').value = ''; document.getElementById('monthFilter').value = 'all'; renderAll(); }
 
         function renderCourseCards() {
             const grid = document.getElementById('courseGrid');
@@ -382,25 +364,24 @@
             courseConfig.forEach(course => {
                 const isActive = course.link !== ''; 
                 const actionHTML = isActive 
-                    ? `<div class="mt-auto pt-5 border-t border-slate-100 flex justify-between items-center"><span class="text-[10px] text-slate-400 font-bold uppercase">${course.sessions} Sessions</span><a href="${course.link}" class="${course.color} font-bold text-xs flex items-center hover:underline group">Giảng dạy <i class="fas fa-arrow-right ml-1.5 text-[10px] transform group-hover:translate-x-1 transition-all"></i></a></div>`
-                    : `<div class="mt-auto pt-5 border-t border-slate-100 flex justify-between items-center opacity-50"><span class="text-[10px] text-slate-400 font-bold uppercase">-- Sessions</span><span class="text-slate-400 font-bold text-xs flex items-center italic cursor-not-allowed">Locked <i class="fas fa-lock ml-1.5 text-[10px]"></i></span></div>`;
-                const cardStateClass = isActive ? 'hover:-translate-y-1' : 'opacity-60 grayscale-[40%] bg-slate-50 cursor-not-allowed';
+                    ? `<div class="mt-auto pt-5 border-t border-slate-100 flex justify-between items-center"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${course.sessions} Sessions</span><a href="${course.link}" class="${course.color} font-bold text-xs flex items-center hover:underline group bg-${course.color.replace('text-','bg-').replace('-500','-50')} px-3 py-1.5 rounded-lg">Giảng dạy <i class="fas fa-arrow-right ml-1.5 text-[10px] transform group-hover:translate-x-1 transition-all"></i></a></div>`
+                    : `<div class="mt-auto pt-5 border-t border-slate-100 flex justify-between items-center opacity-50"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">-- Sessions</span><span class="text-slate-400 font-bold text-xs flex items-center italic cursor-not-allowed">Đang phát triển <i class="fas fa-lock ml-1.5 text-[10px]"></i></span></div>`;
+                const cardStateClass = isActive ? 'hover-5d' : 'opacity-60 grayscale-[50%] bg-slate-50 cursor-not-allowed';
 
-                grid.innerHTML += `<div class="course-card p-6 flex flex-col h-full border-l-4 ${course.border} ${cardStateClass}">
-                    <span class="text-[9px] bg-slate-100 w-fit px-2 py-1 rounded-md font-bold ${course.color} uppercase tracking-wider mb-3">${course.label}</span>
-                    <h3 class="text-base font-extrabold text-slate-800 mb-1.5">${course.title}</h3>
-                    <p class="text-[11px] text-slate-500 leading-relaxed mb-6 font-medium">${course.desc}</p>${actionHTML}</div>`;
+                grid.innerHTML += `<div class="glass-panel course-card p-6 flex flex-col h-full border-l-4 ${course.border} ${cardStateClass}">
+                    <span class="text-[9px] bg-slate-100 w-fit px-2 py-1 rounded-md font-black ${course.color} uppercase tracking-[0.1em] mb-3 shadow-sm">${course.label}</span>
+                    <h3 class="text-lg font-black text-slate-800 mb-2 tracking-tight">${course.title}</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed mb-6 font-medium">${course.desc}</p>${actionHTML}</div>`;
             });
         }
 
         function loadDB() {
             let data = JSON.parse(localStorage.getItem('kv_master_db')) || [];
             const now = new Date().getTime();
-            const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
             let isChanged = false;
             data = data.filter(item => {
                 if (!item.timestamp) { item.timestamp = now; isChanged = true; }
-                return (now - item.timestamp) <= oneYearInMs;
+                return (now - item.timestamp) <= (365 * 24 * 60 * 60 * 1000);
             });
             if (isChanged) localStorage.setItem('kv_master_db', JSON.stringify(data));
             return data;
@@ -409,12 +390,7 @@
         function handleSearch(val) { AppState.filters.search = val.toLowerCase(); AppState.pagination.page = 1; renderAll(); }
         function handlePageSize(val) { AppState.pagination.limit = parseInt(val); AppState.pagination.page = 1; renderAll(); }
         function goToPage(p) { AppState.pagination.page = p; renderAll(); }
-        
-        function handleSort(colName) {
-            if(AppState.sort.col === colName) AppState.sort.asc = !AppState.sort.asc; 
-            else { AppState.sort.col = colName; AppState.sort.asc = true; }
-            renderAll();
-        }
+        function handleSort(colName) { if(AppState.sort.col === colName) AppState.sort.asc = !AppState.sort.asc; else { AppState.sort.col = colName; AppState.sort.asc = true; } renderAll(); }
 
         function renderAll() {
             let allData = loadDB();
@@ -425,32 +401,23 @@
 
             renderDashboard(displayData);
 
-            if(AppState.filters.status !== "") {
-                displayData = displayData.filter(d => d.status === AppState.filters.status);
-                document.getElementById('filterIndicator').classList.remove('hidden');
-            } else document.getElementById('filterIndicator').classList.add('hidden');
+            if(AppState.filters.status !== "") { displayData = displayData.filter(d => d.status === AppState.filters.status); document.getElementById('filterIndicator').classList.remove('hidden'); } 
+            else document.getElementById('filterIndicator').classList.add('hidden');
 
             if(AppState.filters.search !== "") {
-                displayData = displayData.filter(d => 
-                    (d.courseId && d.courseId.toLowerCase().includes(AppState.filters.search)) ||
-                    (d.groupName && d.groupName.toLowerCase().includes(AppState.filters.search))
-                );
+                displayData = displayData.filter(d => (d.courseId && d.courseId.toLowerCase().includes(AppState.filters.search)) || (d.groupName && d.groupName.toLowerCase().includes(AppState.filters.search)));
             }
 
             if(AppState.sort.col !== "") {
                 displayData.sort((a, b) => {
-                    let valA = (a[AppState.sort.col] || '').toString().toLowerCase();
-                    let valB = (b[AppState.sort.col] || '').toString().toLowerCase();
-                    if(valA < valB) return AppState.sort.asc ? -1 : 1;
-                    if(valA > valB) return AppState.sort.asc ? 1 : -1;
-                    return 0;
+                    let valA = (a[AppState.sort.col] || '').toString().toLowerCase(), valB = (b[AppState.sort.col] || '').toString().toLowerCase();
+                    if(valA < valB) return AppState.sort.asc ? -1 : 1; if(valA > valB) return AppState.sort.asc ? 1 : -1; return 0;
                 });
             }
 
             renderTableWithPagination(displayData, allData);
         }
 
-        // YÊU CẦU 3 & 7: Render Table Tách Cột
         function renderTableWithPagination(displayData, allData) {
             const tbody = document.getElementById('reportBody');
             tbody.innerHTML = '';
@@ -463,85 +430,69 @@
             const endIdx = startIdx + AppState.pagination.limit;
             const paginatedData = displayData.slice(startIdx, endIdx);
 
-            document.getElementById('pageInfo').innerText = `Đang xem ${totalItems > 0 ? startIdx + 1 : 0} - ${Math.min(endIdx, totalItems)} / Tổng ${totalItems} khóa`;
+            document.getElementById('pageInfo').innerText = `Dòng ${totalItems > 0 ? startIdx + 1 : 0} - ${Math.min(endIdx, totalItems)} / Tổng ${totalItems}`;
             
             let btnHTML = '';
             for(let i=1; i<=totalPages; i++) {
-                if(i === AppState.pagination.page) btnHTML += `<button class="w-6 h-6 rounded bg-blue-50 text-blue-600 font-bold text-[10px] shadow-sm">${i}</button>`;
-                else btnHTML += `<button onclick="goToPage(${i})" class="w-6 h-6 rounded bg-transparent text-slate-500 hover:bg-slate-100 font-medium text-[10px] transition">${i}</button>`;
+                if(i === AppState.pagination.page) btnHTML += `<button class="w-7 h-7 rounded bg-blue-600 text-white font-bold text-[11px] shadow-md transform scale-105">${i}</button>`;
+                else btnHTML += `<button onclick="goToPage(${i})" class="w-7 h-7 rounded bg-slate-100 text-slate-500 hover:bg-slate-200 font-bold text-[11px] transition">${i}</button>`;
             }
             document.getElementById('pageButtons').innerHTML = btnHTML;
 
-            if(paginatedData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="13" class="text-center py-12 text-slate-400 italic text-sm">Không có dữ liệu khóa học.</td></tr>`;
-                return;
-            }
+            if(paginatedData.length === 0) { tbody.innerHTML = `<tr><td colspan="13" class="text-center py-16 text-slate-400 italic text-sm"><i class="fas fa-inbox text-3xl mb-3 block opacity-20"></i>Không có báo cáo nào.</td></tr>`; return; }
 
             paginatedData.forEach((item, displayIndex) => {
                 const realIndex = allData.findIndex(d => d.courseId === item.courseId && d.timestamp === item.timestamp);
                 
-                const linkDS = item.listLink ? `<a href="${item.listLink}" target="_blank" class="icon-link icon-excel"><i class="fas fa-file-excel"></i></a>` : `<span class="text-slate-200 cursor-not-allowed" title="Trống"><i class="fas fa-file-excel"></i></span>`;
-                const linkQ = item.quizLink ? `<a href="${item.quizLink}" target="_blank" class="icon-link icon-quiz"><i class="fas fa-poll"></i></a>` : `<span class="text-slate-200 cursor-not-allowed" title="Trống"><i class="fas fa-poll"></i></span>`;
-                const linkR = item.recordLink ? `<a href="${item.recordLink}" target="_blank" class="icon-link icon-drive"><i class="fab fa-google-drive"></i></a>` : `<span class="text-slate-200 cursor-not-allowed" title="Trống"><i class="fab fa-google-drive"></i></span>`;
+                const linkDS = item.listLink ? `<a href="${item.listLink}" target="_blank" class="icon-link icon-excel"><i class="fas fa-file-excel"></i></a>` : `<span class="text-slate-300" title="Trống"><i class="fas fa-file-excel"></i></span>`;
+                const linkQ = item.quizLink ? `<a href="${item.quizLink}" target="_blank" class="icon-link icon-quiz"><i class="fas fa-poll"></i></a>` : `<span class="text-slate-300" title="Trống"><i class="fas fa-poll"></i></span>`;
+                const linkR = item.recordLink ? `<a href="${item.recordLink}" target="_blank" class="icon-link icon-drive"><i class="fab fa-google-drive"></i></a>` : `<span class="text-slate-300" title="Trống"><i class="fab fa-google-drive"></i></span>`;
 
-                const tTotal = parseInt(item.totalTrainees) || 0;
-                const tPass = parseInt(item.passedTrainees) || 0;
-                const tFail = parseInt(item.failedTrainees) || 0;
-                const rateText = tTotal > 0 ? `<span class="font-bold text-slate-700">${Math.round((tPass/tTotal)*100)}%</span>` : `<span class="text-slate-300">--</span>`;
+                const tTotal = parseInt(item.totalTrainees) || 0, tPass = parseInt(item.passedTrainees) || 0, tFail = parseInt(item.failedTrainees) || 0;
+                const rateText = tTotal > 0 ? `<span class="font-black text-slate-800">${Math.round((tPass/tTotal)*100)}%</span>` : `<span class="text-slate-300 font-bold">--</span>`;
 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-blue-50/30 transition border-b border-slate-50">
-                        <td class="px-4 py-3 text-center text-slate-400 text-[10px] font-bold">${startIdx + displayIndex + 1}</td>
-                        <td class="px-4 py-3 font-bold text-slate-800 text-[11px]">${item.groupName}</td>
-                        <td class="px-4 py-3 font-bold text-blue-600 text-[11px]">${item.courseId}</td>
-                        <td class="px-4 py-3 text-center font-bold text-slate-500 text-[10px]">T${item.month}</td>
-                        <td class="px-4 py-3 text-center text-slate-500">${item.startDate || '--'}</td>
-                        <td class="px-4 py-3 text-center text-slate-500">${item.finishDate || '--'}</td>
-                        
-                        <td class="px-4 py-3 text-center bg-indigo-50/20 font-bold">${tTotal > 0 ? tTotal : '-'}</td>
-                        <td class="px-4 py-3 text-center bg-green-50/20 text-green-600 font-bold">${tPass > 0 ? tPass : '-'}</td>
-                        <td class="px-4 py-3 text-center bg-red-50/20 text-red-500 font-bold">${tFail > 0 ? tFail : '-'}</td>
-                        <td class="px-4 py-3 text-center bg-slate-50/30">${rateText}</td>
-                        
-                        <td class="px-4 py-3 text-center"><div class="flex justify-center space-x-3 text-sm">${linkDS}${linkQ}${linkR}</div></td>
-                        <td class="px-4 py-3 text-center"><span class="status-pill ${getStatusColor(item.status)}">${item.status}</span></td>
-                        <td class="px-4 py-3 text-center space-x-1">
-                            <button onclick="openEditModal(${realIndex})" class="action-icon icon-edit"><i class="fas fa-edit"></i></button>
-                            <button onclick="requestDelete(${realIndex})" class="action-icon icon-delete"><i class="fas fa-trash-alt"></i></button>
+                    <tr class="table-row-5d border-b border-slate-100">
+                        <td class="px-5 py-4 text-center text-slate-400 text-[10px] font-black">${startIdx + displayIndex + 1}</td>
+                        <td class="px-5 py-4 font-black text-slate-800 text-[11px]">${item.groupName}</td>
+                        <td class="px-5 py-4 font-black text-blue-600 text-[11px]">${item.courseId}</td>
+                        <td class="px-5 py-4 text-center font-black text-slate-400 text-[10px] uppercase">Tháng ${item.month}</td>
+                        <td class="px-5 py-4 text-center text-slate-600 text-xs font-medium">${item.startDate || '--'}</td>
+                        <td class="px-5 py-4 text-center text-slate-600 text-xs font-medium">${item.finishDate || '--'}</td>
+                        <td class="px-5 py-4 text-center bg-indigo-50/50 font-bold text-indigo-700">${tTotal > 0 ? tTotal : '-'}</td>
+                        <td class="px-5 py-4 text-center bg-emerald-50/50 text-emerald-600 font-bold">${tPass > 0 ? tPass : '-'}</td>
+                        <td class="px-5 py-4 text-center bg-rose-50/50 text-rose-500 font-bold">${tFail > 0 ? tFail : '-'}</td>
+                        <td class="px-5 py-4 text-center bg-slate-50/50">${rateText}</td>
+                        <td class="px-5 py-4 text-center"><div class="flex justify-center space-x-3 text-sm">${linkDS}${linkQ}${linkR}</div></td>
+                        <td class="px-5 py-4 text-center"><span class="status-pill ${getStatusColor(item.status)} shadow-sm">${item.status}</span></td>
+                        <td class="px-5 py-4 text-center space-x-1">
+                            <button onclick="openEditModal(${realIndex})" class="action-icon icon-edit"><i class="fas fa-pen text-xs"></i></button>
+                            <button onclick="requestDelete(${realIndex})" class="action-icon icon-delete"><i class="fas fa-trash text-xs"></i></button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        // YÊU CẦU 4: REDESIGN CHART.JS SAAS STYLE
         function renderDashboard(chartData) {
-            let totalClasses = chartData.length;
-            let sumTotal = 0, sumPass = 0, sumFail = 0;
+            let totalClasses = chartData.length, sumTotal = 0, sumPass = 0, sumFail = 0;
             const statusCounts = { 'Hoàn thành': 0, 'Đang diễn ra': 0, 'Dời lịch': 0, 'Hủy': 0 };
 
             chartData.forEach(item => { 
                 if(statusCounts[item.status] !== undefined) statusCounts[item.status]++; 
-                sumTotal += parseInt(item.totalTrainees) || 0;
-                sumPass += parseInt(item.passedTrainees) || 0;
-                sumFail += parseInt(item.failedTrainees) || 0;
+                sumTotal += parseInt(item.totalTrainees) || 0; sumPass += parseInt(item.passedTrainees) || 0; sumFail += parseInt(item.failedTrainees) || 0;
             });
 
             const passRate = sumTotal > 0 ? Math.round((sumPass/sumTotal)*100) : 0;
-
-            document.getElementById('stat-total').innerText = totalClasses;
-            document.getElementById('stat-trainees').innerText = sumTotal;
-            document.getElementById('stat-passrate').innerText = passRate + '%';
+            document.getElementById('stat-total').innerText = totalClasses; document.getElementById('stat-trainees').innerText = sumTotal; document.getElementById('stat-passrate').innerText = passRate + '%';
 
             const aiBox = document.getElementById('ai-suggestion');
-            if(totalClasses === 0) aiBox.innerText = "Chưa có đủ dữ liệu học viên để đưa ra lời khuyên. Hãy thiết lập khóa học.";
-            else if(passRate >= 85) aiBox.innerHTML = "<span class='text-emerald-400 font-bold'>Tốt (Healthy)</span><br>Chất lượng đào tạo cực tốt. Nên giữ vững lộ trình và bài tập hiện tại.";
-            else if(passRate >= 60) aiBox.innerHTML = "<span class='text-amber-400 font-bold'>Cảnh báo (Warning)</span><br>Tỷ lệ rớt bắt đầu cao. Xem xét review lại các câu hỏi khó trong Quiz.";
-            else aiBox.innerHTML = "<span class='text-rose-400 font-bold'>Rủi ro (Critical)</span><br>Chất lượng đầu ra không đảm bảo. Đề xuất tăng cường buổi thực hành 1:1.";
+            if(totalClasses === 0) aiBox.innerHTML = "<span class='text-slate-400'>Hệ thống trống. Cần tối thiểu 1 khóa để phân tích.</span>";
+            else if(passRate >= 85) aiBox.innerHTML = "<span class='text-emerald-400 font-bold'>Excellent (Khỏe mạnh)</span><br>Giáo án đang rất chuẩn. Tỷ lệ tiếp thu vượt mức kỳ vọng.";
+            else if(passRate >= 60) aiBox.innerHTML = "<span class='text-yellow-400 font-bold'>Warning (Lưu ý)</span><br>Tỷ lệ rớt >15%. Cần xem xét lại các câu hỏi khó trong bộ Quiz.";
+            else aiBox.innerHTML = "<span class='text-rose-400 font-bold'>Critical (Nguy hiểm)</span><br>Đa số học viên rớt. Đề xuất tăng thời lượng thực hành thực tế trên App.";
 
-            // MÀU SẮC MODERN
-            Chart.defaults.font.family = 'Inter';
-            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.font.family = 'Inter'; Chart.defaults.color = '#94a3b8';
 
             const ctxStatus = document.getElementById('statusChart').getContext('2d');
             if(statusChartInstance) statusChartInstance.destroy();
@@ -549,88 +500,66 @@
                 type: 'doughnut',
                 data: {
                     labels: ['Hoàn thành', 'Đang diễn', 'Dời lịch', 'Hủy'],
-                    datasets: [{
-                        data: [statusCounts['Hoàn thành'], statusCounts['Đang diễn ra'], statusCounts['Dời lịch'], statusCounts['Hủy']],
-                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'], 
-                        borderWidth: 0,
-                        hoverOffset: 4
-                    }]
+                    datasets: [{ data: [statusCounts['Hoàn thành'], statusCounts['Đang diễn ra'], statusCounts['Dời lịch'], statusCounts['Hủy']], backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'], borderWidth: 0, hoverOffset: 8 }]
                 },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, cutout: '75%',
-                    plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 6, font: {size: 10} } } },
-                    onClick: (evt, el, chart) => {
-                        if(el.length > 0) {
-                            let label = chart.data.labels[el[0].index];
-                            if(label === 'Đang diễn') label = 'Đang diễn ra';
-                            AppState.filters.status = (AppState.filters.status === label) ? "" : label;
-                        } else AppState.filters.status = "";
-                        renderAll();
-                    }
-                }
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 6, font: {size: 11, weight: 'bold'} } } }, onClick: (evt, el, chart) => { if(el.length > 0) { let label = chart.data.labels[el[0].index]; if(label === 'Đang diễn') label = 'Đang diễn ra'; AppState.filters.status = (AppState.filters.status === label) ? "" : label; } else AppState.filters.status = ""; renderAll(); } }
             });
 
             const ctxPerf = document.getElementById('performanceChart').getContext('2d');
             if(perfChartInstance) perfChartInstance.destroy();
+            
+            // Gradient fill for Bar Chart 5D
+            let gradientPass = ctxPerf.createLinearGradient(0, 0, 0, 400); gradientPass.addColorStop(0, '#10b981'); gradientPass.addColorStop(1, '#059669');
+            let gradientFail = ctxPerf.createLinearGradient(0, 0, 0, 400); gradientFail.addColorStop(0, '#f43f5e'); gradientFail.addColorStop(1, '#e11d48');
+
             perfChartInstance = new Chart(ctxPerf, {
                 type: 'bar',
-                data: {
-                    labels: ['Học viên Đạt', 'Học viên Fail'],
-                    datasets: [{
-                        data: [sumPass, sumFail],
-                        backgroundColor: ['#10b981', '#ef4444'],
-                        borderRadius: 6,
-                        barThickness: 32
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { 
-                        y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#f1f5f9' }, border: {display: false}, ticks: {stepSize: 1, font:{size: 10}} }, 
-                        x: { grid: { display: false }, border: {display: false}, ticks: {font:{size: 11, weight: 'bold'}} } 
-                    }
-                }
+                data: { labels: ['Học viên Đạt', 'Học viên Fail'], datasets: [{ data: [sumPass, sumFail], backgroundColor: [gradientPass, gradientFail], borderRadius: 8, barThickness: 40 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#f1f5f9' }, border: {display: false}, ticks: {stepSize: 1, font:{size: 11, weight: 'bold'}} }, x: { grid: { display: false }, border: {display: false}, ticks: {font:{size: 12, weight: '900'}} } } }
             });
         }
 
         function getStatusColor(s) {
-            if(s === 'Hoàn thành') return 'bg-green-100/50 text-green-700 border border-green-200';
-            if(s === 'Đang diễn ra') return 'bg-blue-100/50 text-blue-700 border border-blue-200';
-            if(s === 'Dời lịch') return 'bg-amber-100/50 text-amber-700 border border-amber-200';
-            if(s === 'Hủy') return 'bg-red-100/50 text-red-600 border border-red-200';
+            if(s === 'Hoàn thành') return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+            if(s === 'Đang diễn ra') return 'bg-blue-100 text-blue-700 border border-blue-200';
+            if(s === 'Dời lịch') return 'bg-amber-100 text-amber-700 border border-amber-200';
+            if(s === 'Hủy') return 'bg-rose-100 text-rose-700 border border-rose-200';
             return 'bg-slate-100 text-slate-600';
         }
 
         function openEditModal(realIndex) {
             const d = loadDB()[realIndex];
             document.getElementById('editIndex').value = realIndex;
-            document.getElementById('editCourseId').value = d.courseId || '';
-            document.getElementById('editGroupName').value = d.groupName || 'SPCB';
-            document.getElementById('editMonth').value = d.month || '';
+            document.getElementById('editCourseId').value = d.courseId || ''; document.getElementById('editGroupName').value = d.groupName || 'SPCB';
             document.getElementById('editStatus').value = d.status || 'Hoàn thành';
-            document.getElementById('editStart').value = d.startDate || '';
-            document.getElementById('editFinish').value = d.finishDate || '';
-            document.getElementById('editTotal').value = d.totalTrainees || '';
-            document.getElementById('editPass').value = d.passedTrainees || '';
-            document.getElementById('editFail').value = d.failedTrainees || '';
-            document.getElementById('editListLink').value = d.listLink || '';
-            document.getElementById('editQuizLink').value = d.quizLink || '';
-            document.getElementById('editRecordLink').value = d.recordLink || '';
-            
+            document.getElementById('editStart').value = d.startDate || ''; document.getElementById('editFinish').value = d.finishDate || '';
+            document.getElementById('editTotal').value = d.totalTrainees || ''; document.getElementById('editPass').value = d.passedTrainees || ''; document.getElementById('editFail').value = d.failedTrainees || '';
+            document.getElementById('editListLink').value = d.listLink || ''; document.getElementById('editQuizLink').value = d.quizLink || ''; document.getElementById('editRecordLink').value = d.recordLink || '';
             document.getElementById('editModal').classList.add('active');
         }
 
+        // YÊU CẦU 3: LOGIC DỮ LIỆU THÁNG NGHIÊM NGẶT
         function saveEdit() {
             const idx = document.getElementById('editIndex').value;
             let d = loadDB();
             
             d[idx].courseId = document.getElementById('editCourseId').value.toUpperCase();
             d[idx].groupName = document.getElementById('editGroupName').value;
-            d[idx].month = document.getElementById('editMonth').value;
             d[idx].status = document.getElementById('editStatus').value;
-            d[idx].startDate = document.getElementById('editStart').value;
+            
+            const startDate = document.getElementById('editStart').value;
+            d[idx].startDate = startDate;
             d[idx].finishDate = document.getElementById('editFinish').value;
+            
+            // Ép buộc Tháng phải bằng đúng Tháng của Ngày Bắt Đầu (Loại trừ khả năng User điền lệch)
+            if(startDate) {
+                const dateObj = new Date(startDate);
+                d[idx].month = dateObj.getMonth() + 1; // 0-11 -> 1-12
+            } else {
+                // Nếu xóa rỗng ngày bắt đầu, thì tháng mới giữ nguyên hoặc mặc định
+                d[idx].month = d[idx].month || new Date().getMonth() + 1; 
+            }
+
             d[idx].totalTrainees = document.getElementById('editTotal').value;
             d[idx].passedTrainees = document.getElementById('editPass').value;
             d[idx].failedTrainees = document.getElementById('editFail').value;
@@ -643,6 +572,7 @@
             renderAll();
         }
 
+        // YÊU CẦU 1 & 4: BẢO MẬT ENTER + CONFIRM
         function requestDelete(idx) {
             deleteTargetIndex = idx;
             document.getElementById('authPassword').value = '';
@@ -650,15 +580,36 @@
             setTimeout(() => document.getElementById('authPassword').focus(), 100);
         }
 
+        function handleAuthKeyPress(e) {
+            if (e.key === 'Enter') {
+                executeDelete();
+            }
+        }
+
         function executeDelete() {
             const pass = document.getElementById('authPassword').value;
-            if(pass !== SECRET_KEY) { alert("Sai mã an toàn! Không thể thực thi."); return; }
+            if(pass !== SECRET_KEY) { alert("Sai mã PIN an toàn! Lệnh bị từ chối."); return; }
 
-            if(deleteTargetIndex === -1) { localStorage.removeItem('kv_master_db'); alert("Đã dọn sạch toàn bộ dữ liệu hệ thống."); } 
-            else {
+            // Thêm Popup Xác nhận cuối cùng theo yêu cầu
+            const msg = deleteTargetIndex === -1 
+                ? "CẢNH BÁO ĐỎ: Bạn đang chuẩn bị xóa SẠCH toàn bộ dữ liệu hệ thống. Thao tác này không thể hoàn tác!\n\nNhấn OK để XÓA.\nNhấn Cancel để HỦY." 
+                : "Bạn có chắc chắn muốn xóa báo cáo khóa học này không?\n\nNhấn OK để XÓA.\nNhấn Cancel để HỦY.";
+            
+            const isConfirmed = confirm(msg);
+            if (!isConfirmed) {
+                closeModal('authModal');
+                return; // User nhấn Cancel thì thoát không làm gì cả
+            }
+
+            // Tiến hành xóa
+            if(deleteTargetIndex === -1) { 
+                localStorage.removeItem('kv_master_db'); 
+                alert("Đã xóa sạch hệ thống thành công."); 
+            } else {
                 let d = loadDB(); 
                 d.splice(deleteTargetIndex, 1); 
                 localStorage.setItem('kv_master_db', JSON.stringify(d)); 
+                alert("Đã xóa dữ liệu khóa học."); 
             }
             closeModal('authModal');
             renderAll();
@@ -666,7 +617,6 @@
 
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        // YÊU CẦU 3 & 7: Xuất file đầy đủ cột
         function exportCSV() {
             const data = loadDB();
             if(!data.length) return alert('Không có dữ liệu để xuất!');
