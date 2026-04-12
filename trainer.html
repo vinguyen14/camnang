@@ -9,9 +9,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #fcfcfd; color: #1e293b; }
-        .course-card { background: white; border: 1px solid #f1f5f9; border-radius: 24px; transition: all 0.3s ease; position: relative; }
-        .course-card:hover { box-shadow: 0 12px 30px -10px rgba(0,0,0,0.08); border-color: #cbd5e1; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; } /* Đổi nền sáng hơn chút để nổi bật thẻ trắng */
+        .course-card { background: white; border: 1px solid #e2e8f0; border-radius: 20px; transition: all 0.3s ease; position: relative; }
+        .course-card:hover { box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01); border-color: #cbd5e1; }
         
         .nav-link { color: #64748b; font-weight: 600; transition: all 0.2s; padding: 4px 0; border-bottom: 2px solid transparent; }
         .nav-link:hover { color: #2563eb; border-bottom-color: #2563eb; }
@@ -22,92 +22,96 @@
         .popup-remind { visibility: hidden; opacity: 0; position: absolute; right: 0; top: 35px; width: 240px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); transition: all 0.2s ease; }
         .notification-zone:hover .popup-remind { visibility: visible; opacity: 1; top: 45px; }
         
-        .status-pill { padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; white-space: nowrap; }
-        table th { white-space: nowrap; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; transition: color 0.2s; }
+        .status-pill { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.05em;}
+        table th { white-space: nowrap; font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; transition: color 0.2s; border-bottom: 2px solid #f1f5f9; }
         table th.sortable:hover { color: #2563eb; cursor: pointer; } 
+        table td { white-space: nowrap; } /* YÊU CẦU 3 & 7: Ngăn vỡ layout khi thêm nhiều cột */
         
-        .icon-link { transition: all 0.2s; display: inline-block; }
-        .icon-link:hover { transform: scale(1.15); }
+        .icon-link { transition: all 0.2s; display: inline-block; opacity: 0.8;}
+        .icon-link:hover { transform: translateY(-2px); opacity: 1;}
         .icon-excel { color: #107c41; } 
         .icon-quiz { color: #8b5cf6; } 
         .icon-drive { color: #3b82f6; } 
         
-        .action-icon { transition: all 0.2s; cursor: pointer; padding: 4px; }
-        .action-icon:hover { transform: scale(1.15); }
+        .action-icon { transition: all 0.2s; cursor: pointer; padding: 6px; border-radius: 6px; }
+        .action-icon:hover { background: #f1f5f9; }
         .icon-edit { color: #f59e0b; } 
         .icon-delete { color: #ef4444; } 
 
         .modal { display: none; }
-        .modal.active { display: flex; }
+        .modal.active { display: flex; animation: fadeIn 0.2s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         
-        /* Cải tiến UI Scrollbar cho bảng */
         .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="antialiased">
 
-    <nav class="bg-white/90 backdrop-blur-md border-b sticky top-0 z-50">
+    <!-- HEADER & NAV -->
+    <nav class="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <div class="flex items-center space-x-3">
-                <img src="https://logo.kiotviet.vn/KiotViet-Logo-Horizontal.svg" alt="KiotViet Logo" class="h-7">
-                <span class="text-xl font-bold tracking-tighter text-slate-800 border-l-2 border-slate-200 pl-3">Trainer Hub</span>
+                <img src="https://logo.kiotviet.vn/KiotViet-Logo-Horizontal.svg" alt="KiotViet Logo" class="h-6">
+                <span class="text-lg font-bold tracking-tight text-slate-800 border-l-2 border-slate-200 pl-3">Trainer Hub</span>
             </div>
             <div class="hidden md:flex space-x-8 text-[13px]">
                 <a href="#sales" class="nav-link">Đào tạo Sales</a>
-                <a href="#reports" class="nav-link">Báo cáo & Record</a>
+                <a href="#reports" class="nav-link text-blue-600 border-b-2 border-blue-600">Báo cáo & Analytics</a>
             </div>
         </div>
     </nav>
 
-    <header class="py-20 border-b bg-white">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-16">
+    <header class="py-16 bg-white border-b border-slate-100">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-12">
             <div class="flex-1">
-                <h1 class="text-4xl font-black text-slate-900 leading-tight mb-4 tracking-tight">Hi Ve ! <br>Cẩm "nan giải" của Ve Ve</h1>
-                <p class="text-slate-500 text-lg mb-10 max-w-lg font-medium leading-relaxed">Nền tảng tập trung kịch bản giảng dạy và tự động hóa báo cáo khóa học KiotViet.</p>
-                <div class="flex flex-wrap gap-4">
-                    <a href="https://sites.google.com/kiotviet.com/daotaokiotviet/l%E1%BB%8Bch-%C4%91%C3%A0o-t%E1%BA%A1o-sales-2026" target="_blank" class="btn-action px-6 py-3 rounded-2xl font-bold text-sm flex items-center">
-                        <i class="far fa-calendar-alt mr-3"></i> Lịch Đào tạo 2026
+                <h1 class="text-4xl font-black text-slate-900 leading-tight mb-3 tracking-tight">Hi Ve ! <br>Cẩm "nan giải" của Ve Ve</h1>
+                <p class="text-slate-500 text-base mb-8 max-w-lg font-medium leading-relaxed">Nền tảng tập trung kịch bản giảng dạy và tự động hóa báo cáo khóa học KiotViet.</p>
+                <div class="flex flex-wrap gap-3">
+                    <a href="https://sites.google.com/kiotviet.com/daotaokiotviet/l%E1%BB%8Bch-%C4%91%C3%A0o-t%E1%BA%A1o-sales-2026" target="_blank" class="btn-action px-5 py-2.5 rounded-xl font-bold text-xs flex items-center shadow-sm">
+                        <i class="far fa-calendar-alt mr-2 text-blue-500"></i> Lịch Đào tạo
                     </a>
-                    <a href="https://sites.google.com/view/kiotviet-trainer-notes/copy-email" target="_blank" class="btn-action px-6 py-3 rounded-2xl font-bold text-sm flex items-center">
-                        <i class="far fa-envelope mr-3"></i> Tool Copy Email
+                    <!-- ĐÃ THÊM LẠI TOOL COPY EMAIL -->
+                    <a href="https://sites.google.com/view/kiotviet-trainer-notes/copy-email" target="_blank" class="btn-action px-5 py-2.5 rounded-xl font-bold text-xs flex items-center shadow-sm">
+                        <i class="far fa-envelope mr-2 text-indigo-500"></i> Tool Copy Email
                     </a>
                 </div>
             </div>
-            <div class="w-40 h-40 bg-blue-50 rounded-[40px] flex items-center justify-center shadow-inner border border-blue-100/50">
-                <i class="fas fa-graduation-cap text-6xl text-blue-500"></i>
+            <div class="w-32 h-32 bg-gradient-to-tr from-blue-50 to-indigo-50 rounded-[32px] flex items-center justify-center shadow-inner border border-white">
+                <i class="fas fa-chart-pie text-5xl text-blue-600/80"></i>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-6 py-20 space-y-32">
+    <main class="max-w-7xl mx-auto px-6 py-16 space-y-24">
 
         <!-- KHOÁ HỌC SALES -->
         <section id="sales">
-            <div class="flex items-center space-x-3 mb-12">
-                <div class="w-1.5 h-8 bg-blue-600 rounded-full"></div>
-                <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Hạng mục Đào tạo Sales</h2>
+            <div class="flex items-center space-x-3 mb-10">
+                <div class="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+                <h2 class="text-xl font-bold text-slate-900 tracking-tight">Hạng mục Đào tạo</h2>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="courseGrid"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="courseGrid"></div>
         </section>
 
-        <!-- DASHBOARD & BÁO CÁO -->
-        <section id="reports" class="bg-white rounded-[40px] border border-slate-100 p-8 md:p-12 shadow-sm overflow-hidden relative">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-6 border-b border-slate-50 pb-8">
+        <!-- DASHBOARD & BÁO CÁO MỚI -->
+        <section id="reports" class="scroll-mt-24">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4">
                 <div>
-                    <h2 class="text-3xl font-bold text-slate-900 tracking-tight">Báo cáo & Truy xuất khóa học</h2>
-                    <p class="text-sm text-slate-400 font-medium mt-1" id="dynamicSubtitle">Ghi nhận dữ liệu thực tế và lưu trữ an toàn trong 1 năm.</p>
+                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Analytics & Report</h2>
+                    <p class="text-[13px] text-slate-500 font-medium mt-1" id="dynamicSubtitle">Phân tích dữ liệu thực tế 1 năm qua.</p>
                 </div>
                 
-                <div class="flex flex-wrap items-center gap-3">
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- YÊU CẦU 9: Tìm kiếm tức thì với oninput thay vì onkeyup -->
                     <div class="relative">
-                        <i class="fas fa-search absolute left-3 top-3.5 text-slate-300 text-xs"></i>
-                        <input type="text" id="searchInput" onkeyup="handleSearch(this.value)" placeholder="Tìm mã khóa, nhóm..." class="border border-slate-200 text-slate-600 text-[13px] rounded-xl pl-8 pr-4 py-2 focus:outline-none focus:border-blue-500 font-medium w-48 transition-all hover:w-56">
+                        <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                        <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Tìm mã khóa, nhóm..." class="border border-slate-200 bg-white text-slate-700 text-xs rounded-lg pl-8 pr-3 py-2 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium w-48 transition-all hover:w-56 outline-none shadow-sm">
                     </div>
                     
-                    <select id="monthFilter" onchange="renderAll()" class="border border-slate-200 text-slate-600 text-[13px] rounded-xl px-4 py-2.5 focus:outline-none focus:border-blue-500 font-medium cursor-pointer">
+                    <select id="monthFilter" onchange="renderAll()" class="border border-slate-200 bg-white text-slate-700 text-xs rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-100 outline-none font-medium cursor-pointer shadow-sm">
                         <option value="all">Tất cả tháng</option>
                         <option value="1">Tháng 1</option><option value="2">Tháng 2</option><option value="3">Tháng 3</option>
                         <option value="4">Tháng 4</option><option value="5">Tháng 5</option><option value="6">Tháng 6</option>
@@ -115,203 +119,262 @@
                         <option value="10">Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option>
                     </select>
 
-                    <select id="pageSizeFilter" onchange="handlePageSize(this.value)" class="border border-slate-200 text-slate-600 text-[13px] rounded-xl px-4 py-2.5 focus:outline-none focus:border-blue-500 font-medium cursor-pointer">
-                        <option value="10">10 dòng/trang</option>
-                        <option value="20">20 dòng/trang</option>
-                        <option value="30">30 dòng/trang</option>
-                        <option value="50">50 dòng/trang</option>
-                    </select>
-
-                    <button onclick="exportCSV()" class="btn-action px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm">
-                        <i class="fas fa-file-csv mr-2 text-green-500"></i> Xuất (CSV)
+                    <!-- YÊU CẦU 8: Nút bỏ bộ lọc -->
+                    <button onclick="clearFilters()" class="btn-action px-3 py-2 rounded-lg text-[11px] font-bold shadow-sm" title="Xóa tất cả bộ lọc">
+                        <i class="fas fa-filter-circle-xmark text-slate-400"></i>
                     </button>
-                    <button onclick="requestDelete(-1)" class="text-red-400 text-[10px] font-bold uppercase hover:underline ml-2">Xóa dữ liệu</button>
+
+                    <button onclick="exportCSV()" class="btn-action px-4 py-2 rounded-lg text-xs font-bold shadow-sm bg-green-50 text-green-700 border-green-200 hover:bg-green-100">
+                        <i class="fas fa-download mr-1.5"></i> Export
+                    </button>
+                    
+                    <button onclick="requestDelete(-1)" class="w-8 h-8 flex items-center justify-center rounded-lg border border-red-100 text-red-400 bg-white hover:bg-red-50 hover:text-red-600 transition ml-1" title="Dọn sạch dữ liệu">
+                        <i class="fas fa-trash-alt text-xs"></i>
+                    </button>
                 </div>
             </div>
 
-            <!-- KHUNG DASHBOARD HIỆU SUẤT TỔNG HỢP -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
-                <!-- Cột Số liệu tổng quan -->
-                <div class="col-span-1 space-y-4">
-                    <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 relative">
-                        <p class="text-[11px] text-blue-500 font-bold uppercase mb-1 tracking-widest">Tổng Lớp Học</p>
-                        <h4 class="text-3xl font-black text-slate-800" id="stat-total">0</h4>
-                        <div id="filterIndicator" class="absolute top-4 right-4 text-[10px] bg-blue-600 text-white font-bold px-2 py-1 rounded-md hidden">Đang lọc</div>
+            <!-- YÊU CẦU 1 & 4: DASHBOARD HIỆN ĐẠI (KIỂU SAAS) -->
+            <!-- Hàng 1: Thẻ thông số (Thu gọn Box AI) -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div id="filterIndicator" class="absolute top-0 right-0 w-2 h-full bg-blue-500 hidden"></div>
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Tổng Lớp</p>
+                        <i class="fas fa-chalkboard-teacher text-slate-300"></i>
                     </div>
-                    <div class="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100">
-                        <p class="text-[11px] text-indigo-500 font-bold uppercase mb-1 tracking-widest">Tổng Học Viên</p>
-                        <h4 class="text-3xl font-black text-slate-800" id="stat-trainees">0</h4>
+                    <h4 class="text-3xl font-black text-slate-800" id="stat-total">0</h4>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Tổng HV</p>
+                        <i class="fas fa-users text-slate-300"></i>
                     </div>
-                    <div class="bg-green-50/50 p-5 rounded-2xl border border-green-100">
-                        <p class="text-[11px] text-green-600 font-bold uppercase mb-1 tracking-widest">Tỷ lệ Pass</p>
-                        <h4 class="text-3xl font-black text-green-600" id="stat-passrate">0%</h4>
+                    <h4 class="text-3xl font-black text-slate-800" id="stat-trainees">0</h4>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Tỷ lệ Pass</p>
+                        <i class="fas fa-check-circle text-green-300"></i>
                     </div>
+                    <h4 class="text-3xl font-black text-green-600" id="stat-passrate">0%</h4>
                 </div>
-
-                <!-- Cột Phân tích Lời khuyên AI -->
-                <div class="col-span-1 bg-slate-800 p-6 rounded-2xl shadow-sm text-white flex flex-col justify-center relative overflow-hidden">
-                    <div class="absolute -right-4 -top-4 opacity-10 text-9xl"><i class="fas fa-robot"></i></div>
-                    <p class="text-[11px] text-slate-400 font-bold uppercase mb-3 tracking-widest relative z-10"><i class="fas fa-magic mr-1"></i> Gợi ý Tối ưu</p>
-                    <p class="text-sm font-medium leading-relaxed text-slate-200 relative z-10" id="ai-suggestion">Đang phân tích dữ liệu hiệu suất...</p>
-                </div>
-
-                <!-- Vùng chứa Chart Trạng thái -->
-                <div class="col-span-1 bg-white p-4 rounded-2xl border border-slate-100 flex flex-col items-center justify-center h-56 cursor-pointer relative group">
-                    <p class="text-[10px] text-slate-400 uppercase font-bold absolute top-3 left-4">Trạng thái khóa</p>
-                    <div class="w-full h-40"><canvas id="statusChart"></canvas></div>
-                </div>
-
-                <!-- Vùng chứa Chart Hiệu suất -->
-                <div class="col-span-1 bg-white p-4 rounded-2xl border border-slate-100 flex flex-col items-center justify-center h-56 relative">
-                    <p class="text-[10px] text-slate-400 uppercase font-bold absolute top-3 left-4">Pass vs Fail</p>
-                    <div class="w-full h-40"><canvas id="performanceChart"></canvas></div>
+                <!-- BOX AI MỚI: Nhỏ gọn, tinh tế -->
+                <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-5 rounded-2xl border border-slate-700 shadow-lg text-white relative">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5"><i class="fas fa-bolt text-yellow-400 mr-1"></i> Insight</p>
+                    <p class="text-[12px] font-medium leading-snug text-slate-200 line-clamp-3" id="ai-suggestion">Đang thu thập dữ liệu...</p>
                 </div>
             </div>
 
-            <!-- BẢNG BÁO CÁO -->
-            <div class="overflow-x-auto rounded-2xl border border-slate-100 custom-scrollbar">
-                <table class="w-full text-left text-[13px] font-medium">
-                    <thead class="bg-slate-50">
-                        <tr>
-                            <th class="px-5 py-4">STT</th>
-                            <th class="px-5 py-4 sortable" onclick="handleSort('groupName')">Nhóm Khóa <i class="fas fa-sort ml-1"></i></th>
-                            <th class="px-5 py-4 sortable" onclick="handleSort('courseId')">Mã Khóa <i class="fas fa-sort ml-1"></i></th>
-                            <th class="px-5 py-4 text-center sortable" onclick="handleSort('month')">Tháng <i class="fas fa-sort ml-1"></i></th>
-                            <th class="px-5 py-4 text-center">Bắt đầu / Kết thúc</th>
-                            <th class="px-5 py-4 text-center">Tỷ lệ Đạt</th>
-                            <th class="px-5 py-4 text-center">Lưu trữ Links</th>
-                            <th class="px-5 py-4 text-center sortable" onclick="handleSort('status')">Trạng thái <i class="fas fa-sort ml-1"></i></th>
-                            <th class="px-5 py-4 text-right">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reportBody" class="divide-y divide-slate-50"></tbody>
-                </table>
+            <!-- Hàng 2: Biểu đồ -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <!-- Chart 1 -->
+                <div class="col-span-1 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center h-64 relative group">
+                    <p class="text-[11px] text-slate-500 font-bold uppercase w-full text-left mb-2">Trạng thái khóa</p>
+                    <div class="w-full h-44"><canvas id="statusChart"></canvas></div>
+                </div>
+                <!-- Chart 2 -->
+                <div class="col-span-1 md:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center h-64 relative">
+                    <p class="text-[11px] text-slate-500 font-bold uppercase w-full text-left mb-2">Chất lượng học viên (Pass/Fail)</p>
+                    <div class="w-full h-48"><canvas id="performanceChart"></canvas></div>
+                </div>
             </div>
 
-            <!-- PHÂN TRANG -->
-            <div class="mt-6 flex justify-between items-center" id="paginationZone">
-                <p class="text-xs text-slate-400 font-medium" id="pageInfo">Hiển thị 0 - 0 trong 0 kết quả</p>
-                <div class="flex space-x-2" id="pageButtons"></div>
+            <!-- BẢNG BÁO CÁO (YÊU CẦU 3 & 7: Tách cột, Thêm cột HV) -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-[12px] font-medium">
+                        <thead class="bg-slate-50/80">
+                            <tr>
+                                <th class="px-4 py-4 text-center">#</th>
+                                <th class="px-4 py-4 sortable" onclick="handleSort('groupName')">Nhóm <i class="fas fa-sort ml-1 opacity-50"></i></th>
+                                <th class="px-4 py-4 sortable" onclick="handleSort('courseId')">Mã Khóa <i class="fas fa-sort ml-1 opacity-50"></i></th>
+                                <th class="px-4 py-4 text-center sortable" onclick="handleSort('month')">Tháng <i class="fas fa-sort ml-1 opacity-50"></i></th>
+                                <th class="px-4 py-4 text-center">Bắt đầu</th>
+                                <th class="px-4 py-4 text-center">Kết thúc</th>
+                                <th class="px-4 py-4 text-center text-indigo-600 bg-indigo-50/50">Tổng HV</th>
+                                <th class="px-4 py-4 text-center text-green-600 bg-green-50/50">Đạt</th>
+                                <th class="px-4 py-4 text-center text-red-500 bg-red-50/50">Fail</th>
+                                <th class="px-4 py-4 text-center">Tỷ lệ</th>
+                                <th class="px-4 py-4 text-center">Tài nguyên</th>
+                                <th class="px-4 py-4 text-center sortable" onclick="handleSort('status')">Trạng thái <i class="fas fa-sort ml-1 opacity-50"></i></th>
+                                <th class="px-4 py-4 text-center">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportBody" class="divide-y divide-slate-100 text-slate-600"></tbody>
+                    </table>
+                </div>
+
+                <!-- YÊU CẦU 2: PHÂN TRANG GỌN GÀNG BÊN DƯỚI -->
+                <div class="bg-slate-50/50 border-t border-slate-100 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4" id="paginationZone">
+                    <p class="text-xs text-slate-500 font-medium" id="pageInfo">Hiển thị 0 - 0 trong 0 kết quả</p>
+                    
+                    <div class="flex items-center space-x-3 bg-white rounded-lg border border-slate-200 p-1 shadow-sm">
+                        <div class="flex space-x-1 px-1" id="pageButtons"></div>
+                        <div class="border-l border-slate-200 pl-2">
+                            <select id="pageSizeFilter" onchange="handlePageSize(this.value)" class="text-[11px] font-bold text-slate-600 border-none bg-transparent py-1 pr-6 focus:ring-0 cursor-pointer outline-none">
+                                <option value="10">10 / trang</option>
+                                <option value="20">20 / trang</option>
+                                <option value="30">30 / trang</option>
+                                <option value="50">50 / trang</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
 
-    <!-- MODAL SỬA THÔNG TIN ĐẦY ĐỦ TRƯỜNG -->
-    <div id="editModal" class="modal fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] items-center justify-center">
-        <div class="bg-white w-full max-w-2xl mx-4 md:mx-0 rounded-[32px] p-6 md:p-8 shadow-2xl transform transition-all max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <h3 class="text-xl font-bold text-slate-800 mb-6 border-b pb-4">Điều chỉnh thông tin khóa học</h3>
-            <input type="hidden" id="editIndex">
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Cột 1: Thông tin cơ bản -->
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Mã Khóa Học</label>
-                        <input type="text" id="editCourseId" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Nhóm Khóa</label>
-                        <select id="editGroupName" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none">
-                            <option value="SPCB">Sản phẩm Cơ bản</option><option value="KV1">Sản phẩm KV1</option>
-                            <option value="TAX">HĐĐT - Thuế</option><option value="FNB">KiotViet FNB</option>
-                            <option value="SALON">KiotViet Salon</option><option value="HOTEL">KiotViet Hotel</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Tháng</label>
-                            <input type="number" id="editMonth" min="1" max="12" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Trạng thái</label>
-                            <select id="editStatus" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
-                                <option value="Hoàn thành">Hoàn thành</option><option value="Đang diễn ra">Đang diễn ra</option>
-                                <option value="Dời lịch">Dời lịch</option><option value="Hủy">Hủy</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Bắt đầu</label>
-                            <input type="date" id="editStart" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Kết thúc</label>
-                            <input type="date" id="editFinish" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
-                        </div>
-                    </div>
-                </div>
+    <footer class="bg-slate-900 py-12 text-center mt-20">
+        <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">© 2026 Trainer Hub • Internal Analytics</p>
+    </footer>
 
-                <!-- Cột 2: Hiệu suất & Links -->
-                <div class="space-y-4">
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
-                        <p class="text-[11px] font-bold text-indigo-500 uppercase tracking-widest">Hiệu suất học viên</p>
-                        <div class="grid grid-cols-3 gap-2">
-                            <div><label class="text-[10px] text-slate-500">Tổng HV</label><input type="number" id="editTotal" class="w-full border rounded-lg px-2 py-2 text-sm outline-none"></div>
-                            <div><label class="text-[10px] text-green-600">Đạt</label><input type="number" id="editPass" class="w-full border rounded-lg px-2 py-2 text-sm outline-none"></div>
-                            <div><label class="text-[10px] text-red-500">Fail</label><input type="number" id="editFail" class="w-full border rounded-lg px-2 py-2 text-sm outline-none"></div>
+    <!-- MODAL SỬA THÔNG TIN -->
+    <div id="editModal" class="modal fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] items-center justify-center p-4">
+        <div class="bg-white w-full max-w-3xl rounded-[24px] shadow-2xl relative flex flex-col max-h-[95vh]">
+            
+            <!-- YÊU CẦU 6: Nút X đóng cửa sổ -->
+            <button onclick="closeModal('editModal')" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center transition z-10">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="p-6 md:p-8 border-b border-slate-100 flex-shrink-0">
+                <h3 class="text-xl font-bold text-slate-800">Cập nhật Báo cáo Khóa học</h3>
+                <p class="text-xs text-slate-500 mt-1">Hệ thống sẽ tự động tính toán Tháng dựa trên Ngày bắt đầu.</p>
+            </div>
+            
+            <div class="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-grow">
+                <input type="hidden" id="editIndex">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Cột 1 -->
+                    <div class="space-y-5">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">Nhóm Khóa</label>
+                                <select id="editGroupName" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-[13px] font-medium outline-none focus:bg-white focus:border-blue-400 transition">
+                                    <option value="SPCB">Sản phẩm Cơ bản</option><option value="KV1">Sản phẩm KV1</option>
+                                    <option value="TAX">HĐĐT - Thuế</option><option value="FNB">KiotViet FNB</option>
+                                    <option value="SALON">KiotViet Salon</option><option value="HOTEL">KiotViet Hotel</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">Trạng thái</label>
+                                <select id="editStatus" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-[13px] font-medium outline-none focus:bg-white focus:border-blue-400 transition">
+                                    <option value="Hoàn thành">Hoàn thành</option><option value="Đang diễn ra">Đang diễn ra</option>
+                                    <option value="Dời lịch">Dời lịch</option><option value="Hủy">Hủy</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">Mã Khóa (VD: SPCB-01-HCM)</label>
+                            <input type="text" id="editCourseId" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-[13px] font-medium outline-none focus:bg-white focus:border-blue-400 transition uppercase">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">Bắt đầu</label>
+                                <input type="date" id="editStart" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-[13px] font-medium outline-none focus:bg-white focus:border-blue-400 transition cursor-pointer">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">Kết thúc</label>
+                                <input type="date" id="editFinish" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-[13px] font-medium outline-none focus:bg-white focus:border-blue-400 transition cursor-pointer">
+                            </div>
+                        </div>
+
+                        <!-- YÊU CẦU 5: Tự hiểu Tháng (Readonly để thấy kết quả sync) -->
+                        <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100 flex justify-between items-center">
+                            <label class="text-[11px] font-bold text-blue-600 uppercase">Tháng ghi nhận</label>
+                            <input type="number" id="editMonth" class="w-16 bg-transparent border-none text-right font-bold text-blue-700 outline-none" readonly>
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Link Danh sách</label>
-                        <input type="text" id="editListLink" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none" placeholder="https://...">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Link Quiz</label>
-                        <input type="text" id="editQuizLink" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none" placeholder="https://...">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Link Record Drive</label>
-                        <input type="text" id="editRecordLink" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none" placeholder="https://...">
+
+                    <!-- Cột 2 -->
+                    <div class="space-y-5">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+                            <p class="text-[11px] font-bold text-slate-700 uppercase tracking-widest"><i class="fas fa-chart-line mr-1 text-slate-400"></i> Số liệu Học viên</p>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div><label class="text-[10px] font-bold text-slate-500 mb-1 block">Tổng HV</label><input type="number" id="editTotal" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-blue-400 text-center"></div>
+                                <div><label class="text-[10px] font-bold text-green-600 mb-1 block">Pass</label><input type="number" id="editPass" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-green-600 outline-none focus:border-green-400 text-center"></div>
+                                <div><label class="text-[10px] font-bold text-red-500 mb-1 block">Fail</label><input type="number" id="editFail" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-red-500 outline-none focus:border-red-400 text-center"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5"><i class="fas fa-file-excel mr-1 text-green-600"></i> Link Sheet Điểm</label>
+                            <input type="text" id="editListLink" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-medium outline-none focus:bg-white focus:border-blue-400" placeholder="https://...">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5"><i class="fas fa-poll mr-1 text-purple-500"></i> Link Quiz</label>
+                            <input type="text" id="editQuizLink" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-medium outline-none focus:bg-white focus:border-blue-400" placeholder="https://...">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5"><i class="fab fa-google-drive mr-1 text-blue-500"></i> Link Record (G-Drive)</label>
+                            <input type="text" id="editRecordLink" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-medium outline-none focus:bg-white focus:border-blue-400" placeholder="https://...">
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div class="mt-8 flex justify-end gap-3 pt-4 border-t border-slate-100">
-                <button onclick="closeModal('editModal')" class="px-6 py-3 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 transition">Hủy</button>
-                <button onclick="saveEdit()" class="px-6 py-3 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-lg shadow-blue-200">Lưu thay đổi</button>
+            <div class="p-6 md:p-8 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 rounded-b-[24px] flex-shrink-0">
+                <button onclick="closeModal('editModal')" class="px-6 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200 transition">Hủy bỏ</button>
+                <button onclick="saveEdit()" class="px-8 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-lg shadow-blue-200">Cập nhật Báo cáo</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL XÁC THỰC MẬT KHẨU ẨN -->
-    <div id="authModal" class="modal fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[200] items-center justify-center">
-        <div class="bg-white w-full max-w-sm mx-4 rounded-3xl p-8 shadow-2xl text-center">
-            <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fas fa-shield-alt"></i></div>
-            <h3 class="text-xl font-bold text-slate-800 mb-2">Xác thực Quyền Xóa</h3>
-            <p class="text-xs text-slate-500 mb-6">Nhập mã an toàn để thực hiện hành động này. Thao tác không thể hoàn tác.</p>
+    <!-- MODAL PASSWORD -->
+    <div id="authModal" class="modal fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[200] items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center relative">
+            <button onclick="closeModal('authModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <div class="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-xl border border-red-100"><i class="fas fa-shield-alt"></i></div>
+            <h3 class="text-lg font-bold text-slate-800 mb-1">Xác thực Quyền</h3>
+            <p class="text-[11px] text-slate-500 mb-6 px-4">Nhập mật khẩu an toàn để thực thi lệnh xóa dữ liệu.</p>
             
-            <input type="password" id="authPassword" placeholder="Nhập mật khẩu..." class="w-full text-center border-2 border-slate-200 rounded-xl px-4 py-3 font-mono text-lg tracking-widest focus:border-red-500 outline-none mb-6">
+            <input type="password" id="authPassword" placeholder="••••••" class="w-full text-center border-2 border-slate-100 rounded-xl px-4 py-3 font-mono text-xl tracking-[0.5em] focus:border-red-400 focus:bg-red-50/30 outline-none mb-6 transition">
             
-            <div class="flex gap-3">
-                <button onclick="closeModal('authModal')" class="flex-1 py-3 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Hủy</button>
-                <button onclick="executeDelete()" class="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition shadow-lg shadow-red-200">Xác nhận Xóa</button>
-            </div>
+            <button onclick="executeDelete()" class="w-full py-3 rounded-xl text-xs font-bold text-white bg-red-500 hover:bg-red-600 transition shadow-lg shadow-red-200">Xác nhận Xóa</button>
         </div>
     </div>
 
     <script>
-        // MÀU SẮC CHUẨN KHOÁ HỌC YÊU CẦU 1
+        // CẤU HÌNH DATA
         const courseConfig = [
             { id: 'SPCB', label: 'Retail', title: 'Sản phẩm Cơ bản', desc: 'Lộ trình 3 buổi: Tổng quan, 6 bước demo và App.', sessions: 3, border: 'border-l-blue-500', color: 'text-blue-500', link: 'spcb.html' },
             { id: 'KV1', label: 'Advanced', title: 'Sản phẩm KV1', desc: 'Nâng cao kỹ năng quản lý tình huống nghiệp vụ.', sessions: 1, border: 'border-l-indigo-600', color: 'text-indigo-600', link: 'kv1.html' },
             { id: 'TAX', label: 'Specialist', title: 'HĐĐT - Thuế', desc: 'Kiến thức chuyên sâu về hóa đơn điện tử.', sessions: 0, border: 'border-l-slate-500', color: 'text-slate-500', link: '' },
             { id: 'FNB', label: 'Industry', title: 'KiotViet FNB', desc: 'Nghiệp vụ dành riêng cho Nhà hàng, Cafe.', sessions: 0, border: 'border-l-orange-500', color: 'text-orange-500', link: '' },
             { id: 'SALON', label: 'Industry', title: 'KiotViet Salon', desc: 'Nghiệp vụ quản lý tiệm Spa, Hair Salon.', sessions: 0, border: 'border-l-fuchsia-500', color: 'text-fuchsia-500', link: '' },
-            { id: 'HOTEL', label: 'Industry', title: 'KiotViet Hotel', desc: 'Giải pháp quản lý cơ sở lưu trú, khách sạn.', sessions: 0, border: 'border-l-green-500', color: 'text-green-500', link: '' }
+            { id: 'HOTEL', label: 'Industry', title: 'KiotViet Hotel', desc: 'Giải pháp quản lý cơ sở lưu trú, khách sạn.', sessions: 0, border: 'border-l-emerald-500', color: 'text-emerald-500', link: '' }
         ];
 
         let statusChartInstance = null; 
         let perfChartInstance = null;
-        let deleteTargetIndex = null; // -1: Xóa All, >=0: Xóa 1 row
-        const SECRET_KEY = "014023"; // YÊU CẦU 4: Mật khẩu ẩn
+        let deleteTargetIndex = null;
+        const SECRET_KEY = "014023"; 
 
-        // STATE TẬP TRUNG (KÈM YÊU CẦU 2: Phân trang)
         const AppState = {
             filters: { month: 'all', search: '', status: '' },
             sort: { col: '', asc: true },
             pagination: { page: 1, limit: 10 }
         };
+
+        // YÊU CẦU 5: Tự động điền Tháng dựa trên Ngày Bắt Đầu
+        document.getElementById('editStart').addEventListener('change', function(e) {
+            if(e.target.value) {
+                const date = new Date(e.target.value);
+                document.getElementById('editMonth').value = date.getMonth() + 1; // getMonth() trả về 0-11
+            }
+        });
+
+        // YÊU CẦU 8: Xóa bộ lọc
+        function clearFilters() {
+            AppState.filters = { month: 'all', search: '', status: '' };
+            AppState.pagination.page = 1;
+            document.getElementById('searchInput').value = '';
+            document.getElementById('monthFilter').value = 'all';
+            renderAll();
+        }
 
         function renderCourseCards() {
             const grid = document.getElementById('courseGrid');
@@ -319,14 +382,14 @@
             courseConfig.forEach(course => {
                 const isActive = course.link !== ''; 
                 const actionHTML = isActive 
-                    ? `<div class="mt-auto pt-6 border-t flex justify-between items-center"><span class="text-[11px] text-slate-400 font-bold uppercase">${course.sessions} Sessions</span><a href="${course.link}" class="${course.color} font-bold text-sm flex items-center hover:underline group">Vào giảng dạy <i class="fas fa-chevron-right ml-2 text-[10px] transform group-hover:translate-x-1 transition-all"></i></a></div>`
-                    : `<div class="mt-auto pt-6 border-t flex justify-between items-center opacity-60"><span class="text-[11px] text-slate-400 font-bold uppercase">-- Sessions</span><span class="text-slate-400 font-bold text-[13px] flex items-center italic cursor-not-allowed">Đang cập nhật <i class="fas fa-lock ml-2 text-[10px]"></i></span></div>`;
-                const cardStateClass = isActive ? 'hover:-translate-y-1' : 'opacity-70 grayscale-[30%] bg-slate-50 cursor-not-allowed';
+                    ? `<div class="mt-auto pt-5 border-t border-slate-100 flex justify-between items-center"><span class="text-[10px] text-slate-400 font-bold uppercase">${course.sessions} Sessions</span><a href="${course.link}" class="${course.color} font-bold text-xs flex items-center hover:underline group">Giảng dạy <i class="fas fa-arrow-right ml-1.5 text-[10px] transform group-hover:translate-x-1 transition-all"></i></a></div>`
+                    : `<div class="mt-auto pt-5 border-t border-slate-100 flex justify-between items-center opacity-50"><span class="text-[10px] text-slate-400 font-bold uppercase">-- Sessions</span><span class="text-slate-400 font-bold text-xs flex items-center italic cursor-not-allowed">Locked <i class="fas fa-lock ml-1.5 text-[10px]"></i></span></div>`;
+                const cardStateClass = isActive ? 'hover:-translate-y-1' : 'opacity-60 grayscale-[40%] bg-slate-50 cursor-not-allowed';
 
-                grid.innerHTML += `<div class="course-card p-8 flex flex-col h-full border-l-4 ${course.border} ${cardStateClass} transition-all duration-300">
-                    <span class="text-[10px] font-bold ${course.color} uppercase tracking-widest mb-2">${course.label}</span>
-                    <h3 class="text-lg font-extrabold text-slate-800 mb-2">${course.title}</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed mb-6 font-medium">${course.desc}</p>${actionHTML}</div>`;
+                grid.innerHTML += `<div class="course-card p-6 flex flex-col h-full border-l-4 ${course.border} ${cardStateClass}">
+                    <span class="text-[9px] bg-slate-100 w-fit px-2 py-1 rounded-md font-bold ${course.color} uppercase tracking-wider mb-3">${course.label}</span>
+                    <h3 class="text-base font-extrabold text-slate-800 mb-1.5">${course.title}</h3>
+                    <p class="text-[11px] text-slate-500 leading-relaxed mb-6 font-medium">${course.desc}</p>${actionHTML}</div>`;
             });
         }
 
@@ -360,7 +423,6 @@
             AppState.filters.month = document.getElementById('monthFilter').value;
             if (AppState.filters.month !== 'all') displayData = displayData.filter(d => d.month == AppState.filters.month);
 
-            // Dashboard tính toán trên tổng data đang lọc (chưa phân trang)
             renderDashboard(displayData);
 
             if(AppState.filters.status !== "") {
@@ -388,11 +450,11 @@
             renderTableWithPagination(displayData, allData);
         }
 
+        // YÊU CẦU 3 & 7: Render Table Tách Cột
         function renderTableWithPagination(displayData, allData) {
             const tbody = document.getElementById('reportBody');
             tbody.innerHTML = '';
             
-            // Xử lý Pagination
             const totalItems = displayData.length;
             const totalPages = Math.ceil(totalItems / AppState.pagination.limit) || 1;
             if (AppState.pagination.page > totalPages) AppState.pagination.page = totalPages;
@@ -401,44 +463,49 @@
             const endIdx = startIdx + AppState.pagination.limit;
             const paginatedData = displayData.slice(startIdx, endIdx);
 
-            document.getElementById('pageInfo').innerText = `Hiển thị ${totalItems > 0 ? startIdx + 1 : 0} - ${Math.min(endIdx, totalItems)} trong ${totalItems} kết quả`;
+            document.getElementById('pageInfo').innerText = `Đang xem ${totalItems > 0 ? startIdx + 1 : 0} - ${Math.min(endIdx, totalItems)} / Tổng ${totalItems} khóa`;
             
-            // Render Nút bấm Pagination
             let btnHTML = '';
             for(let i=1; i<=totalPages; i++) {
-                if(i === AppState.pagination.page) btnHTML += `<button class="w-8 h-8 rounded-lg bg-blue-600 text-white font-bold text-xs shadow-md">${i}</button>`;
-                else btnHTML += `<button onclick="goToPage(${i})" class="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 font-bold text-xs">${i}</button>`;
+                if(i === AppState.pagination.page) btnHTML += `<button class="w-6 h-6 rounded bg-blue-50 text-blue-600 font-bold text-[10px] shadow-sm">${i}</button>`;
+                else btnHTML += `<button onclick="goToPage(${i})" class="w-6 h-6 rounded bg-transparent text-slate-500 hover:bg-slate-100 font-medium text-[10px] transition">${i}</button>`;
             }
             document.getElementById('pageButtons').innerHTML = btnHTML;
 
             if(paginatedData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-10 text-slate-400 italic">Không tìm thấy dữ liệu.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="13" class="text-center py-12 text-slate-400 italic text-sm">Không có dữ liệu khóa học.</td></tr>`;
                 return;
             }
 
             paginatedData.forEach((item, displayIndex) => {
                 const realIndex = allData.findIndex(d => d.courseId === item.courseId && d.timestamp === item.timestamp);
                 
-                // YÊU CẦU 2: Link động, mờ đi nếu không có
-                const linkDS = item.listLink ? `<a href="${item.listLink}" target="_blank" class="icon-link icon-excel"><i class="fas fa-file-excel fa-lg"></i></a>` : `<span class="text-slate-300 cursor-not-allowed opacity-50" title="Chưa có link"><i class="fas fa-file-excel fa-lg"></i></span>`;
-                const linkQ = item.quizLink ? `<a href="${item.quizLink}" target="_blank" class="icon-link icon-quiz"><i class="fas fa-poll fa-lg"></i></a>` : `<span class="text-slate-300 cursor-not-allowed opacity-50" title="Chưa có link"><i class="fas fa-poll fa-lg"></i></span>`;
-                const linkR = item.recordLink ? `<a href="${item.recordLink}" target="_blank" class="icon-link icon-drive"><i class="fab fa-google-drive fa-lg"></i></a>` : `<span class="text-slate-300 cursor-not-allowed opacity-50" title="Chưa có link"><i class="fab fa-google-drive fa-lg"></i></span>`;
+                const linkDS = item.listLink ? `<a href="${item.listLink}" target="_blank" class="icon-link icon-excel"><i class="fas fa-file-excel"></i></a>` : `<span class="text-slate-200 cursor-not-allowed" title="Trống"><i class="fas fa-file-excel"></i></span>`;
+                const linkQ = item.quizLink ? `<a href="${item.quizLink}" target="_blank" class="icon-link icon-quiz"><i class="fas fa-poll"></i></a>` : `<span class="text-slate-200 cursor-not-allowed" title="Trống"><i class="fas fa-poll"></i></span>`;
+                const linkR = item.recordLink ? `<a href="${item.recordLink}" target="_blank" class="icon-link icon-drive"><i class="fab fa-google-drive"></i></a>` : `<span class="text-slate-200 cursor-not-allowed" title="Trống"><i class="fab fa-google-drive"></i></span>`;
 
                 const tTotal = parseInt(item.totalTrainees) || 0;
                 const tPass = parseInt(item.passedTrainees) || 0;
-                const rateText = tTotal > 0 ? `<span class="text-green-600 font-bold">${Math.round((tPass/tTotal)*100)}%</span> <span class="text-[10px] text-slate-400">(${tPass}/${tTotal})</span>` : `<span class="text-slate-300">--</span>`;
+                const tFail = parseInt(item.failedTrainees) || 0;
+                const rateText = tTotal > 0 ? `<span class="font-bold text-slate-700">${Math.round((tPass/tTotal)*100)}%</span>` : `<span class="text-slate-300">--</span>`;
 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50/80 transition">
-                        <td class="px-5 py-4 text-slate-400 font-bold">${startIdx + displayIndex + 1}</td>
-                        <td class="px-5 py-4 font-bold text-slate-900 uppercase text-[11px] tracking-tighter">${item.groupName}</td>
-                        <td class="px-5 py-4 font-bold text-blue-600 text-xs">${item.courseId}</td>
-                        <td class="px-5 py-4 text-center font-bold text-slate-500 uppercase tracking-widest text-[10px]">T${item.month}</td>
-                        <td class="px-5 py-4 text-center text-slate-500 text-[11px] leading-tight">${item.startDate || '--'}<br><span class="text-slate-300">đến</span><br>${item.finishDate || '--'}</td>
-                        <td class="px-5 py-4 text-center text-[13px]">${rateText}</td>
-                        <td class="px-5 py-4 text-center"><div class="flex justify-center space-x-3">${linkDS}${linkQ}${linkR}</div></td>
-                        <td class="px-5 py-4 text-center"><span class="status-pill ${getStatusColor(item.status)}">${item.status}</span></td>
-                        <td class="px-5 py-4 text-right space-x-2">
+                    <tr class="hover:bg-blue-50/30 transition border-b border-slate-50">
+                        <td class="px-4 py-3 text-center text-slate-400 text-[10px] font-bold">${startIdx + displayIndex + 1}</td>
+                        <td class="px-4 py-3 font-bold text-slate-800 text-[11px]">${item.groupName}</td>
+                        <td class="px-4 py-3 font-bold text-blue-600 text-[11px]">${item.courseId}</td>
+                        <td class="px-4 py-3 text-center font-bold text-slate-500 text-[10px]">T${item.month}</td>
+                        <td class="px-4 py-3 text-center text-slate-500">${item.startDate || '--'}</td>
+                        <td class="px-4 py-3 text-center text-slate-500">${item.finishDate || '--'}</td>
+                        
+                        <td class="px-4 py-3 text-center bg-indigo-50/20 font-bold">${tTotal > 0 ? tTotal : '-'}</td>
+                        <td class="px-4 py-3 text-center bg-green-50/20 text-green-600 font-bold">${tPass > 0 ? tPass : '-'}</td>
+                        <td class="px-4 py-3 text-center bg-red-50/20 text-red-500 font-bold">${tFail > 0 ? tFail : '-'}</td>
+                        <td class="px-4 py-3 text-center bg-slate-50/30">${rateText}</td>
+                        
+                        <td class="px-4 py-3 text-center"><div class="flex justify-center space-x-3 text-sm">${linkDS}${linkQ}${linkR}</div></td>
+                        <td class="px-4 py-3 text-center"><span class="status-pill ${getStatusColor(item.status)}">${item.status}</span></td>
+                        <td class="px-4 py-3 text-center space-x-1">
                             <button onclick="openEditModal(${realIndex})" class="action-icon icon-edit"><i class="fas fa-edit"></i></button>
                             <button onclick="requestDelete(${realIndex})" class="action-icon icon-delete"><i class="fas fa-trash-alt"></i></button>
                         </td>
@@ -447,7 +514,7 @@
             });
         }
 
-        // YÊU CẦU 3: DASHBOARD & LỜI KHUYÊN AI
+        // YÊU CẦU 4: REDESIGN CHART.JS SAAS STYLE
         function renderDashboard(chartData) {
             let totalClasses = chartData.length;
             let sumTotal = 0, sumPass = 0, sumFail = 0;
@@ -466,34 +533,36 @@
             document.getElementById('stat-trainees').innerText = sumTotal;
             document.getElementById('stat-passrate').innerText = passRate + '%';
 
-            // AI Text
             const aiBox = document.getElementById('ai-suggestion');
-            if(totalClasses === 0) aiBox.innerText = "Chưa có dữ liệu ghi nhận. Hãy thiết lập và giảng dạy khóa đầu tiên.";
-            else if(passRate >= 85) aiBox.innerHTML = "<span class='text-green-400 font-bold'>Hiệu suất tuyệt vời!</span> Phương pháp giảng dạy đang rất hiệu quả, học viên nắm vững kiến thức.";
-            else if(passRate >= 60) aiBox.innerHTML = "<span class='text-yellow-400 font-bold'>Khá ổn, nhưng cần cải thiện.</span> Nên tăng cường các bài tập thực hành tình huống (Roleplay) để HV quen thao tác.";
-            else aiBox.innerHTML = "<span class='text-red-400 font-bold'>Báo động đỏ!</span> Tỷ lệ trượt quá cao. Cần xem xét lại tốc độ giảng dạy và độ khó của bài Quiz hiện tại.";
+            if(totalClasses === 0) aiBox.innerText = "Chưa có đủ dữ liệu học viên để đưa ra lời khuyên. Hãy thiết lập khóa học.";
+            else if(passRate >= 85) aiBox.innerHTML = "<span class='text-emerald-400 font-bold'>Tốt (Healthy)</span><br>Chất lượng đào tạo cực tốt. Nên giữ vững lộ trình và bài tập hiện tại.";
+            else if(passRate >= 60) aiBox.innerHTML = "<span class='text-amber-400 font-bold'>Cảnh báo (Warning)</span><br>Tỷ lệ rớt bắt đầu cao. Xem xét review lại các câu hỏi khó trong Quiz.";
+            else aiBox.innerHTML = "<span class='text-rose-400 font-bold'>Rủi ro (Critical)</span><br>Chất lượng đầu ra không đảm bảo. Đề xuất tăng cường buổi thực hành 1:1.";
 
-            // Chart 1: Donut (Trạng thái)
+            // MÀU SẮC MODERN
+            Chart.defaults.font.family = 'Inter';
+            Chart.defaults.color = '#94a3b8';
+
             const ctxStatus = document.getElementById('statusChart').getContext('2d');
             if(statusChartInstance) statusChartInstance.destroy();
             statusChartInstance = new Chart(ctxStatus, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Xong', 'Đang học', 'Dời', 'Hủy'],
+                    labels: ['Hoàn thành', 'Đang diễn', 'Dời lịch', 'Hủy'],
                     datasets: [{
                         data: [statusCounts['Hoàn thành'], statusCounts['Đang diễn ra'], statusCounts['Dời lịch'], statusCounts['Hủy']],
-                        backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'], borderWidth: 2
+                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'], 
+                        borderWidth: 0,
+                        hoverOffset: 4
                     }]
                 },
                 options: { 
-                    responsive: true, maintainAspectRatio: false, cutout: '65%',
-                    plugins: { legend: { position: 'right', labels: { boxWidth: 8, font: {size: 10} } } },
+                    responsive: true, maintainAspectRatio: false, cutout: '75%',
+                    plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 6, font: {size: 10} } } },
                     onClick: (evt, el, chart) => {
                         if(el.length > 0) {
                             let label = chart.data.labels[el[0].index];
-                            if(label === 'Xong') label = 'Hoàn thành';
-                            if(label === 'Đang học') label = 'Đang diễn ra';
-                            if(label === 'Dời') label = 'Dời lịch';
+                            if(label === 'Đang diễn') label = 'Đang diễn ra';
                             AppState.filters.status = (AppState.filters.status === label) ? "" : label;
                         } else AppState.filters.status = "";
                         renderAll();
@@ -501,37 +570,38 @@
                 }
             });
 
-            // Chart 2: Bar Chart (Hiệu suất Đạt/Fail)
             const ctxPerf = document.getElementById('performanceChart').getContext('2d');
             if(perfChartInstance) perfChartInstance.destroy();
             perfChartInstance = new Chart(ctxPerf, {
                 type: 'bar',
                 data: {
-                    labels: ['Đạt', 'Fail'],
+                    labels: ['Học viên Đạt', 'Học viên Fail'],
                     datasets: [{
-                        label: 'Số lượng HV',
                         data: [sumPass, sumFail],
-                        backgroundColor: ['#22c55e', '#ef4444'],
-                        borderRadius: 4
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderRadius: 6,
+                        barThickness: 32
                     }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: {stepSize: 1, font:{size: 10}} }, x: {ticks: {font:{size: 10}}} }
+                    scales: { 
+                        y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#f1f5f9' }, border: {display: false}, ticks: {stepSize: 1, font:{size: 10}} }, 
+                        x: { grid: { display: false }, border: {display: false}, ticks: {font:{size: 11, weight: 'bold'}} } 
+                    }
                 }
             });
         }
 
         function getStatusColor(s) {
-            if(s === 'Hoàn thành') return 'bg-green-100 text-green-700';
-            if(s === 'Đang diễn ra') return 'bg-blue-100 text-blue-700';
-            if(s === 'Dời lịch') return 'bg-orange-50 text-orange-600';
-            if(s === 'Hủy') return 'bg-red-50 text-red-600';
+            if(s === 'Hoàn thành') return 'bg-green-100/50 text-green-700 border border-green-200';
+            if(s === 'Đang diễn ra') return 'bg-blue-100/50 text-blue-700 border border-blue-200';
+            if(s === 'Dời lịch') return 'bg-amber-100/50 text-amber-700 border border-amber-200';
+            if(s === 'Hủy') return 'bg-red-100/50 text-red-600 border border-red-200';
             return 'bg-slate-100 text-slate-600';
         }
 
-        // YÊU CẦU 5: MỞ MODAL ĐẦY ĐỦ THÔNG TIN
         function openEditModal(realIndex) {
             const d = loadDB()[realIndex];
             document.getElementById('editIndex').value = realIndex;
@@ -555,7 +625,7 @@
             const idx = document.getElementById('editIndex').value;
             let d = loadDB();
             
-            d[idx].courseId = document.getElementById('editCourseId').value;
+            d[idx].courseId = document.getElementById('editCourseId').value.toUpperCase();
             d[idx].groupName = document.getElementById('editGroupName').value;
             d[idx].month = document.getElementById('editMonth').value;
             d[idx].status = document.getElementById('editStatus').value;
@@ -573,39 +643,30 @@
             renderAll();
         }
 
-        // YÊU CẦU 4: BẢO MẬT XÓA BẰNG PASSWORD ẨN
         function requestDelete(idx) {
             deleteTargetIndex = idx;
             document.getElementById('authPassword').value = '';
             document.getElementById('authModal').classList.add('active');
-            document.getElementById('authPassword').focus();
+            setTimeout(() => document.getElementById('authPassword').focus(), 100);
         }
 
         function executeDelete() {
             const pass = document.getElementById('authPassword').value;
-            if(pass !== SECRET_KEY) {
-                alert("Sai mã an toàn! Không thể thực thi.");
-                return;
-            }
+            if(pass !== SECRET_KEY) { alert("Sai mã an toàn! Không thể thực thi."); return; }
 
-            if(deleteTargetIndex === -1) {
-                // Xóa All
-                localStorage.removeItem('kv_master_db');
-                alert("Đã dọn sạch toàn bộ dữ liệu hệ thống.");
-            } else {
-                // Xóa 1 row
+            if(deleteTargetIndex === -1) { localStorage.removeItem('kv_master_db'); alert("Đã dọn sạch toàn bộ dữ liệu hệ thống."); } 
+            else {
                 let d = loadDB(); 
                 d.splice(deleteTargetIndex, 1); 
                 localStorage.setItem('kv_master_db', JSON.stringify(d)); 
-                alert("Đã xóa khóa học thành công.");
             }
-            
             closeModal('authModal');
             renderAll();
         }
 
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
+        // YÊU CẦU 3 & 7: Xuất file đầy đủ cột
         function exportCSV() {
             const data = loadDB();
             if(!data.length) return alert('Không có dữ liệu để xuất!');
@@ -613,7 +674,7 @@
             data.forEach((i, idx) => { csv += `${idx+1},${i.groupName},${i.courseId},${i.month},${i.startDate},${i.finishDate},${i.totalTrainees||0},${i.passedTrainees||0},${i.failedTrainees||0},${i.status}\n`; });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a"); link.href = URL.createObjectURL(blob); 
-            link.setAttribute("download", `Bao_Cao_Trainer_${new Date().toLocaleDateString('vi-VN')}.csv`); link.click();
+            link.setAttribute("download", `Analytics_Trainer_${new Date().toLocaleDateString('vi-VN')}.csv`); link.click();
         }
 
         window.onload = () => { renderCourseCards(); renderAll(); };
