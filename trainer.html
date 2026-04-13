@@ -47,7 +47,7 @@
         .action-icon:hover { background: #f1f5f9; transform: scale(1.1); }
         .icon-edit { color: #f59e0b; } .icon-delete { color: #ef4444; } 
 
-        .modal { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .modal { display: none; opacity: 0; transition: opacity 0.3s ease; z-index: 9999; }
         .modal.active { display: flex; opacity: 1; }
         .modal-content { transform: scale(0.95) translateY(20px); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1); }
         .modal.active .modal-content { transform: scale(1) translateY(0); opacity: 1; }
@@ -89,11 +89,15 @@
                 <p class="text-slate-500 text-lg mb-10 max-w-lg font-medium leading-relaxed">Trung tâm điều khiển kịch bản giảng dạy và báo cáo hiệu suất theo thời gian thực.</p>
                 <div class="flex flex-wrap gap-4">
                     <a href="https://sites.google.com/kiotviet.com/daotaokiotviet/l%E1%BB%8Bch-%C4%91%C3%A0o-t%E1%BA%A1o-sales-2026" target="_blank" class="glass-panel px-6 py-3 rounded-2xl font-bold text-sm flex items-center hover-5d text-slate-700">
-                        <i class="far fa-calendar-alt mr-2 text-blue-500 text-lg"></i> Lịch Đào tạo 2026
+                        <i class="far fa-calendar-alt mr-2 text-blue-500 text-lg"></i> Lịch Đào tạo
                     </a>
                     <a href="https://sites.google.com/view/kiotviet-trainer-notes/copy-email" target="_blank" class="glass-panel px-6 py-3 rounded-2xl font-bold text-sm flex items-center hover-5d text-slate-700">
-                        <i class="far fa-envelope mr-2 text-indigo-500 text-lg"></i> Tool Copy Email
+                        <i class="far fa-envelope mr-2 text-indigo-500 text-lg"></i> Mẫu Copy Email
                     </a>
+                    <!-- NÚT GỌI TOOL LỌC EMAIL MỚI -->
+                    <button onclick="openModal('emailToolModal')" class="glass-panel px-6 py-3 rounded-2xl font-bold text-sm flex items-center hover-5d text-slate-700 border-emerald-200">
+                        <i class="fas fa-filter mr-2 text-emerald-500 text-lg"></i> Lọc Email Chat
+                    </button>
                 </div>
             </div>
             <div class="w-40 h-40 bg-white/60 backdrop-blur-xl rounded-[40px] flex items-center justify-center shadow-[0_20px_40px_-15px_rgba(59,130,246,0.3)] border border-white relative hover-5d">
@@ -113,7 +117,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="courseGrid"></div>
         </section>
 
-        <!-- DASHBOARD & BÁO CÁO MỚI (5D SAAS STYLE) -->
+        <!-- DASHBOARD & BÁO CÁO -->
         <section id="reports" class="scroll-mt-24 relative">
             <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
                 <div>
@@ -151,7 +155,7 @@
                 </div>
             </div>
 
-            <!-- DASHBOARD NUMBERS (5D Glass Cards) -->
+            <!-- DASHBOARD NUMBERS -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
                 <div class="glass-panel stat-card p-6 rounded-[24px]">
                     <div id="filterIndicator" class="absolute top-4 right-4 text-[9px] bg-blue-500 text-white font-bold px-2 py-1 rounded-md hidden shadow-lg shadow-blue-200">Đang lọc</div>
@@ -237,13 +241,53 @@
         <p class="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] relative z-10">© 2026 Trainer Hub • Automated Analytics System</p>
     </footer>
 
-    <!-- MODAL SỬA THÔNG TIN 5D -->
-    <div id="editModal" class="modal fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] items-center justify-center p-4">
-        <div class="modal-content bg-white w-full max-w-4xl rounded-[32px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.4)] relative flex flex-col max-h-[90vh] overflow-hidden border border-white">
+    <!-- MODAL LỌC EMAIL (NEW) -->
+    <div id="emailToolModal" class="modal fixed inset-0 bg-slate-900/80 backdrop-blur-xl items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-4xl rounded-[32px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] relative flex flex-col overflow-hidden border border-white">
             
-            <button onclick="closeModal('editModal')" class="absolute top-6 right-6 text-slate-400 hover:text-rose-500 hover:bg-rose-50 w-10 h-10 rounded-full flex items-center justify-center transition-all z-10 text-xl shadow-sm bg-slate-50 border border-slate-100">
+            <button onclick="closeModal('emailToolModal')" class="absolute top-6 right-6 text-slate-400 hover:text-rose-500 hover:bg-rose-50 w-10 h-10 rounded-full flex items-center justify-center transition-all z-10 text-xl shadow-sm bg-slate-50 border border-slate-100">
                 <i class="fas fa-times"></i>
             </button>
+
+            <!-- Header Modal Lọc Email -->
+            <div class="px-10 py-8 bg-slate-50/50 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 flex-shrink-0">
+                <div>
+                    <h3 class="text-2xl font-black text-slate-800 tracking-tight flex items-center"><i class="fas fa-filter text-emerald-500 mr-3"></i> Bộ lọc Email Google Chat</h3>
+                    <p class="text-xs text-slate-500 mt-2 font-medium">Hệ thống tự động bóc tách Email KiotViet, xóa trùng lặp và định dạng dấu phẩy sẵn sàng copy.</p>
+                </div>
+                <div class="flex gap-2">
+                    <span id="mod-valid-count" class="px-4 py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full text-[11px] font-black uppercase tracking-wider shadow-inner">0 Hợp lệ</span>
+                    <span id="mod-invalid-count" class="px-4 py-1.5 bg-rose-50 text-rose-500 border border-rose-200 rounded-full text-[11px] font-black uppercase tracking-wider shadow-inner">0 Loại bỏ</span>
+                </div>
+            </div>
+            
+            <!-- Body Modal Lọc Email -->
+            <div class="px-10 py-8 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white">
+                <!-- Input Section -->
+                <div class="flex flex-col h-full">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3"><i class="fas fa-paste text-blue-500 mr-1"></i> Dữ liệu đầu vào (Excel / Text)</label>
+                    <textarea id="mod-input" class="w-full h-56 bg-slate-50 border border-slate-200 rounded-2xl p-5 text-sm font-medium outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition shadow-inner custom-scrollbar resize-none text-slate-700 placeholder-slate-300" placeholder="Copy cột Email từ Excel hoặc file Text và dán vào đây..."></textarea>
+                    <button onclick="processModuleEmails()" class="mt-4 w-full py-3.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 transition shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] transform hover:-translate-y-0.5 uppercase tracking-wider">
+                        <i class="fas fa-magic mr-2"></i> Xử lý & Làm sạch dữ liệu
+                    </button>
+                </div>
+                
+                <!-- Output Section -->
+                <div class="flex flex-col h-full relative">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3"><i class="fas fa-check-circle text-emerald-500 mr-1"></i> Kết quả đã lọc</label>
+                    <textarea id="mod-output" readonly class="w-full h-56 bg-indigo-50/40 border border-indigo-100 rounded-2xl p-5 text-sm font-bold text-indigo-700 outline-none shadow-inner custom-scrollbar resize-none" placeholder="Kết quả sẵn sàng dán vào Google Chat sẽ hiển thị ở đây..."></textarea>
+                    <button onclick="copyModuleEmails(this)" class="absolute bottom-5 right-5 px-5 py-2.5 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-lg shadow-blue-200 flex items-center">
+                        <i class="far fa-copy mr-2"></i> Copy kết quả
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SỬA THÔNG TIN 5D -->
+    <div id="editModal" class="modal fixed inset-0 bg-slate-900/60 backdrop-blur-md items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-4xl rounded-[32px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.4)] relative flex flex-col max-h-[90vh] overflow-hidden border border-white">
+            <button onclick="closeModal('editModal')" class="absolute top-6 right-6 text-slate-400 hover:text-rose-500 hover:bg-rose-50 w-10 h-10 rounded-full flex items-center justify-center transition-all z-10 text-xl shadow-sm bg-slate-50 border border-slate-100"><i class="fas fa-times"></i></button>
 
             <div class="px-10 py-8 bg-slate-50/50 border-b border-slate-100 flex-shrink-0">
                 <h3 class="text-2xl font-black text-slate-800 tracking-tight">Cập nhật Báo cáo</h3>
@@ -253,7 +297,6 @@
             <div class="px-10 py-8 overflow-y-auto custom-scrollbar flex-grow bg-white">
                 <input type="hidden" id="editIndex">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    <!-- Column 1: Config -->
                     <div class="space-y-6">
                         <div class="bg-blue-50/30 p-5 rounded-2xl border border-blue-50 space-y-4">
                             <div>
@@ -289,7 +332,6 @@
                         </div>
                     </div>
 
-                    <!-- Column 2: Performance & Links -->
                     <div class="space-y-6">
                         <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 shadow-inner">
                             <p class="text-[11px] font-black text-slate-700 uppercase tracking-widest mb-4 flex items-center"><i class="fas fa-chart-line mr-2 text-indigo-500 text-lg"></i> Hiệu suất đầu ra</p>
@@ -326,7 +368,7 @@
     </div>
 
     <!-- MODAL PASSWORD BẢO MẬT -->
-    <div id="authModal" class="modal fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[200] items-center justify-center p-4">
+    <div id="authModal" class="modal fixed inset-0 bg-slate-900/80 backdrop-blur-xl items-center justify-center p-4">
         <div class="modal-content bg-white w-full max-w-sm rounded-[32px] p-8 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] text-center relative border border-white">
             <button onclick="closeModal('authModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full hover:bg-slate-100"><i class="fas fa-times"></i></button>
             
@@ -334,7 +376,6 @@
             <h3 class="text-xl font-black text-slate-800 mb-2 tracking-tight">Xác thực Bảo mật</h3>
             <p class="text-xs text-slate-500 mb-8 px-2 font-medium">Bạn đang yêu cầu xóa dữ liệu. Vui lòng nhập mã PIN an toàn và <b class="text-slate-700">nhấn Enter</b>.</p>
             
-            <!-- YÊU CẦU 1: onkeypress Enter -->
             <input type="password" id="authPassword" onkeypress="handleAuthKeyPress(event)" placeholder="••••••" class="w-full text-center border-2 border-slate-100 bg-slate-50 rounded-2xl px-4 py-4 font-mono text-2xl tracking-[0.5em] focus:border-rose-400 focus:bg-white outline-none mb-8 transition shadow-inner">
             
             <button onclick="executeDelete()" class="w-full py-4 rounded-2xl text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 transition shadow-[0_10px_20px_-10px_rgba(244,63,94,0.6)] transform hover:-translate-y-0.5 uppercase tracking-wider">Thực thi Xóa</button>
@@ -342,6 +383,7 @@
     </div>
 
     <script>
+        // CẤU HÌNH DATA
         const courseConfig = [
             { id: 'SPCB', label: 'Retail', title: 'Sản phẩm Cơ bản', desc: 'Lộ trình 3 buổi: Tổng quan, 6 bước demo và App.', sessions: 3, border: 'border-l-blue-500', color: 'text-blue-500', link: 'spcb.html' },
             { id: 'KV1', label: 'Advanced', title: 'Sản phẩm KV1', desc: 'Nâng cao kỹ năng quản lý tình huống nghiệp vụ.', sessions: 1, border: 'border-l-indigo-500', color: 'text-indigo-500', link: 'kv1.html' },
@@ -508,7 +550,6 @@
             const ctxPerf = document.getElementById('performanceChart').getContext('2d');
             if(perfChartInstance) perfChartInstance.destroy();
             
-            // Gradient fill for Bar Chart 5D
             let gradientPass = ctxPerf.createLinearGradient(0, 0, 0, 400); gradientPass.addColorStop(0, '#10b981'); gradientPass.addColorStop(1, '#059669');
             let gradientFail = ctxPerf.createLinearGradient(0, 0, 0, 400); gradientFail.addColorStop(0, '#f43f5e'); gradientFail.addColorStop(1, '#e11d48');
 
@@ -527,6 +568,9 @@
             return 'bg-slate-100 text-slate-600';
         }
 
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
         function openEditModal(realIndex) {
             const d = loadDB()[realIndex];
             document.getElementById('editIndex').value = realIndex;
@@ -535,10 +579,9 @@
             document.getElementById('editStart').value = d.startDate || ''; document.getElementById('editFinish').value = d.finishDate || '';
             document.getElementById('editTotal').value = d.totalTrainees || ''; document.getElementById('editPass').value = d.passedTrainees || ''; document.getElementById('editFail').value = d.failedTrainees || '';
             document.getElementById('editListLink').value = d.listLink || ''; document.getElementById('editQuizLink').value = d.quizLink || ''; document.getElementById('editRecordLink').value = d.recordLink || '';
-            document.getElementById('editModal').classList.add('active');
+            openModal('editModal');
         }
 
-        // YÊU CẦU 3: LOGIC DỮ LIỆU THÁNG NGHIÊM NGẶT
         function saveEdit() {
             const idx = document.getElementById('editIndex').value;
             let d = loadDB();
@@ -551,12 +594,10 @@
             d[idx].startDate = startDate;
             d[idx].finishDate = document.getElementById('editFinish').value;
             
-            // Ép buộc Tháng phải bằng đúng Tháng của Ngày Bắt Đầu (Loại trừ khả năng User điền lệch)
             if(startDate) {
                 const dateObj = new Date(startDate);
-                d[idx].month = dateObj.getMonth() + 1; // 0-11 -> 1-12
+                d[idx].month = dateObj.getMonth() + 1;
             } else {
-                // Nếu xóa rỗng ngày bắt đầu, thì tháng mới giữ nguyên hoặc mặc định
                 d[idx].month = d[idx].month || new Date().getMonth() + 1; 
             }
 
@@ -572,50 +613,32 @@
             renderAll();
         }
 
-        // YÊU CẦU 1 & 4: BẢO MẬT ENTER + CONFIRM
         function requestDelete(idx) {
             deleteTargetIndex = idx;
             document.getElementById('authPassword').value = '';
-            document.getElementById('authModal').classList.add('active');
+            openModal('authModal');
             setTimeout(() => document.getElementById('authPassword').focus(), 100);
         }
 
-        function handleAuthKeyPress(e) {
-            if (e.key === 'Enter') {
-                executeDelete();
-            }
-        }
+        function handleAuthKeyPress(e) { if (e.key === 'Enter') { executeDelete(); } }
 
         function executeDelete() {
             const pass = document.getElementById('authPassword').value;
             if(pass !== SECRET_KEY) { alert("Sai mã PIN an toàn! Lệnh bị từ chối."); return; }
 
-            // Thêm Popup Xác nhận cuối cùng theo yêu cầu
             const msg = deleteTargetIndex === -1 
                 ? "CẢNH BÁO ĐỎ: Bạn đang chuẩn bị xóa SẠCH toàn bộ dữ liệu hệ thống. Thao tác này không thể hoàn tác!\n\nNhấn OK để XÓA.\nNhấn Cancel để HỦY." 
                 : "Bạn có chắc chắn muốn xóa báo cáo khóa học này không?\n\nNhấn OK để XÓA.\nNhấn Cancel để HỦY.";
             
             const isConfirmed = confirm(msg);
-            if (!isConfirmed) {
-                closeModal('authModal');
-                return; // User nhấn Cancel thì thoát không làm gì cả
-            }
+            if (!isConfirmed) { closeModal('authModal'); return; }
 
-            // Tiến hành xóa
-            if(deleteTargetIndex === -1) { 
-                localStorage.removeItem('kv_master_db'); 
-                alert("Đã xóa sạch hệ thống thành công."); 
-            } else {
-                let d = loadDB(); 
-                d.splice(deleteTargetIndex, 1); 
-                localStorage.setItem('kv_master_db', JSON.stringify(d)); 
-                alert("Đã xóa dữ liệu khóa học."); 
-            }
+            if(deleteTargetIndex === -1) { localStorage.removeItem('kv_master_db'); alert("Đã xóa sạch hệ thống thành công."); } 
+            else { let d = loadDB(); d.splice(deleteTargetIndex, 1); localStorage.setItem('kv_master_db', JSON.stringify(d)); alert("Đã xóa dữ liệu khóa học."); }
+            
             closeModal('authModal');
             renderAll();
         }
-
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
         function exportCSV() {
             const data = loadDB();
@@ -625,6 +648,53 @@
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a"); link.href = URL.createObjectURL(blob); 
             link.setAttribute("download", `Analytics_Trainer_${new Date().toLocaleDateString('vi-VN')}.csv`); link.click();
+        }
+
+        /* --- SCRIPT LỌC EMAIL GOOGLE CHAT --- */
+        function processModuleEmails() {
+            const input = document.getElementById('mod-input').value;
+            const validBadge = document.getElementById('mod-valid-count');
+            const invalidBadge = document.getElementById('mod-invalid-count');
+            const outputArea = document.getElementById('mod-output');
+
+            if (!input.trim()) return;
+
+            const rawItems = input.split(/[\n,;\s]+/).filter(item => item.trim() !== '');
+            const validSet = new Set();
+            let invalidCount = 0;
+
+            rawItems.forEach(item => {
+                const clean = item.trim().toLowerCase();
+                if (clean.endsWith('@kiotviet.com')) {
+                    validSet.add(clean);
+                } else {
+                    invalidCount++;
+                }
+            });
+
+            const result = Array.from(validSet);
+            outputArea.value = result.join(', ');
+            
+            validBadge.innerText = `${result.length} Hợp lệ`;
+            invalidBadge.innerText = `${invalidCount} Loại bỏ`;
+        }
+
+        function copyModuleEmails(btn) {
+            const output = document.getElementById('mod-output');
+            if (!output.value) return;
+
+            navigator.clipboard.writeText(output.value).then(() => {
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i>Đã Copy';
+                btn.classList.replace('bg-blue-600', 'bg-emerald-500');
+                btn.classList.replace('hover:bg-blue-700', 'hover:bg-emerald-600');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.replace('bg-emerald-500', 'bg-blue-600');
+                    btn.classList.replace('hover:bg-emerald-600', 'hover:bg-blue-700');
+                }, 2000);
+            });
         }
 
         window.onload = () => { renderCourseCards(); renderAll(); };
