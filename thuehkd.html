@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HĐĐT - Thuế | Trainer Hub</title>
+    <title>HĐĐT - Thuế - Kế toán | Trainer Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -14,236 +14,350 @@
             font-family: 'Inter', sans-serif; 
             background-color: #f8fafc; 
             color: #0f172a; 
-            background-image: radial-gradient(circle at 10% 20%, rgba(71, 85, 105, 0.05), transparent 30%), radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.05), transparent 30%);
+            overflow-x: hidden;
         }
         
-        /* Glassmorphism & 5D Hover Effects */
-        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); }
-        .hover-5d { transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.15); }
-        .hover-5d:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 20px 30px -10px rgba(0,0,0,0.08); border-color: #e2e8f0; }
+        /* Background Animations (Floating Orbs) */
+        .bg-orb { position: fixed; border-radius: 50%; mix-blend-mode: multiply; filter: blur(80px); opacity: 0.4; z-index: -1; animation: float 15s infinite; }
+        .orb-1 { top: -10%; left: -10%; width: 400px; height: 400px; background: #93c5fd; animation-delay: 0s; }
+        .orb-2 { top: 40%; right: -10%; width: 500px; height: 500px; background: #c4b5fd; animation-delay: 2s; }
+        .orb-3 { bottom: -20%; left: 20%; width: 600px; height: 600px; background: #6ee7b7; animation-delay: 4s; }
+
+        @keyframes float {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+
+        /* Glassmorphism & 5D Effects */
+        .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); }
+        .glass-panel-heavy { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 1); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); }
         
-        .copy-btn { transition: all 0.2s ease; }
-        .copy-btn:active { transform: scale(0.95); }
+        .hover-5d { transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.2), box-shadow 0.5s ease; }
+        .hover-5d:hover { transform: translateY(-6px); box-shadow: 0 30px 40px -15px rgba(0,0,0,0.12); border-color: rgba(255, 255, 255, 1); z-index: 10; relative; }
+        
+        .btn-fluid { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-fluid:hover { transform: translateY(-2px); }
+        .btn-fluid:active { transform: scale(0.95); }
 
         .text-area-code {
-            font-family: 'Inter', sans-serif; /* Giữ font chữ dễ đọc thay vì mono để giống email */
+            font-family: 'Inter', sans-serif; 
             white-space: pre-wrap;
-            line-height: 1.6;
+            line-height: 1.7;
+            background: linear-gradient(to bottom right, #f8fafc, #f1f5f9);
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02);
         }
 
-        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* TAB FLUID TRANSITIONS */
+        .tab-content { display: none; opacity: 0; transform: translateY(20px) scale(0.98); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .tab-content.active { display: block; opacity: 1; transform: translateY(0) scale(1); }
+
+        /* SIDEBAR ACTIVE STATE */
+        .sidebar-item { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-left: 4px solid transparent; position: relative; overflow: hidden; }
+        .sidebar-item::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 0; background: linear-gradient(90deg, rgba(59, 130, 246, 0.1), transparent); transition: width 0.4s ease; z-index: -1; }
+        .sidebar-item:hover::before { width: 100%; }
+        .sidebar-item.active { background: #eff6ff; border-left-color: #3b82f6; color: #1d4ed8; font-weight: 800; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.05); }
+        .sidebar-item.active i { color: #3b82f6; animation: pulseIcon 2s infinite; }
+
+        @keyframes pulseIcon { 0% { transform: scale(1); } 50% { transform: scale(1.15); filter: brightness(1.2); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body class="antialiased">
 
+    <!-- 5D Animated Background -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
     <!-- HEADER NAVIGATION -->
-    <nav class="glass-panel border-b border-slate-200/60 sticky top-0 z-50 shadow-sm">
+    <nav class="glass-panel border-b border-slate-200/50 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <a href="index.html" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-all shadow-inner border border-slate-200">
-                    <i class="fas fa-arrow-left"></i>
+            <div class="flex items-center space-x-3 group">
+                <a href="index.html" class="w-9 h-9 flex items-center justify-center rounded-full bg-white text-slate-500 hover:bg-blue-500 hover:text-white transition-all duration-300 shadow-sm border border-slate-200 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/30" title="Về trang chủ">
+                    <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
                 </a>
-                <span class="text-lg font-black tracking-tight text-slate-800 border-l-2 border-slate-200 pl-3">Khóa: HĐĐT - Thuế</span>
+                <span class="text-lg font-black tracking-tight text-slate-800 border-l-2 border-slate-300 pl-4">HĐĐT - Thuế - Kế toán</span>
             </div>
             <div class="hidden md:flex space-x-4">
-                <span class="px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-bold uppercase tracking-widest shadow-sm">
-                    <i class="fas fa-tag mr-1 text-slate-400"></i> Specialist
+                <span class="px-4 py-1.5 rounded-full bg-white/60 border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-[0.15em] shadow-sm flex items-center">
+                    <div class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></div> Specialist
                 </span>
             </div>
         </div>
     </nav>
 
     <!-- HERO SECTION -->
-    <header class="py-12 relative overflow-hidden">
-        <div class="max-w-7xl mx-auto px-6 relative z-10">
-            <h1 class="text-4xl font-black text-slate-900 leading-tight mb-4 tracking-tighter drop-shadow-sm flex items-center gap-4">
-                Tổ chức đào tạo Hóa đơn điện tử
-                <i class="fas fa-file-invoice-dollar text-slate-400"></i>
-            </h1>
-            <p class="text-slate-500 text-sm mb-8 max-w-2xl font-medium leading-relaxed">
-                Chuẩn hóa quy trình vận hành khóa HĐĐT - Thuế. Thiết lập thông số lớp học bên dưới, hệ thống sẽ tự động tạo Kịch bản Copy cho Email và Chat đúng chuẩn.
-            </p>
+    <header class="py-10 relative z-10">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+                <h1 class="text-3xl font-black text-slate-900 mb-2 tracking-tight flex items-center gap-3 drop-shadow-sm">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30">
+                        <i class="fas fa-file-invoice-dollar text-xl"></i>
+                    </div>
+                    Điều phối Khóa học
+                </h1>
+                <p class="text-slate-500 text-sm font-medium ml-1">Chuỗi kịch bản được tự động hóa. Đảm bảo đúng tiến trình, không bỏ sót học viên.</p>
+            </div>
 
-            <!-- TÀI NGUYÊN KHÓA HỌC -->
-            <div class="flex flex-wrap gap-3 mb-10">
-                <a href="https://www.canva.com/design/DAHAO9by6Uc/DbIkB7psM39Jx0d8BCmGgA/edit" target="_blank" class="glass-panel px-4 py-2.5 rounded-xl font-bold text-xs flex items-center hover-5d text-slate-700">
-                    <i class="fas fa-desktop mr-2 text-blue-500"></i> Slide Bài giảng
-                </a>
-                <a href="https://kiotvietlnd.github.io/elearning/thuehkd/#ke-toan-01" target="_blank" class="glass-panel px-4 py-2.5 rounded-xl font-bold text-xs flex items-center hover-5d text-slate-700">
-                    <i class="fab fa-github mr-2 text-slate-800"></i> Github E-learning
-                </a>
-                <a href="https://daotao.kiotviet.vn/khoa-hoc/ke-toan-01/" target="_blank" class="glass-panel px-4 py-2.5 rounded-xl font-bold text-xs flex items-center hover-5d text-slate-700">
-                    <i class="fas fa-graduation-cap mr-2 text-indigo-500"></i> Khóa học LMS
-                </a>
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLSdM_-jSquep4EHJkd0WubTnj3xaXfPzOoDOhmTQluJJ9p3bxg/viewform" target="_blank" class="glass-panel px-4 py-2.5 rounded-xl font-bold text-xs flex items-center hover-5d text-slate-700">
-                    <i class="fas fa-clipboard-check mr-2 text-emerald-500"></i> Form Điểm danh
-                </a>
+            <div class="flex flex-wrap gap-2">
+                <a href="https://www.canva.com/design/DAHAO9by6Uc/DbIkB7psM39Jx0d8BCmGgA/edit" target="_blank" class="glass-panel px-4 py-2 rounded-xl font-bold text-[11px] text-slate-600 hover:text-blue-600 btn-fluid"><i class="fas fa-desktop mr-1.5 text-blue-500"></i> Slide</a>
+                <a href="https://kiotvietlnd.github.io/elearning/thuehkd/#ke-toan-01" target="_blank" class="glass-panel px-4 py-2 rounded-xl font-bold text-[11px] text-slate-600 hover:text-slate-900 btn-fluid"><i class="fab fa-github mr-1.5 text-slate-800"></i> Github</a>
+                <a href="https://daotao.kiotviet.vn/khoa-hoc/ke-toan-01/" target="_blank" class="glass-panel px-4 py-2 rounded-xl font-bold text-[11px] text-slate-600 hover:text-indigo-600 btn-fluid"><i class="fas fa-graduation-cap mr-1.5 text-indigo-500"></i> LMS</a>
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSdM_-jSquep4EHJkd0WubTnj3xaXfPzOoDOhmTQluJJ9p3bxg/viewform" target="_blank" class="glass-panel px-4 py-2 rounded-xl font-bold text-[11px] text-slate-600 hover:text-emerald-600 btn-fluid"><i class="fas fa-clipboard-check mr-1.5 text-emerald-500"></i> Điểm danh</a>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-6 pb-20 space-y-12">
+    <main class="max-w-7xl mx-auto px-6 pb-24 flex flex-col lg:flex-row gap-8 relative z-10">
 
-        <!-- STEP 0: CẤU HÌNH THÔNG SỐ -->
-        <section class="glass-panel p-8 rounded-[32px] border-l-4 border-l-slate-600 shadow-sm relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-slate-200 rounded-full mix-blend-multiply filter blur-[60px] opacity-30 -translate-y-1/2 translate-x-1/2"></div>
-            
-            <div class="flex items-center gap-3 mb-6 relative z-10">
-                <div class="w-10 h-10 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center text-lg font-black shadow-inner border border-slate-200">0</div>
-                <h2 class="text-xl font-black text-slate-800 tracking-tight">Cấu hình Lớp học (Bắt buộc)</h2>
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="w-full lg:w-1/4 flex-shrink-0">
+            <div class="glass-panel p-3 rounded-[24px] sticky top-28 border border-white">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-4 pt-2">Tiến trình (5 Bước)</h3>
+                <ul class="flex flex-row lg:flex-col gap-1 overflow-x-auto custom-scrollbar pb-2 lg:pb-0">
+                    <li><button onclick="switchTab('step1')" id="nav-step1" class="sidebar-item active w-full text-left px-4 py-3.5 rounded-2xl text-[13px] font-semibold text-slate-600 flex items-center whitespace-nowrap lg:whitespace-normal"><i class="fas fa-cog w-7 text-slate-400"></i> Cấu hình ban đầu</button></li>
+                    <li><button onclick="switchTab('step2')" id="nav-step2" class="sidebar-item w-full text-left px-4 py-3.5 rounded-2xl text-[13px] font-semibold text-slate-600 flex items-center whitespace-nowrap lg:whitespace-normal"><i class="fas fa-paper-plane w-7 text-slate-400"></i> Trước đào tạo (T3)</button></li>
+                    <li><button onclick="switchTab('step3')" id="nav-step3" class="sidebar-item w-full text-left px-4 py-3.5 rounded-2xl text-[13px] font-semibold text-slate-600 flex items-center whitespace-nowrap lg:whitespace-normal"><i class="fas fa-bullhorn w-7 text-slate-400"></i> Trong ngày học (T6)</button></li>
+                    <li><button onclick="switchTab('step4')" id="nav-step4" class="sidebar-item w-full text-left px-4 py-3.5 rounded-2xl text-[13px] font-semibold text-slate-600 flex items-center whitespace-nowrap lg:whitespace-normal"><i class="fas fa-tasks w-7 text-slate-400"></i> Hối thúc LMS</button></li>
+                    <li><button onclick="switchTab('step5')" id="nav-step5" class="sidebar-item w-full text-left px-4 py-3.5 rounded-2xl text-[13px] font-semibold text-slate-600 flex items-center whitespace-nowrap lg:whitespace-normal"><i class="fas fa-chart-pie w-7 text-slate-400"></i> Lưu Báo cáo DB</button></li>
+                </ul>
             </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="w-full lg:w-3/4 min-h-[600px] relative">
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Ngày học (Thứ 6)</label>
-                    <input type="date" id="conf-date" onchange="updateTemplates()" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-50 transition shadow-sm cursor-pointer">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Giảng viên Phần 1</label>
-                    <input type="text" id="conf-trainer" oninput="updateTemplates()" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-50 transition shadow-sm" value="Đỗ Hoàng Sơn">
-                </div>
-                <div class="lg:col-span-2">
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Link Google Meet</label>
-                    <div class="relative">
-                        <i class="fas fa-video absolute left-4 top-3.5 text-blue-500"></i>
-                        <input type="text" id="conf-meet" oninput="updateTemplates()" class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm font-bold text-blue-600 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition shadow-sm" value="https://meet.google.com/jpp-kpzc-iku">
+            <!-- STEP 1 -->
+            <section id="step1" class="tab-content active glass-panel-heavy p-8 rounded-[32px] border-t-4 border-slate-700">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center text-xl font-black shadow-inner border border-slate-200"><i class="fas fa-sliders-h"></i></div>
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Thiết lập Thông số</h2>
+                        <p class="text-sm text-slate-500 font-medium">Hệ thống sẽ đồng bộ thông tin này vào tất cả Kịch bản bên dưới.</p>
                     </div>
                 </div>
-            </div>
-            
-            <div class="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
-                <i class="fas fa-lightbulb text-amber-500 mt-0.5"></i>
-                <div class="text-xs text-amber-700 font-medium">
-                    <p class="font-bold mb-1">Ghi chú lọc Data HRM:</p>
-                    <p id="hrm-hint">Vui lòng chọn Ngày học để hệ thống tự động tính toán tháng lọc danh sách nhân sự.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- KỊCH BẢN COPY GRID -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
-            <!-- STEP 1: PRE-TRAINING -->
-            <section class="space-y-6">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg font-black shadow-inner border border-indigo-100">1</div>
-                    <h2 class="text-xl font-black text-slate-800 tracking-tight">Trước đào tạo (Thứ 3)</h2>
-                </div>
-
-                <!-- Template Mail -->
-                <div class="glass-panel rounded-[24px] overflow-hidden flex flex-col hover-5d">
-                    <div class="bg-indigo-50/50 px-5 py-3 border-b border-indigo-100 flex justify-between items-center">
-                        <span class="text-[10px] font-black uppercase tracking-widest text-indigo-600 flex items-center"><i class="fas fa-envelope mr-2"></i> Mail Mời học</span>
-                        <button onclick="copyContent('tpl-mail-1', this)" class="copy-btn px-3 py-1.5 rounded-lg text-[10px] font-bold text-white bg-indigo-500 hover:bg-indigo-600 shadow-sm flex items-center gap-1.5"><i class="far fa-copy"></i> COPY</button>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 p-6 bg-slate-50/50 rounded-3xl border border-slate-100">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Ngày học (Thứ 6) <span class="text-rose-500">*</span></label>
+                        <input type="date" id="conf-date" onchange="updateTemplates()" class="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all shadow-sm cursor-pointer hover:border-blue-300">
                     </div>
-                    <div class="p-5 bg-white relative">
-                        <textarea id="tpl-mail-1" readonly class="w-full h-[400px] text-area-code text-[13px] text-slate-600 outline-none resize-none bg-transparent custom-scrollbar"></textarea>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Giảng viên Phần 1</label>
+                        <input type="text" id="conf-trainer" oninput="updateTemplates()" class="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all shadow-sm hover:border-blue-300" value="Nguyễn Lê Nhật Vi">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Link Google Meet</label>
+                        <div class="relative">
+                            <i class="fas fa-video absolute left-5 top-4 text-blue-500 text-lg"></i>
+                            <input type="text" id="conf-meet" oninput="updateTemplates()" class="w-full bg-white border border-slate-200 rounded-2xl pl-12 pr-5 py-4 text-sm font-bold text-blue-600 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all shadow-sm hover:border-blue-300" value="https://meet.google.com/jpp-kpzc-iku">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-5 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-100 flex items-start gap-4 shadow-inner">
+                    <div class="w-10 h-10 rounded-full bg-white text-amber-500 flex items-center justify-center flex-shrink-0 shadow-sm border border-amber-100"><i class="fas fa-lightbulb text-lg"></i></div>
+                    <div>
+                        <h4 class="text-sm font-black text-amber-900 mb-1 tracking-tight">AI Gợi ý trích xuất Danh sách HRM:</h4>
+                        <p id="hrm-hint" class="text-xs text-amber-700 font-medium leading-relaxed">Vui lòng chọn <b class="font-black text-amber-900">Ngày học</b> ở trên để hệ thống tự động tính toán tháng cần xuất file danh sách.</p>
                     </div>
                 </div>
 
-                <!-- Template Chat -->
-                <div class="glass-panel rounded-[24px] overflow-hidden flex flex-col hover-5d">
-                    <div class="bg-blue-50/50 px-5 py-3 border-b border-blue-100 flex justify-between items-center">
-                        <span class="text-[10px] font-black uppercase tracking-widest text-blue-600 flex items-center"><i class="fas fa-comment-dots mr-2"></i> Chat Nhắc nhở (Group)</span>
-                        <button onclick="copyContent('tpl-chat-1', this)" class="copy-btn px-3 py-1.5 rounded-lg text-[10px] font-bold text-white bg-blue-500 hover:bg-blue-600 shadow-sm flex items-center gap-1.5"><i class="far fa-copy"></i> COPY</button>
+                <div class="mt-8 flex justify-end">
+                    <button onclick="switchTab('step2')" class="px-8 py-4 rounded-2xl text-sm font-black text-white bg-slate-800 hover:bg-slate-900 transition-all shadow-lg hover:shadow-slate-500/30 btn-fluid flex items-center gap-2">
+                        BƯỚC TIẾP THEO <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- STEP 2 -->
+            <section id="step2" class="tab-content glass-panel-heavy p-8 rounded-[32px] border-t-4 border-indigo-500">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-black shadow-inner border border-indigo-100"><i class="fas fa-paper-plane"></i></div>
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Trước đào tạo (Thứ 3)</h2>
+                        <p class="text-sm text-slate-500 font-medium">Gửi Email chính thức và Chat thông báo trên Group.</p>
                     </div>
-                    <div class="p-5 bg-white relative">
-                        <textarea id="tpl-chat-1" readonly class="w-full h-[250px] text-area-code text-[13px] text-slate-600 outline-none resize-none bg-transparent custom-scrollbar"></textarea>
+                </div>
+
+                <div class="space-y-10">
+                    <div class="bg-white border border-slate-200 rounded-[24px] overflow-hidden hover-5d">
+                        <div class="bg-indigo-50/50 px-6 py-4 border-b border-indigo-100 flex justify-between items-center backdrop-blur-sm">
+                            <span class="text-xs font-black uppercase tracking-widest text-indigo-700 flex items-center"><i class="fas fa-envelope mr-2 text-indigo-500"></i> Kịch bản Mail Mời học</span>
+                            <button onclick="copyContent('tpl-mail-1', this, 'indigo')" class="btn-fluid px-5 py-2.5 rounded-xl text-[11px] font-bold text-white bg-indigo-500 hover:bg-indigo-600 shadow-md shadow-indigo-500/30 flex items-center gap-2"><i class="far fa-copy"></i> COPY MAIL</button>
+                        </div>
+                        <div class="p-1 bg-slate-50">
+                            <textarea id="tpl-mail-1" readonly class="w-full h-[380px] text-area-code p-5 text-[13px] text-slate-700 outline-none resize-none rounded-[20px] custom-scrollbar border border-transparent focus:border-indigo-200 transition-colors"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-slate-200 rounded-[24px] overflow-hidden hover-5d">
+                        <div class="bg-blue-50/50 px-6 py-4 border-b border-blue-100 flex justify-between items-center backdrop-blur-sm">
+                            <span class="text-xs font-black uppercase tracking-widest text-blue-700 flex items-center"><i class="fas fa-comment-dots mr-2 text-blue-500"></i> Kịch bản Chat Nhắc nhở</span>
+                            <button onclick="copyContent('tpl-chat-1', this, 'blue')" class="btn-fluid px-5 py-2.5 rounded-xl text-[11px] font-bold text-white bg-blue-500 hover:bg-blue-600 shadow-md shadow-blue-500/30 flex items-center gap-2"><i class="far fa-copy"></i> COPY CHAT</button>
+                        </div>
+                        <div class="p-1 bg-slate-50">
+                            <textarea id="tpl-chat-1" readonly class="w-full h-[250px] text-area-code p-5 text-[13px] text-slate-700 outline-none resize-none rounded-[20px] custom-scrollbar border border-transparent focus:border-blue-200 transition-colors"></textarea>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- STEP 2 & 3: TRAINING & FOLLOW UP -->
-            <section class="space-y-6">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-black shadow-inner border border-emerald-100">2</div>
-                    <h2 class="text-xl font-black text-slate-800 tracking-tight">Trong & Sau đào tạo</h2>
-                </div>
-
-                <!-- Template Chat Training Day -->
-                <div class="glass-panel rounded-[24px] overflow-hidden flex flex-col hover-5d">
-                    <div class="bg-emerald-50/50 px-5 py-3 border-b border-emerald-100 flex justify-between items-center">
-                        <span class="text-[10px] font-black uppercase tracking-widest text-emerald-600 flex items-center"><i class="fas fa-bell mr-2"></i> Chat Sáng Thứ 6 (Trong ngày)</span>
-                        <button onclick="copyContent('tpl-chat-2', this)" class="copy-btn px-3 py-1.5 rounded-lg text-[10px] font-bold text-white bg-emerald-500 hover:bg-emerald-600 shadow-sm flex items-center gap-1.5"><i class="far fa-copy"></i> COPY</button>
-                    </div>
-                    <div class="p-5 bg-white relative">
-                        <textarea id="tpl-chat-2" readonly class="w-full h-[150px] text-area-code text-[13px] text-slate-600 outline-none resize-none bg-transparent custom-scrollbar"></textarea>
+            <!-- STEP 3 -->
+            <section id="step3" class="tab-content glass-panel-heavy p-8 rounded-[32px] border-t-4 border-emerald-500">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-black shadow-inner border border-emerald-100"><i class="fas fa-bullhorn"></i></div>
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Trong ngày học (Sáng T6)</h2>
+                        <p class="text-sm text-slate-500 font-medium">Chat nhắc nhở sát giờ học kèm Link Form Điểm danh.</p>
                     </div>
                 </div>
 
-                <!-- Template Mail Push LMS -->
-                <div class="glass-panel rounded-[24px] overflow-hidden flex flex-col hover-5d">
-                    <div class="bg-rose-50/50 px-5 py-3 border-b border-rose-100 flex justify-between items-center">
-                        <span class="text-[10px] font-black uppercase tracking-widest text-rose-500 flex items-center"><i class="fas fa-paper-plane mr-2"></i> Mail Hối thúc học LMS</span>
-                        <button onclick="copyContent('tpl-mail-2', this)" class="copy-btn px-3 py-1.5 rounded-lg text-[10px] font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-sm flex items-center gap-1.5"><i class="far fa-copy"></i> COPY</button>
+                <div class="bg-white border border-slate-200 rounded-[24px] overflow-hidden hover-5d">
+                    <div class="bg-emerald-50/50 px-6 py-4 border-b border-emerald-100 flex justify-between items-center backdrop-blur-sm">
+                        <span class="text-xs font-black uppercase tracking-widest text-emerald-700 flex items-center"><i class="fas fa-bell mr-2 text-emerald-500"></i> Chat Nhắc Sát Giờ</span>
+                        <button onclick="copyContent('tpl-chat-2', this, 'emerald')" class="btn-fluid px-5 py-2.5 rounded-xl text-[11px] font-bold text-white bg-emerald-500 hover:bg-emerald-600 shadow-md shadow-emerald-500/30 flex items-center gap-2"><i class="far fa-copy"></i> COPY CHAT</button>
                     </div>
-                    <div class="p-5 bg-white relative">
-                        <textarea id="tpl-mail-2" readonly class="w-full h-[300px] text-area-code text-[13px] text-slate-600 outline-none resize-none bg-transparent custom-scrollbar"></textarea>
-                    </div>
-                </div>
-
-                 <!-- Template Chat Push LMS -->
-                 <div class="glass-panel rounded-[24px] overflow-hidden flex flex-col hover-5d">
-                    <div class="bg-rose-50/50 px-5 py-3 border-b border-rose-100 flex justify-between items-center">
-                        <span class="text-[10px] font-black uppercase tracking-widest text-rose-500 flex items-center"><i class="fas fa-comments mr-2"></i> Chat Hối thúc LMS (Group)</span>
-                        <button onclick="copyContent('tpl-chat-3', this)" class="copy-btn px-3 py-1.5 rounded-lg text-[10px] font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-sm flex items-center gap-1.5"><i class="far fa-copy"></i> COPY</button>
-                    </div>
-                    <div class="p-5 bg-white relative">
-                        <textarea id="tpl-chat-3" readonly class="w-full h-[300px] text-area-code text-[13px] text-slate-600 outline-none resize-none bg-transparent custom-scrollbar"></textarea>
+                    <div class="p-1 bg-slate-50">
+                        <textarea id="tpl-chat-2" readonly class="w-full h-[200px] text-area-code p-5 text-[13px] text-slate-700 outline-none resize-none rounded-[20px] custom-scrollbar border border-transparent focus:border-emerald-200 transition-colors"></textarea>
                     </div>
                 </div>
             </section>
+
+            <!-- STEP 4 -->
+            <section id="step4" class="tab-content glass-panel-heavy p-8 rounded-[32px] border-t-4 border-rose-500">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl font-black shadow-inner border border-rose-100"><i class="fas fa-tasks"></i></div>
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Hối thúc hoàn thành LMS</h2>
+                        <p class="text-sm text-slate-500 font-medium">Gửi Mail cho Quản lý và Chat đôn đốc học viên lên LMS thi.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-10">
+                    <div class="bg-white border border-slate-200 rounded-[24px] overflow-hidden hover-5d">
+                        <div class="bg-rose-50/50 px-6 py-4 border-b border-rose-100 flex justify-between items-center backdrop-blur-sm">
+                            <span class="text-xs font-black uppercase tracking-widest text-rose-700 flex items-center"><i class="fas fa-paper-plane mr-2 text-rose-500"></i> Kịch bản Mail Hối thúc (Có CC SM)</span>
+                            <button onclick="copyContent('tpl-mail-2', this, 'rose')" class="btn-fluid px-5 py-2.5 rounded-xl text-[11px] font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-md shadow-rose-500/30 flex items-center gap-2"><i class="far fa-copy"></i> COPY MAIL</button>
+                        </div>
+                        <div class="p-1 bg-slate-50">
+                            <textarea id="tpl-mail-2" readonly class="w-full h-[320px] text-area-code p-5 text-[13px] text-slate-700 outline-none resize-none rounded-[20px] custom-scrollbar border border-transparent focus:border-rose-200 transition-colors"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-slate-200 rounded-[24px] overflow-hidden hover-5d">
+                        <div class="bg-orange-50/50 px-6 py-4 border-b border-orange-100 flex justify-between items-center backdrop-blur-sm">
+                            <span class="text-xs font-black uppercase tracking-widest text-orange-700 flex items-center"><i class="fas fa-comments mr-2 text-orange-500"></i> Chat Đôn đốc Group</span>
+                            <button onclick="copyContent('tpl-chat-3', this, 'orange')" class="btn-fluid px-5 py-2.5 rounded-xl text-[11px] font-bold text-white bg-orange-500 hover:bg-orange-600 shadow-md shadow-orange-500/30 flex items-center gap-2"><i class="far fa-copy"></i> COPY CHAT</button>
+                        </div>
+                        <div class="p-1 bg-slate-50">
+                            <textarea id="tpl-chat-3" readonly class="w-full h-[350px] text-area-code p-5 text-[13px] text-slate-700 outline-none resize-none rounded-[20px] custom-scrollbar border border-transparent focus:border-orange-200 transition-colors"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STEP 5 -->
+            <section id="step5" class="tab-content glass-panel-heavy p-8 rounded-[32px] border-t-4 border-blue-600">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-2xl shadow-lg shadow-blue-500/30"><i class="fas fa-chart-pie"></i></div>
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-800 tracking-tight">Đồng bộ Hệ thống</h2>
+                        <p class="text-sm text-slate-500 font-medium mt-1">Kết quả sẽ được cập nhật Real-time ra Bảng điều khiển (Dashboard).</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-[24px] border border-slate-200 mb-8 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 block">Mã Khóa Nhận Diện <span class="text-rose-500">*</span></label>
+                            <input type="text" id="db-code" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold text-blue-600 outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner uppercase" placeholder="VD: INV-2604">
+                        </div>
+                        <div class="lg:col-span-2">
+                            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 block">Link Danh sách / Kết quả</label>
+                            <div class="relative">
+                                <i class="fas fa-link absolute left-5 top-4 text-slate-400 text-lg"></i>
+                                <input type="text" id="db-link" class="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-5 py-4 text-sm font-medium text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner" placeholder="Dán link Google Sheet tại đây...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-6">
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 text-center relative overflow-hidden group hover-5d">
+                            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-3">Tổng HV</label>
+                            <input type="number" id="db-total" class="w-full bg-white border border-slate-200 rounded-xl px-2 py-3 text-2xl font-black text-slate-800 text-center outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all shadow-sm">
+                        </div>
+                        <div class="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100 text-center relative overflow-hidden group hover-5d">
+                            <label class="text-[10px] font-black text-emerald-600 uppercase tracking-widest block mb-3">Lượng Đạt</label>
+                            <input type="number" id="db-pass" class="w-full bg-white border border-emerald-200 rounded-xl px-2 py-3 text-2xl font-black text-emerald-600 text-center outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition-all shadow-sm">
+                        </div>
+                        <div class="bg-rose-50/50 p-5 rounded-2xl border border-rose-100 text-center relative overflow-hidden group hover-5d">
+                            <label class="text-[10px] font-black text-rose-500 uppercase tracking-widest block mb-3">Lượng Fail</label>
+                            <input type="number" id="db-fail" class="w-full bg-white border border-rose-200 rounded-xl px-2 py-3 text-2xl font-black text-rose-500 text-center outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-50 transition-all shadow-sm">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 block">Trạng thái khóa học</label>
+                        <select id="db-status" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner cursor-pointer">
+                            <option value="Hoàn thành">Đã Hoàn thành</option>
+                            <option value="Đang diễn ra">Đang diễn ra</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="saveToDB()" class="w-full py-5 rounded-2xl text-sm font-black text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all shadow-[0_15px_30px_-10px_rgba(59,130,246,0.5)] btn-fluid uppercase tracking-widest flex items-center justify-center gap-3">
+                    <i class="fas fa-cloud-upload-alt text-lg"></i> ĐỒNG BỘ DỮ LIỆU LÊN DASHBOARD
+                </button>
+            </section>
+
         </div>
-
-        <!-- STEP 4: LƯU BÁO CÁO VỀ INDEX -->
-        <section class="glass-panel p-8 rounded-[32px] border-l-4 border-l-blue-500 shadow-sm bg-white mt-10">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg font-black shadow-inner border border-blue-100">3</div>
-                <div>
-                    <h2 class="text-xl font-black text-slate-800 tracking-tight">Ghi nhận Báo cáo kết quả</h2>
-                    <p class="text-[11px] text-slate-500 font-medium mt-1">Dữ liệu sẽ được đồng bộ ngay lập tức về trang Dashboard (index.html).</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Mã Khóa (VD: TAX-04-HCM)</label><input type="text" id="db-code" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-blue-600 outline-none focus:border-blue-400 shadow-sm uppercase"></div>
-                <div><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Link DS Điểm danh/Kết quả</label><input type="text" id="db-link" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 outline-none focus:border-blue-400 shadow-sm"></div>
-                <div><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Trạng thái</label>
-                    <select id="db-status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-400 shadow-sm cursor-pointer">
-                        <option value="Hoàn thành">Hoàn thành</option><option value="Đang diễn ra">Đang diễn ra</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-3 gap-4 mb-8">
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center"><label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-2">Tổng HV tham gia</label><input type="number" id="db-total" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xl font-black text-slate-800 text-center outline-none shadow-inner"></div>
-                <div class="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 text-center"><label class="text-[10px] font-black text-emerald-600 uppercase tracking-wider block mb-2">Số lượng Đạt (>80%)</label><input type="number" id="db-pass" class="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-xl font-black text-emerald-600 text-center outline-none shadow-inner"></div>
-                <div class="bg-rose-50/50 p-4 rounded-2xl border border-rose-100 text-center"><label class="text-[10px] font-black text-rose-500 uppercase tracking-wider block mb-2">Số lượng Fail</label><input type="number" id="db-fail" class="w-full bg-white border border-rose-200 rounded-xl px-3 py-2 text-xl font-black text-rose-500 text-center outline-none shadow-inner"></div>
-            </div>
-
-            <button onclick="saveToDB()" class="w-full py-4 rounded-2xl text-sm font-black text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition shadow-[0_10px_20px_-10px_rgba(59,130,246,0.6)] transform hover:-translate-y-0.5 uppercase tracking-widest flex items-center justify-center gap-2">
-                <i class="fas fa-database"></i> LƯU KẾT QUẢ VÀO HỆ THỐNG
-            </button>
-        </section>
-
     </main>
 
     <script>
-        // State Management
         const AppState = {
+            activeTab: 'step1',
             config: {
                 dateObj: null,
-                classDateStr: '', // dd/mm/yyyy
-                deadlineStr: '',  // dd/mm/yyyy (+5 days)
-                monthYearStr: '', // mm/yyyy
-                hrmMonthStr: '',  // Tháng lọc HRM
+                classDateStr: '', 
+                deadlineStr: '',  
+                monthYearStr: '', 
+                hrmMonthStr: '',  
                 trainer: '',
                 meetLink: ''
             }
         };
+
+        function switchTab(tabId) {
+            // Trick để reset CSS animation: Ẩn tất cả -> setTimeout hiện lại
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+                setTimeout(() => el.style.display = 'none', 300); // Đợi fade out
+            });
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('nav-' + tabId).classList.add('active');
+            AppState.activeTab = tabId;
+
+            setTimeout(() => {
+                const target = document.getElementById(tabId);
+                target.style.display = 'block';
+                // Trigger reflow
+                void target.offsetWidth; 
+                target.classList.add('active');
+            }, 310);
+
+            if (window.innerWidth < 1024) {
+                window.scrollTo({ top: document.querySelector('main').offsetTop - 100, behavior: 'smooth' });
+            }
+        }
 
         function formatDateStr(date) {
             const d = date.getDate().toString().padStart(2, '0');
@@ -255,14 +369,8 @@
         function calculateDates(selectedDate) {
             if(!selectedDate) return;
             const classDate = new Date(selectedDate);
-            
-            // Deadline + 5 days
-            const deadlineDate = new Date(classDate);
-            deadlineDate.setDate(deadlineDate.getDate() + 5);
-
-            // HRM Month (2 months prior logically, e.g., April class -> Feb List)
-            const hrmDate = new Date(classDate);
-            hrmDate.setMonth(hrmDate.getMonth() - 2);
+            const deadlineDate = new Date(classDate); deadlineDate.setDate(deadlineDate.getDate() + 5);
+            const hrmDate = new Date(classDate); hrmDate.setMonth(hrmDate.getMonth() - 2);
 
             AppState.config.dateObj = classDate;
             AppState.config.classDateStr = formatDateStr(classDate);
@@ -271,15 +379,12 @@
             const mm = (classDate.getMonth() + 1).toString().padStart(2, '0');
             const yy = classDate.getFullYear();
             AppState.config.monthYearStr = `${mm}/${yy}`;
-            AppState.config.monthOnly = classDate.getMonth() + 1; // For DB filtering
+            AppState.config.monthOnly = classDate.getMonth() + 1;
 
             const hrm_m = (hrmDate.getMonth() + 1).toString().padStart(2, '0');
-            const hrm_y = hrmDate.getFullYear();
             AppState.config.hrmMonthStr = `Tháng ${hrm_m}`;
 
-            document.getElementById('hrm-hint').innerHTML = `Khóa học diễn ra vào Tháng ${mm}, bạn cần trích xuất danh sách nhân sự gia nhập từ đầu đến cuối <span class="font-black text-amber-600 bg-amber-100 px-1 rounded">Tháng ${hrm_m}</span>.`;
-            
-            // Auto fill DB code suggestion
+            document.getElementById('hrm-hint').innerHTML = `Khóa học diễn ra vào Tháng ${mm}, xuất danh sách nhân sự từ đầu đến cuối <span class="font-black text-amber-900 bg-amber-200 px-1.5 py-0.5 rounded shadow-sm">Tháng ${hrm_m}</span>.`;
             document.getElementById('db-code').value = `TAX-${mm}-${yy.toString().slice(-2)}`;
         }
 
@@ -288,226 +393,77 @@
             AppState.config.trainer = document.getElementById('conf-trainer').value;
             AppState.config.meetLink = document.getElementById('conf-meet').value;
 
-            if (dateVal) {
-                calculateDates(dateVal);
-            } else {
-                // Default placeholders if no date picked
-                AppState.config.monthYearStr = '[Tháng/Năm]';
-                AppState.config.classDateStr = '[Ngày học]';
-                AppState.config.deadlineStr = '[Ngày hoàn thành]';
-                AppState.config.hrmMonthStr = '[Tháng lọc data]';
+            if (dateVal) calculateDates(dateVal); 
+            else {
+                AppState.config.monthYearStr = '[Tháng/Năm]'; AppState.config.classDateStr = '[Ngày học]'; AppState.config.deadlineStr = '[Ngày hoàn thành]'; AppState.config.hrmMonthStr = '[Tháng lọc data]';
             }
 
             const c = AppState.config;
-
-            // TPL 1: MAIL PRE-TRAINING
-            const mail1 = `Dear các bạn,
-
-Team LND gửi các bạn thông tin Chương trình Đào tạo Sản phẩm - Tính năng Hóa đơn điện tử - Tháng ${c.monthYearStr}:
-
-1. Đối tượng tham gia:
-Nhân viên kinh doanh (NVKD) mới, bắt đầu sang tháng làm việc thứ hai theo danh sách.
-               DS HDĐT & CKS Sales toàn quốc Tháng ${c.monthYearStr}
-
-2. Mục tiêu chương trình:
-Nắm vững kiến thức tổng quan và quy định pháp lý về Hóa đơn điện tử, Chữ ký số cập nhật nhất.
-Thành thạo quy trình triển khai ban đầu Hóa đơn điện tử, Chữ ký số cho Hộ kinh doanh.
-Xử lý tình huống và giải quyết các lỗi thường gặp khi tư vấn, triển khai thực tế.
-
-3. Lộ trình Đào tạo:
-Phần 1: Học online tập trung cùng giảng viên
-Thời gian: 09:00 - 12:00, Thứ 6 ngày ${c.classDateStr}
-Hình thức: Đào tạo Online trên Google Meets
-Link tham gia: ${c.meetLink}
-Giảng viên: ${c.trainer} - Chuyên viên Đào tạo
-
-Phần 2: Tự học trên hệ thống Github và LMS
-Thời gian: Từ ${c.classDateStr} đến ${c.deadlineStr}
-Link truy cập hệ thống: https://daotao.kiotviet.vn/dang-nhap/
-User & Password: Cấp sau khi hoàn thành buổi học tập trung phần 01.
-
-Đánh giá sau đào tạo
-Chứng chỉ hoàn thành được cấp tự động trên hệ thống sau khi hoàn thành bài học và đạt 80% kết quả bài kiểm tra cuối khóa trong thời gian quy định (Từ ${c.classDateStr} đến ${c.deadlineStr}).
-
-4. Lưu ý quan trọng:
-Thực hiện khảo sát trước đào tạo để chia sẻ các vướng mắc thực tế: https://forms.gle/xwkR7QkTiaz6JUEk9
-Chuẩn bị trước buổi học: Học viên cần chuẩn bị máy tính, tai nghe, mic hoạt động ổn định và sắp xếp công việc để tham gia đúng thời gian đã thông báo.
-
-Trường hợp bất khả kháng không thể tham gia, vui lòng phản hồi lại email này trước 17h00 ngày ${c.dateObj ? formatDateStr(new Date(c.dateObj.getTime() - 86400000)) : '[Ngày T-1]'}.`;
-
-            // TPL 2: CHAT PRE-TRAINING
-            const chat1 = `Hi @all, sáng mai Team Đào tạo có lịch đào tạo HĐĐT - Thuế - Kế toán định kỳ cho các bạn nhân sự mới. Các bạn trong group mình trong danh sách bắt buộc tham gia khóa học này theo lộ trình đào tạo nhân viên mới.
-
-Nội dung đào tạo gồm 2 phần: 
-
-Phần 1: Học online tập trung cùng giảng viên
-Thời gian: 09:00 - 12:00, Thứ 6 ngày ${c.classDateStr}
-Hình thức: Đào tạo Online trên Google Meets
-Link tham gia: ${c.meetLink}
-Giảng viên: ${c.trainer} - Chuyên viên Đào tạo
-
-Phần 2: Tự học trên hệ thống Github và LMS
-Thời gian: Từ ${c.classDateStr} đến ${c.deadlineStr}
-Link truy cập hệ thống: https://daotao.kiotviet.vn/dang-nhap/
-User & Password: Cấp sau khi hoàn thành buổi học tập trung phần 01.
-
-Vì hệ thống vừa cập nhật giao diện nội dung này, Team Đào tạo rất hoan nghênh các bạn mời thêm nhân sự cũ cùng tham gia Phần 1 trên Google Meet để cập nhật kiến thức, hỗ trợ khách mượt mà hơn.
-
-Bạn nào nhận thông tin bấm Yes trên Google Calendar và bấm Like xác nhận tin nhắn này nhé!`;
-
-            // TPL 3: CHAT TRAINING DAY
             const dateShort = c.dateObj ? `${c.dateObj.getDate().toString().padStart(2,'0')}/${(c.dateObj.getMonth()+1).toString().padStart(2,'0')}` : '[Ngày/Tháng]';
-            const chat2 = `Mình gửi thông tin tham gia Khóa học HĐĐT - Thuế - Kế toán sáng nay:
 
-Thời gian học: 09:00 - 12:00, Thứ 6 (${dateShort})
-Hình thức: Google Meet
-Link tham gia: ${c.meetLink}
-
-Các bạn tham gia điền giúp mình form điểm danh tại đây nha:
-https://docs.google.com/forms/d/e/1FAIpQLSdM_-jSquep4EHJkd0WubTnj3xaXfPzOoDOhmTQluJJ9p3bxg/viewform`;
-
-            // TPL 4: MAIL PUSH LMS
-            const mail2 = `Chào Các bạn, 
-CC: Các Anh/ Chị SM,
-
-Cảm ơn các bạn đã tham gia Phần 1 (Học online tập trung) của khóa đào tạo HĐĐT & CKS sáng nay. Danh sách điểm danh chi tiết được đính kèm tại link này: DS HDĐT & CKS Sales toàn quốc Tháng ${c.monthYearStr}.
-
-Để chính thức hoàn tất chương trình và được cấp chứng chỉ nghiệp vụ, các bạn cần hoàn thành Phần 2 (Tự ôn tập và Kiểm tra) với điều kiện bài Test đạt tối thiểu 80% điểm.
-
-Hướng dẫn thực hiện:
-Ôn tập kiến thức: Truy cập tài liệu tại Github (https://kiotvietlnd.github.io/elearning/thuehkd/#ke-toan-01)
-Làm bài kiểm tra: Truy cập hệ thống LMS (https://daotao.kiotviet.vn/khoa-hoc/ke-toan-01/)
-Tài khoản: Email công ty
-Mật khẩu: 123456A@
-
-Thời hạn hoàn thành: Chậm nhất 23:59 ngày ${c.deadlineStr}.
-
-Lưu ý:
-Phòng Đào tạo sẽ trích xuất kết quả từ hệ thống và gửi báo cáo tiến độ cho các Quản lý trực tiếp (SM) vào ngày ${c.dateObj ? formatDateStr(new Date(c.dateObj.getTime() + 6*86400000)).substring(0,5) : '[Ngày T+6]'}. Nếu gặp vấn đề về đăng nhập hệ thống, các bạn vui lòng phản hồi trực tiếp tại email này để được hỗ trợ kịp thời.
-
-Trân trọng,
-Phòng Đào tạo`;
-
-            // TPL 5: CHAT PUSH LMS
-            const chat3 = `Hi @all ,
-Sau khi hoàn thành Phần 1: Học online tập trung cùng giảng viên
-Tiếp tục chúng ta sẽ đến với phần tiếp theo,
-
-Phần 2: Tự học trên hệ thống Github và LMS
-Thời gian: Từ ${c.classDateStr} đến ${c.deadlineStr}
-Link truy cập Khóa học: https://daotao.kiotviet.vn/khoa-hoc/ke-toan-01/
-User & Password: Mail Công ty + 123456A@
-Danh sách tham gia buổi học sáng nay:  DS HDĐT & CKS Sales toàn quốc Tháng ${c.monthYearStr}
-
-Học theo 2 bước: 
-Bước 1 – Học trên Github: https://kiotvietlnd.github.io/elearning/thuehkd/#ke-toan-01
-Bạn truy cập link bài học trên Github để bắt đầu tự học, chọn tên học phần và bấm "E-Learning"
-Lần lượt theo dõi Video, Infographic, Kiến thức Tổng quan, Tình huống hội thoại và Flashcard ôn tập tương ứng; hệ thống hóa kiến thức với Bảng so sánh: Sự thật và Lầm tưởng
-Cuối bài, bạn tham gia Quiz Game để ôn tập (Bài Quiz này chỉ mang tính luyện tập, chuẩn bị cho bài tập trên LMS). Sau khi hoàn thành bài Quiz Game, bạn có thể đánh dấu trên trang Github của khóa học để tự theo dõi tiến độ.
-
-Bước 2 – Quay về LMS làm bài kiểm tra:
-Sau khi đã nắm chắc kiến thức, bạn quay lại LMS của học phần này, bấm "Làm Bài tập".
-Hoàn thành Bài test nhanh gồm các câu hỏi trắc nghiệm để hệ thống ghi nhận kết quả chính thức, mở khóa học phần tiếp theo
-
-Hoàn tất học phần:
-Khi bạn đạt yêu cầu trên LMS, bạn đã hoàn thành học phần này, bạn có thể đánh dấu trên trang Github để theo dõi tiến độ và tự tin chuyển sang học phần tiếp theo.
-
------------------
-Đánh giá sau đào tạo
-Chứng chỉ hoàn thành được cấp tự động trên hệ thống sau khi hoàn thành bài học và đạt 80% kết quả bài kiểm tra cuối khóa trong thời gian quy định (Từ ${c.classDateStr} đến ${c.deadlineStr}).`;
-
-
-            document.getElementById('tpl-mail-1').value = mail1;
-            document.getElementById('tpl-chat-1').value = chat1;
-            document.getElementById('tpl-chat-2').value = chat2;
-            document.getElementById('tpl-mail-2').value = mail2;
-            document.getElementById('tpl-chat-3').value = chat3;
+            document.getElementById('tpl-mail-1').value = `Dear các bạn,\n\nTeam LND gửi các bạn thông tin Chương trình Đào tạo Sản phẩm - Tính năng Hóa đơn điện tử - Tháng ${c.monthYearStr}:\n\n1. Đối tượng tham gia:\nNhân viên kinh doanh (NVKD) mới, bắt đầu sang tháng làm việc thứ hai theo danh sách.\n               DS HDĐT & CKS Sales toàn quốc Tháng ${c.monthYearStr}\n\n2. Mục tiêu chương trình:\nNắm vững kiến thức tổng quan và quy định pháp lý về Hóa đơn điện tử, Chữ ký số cập nhật nhất.\nThành thạo quy trình triển khai ban đầu Hóa đơn điện tử, Chữ ký số cho Hộ kinh doanh.\nXử lý tình huống và giải quyết các lỗi thường gặp khi tư vấn, triển khai thực tế.\n\n3. Lộ trình Đào tạo:\nPhần 1: Học online tập trung cùng giảng viên\nThời gian: 09:00 - 12:00, Thứ 6 ngày ${c.classDateStr}\nHình thức: Đào tạo Online trên Google Meets\nLink tham gia: ${c.meetLink}\nGiảng viên: ${c.trainer} - Chuyên viên Đào tạo\n\nPhần 2: Tự học trên hệ thống Github và LMS\nThời gian: Từ ${c.classDateStr} đến ${c.deadlineStr}\nLink truy cập hệ thống: https://daotao.kiotviet.vn/dang-nhap/\nUser & Password: Cấp sau khi hoàn thành buổi học tập trung phần 01.\n\nĐánh giá sau đào tạo\nChứng chỉ hoàn thành được cấp tự động trên hệ thống sau khi hoàn thành bài học và đạt 80% kết quả bài kiểm tra cuối khóa trong thời gian quy định (Từ ${c.classDateStr} đến ${c.deadlineStr}).\n\n4. Lưu ý quan trọng:\nThực hiện khảo sát trước đào tạo để chia sẻ các vướng mắc thực tế: https://forms.gle/xwkR7QkTiaz6JUEk9\nChuẩn bị trước buổi học: Học viên cần chuẩn bị máy tính, tai nghe, mic hoạt động ổn định và sắp xếp công việc để tham gia đúng thời gian đã thông báo.\n\nTrường hợp bất khả kháng không thể tham gia, vui lòng phản hồi lại email này trước 17h00 ngày ${c.dateObj ? formatDateStr(new Date(c.dateObj.getTime() - 86400000)) : '[Ngày T-1]'}.`;
+            document.getElementById('tpl-chat-1').value = `Hi @all, sáng mai Team Đào tạo có lịch đào tạo HĐĐT - Thuế - Kế toán định kỳ cho các bạn nhân sự mới. Các bạn trong group mình trong danh sách bắt buộc tham gia khóa học này theo lộ trình đào tạo nhân viên mới.\n\nNội dung đào tạo gồm 2 phần: \n\nPhần 1: Học online tập trung cùng giảng viên\nThời gian: 09:00 - 12:00, Thứ 6 ngày ${c.classDateStr}\nHình thức: Đào tạo Online trên Google Meets\nLink tham gia: ${c.meetLink}\nGiảng viên: ${c.trainer} - Chuyên viên Đào tạo\n\nPhần 2: Tự học trên hệ thống Github và LMS\nThời gian: Từ ${c.classDateStr} đến ${c.deadlineStr}\nLink truy cập hệ thống: https://daotao.kiotviet.vn/dang-nhap/\nUser & Password: Cấp sau khi hoàn thành buổi học tập trung phần 01.\n\nVì hệ thống vừa cập nhật giao diện nội dung này, Team Đào tạo rất hoan nghênh các bạn mời thêm nhân sự cũ cùng tham gia Phần 1 trên Google Meet để cập nhật kiến thức, hỗ trợ khách mượt mà hơn.\n\nBạn nào nhận thông tin bấm Yes trên Google Calendar và bấm Like xác nhận tin nhắn này nhé!`;
+            document.getElementById('tpl-chat-2').value = `Mình gửi thông tin tham gia Khóa học HĐĐT - Thuế - Kế toán sáng nay:\n\nThời gian học: 09:00 - 12:00, Thứ 6 (${dateShort})\nHình thức: Google Meet\nLink tham gia: ${c.meetLink}\n\nCác bạn tham gia điền giúp mình form điểm danh tại đây nha:\nhttps://docs.google.com/forms/d/e/1FAIpQLSdM_-jSquep4EHJkd0WubTnj3xaXfPzOoDOhmTQluJJ9p3bxg/viewform`;
+            document.getElementById('tpl-mail-2').value = `Chào Các bạn, \nCC: Các Anh/ Chị SM,\n\nCảm ơn các bạn đã tham gia Phần 1 (Học online tập trung) của khóa đào tạo HĐĐT & CKS sáng nay. Danh sách điểm danh chi tiết được đính kèm tại link này: DS HDĐT & CKS Sales toàn quốc Tháng ${c.monthYearStr}.\n\nĐể chính thức hoàn tất chương trình và được cấp chứng chỉ nghiệp vụ, các bạn cần hoàn thành Phần 2 (Tự ôn tập và Kiểm tra) với điều kiện bài Test đạt tối thiểu 80% điểm.\n\nHướng dẫn thực hiện:\nÔn tập kiến thức: Truy cập tài liệu tại Github (https://kiotvietlnd.github.io/elearning/thuehkd/#ke-toan-01)\nLàm bài kiểm tra: Truy cập hệ thống LMS (https://daotao.kiotviet.vn/khoa-hoc/ke-toan-01/)\nTài khoản: Email công ty\nMật khẩu: 123456A@\n\nThời hạn hoàn thành: Chậm nhất 23:59 ngày ${c.deadlineStr}.\n\nLưu ý:\nPhòng Đào tạo sẽ trích xuất kết quả từ hệ thống và gửi báo cáo tiến độ cho các Quản lý trực tiếp (SM) vào ngày ${c.dateObj ? formatDateStr(new Date(c.dateObj.getTime() + 6*86400000)).substring(0,5) : '[Ngày T+6]'}. Nếu gặp vấn đề về đăng nhập hệ thống, các bạn vui lòng phản hồi trực tiếp tại email này để được hỗ trợ kịp thời.\n\nTrân trọng,\nPhòng Đào tạo`;
+            document.getElementById('tpl-chat-3').value = `Hi @all ,\nSau khi hoàn thành Phần 1: Học online tập trung cùng giảng viên\nTiếp tục chúng ta sẽ đến với phần tiếp theo,\n\nPhần 2: Tự học trên hệ thống Github và LMS\nThời gian: Từ ${c.classDateStr} đến ${c.deadlineStr}\nLink truy cập Khóa học: https://daotao.kiotviet.vn/khoa-hoc/ke-toan-01/\nUser & Password: Mail Công ty + 123456A@\nDanh sách tham gia buổi học sáng nay:  DS HDĐT & CKS Sales toàn quốc Tháng ${c.monthYearStr}\n\nHọc theo 2 bước: \nBước 1 – Học trên Github: https://kiotvietlnd.github.io/elearning/thuehkd/#ke-toan-01\nBạn truy cập link bài học trên Github để bắt đầu tự học, chọn tên học phần và bấm "E-Learning"\nLần lượt theo dõi Video, Infographic, Kiến thức Tổng quan, Tình huống hội thoại và Flashcard ôn tập tương ứng; hệ thống hóa kiến thức với Bảng so sánh: Sự thật và Lầm tưởng\nCuối bài, bạn tham gia Quiz Game để ôn tập (Bài Quiz này chỉ mang tính luyện tập, chuẩn bị cho bài tập trên LMS). Sau khi hoàn thành bài Quiz Game, bạn có thể đánh dấu trên trang Github của khóa học để tự theo dõi tiến độ.\n\nBước 2 – Quay về LMS làm bài kiểm tra:\nSau khi đã nắm chắc kiến thức, bạn quay lại LMS của học phần này, bấm "Làm Bài tập".\nHoàn thành Bài test nhanh gồm các câu hỏi trắc nghiệm để hệ thống ghi nhận kết quả chính thức, mở khóa học phần tiếp theo\n\nHoàn tất học phần:\nKhi bạn đạt yêu cầu trên LMS, bạn đã hoàn thành học phần này, bạn có thể đánh dấu trên trang Github để theo dõi tiến độ và tự tin chuyển sang học phần tiếp theo.\n\n-----------------\nĐánh giá sau đào tạo\nChứng chỉ hoàn thành được cấp tự động trên hệ thống sau khi hoàn thành bài học và đạt 80% kết quả bài kiểm tra cuối khóa trong thời gian quy định (Từ ${c.classDateStr} đến ${c.deadlineStr}).`;
         }
 
-        function copyContent(elementId, btnElement) {
+        function copyContent(elementId, btnElement, colorClass) {
             const copyText = document.getElementById(elementId);
-            copyText.select();
-            copyText.setSelectionRange(0, 99999); 
+            copyText.select(); copyText.setSelectionRange(0, 99999); 
             navigator.clipboard.writeText(copyText.value).then(() => {
                 const originalHTML = btnElement.innerHTML;
                 btnElement.innerHTML = '<i class="fas fa-check"></i> ĐÃ COPY';
-                btnElement.classList.remove('bg-indigo-500', 'bg-blue-500', 'bg-emerald-500', 'bg-rose-500');
-                btnElement.classList.add('bg-slate-800');
-                
+                btnElement.className = `btn-fluid px-5 py-2.5 rounded-xl text-[11px] font-bold text-white bg-slate-800 shadow-md flex items-center gap-2`;
                 setTimeout(() => {
                     btnElement.innerHTML = originalHTML;
-                    btnElement.classList.remove('bg-slate-800');
-                    if(elementId.includes('mail-1')) btnElement.classList.add('bg-indigo-500');
-                    else if(elementId === 'tpl-chat-1') btnElement.classList.add('bg-blue-500');
-                    else if(elementId === 'tpl-chat-2') btnElement.classList.add('bg-emerald-500');
-                    else btnElement.classList.add('bg-rose-500');
+                    btnElement.className = `btn-fluid px-5 py-2.5 rounded-xl text-[11px] font-bold text-white bg-${colorClass}-500 hover:bg-${colorClass}-600 shadow-md shadow-${colorClass}-500/30 flex items-center gap-2`;
                 }, 2000);
             });
         }
 
         function saveToDB() {
             const dateVal = document.getElementById('conf-date').value;
-            if(!dateVal) { alert("Vui lòng chọn Ngày học ở phần Cấu hình trước khi lưu DB."); return; }
+            if(!dateVal) { alert("Vui lòng thiết lập 'Ngày học' tại Tab Cấu hình ban đầu."); switchTab('step1'); return; }
 
             const code = document.getElementById('db-code').value.trim();
-            const link = document.getElementById('db-link').value.trim();
-            const status = document.getElementById('db-status').value;
-            const total = document.getElementById('db-total').value;
-            const pass = document.getElementById('db-pass').value;
-            const fail = document.getElementById('db-fail').value;
-
-            if(!code) { alert("Thiếu Mã Khóa!"); return; }
+            if(!code) { alert("Mã Khóa nhận diện không được để trống!"); return; }
 
             const newRecord = {
                 timestamp: new Date().getTime(),
-                groupName: 'TAX', // Cố định theo config index
-                courseId: code.toUpperCase(),
-                month: AppState.config.monthOnly,
-                startDate: AppState.config.classDateStr,
-                finishDate: AppState.config.deadlineStr,
-                totalTrainees: total || 0,
-                passedTrainees: pass || 0,
-                failedTrainees: fail || 0,
-                listLink: link,
-                quizLink: 'https://daotao.kiotviet.vn/khoa-hoc/ke-toan-01/', // Cố định LMS
+                groupName: 'TAX', courseId: code.toUpperCase(),
+                month: AppState.config.monthOnly, startDate: AppState.config.classDateStr, finishDate: AppState.config.deadlineStr,
+                totalTrainees: document.getElementById('db-total').value || 0,
+                passedTrainees: document.getElementById('db-pass').value || 0,
+                failedTrainees: document.getElementById('db-fail').value || 0,
+                listLink: document.getElementById('db-link').value.trim(),
+                quizLink: 'https://daotao.kiotviet.vn/khoa-hoc/ke-toan-01/', 
                 recordLink: '',
-                status: status
+                status: document.getElementById('db-status').value
             };
 
             let db = JSON.parse(localStorage.getItem('kv_master_db')) || [];
-            
-            // Check trùng mã
             const existIdx = db.findIndex(item => item.courseId === newRecord.courseId);
+            
             if(existIdx >= 0) {
-                if(confirm("Mã khóa này đã tồn tại trong hệ thống. Bạn có muốn ghi đè cập nhật không?")) {
-                    db[existIdx] = {...db[existIdx], ...newRecord};
-                } else return;
-            } else {
-                db.push(newRecord);
-            }
+                if(!confirm(`Mã khóa ${newRecord.courseId} đã tồn tại. Bạn có muốn ghi đè kết quả?`)) return;
+                db[existIdx] = {...db[existIdx], ...newRecord};
+            } else { db.push(newRecord); }
 
             localStorage.setItem('kv_master_db', JSON.stringify(db));
             
-            // Hiệu ứng nút Save
             const btn = document.querySelector('button[onclick="saveToDB()"]');
             const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-check-circle"></i> ĐÃ LƯU THÀNH CÔNG VÀO TRANG CHỦ';
-            btn.classList.replace('from-blue-600', 'from-emerald-500');
-            btn.classList.replace('to-indigo-600', 'to-teal-500');
+            btn.innerHTML = '<i class="fas fa-check-circle text-lg"></i> ĐỒNG BỘ THÀNH CÔNG';
+            btn.className = "w-full py-5 rounded-2xl text-sm font-black text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_15px_30px_-10px_rgba(16,185,129,0.5)] uppercase tracking-widest flex items-center justify-center gap-3 transition-all";
 
             setTimeout(() => {
                 btn.innerHTML = originalHTML;
-                btn.classList.replace('from-emerald-500', 'from-blue-600');
-                btn.classList.replace('to-teal-500', 'to-indigo-600');
-                // Tùy chọn chuyển hướng về index:
-                // window.location.href = 'index.html'; 
+                btn.className = "w-full py-5 rounded-2xl text-sm font-black text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all shadow-[0_15px_30px_-10px_rgba(59,130,246,0.5)] btn-fluid uppercase tracking-widest flex items-center justify-center gap-3";
             }, 2500);
         }
 
-        // Init load
-        window.onload = () => {
-            updateTemplates(); // Render default [placeholders]
-        }
+        window.onload = () => updateTemplates();
     </script>
 </body>
 </html>
