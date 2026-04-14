@@ -6,80 +6,137 @@
     <title>Sản phẩm KV1 RETAIL | Trainer Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #fcfcfd; color: #1e293b; overflow-x: hidden; }
+        /* 5D & Fluid UI Core Variables */
+        html { scroll-behavior: smooth; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f4f7f9; 
+            color: #0f172a; 
+            background-image: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.04), transparent 25%), radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.04), transparent 25%);
+        }
         
-        /* Sidebar Styling */
-        .sidebar-item { transition: all 0.2s ease; color: #64748b; font-weight: 600; border: 1px solid transparent; }
-        .sidebar-item:hover { background-color: #f8fafc; color: #0891b2; border-color: #f1f5f9; transform: translateX(4px); }
-        .sidebar-item.active { background-color: #0891b2; color: white; font-weight: 800; box-shadow: 0 10px 20px -5px rgba(8, 145, 178, 0.3); transform: translateX(0); }
+        /* Glassmorphism & 5D Hover Effects */
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); }
+        .hover-5d { transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.15); }
+        .hover-5d:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 20px 30px -10px rgba(0,0,0,0.08), 0 10px 15px -5px rgba(0,0,0,0.03); border-color: #e2e8f0; }
         
-        /* Card Styling */
-        .script-card { background: white; border: 1px solid #f1f5f9; border-radius: 24px; padding: 2rem; border-left: 6px solid #0891b2; position: relative; margin-bottom: 1.5rem; transition: all 0.3s ease; }
-        .script-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px -10px rgba(0,0,0,0.08); border-color: #cbd5e1; }
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
+
+        /* Component Specifics */
+        .sidebar-item { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sidebar-item.active { background: linear-gradient(to right, #0891b2, #0284c7); color: white; box-shadow: 0 10px 15px -3px rgba(8, 145, 178, 0.3); transform: scale(1.02); }
+        .sidebar-item.active i { color: white !important; }
         
-        /* Button & Form */
-        .copy-btn { position: absolute; top: 24px; right: 24px; font-size: 11px; font-weight: 800; background: white; color: #64748b; padding: 8px 16px; border-radius: 12px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.05em; }
-        .copy-btn:hover { background: #0891b2; color: white; border-color: #0891b2; box-shadow: 0 4px 10px -2px rgba(8, 145, 178, 0.3); }
-        .pre-box { background-color: #f8fafc; border: 1px solid #f1f5f9; border-radius: 16px; padding: 16px; font-size: 13.5px; line-height: 1.7; color: #334155; margin-top: 12px; white-space: pre-wrap; word-wrap: break-word; font-family: inherit; font-weight: 500; }
+        .copy-btn { transition: all 0.2s ease; }
+        .copy-btn:hover { background-color: #0891b2; color: white; border-color: #0891b2; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(8, 145, 178, 0.2); }
+        .copy-btn.copied { background-color: #10b981; color: white; border-color: #10b981; pointer-events: none; }
+
+        pre { white-space: pre-wrap; word-wrap: break-word; font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.6; margin: 0; }
         
-        .step-content { display: none; }
-        .step-content.active { display: block; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .step-content { display: none; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; }
+        .step-content.active { display: block; opacity: 1; transform: translateY(0); animation: fadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards; }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+        /* Form Inputs (SaaS Style) */
+        .form-label { display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.05em; }
+        .form-input { width: 100%; padding: 12px 16px; background-color: #f8fafc; border: 1px solid transparent; border-radius: 12px; font-size: 13px; font-weight: 600; color: #334155; outline: none; transition: all 0.2s; box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.02); }
+        .form-input:focus { background-color: #ffffff; border-color: #67e8f9; box-shadow: 0 0 0 4px rgba(8, 145, 178, 0.1); }
         
-        .form-label { display: block; font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.05em; }
-        .form-input { width: 100%; padding: 16px 20px; border: 2px solid #f1f5f9; border-radius: 16px; font-size: 14px; outline: none; transition: all 0.2s; background: #ffffff; font-weight: 500; color: #1e293b; }
-        .form-input:focus { border-color: #0891b2; box-shadow: 0 0 0 4px rgba(8, 145, 178, 0.1); background: #f8fafc; }
-        .modal-overlay { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); }
+        /* Custom Checkbox */
+        .checkbox-container input:checked + div { background-color: #0891b2; border-color: #0891b2; }
+        .checkbox-container input:checked + div i { opacity: 1; transform: scale(1); }
     </style>
 </head>
-<body class="antialiased selection:bg-cyan-200 selection:text-cyan-900">
+<body class="antialiased custom-scrollbar">
 
-    <!-- SIDEBAR -->
-    <aside class="fixed inset-y-0 left-0 w-72 bg-white/80 backdrop-blur-xl border-r border-slate-100 z-50 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-        <div class="p-8 border-b border-slate-100">
-            <a href="trainer.html" class="flex items-center text-slate-400 font-bold text-xs mb-6 hover:text-cyan-600 transition-colors uppercase tracking-widest">
-                <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Dashboard
-            </a>
-            <div class="w-12 h-12 bg-cyan-100 rounded-2xl flex items-center justify-center mb-4 shadow-inner border border-cyan-200/50">
-                <i data-lucide="layers" class="w-6 h-6 text-cyan-600"></i>
+    <!-- HEADER NAVIGATION -->
+    <nav class="glass-panel border-b border-slate-200/60 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <a href="index.html" class="w-8 h-8 bg-slate-50 hover:bg-slate-100 rounded-full flex items-center justify-center text-slate-500 transition-colors border border-slate-200">
+                    <i class="fas fa-chevron-left text-xs"></i>
+                </a>
+                <span class="text-lg font-black tracking-tight text-slate-800 border-l-2 border-slate-200 pl-3">Sản phẩm KV1 <span class="text-cyan-600">RETAIL</span></span>
             </div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-none">Sản phẩm KV1 <br><span class="text-cyan-600">RETAIL</span></h1>
+            <div class="hidden md:flex items-center space-x-2">
+                <span class="text-[10px] font-bold uppercase tracking-widest text-cyan-600 bg-cyan-50 px-3 py-1.5 rounded-lg border border-cyan-100">Advance Workflow</span>
+            </div>
         </div>
-        <nav class="flex-1 p-5 space-y-2 overflow-y-auto text-[13px]">
-            <button onclick="showStep('step-mail1')" id="btn-step-mail1" class="sidebar-item active w-full flex items-center px-4 py-3.5 rounded-2xl"><i data-lucide="mail" class="w-4 h-4 mr-3"></i> Lịch gửi Mail đầu tháng</button>
-            <button onclick="showStep('step-setup')" id="btn-step-setup" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-2xl"><i data-lucide="calendar-plus" class="w-4 h-4 mr-3"></i> Setup Lịch & Group</button>
-            <button onclick="showStep('step-zalo')" id="btn-step-zalo" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-2xl"><i data-lucide="message-circle" class="w-4 h-4 mr-3"></i> Truyền thông Nhắc nhở</button>
-            <button onclick="showStep('step-test1')" id="btn-step-test1" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-2xl text-orange-500"><i data-lucide="award" class="w-4 h-4 mr-3"></i> Kết quả Test Lần 1</button>
-            <button onclick="showStep('step-test2')" id="btn-step-test2" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-2xl text-red-500"><i data-lucide="medal" class="w-4 h-4 mr-3"></i> Kết quả Test Lần 2</button>
-            <div class="h-px bg-slate-100 my-4 mx-2"></div>
-            <!-- MỤC CÔNG CỤ -->
-            <button onclick="showStep('step-links')" id="btn-step-links" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-2xl text-cyan-600 font-bold"><i data-lucide="link-2" class="w-4 h-4 mr-3"></i> Link Tài liệu</button>
-            <button onclick="showStep('tools')" id="btn-tools" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-2xl text-slate-700 font-bold"><i data-lucide="check-square" class="w-4 h-4 mr-3"></i> Checklist Công việc</button>
-            <button onclick="showStep('finalize')" id="btn-finalize" class="w-full flex items-center px-4 py-4 rounded-2xl text-green-600 bg-green-50/50 border border-green-100 hover:bg-green-100 transition-all font-bold mt-2"><i data-lucide="check-circle-2" class="w-4 h-4 mr-3"></i> Nộp Báo cáo Khóa</button>
-        </nav>
-    </aside>
+    </nav>
 
-    <!-- MAIN CONTENT -->
-    <main class="ml-72 p-12 lg:p-20 min-h-screen">
+    <!-- Floating Blur Orbs -->
+    <div class="fixed top-0 left-10 w-72 h-72 bg-cyan-400 rounded-full mix-blend-multiply filter blur-[80px] opacity-20 animate-pulse pointer-events-none z-[-1]"></div>
 
-        <!-- LỊCH GỬI MAIL ĐẦU THÁNG -->
-        <div id="step-mail1" class="step-content active max-w-4xl">
-            <div class="flex items-center space-x-3 mb-8">
-                <div class="w-1.5 h-8 bg-cyan-600 rounded-full"></div>
-                <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Gửi Mail Đầu Tháng (Lọc HRM)</h2>
+    <main class="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row gap-8 items-start relative z-10">
+
+        <!-- SIDEBAR 5D FLOAT -->
+        <aside class="w-full md:w-72 flex-shrink-0 glass-panel rounded-[24px] p-4 sticky top-24 shadow-sm">
+            <div class="p-2 mb-4 border-b border-slate-100 pb-6">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-50 border border-cyan-100 text-cyan-600 text-[10px] font-bold uppercase tracking-widest mb-2">
+                    Nâng cao
+                </div>
+                <h1 class="text-2xl font-black text-slate-800 tracking-tight">Timeline <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-500">Vận hành</span></h1>
             </div>
+
+            <nav class="space-y-1.5 overflow-y-auto custom-scrollbar max-h-[60vh] pr-2">
+                <button onclick="showStep('step-mail1')" id="btn-step-mail1" class="sidebar-item active w-full flex items-center px-4 py-3.5 rounded-xl text-[13px] font-bold text-slate-600 hover:bg-slate-50">
+                    <i class="fas fa-envelope w-5 text-slate-400"></i> Lịch gửi Mail đầu tháng
+                </button>
+                <button onclick="showStep('step-setup')" id="btn-step-setup" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-xl text-[13px] font-bold text-slate-600 hover:bg-slate-50">
+                    <i class="fas fa-calendar-plus w-5 text-slate-400"></i> Setup Lịch & Group
+                </button>
+                <button onclick="showStep('step-zalo')" id="btn-step-zalo" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-xl text-[13px] font-bold text-slate-600 hover:bg-slate-50">
+                    <i class="fas fa-comments w-5 text-slate-400"></i> Truyền thông Group
+                </button>
+                <button onclick="showStep('step-test1')" id="btn-step-test1" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-xl text-[13px] font-bold text-orange-500 hover:bg-orange-50">
+                    <i class="fas fa-award w-5 text-orange-400"></i> Kết quả Test Lần 1
+                </button>
+                <button onclick="showStep('step-test2')" id="btn-step-test2" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-xl text-[13px] font-bold text-rose-500 hover:bg-rose-50">
+                    <i class="fas fa-medal w-5 text-rose-400"></i> Kết quả Test Lần 2
+                </button>
+                
+                <div class="h-px bg-slate-100 my-4"></div>
+                
+                <button onclick="showStep('step-links')" id="btn-step-links" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-xl text-[13px] font-bold text-cyan-600 hover:bg-cyan-50">
+                    <i class="fas fa-link w-5 text-cyan-400"></i> Links & Tài nguyên
+                </button>
+                <button onclick="showStep('tools')" id="btn-tools" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-xl text-[13px] font-bold text-emerald-600 hover:bg-emerald-50">
+                    <i class="fas fa-tasks w-5 text-emerald-400"></i> Checklist Công việc
+                </button>
+                
+                <div class="mt-4 pt-4 border-t border-slate-100">
+                    <button onclick="showStep('finalize')" id="btn-finalize" class="w-full flex items-center justify-center px-4 py-4 rounded-xl text-white bg-slate-900 hover:bg-slate-800 transition-all font-black text-sm shadow-[0_10px_20px_-10px_rgba(0,0,0,0.4)] transform hover:-translate-y-0.5">
+                        <i class="fas fa-check-double mr-2"></i> ĐÓNG KHÓA
+                    </button>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="flex-1 w-full pb-20">
             
-            <div class="bg-cyan-50 border border-cyan-100 text-cyan-800 p-5 rounded-2xl text-sm font-semibold mb-8 flex items-start shadow-sm">
-                <i data-lucide="info" class="w-5 h-5 mr-3 text-cyan-600 flex-shrink-0"></i>
-                <p class="leading-relaxed">Vào phần mềm HRM lọc nhân viên gia nhập sau 1 tháng và xuất dữ liệu. Sau đó tổng hợp danh sách và gửi mail vào đầu tháng.</p>
-            </div>
-            
-            <div class="script-card border-l-cyan-500">
-                <button onclick="copy('m-mail1')" class="copy-btn"><i data-lucide="copy" class="w-3 h-3 inline mr-1"></i> Copy Mail</button>
-                <p class="form-label text-cyan-600 mb-1">Mẫu Email (Ví dụ tháng 03/2026)</p>
-                <div class="pre-box" id="m-mail1">Dear anh/chị,
+            <!-- LỊCH GỬI MAIL ĐẦU THÁNG -->
+            <div id="step-mail1" class="step-content active space-y-6">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-black text-slate-900 tracking-tight">Gửi Mail Đầu Tháng (Lọc HRM)</h2>
+                    <p class="text-sm text-slate-500 font-medium mt-2">Dành cho nhân sự đi làm trên 1 tháng.</p>
+                </div>
+
+                <div class="bg-cyan-50/50 border border-cyan-100 p-5 rounded-2xl text-sm font-medium text-cyan-800 mb-8 flex items-start shadow-sm">
+                    <i class="fas fa-info-circle text-cyan-500 text-lg mr-3 mt-0.5"></i>
+                    <p class="leading-relaxed">Vào phần mềm HRM lọc nhân viên gia nhập sau 1 tháng và xuất dữ liệu. Sau đó tổng hợp danh sách và gửi mail vào đầu tháng.</p>
+                </div>
+                
+                <div class="glass-panel hover-5d p-6 rounded-[24px] relative border-l-4 border-l-cyan-500">
+                    <p class="text-[10px] font-black text-cyan-600 uppercase tracking-widest mb-3"><i class="fas fa-envelope mr-1"></i> Mẫu Email (Ví dụ tháng 03/2026)</p>
+                    <button onclick="copyScript(this, 'm-mail1')" class="copy-btn absolute top-6 right-6 text-[10px] font-bold bg-white text-cyan-600 px-3 py-1.5 rounded-lg border border-cyan-100"><i class="fas fa-copy mr-1"></i> Copy Mail</button>
+                    <pre id="m-mail1" class="text-slate-700 bg-slate-50/50 p-5 rounded-xl font-medium border border-slate-100/50 pr-24">Dear anh/chị,
 
 Team LnD gửi thông tin chi tiết về Chương trình Đào tạo và Test Sản phẩm KV1 dành cho nhân viên sales gia nhập sau tháng đầu tiên (gia nhập vào Tháng 12/2025 - 01/2026).
 
@@ -109,60 +166,58 @@ Group chat Test SP KV1 03/2026
 
 Anh/chị SM/Leader và admin hỗ trợ nhắc nhở các bạn đăng nhập LMS, tham gia khóa học và hoàn thành đúng thời hạn quy định.
 
-Mọi thắc mắc hoặc phát sinh: Vui lòng liên hệ daotao@kiotviet.com</div>
-            </div>
-        </div>
-
-        <!-- SETUP LỊCH & GROUP -->
-        <div id="step-setup" class="step-content max-w-4xl">
-            <div class="flex items-center space-x-3 mb-8">
-                <div class="w-1.5 h-8 bg-cyan-600 rounded-full"></div>
-                <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Setup Lịch Test & Group Zalo</h2>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="script-card bg-white border-l-slate-400">
-                    <div class="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 border border-slate-100">
-                        <i data-lucide="calendar" class="w-6 h-6 text-slate-600"></i>
-                    </div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-3">1. Tạo Lịch Calendar</h3>
-                    <p class="text-sm text-slate-500 font-medium leading-relaxed mb-4">Sau khi gửi mail cho danh sách lọc từ HRM xong, tiến hành setup Calendar cho học viên.</p>
-                    <div class="bg-slate-50 p-4 rounded-xl text-[13px] font-semibold text-slate-700 border border-slate-100">
-                        <p>• Tên sự kiện: <span class="text-blue-600">Test SP KV1 "MM"/2026</span></p>
-                        <p class="mt-2">• Hạn chót bài test: Add lịch vào ngày <span class="text-red-500">15 của tháng</span>.</p>
-                    </div>
-                </div>
-
-                <div class="script-card bg-white border-l-blue-500">
-                    <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 border border-blue-100">
-                        <i data-lucide="message-square" class="w-6 h-6 text-blue-600"></i>
-                    </div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-3">2. Tạo Group Zalo</h3>
-                    <p class="text-sm text-slate-500 font-medium leading-relaxed mb-4">Tạo không gian chung để truyền thông nhắc nhở và giải đáp thắc mắc tài khoản.</p>
-                    <div class="bg-blue-50/50 p-4 rounded-xl text-[13px] font-semibold text-slate-700 border border-blue-100/50">
-                        <p>• Tên Group: <span class="text-blue-600">Test SP KV1 "MM"/2026</span></p>
-                        <p class="mt-2">• Member: Add toàn bộ học viên có trong danh sách thi vào nhóm.</p>
-                    </div>
+Mọi thắc mắc hoặc phát sinh: Vui lòng liên hệ daotao@kiotviet.com</pre>
                 </div>
             </div>
-        </div>
 
-        <!-- TRUYỀN THÔNG HỌC TẬP -->
-        <div id="step-zalo" class="step-content max-w-4xl">
-            <div class="flex items-center space-x-3 mb-8">
-                <div class="w-1.5 h-8 bg-cyan-600 rounded-full"></div>
-                <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Truyền thông Group Zalo</h2>
+            <!-- SETUP LỊCH & GROUP -->
+            <div id="step-setup" class="step-content space-y-6">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-black text-slate-900 tracking-tight">Setup Lịch Test & Group Zalo</h2>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-panel hover-5d p-6 rounded-[24px] border-l-4 border-l-slate-400 flex flex-col h-full">
+                        <div class="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 border border-slate-100 shadow-sm">
+                            <i class="fas fa-calendar-alt text-xl text-slate-500"></i>
+                        </div>
+                        <h3 class="text-lg font-black text-slate-800 mb-2">1. Tạo Lịch Calendar</h3>
+                        <p class="text-xs text-slate-500 font-medium leading-relaxed mb-6 flex-grow">Sau khi gửi mail cho danh sách lọc từ HRM xong, tiến hành setup Calendar cho học viên.</p>
+                        <div class="bg-slate-50/50 p-4 rounded-xl text-[12px] font-bold text-slate-600 border border-slate-100/50">
+                            <p class="flex items-center"><i class="fas fa-tag text-slate-400 w-5"></i> Tên sự kiện: <span class="text-cyan-600 ml-1">Test SP KV1 "MM"/2026</span></p>
+                            <p class="mt-2 flex items-center"><i class="fas fa-clock text-slate-400 w-5"></i> Hạn chót: Add lịch vào ngày <span class="text-rose-500 ml-1">15 của tháng</span>.</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel hover-5d p-6 rounded-[24px] border-l-4 border-l-cyan-500 flex flex-col h-full bg-cyan-50/10">
+                        <div class="w-12 h-12 bg-cyan-50 rounded-2xl flex items-center justify-center mb-6 border border-cyan-100 shadow-sm">
+                            <i class="fas fa-comments text-xl text-cyan-500"></i>
+                        </div>
+                        <h3 class="text-lg font-black text-slate-800 mb-2">2. Tạo Group Zalo</h3>
+                        <p class="text-xs text-slate-500 font-medium leading-relaxed mb-6 flex-grow">Tạo không gian chung để truyền thông nhắc nhở và giải đáp thắc mắc tài khoản.</p>
+                        <div class="bg-cyan-50/50 p-4 rounded-xl text-[12px] font-bold text-slate-600 border border-cyan-100/50">
+                            <p class="flex items-center"><i class="fas fa-users text-cyan-400 w-5"></i> Tên Group: <span class="text-cyan-600 ml-1">Test SP KV1 "MM"/2026</span></p>
+                            <p class="mt-2 flex items-center"><i class="fas fa-user-plus text-cyan-400 w-5"></i> Member: Add toàn bộ học viên vào nhóm.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-indigo-50 border border-indigo-100 text-indigo-800 p-5 rounded-2xl text-sm font-semibold mb-8 flex items-start shadow-sm">
-                <i data-lucide="bell-ring" class="w-5 h-5 mr-3 text-indigo-600 flex-shrink-0 animate-bounce"></i>
-                <p>Gửi kịch bản này vào Group Zalo khi <span class="text-indigo-600 font-black">còn 5 ngày</span> tính tới deadline hoàn thành bài kiểm tra.</p>
-            </div>
-            
-            <div class="script-card border-l-indigo-500">
-                <button onclick="copy('zalo-msg')" class="copy-btn hover:bg-indigo-600 hover:border-indigo-600 text-indigo-600"><i data-lucide="copy" class="w-3 h-3 inline mr-1"></i> Copy</button>
-                <p class="form-label text-indigo-500">Kịch bản nhắc nhở học viên</p>
-                <div class="pre-box" id="zalo-msg">Hi các bạn @all , 
+            <!-- TRUYỀN THÔNG HỌC TẬP -->
+            <div id="step-zalo" class="step-content space-y-6">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-black text-slate-900 tracking-tight">Truyền thông Group Zalo</h2>
+                </div>
+
+                <div class="bg-indigo-50/50 border border-indigo-100 p-5 rounded-2xl text-sm font-medium text-indigo-800 mb-8 flex items-start shadow-sm">
+                    <i class="fas fa-bell text-indigo-500 text-lg mr-3 mt-0.5 animate-bounce"></i>
+                    <p class="leading-relaxed">Gửi kịch bản này vào Group Zalo khi <span class="text-indigo-600 font-black">còn 5 ngày</span> tính tới deadline hoàn thành bài kiểm tra.</p>
+                </div>
+                
+                <div class="glass-panel hover-5d p-6 rounded-[24px] relative border-l-4 border-l-indigo-500">
+                    <p class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-3"><i class="fas fa-paper-plane mr-1"></i> Kịch bản nhắc nhở học viên</p>
+                    <button onclick="copyScript(this, 'zalo-msg')" class="copy-btn absolute top-6 right-6 text-[10px] font-bold bg-white text-indigo-600 px-3 py-1.5 rounded-lg border border-indigo-100"><i class="fas fa-copy mr-1"></i> Copy</button>
+                    <pre id="zalo-msg" class="text-slate-700 bg-slate-50/50 p-5 rounded-xl font-medium border border-slate-100/50 pr-24">Hi các bạn @all , 
 Chỉ còn 5 ngày nữa để chúng ta hoàn thành bài kiểm tra KV1, các bạn nào chưa vào học thì tranh thủ vào học và làm bài kiểm tra nhé!
 
 Tự học trên hệ thống Github và làm bài kiểm tra trên LMS
@@ -178,26 +233,25 @@ Bước 2 – Quay về LMS làm bài kiểm tra:
 Sau khi đã nắm chắc kiến thức, bạn quay lại LMS của học phần này, bấm "Làm Bài tập" để hoàn thành Bài test nhanh mở khóa học phần tiếp theo.
 
 Đánh giá sau đào tạo:
-Chứng chỉ hoàn thành được cấp tự động trên hệ thống sau khi đạt 80% kết quả (40 câu hỏi trắc nghiệm / 60 phút) trong thời gian quy định.</div>
+Chứng chỉ hoàn thành được cấp tự động trên hệ thống sau khi đạt 80% kết quả (40 câu hỏi trắc nghiệm / 60 phút) trong thời gian quy định.</pre>
+                </div>
             </div>
-        </div>
 
-        <!-- TEST LẦN 1 -->
-        <div id="step-test1" class="step-content max-w-4xl">
-            <div class="flex items-center space-x-3 mb-8">
-                <div class="w-1.5 h-8 bg-orange-500 rounded-full"></div>
-                <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Kết quả Kiểm tra Lần 1</h2>
-            </div>
-            
-            <div class="bg-orange-50 border border-orange-100 text-orange-800 p-5 rounded-2xl text-sm font-semibold mb-8 flex items-start shadow-sm">
-                <i data-lucide="alert-triangle" class="w-5 h-5 mr-3 text-orange-600 flex-shrink-0"></i>
-                <p>Khoảng chừng ngày 10 sẽ nhắc nhở hoàn thiện bài test. Khi đến hạn chót Lần 1, tổng hợp kết quả (Pass/Fail/Chưa làm) và gửi Mail thông báo Test Lần 2.</p>
-            </div>
-            
-            <div class="script-card border-l-orange-500">
-                <button onclick="copy('m-test1')" class="copy-btn hover:bg-orange-500 hover:border-orange-500 hover:text-white"><i data-lucide="copy" class="w-3 h-3 inline mr-1"></i> Copy Mail</button>
-                <p class="form-label text-orange-600">Mẫu Email - Kết quả Lần 1 & Hạn chót Lần 2</p>
-                <div class="pre-box" id="m-test1">Dear các bạn,
+            <!-- TEST LẦN 1 -->
+            <div id="step-test1" class="step-content space-y-6">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-black text-orange-500 tracking-tight">Kết quả Kiểm tra Lần 1</h2>
+                </div>
+                
+                <div class="bg-orange-50/50 border border-orange-100 p-5 rounded-2xl text-sm font-medium text-orange-800 mb-8 flex items-start shadow-sm">
+                    <i class="fas fa-exclamation-triangle text-orange-500 text-lg mr-3 mt-0.5"></i>
+                    <p class="leading-relaxed">Khoảng chừng ngày 10 sẽ nhắc nhở hoàn thiện bài test. Khi đến hạn chót Lần 1, tổng hợp kết quả (Pass/Fail/Chưa làm) và gửi Mail thông báo Test Lần 2.</p>
+                </div>
+                
+                <div class="glass-panel hover-5d p-6 rounded-[24px] relative border-l-4 border-l-orange-500 bg-orange-50/10">
+                    <p class="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-3"><i class="fas fa-envelope-open mr-1"></i> Kết quả Lần 1 & Hạn chót Lần 2</p>
+                    <button onclick="copyScript(this, 'm-test1')" class="copy-btn absolute top-6 right-6 text-[10px] font-bold bg-white text-orange-500 px-3 py-1.5 rounded-lg border border-orange-100"><i class="fas fa-copy mr-1"></i> Copy Mail</button>
+                    <pre id="m-test1" class="text-slate-700 bg-white p-5 rounded-xl font-medium border border-orange-100/50 pr-24">Dear các bạn,
 
 Team LnD gửi kết quả bài kiểm tra KV1 lần 1 ngày [16/03/2026] và thông báo lịch test lần 2 với trường hợp Fail/ Chưa test.
 
@@ -206,21 +260,21 @@ Thông tin đăng nhập LMS giữ nguyên không đổi.
 
 Kết quả xem chi tiết tại file đính kèm: [Chèn Link Drive Sheet Kết Quả]
 
-Chúc các bạn ôn tập tốt và hoàn thành bài thi!</div>
+Chúc các bạn ôn tập tốt và hoàn thành bài thi!</pre>
+                </div>
             </div>
-        </div>
 
-        <!-- TEST LẦN 2 -->
-        <div id="step-test2" class="step-content max-w-4xl">
-            <div class="flex items-center space-x-3 mb-8">
-                <div class="w-1.5 h-8 bg-red-500 rounded-full"></div>
-                <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Kết quả Kiểm tra Lần 2 (Final)</h2>
-            </div>
-            
-            <div class="script-card border-l-red-500">
-                <button onclick="copy('m-test2')" class="copy-btn hover:bg-red-500 hover:border-red-500 hover:text-white"><i data-lucide="copy" class="w-3 h-3 inline mr-1"></i> Copy Mail Final</button>
-                <p class="form-label text-red-600">Gửi mail sau khi hết hạn Lần 2</p>
-                <div class="pre-box" id="m-test2">Dear các bạn,
+            <!-- TEST LẦN 2 -->
+            <div id="step-test2" class="step-content space-y-6">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-black text-rose-600 tracking-tight">Kết quả Kiểm tra Lần 2</h2>
+                    <p class="text-sm text-slate-500 font-medium mt-2">Đánh giá cuối cùng của tháng.</p>
+                </div>
+                
+                <div class="glass-panel hover-5d p-6 rounded-[24px] relative border-l-4 border-l-rose-500 bg-rose-50/10">
+                    <p class="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-3"><i class="fas fa-flag-checkered mr-1"></i> Mail kết quả Final</p>
+                    <button onclick="copyScript(this, 'm-test2')" class="copy-btn absolute top-6 right-6 text-[10px] font-bold bg-white text-rose-500 px-3 py-1.5 rounded-lg border border-rose-100"><i class="fas fa-copy mr-1"></i> Copy Final</button>
+                    <pre id="m-test2" class="text-slate-700 bg-white p-5 rounded-xl font-medium border border-rose-100/50 pr-24">Dear các bạn,
 
 Team LnD gửi kết quả bài kiểm tra KV1 lần 2 ngày [18/03/2026].
 Đây là kết quả cuối cùng của chương trình đánh giá Sản phẩm KV1 tháng này.
@@ -228,183 +282,229 @@ Team LnD gửi kết quả bài kiểm tra KV1 lần 2 ngày [18/03/2026].
 Kết quả xem chi tiết tại: [Chèn Link Drive Sheet Kết Quả Final]
 
 Cảm ơn các bạn đã tham gia khóa học.
-Trân trọng,</div>
+Trân trọng,</pre>
+                </div>
             </div>
-        </div>
 
-        <!-- LINK TÀI LIỆU -->
-        <div id="step-links" class="step-content max-w-5xl">
-            <div class="flex items-center space-x-3 mb-8">
-                <div class="w-1.5 h-8 bg-cyan-600 rounded-full"></div>
-                <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Tài liệu & Nền tảng Đào tạo</h2>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="script-card border-l-cyan-500">
-                    <p class="form-label text-cyan-700">Thư viện Github KV1</p>
-                    <div class="bg-slate-50 border border-slate-100 p-3 rounded-xl mt-2 text-[12px] font-medium text-slate-500 truncate" id="res1">https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-retail</div>
-                    <div class="mt-4 flex gap-3">
-                        <button onclick="copy('res1')" class="text-xs bg-white border border-slate-200 px-4 py-2 rounded-xl font-bold hover:bg-cyan-50 hover:text-cyan-700 hover:border-cyan-200 transition">Copy Link</button>
-                        <a href="https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-retail" target="_blank" class="text-xs bg-cyan-600 text-white px-4 py-2 rounded-xl font-bold shadow-md shadow-cyan-200 hover:bg-cyan-700 transition">Mở Trang</a>
-                    </div>
+            <!-- LINK TÀI LIỆU -->
+            <div id="step-links" class="step-content space-y-6">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-black text-cyan-600 tracking-tight">Links & Tài nguyên KV1</h2>
+                    <p class="text-sm text-slate-500 font-medium mt-2">Truy cập nhanh nền tảng đào tạo nâng cao.</p>
                 </div>
                 
-                <div class="script-card border-l-cyan-500">
-                    <p class="form-label text-cyan-700">Hệ thống LMS (Test & Pass)</p>
-                    <div class="bg-slate-50 border border-slate-100 p-3 rounded-xl mt-2 text-[12px] font-medium text-slate-500 truncate" id="res2">https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-retail-kv1/</div>
-                    <div class="mt-4 flex gap-3">
-                        <button onclick="copy('res2')" class="text-xs bg-white border border-slate-200 px-4 py-2 rounded-xl font-bold hover:bg-cyan-50 hover:text-cyan-700 transition">Copy Link</button>
-                        <a href="https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-retail-kv1/" target="_blank" class="text-xs bg-cyan-600 text-white px-4 py-2 rounded-xl font-bold shadow-md shadow-cyan-200 hover:bg-cyan-700 transition">Vào LMS</a>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="glass-panel hover-5d p-5 rounded-[24px] border-l-4 border-l-cyan-500 relative group">
+                        <p class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-1.5">Thư viện Github KV1</p>
+                        <pre id="res1" class="text-slate-500 text-[11px] truncate w-full mb-3">https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-retail</pre>
+                        <div class="flex gap-2">
+                            <button onclick="copyScript(this, 'res1')" class="text-[10px] bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg font-bold hover:bg-cyan-600 hover:text-white transition shadow-sm"><i class="fas fa-copy mr-1"></i> Copy</button>
+                            <a href="https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-retail" target="_blank" class="text-[10px] bg-cyan-50 text-cyan-600 px-3 py-1.5 rounded-lg font-bold hover:bg-cyan-100 transition shadow-sm"><i class="fas fa-external-link-alt mr-1"></i> Mở Trang</a>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-panel hover-5d p-5 rounded-[24px] border-l-4 border-l-cyan-500 relative group">
+                        <p class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-1.5">Hệ thống LMS (Test)</p>
+                        <pre id="res2" class="text-slate-500 text-[11px] truncate w-full mb-3">https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-retail-kv1/</pre>
+                        <div class="flex gap-2">
+                            <button onclick="copyScript(this, 'res2')" class="text-[10px] bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg font-bold hover:bg-cyan-600 hover:text-white transition shadow-sm"><i class="fas fa-copy mr-1"></i> Copy</button>
+                            <a href="https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-retail-kv1/" target="_blank" class="text-[10px] bg-cyan-50 text-cyan-600 px-3 py-1.5 rounded-lg font-bold hover:bg-cyan-100 transition shadow-sm"><i class="fas fa-external-link-alt mr-1"></i> Vào LMS</a>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel hover-5d p-5 rounded-[24px] border-l-4 border-l-cyan-500 relative group md:col-span-2">
+                        <p class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-1.5">Slide hướng dẫn thao tác trên Github</p>
+                        <pre id="res3" class="text-slate-500 text-[11px] truncate w-full mb-3">https://www.canva.com/design/DAHCSyWFhJ4/6YhxK5Qzek6MnYid0jufPA</pre>
+                        <div class="flex gap-2">
+                            <button onclick="copyScript(this, 'res3')" class="text-[10px] bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg font-bold hover:bg-cyan-600 hover:text-white transition shadow-sm"><i class="fas fa-copy mr-1"></i> Copy</button>
+                            <a href="https://www.canva.com/design/DAHCSyWFhJ4/6YhxK5Qzek6MnYid0jufPA/view?embed" target="_blank" class="text-[10px] bg-cyan-50 text-cyan-600 px-3 py-1.5 rounded-lg font-bold hover:bg-cyan-100 transition shadow-sm"><i class="fas fa-external-link-alt mr-1"></i> Mở Canva</a>
+                        </div>
                     </div>
                 </div>
-
-                <div class="script-card border-l-cyan-500">
-                    <p class="form-label text-cyan-700">Slide hướng dẫn thao tác trên Github</p>
-                    <div class="bg-slate-50 border border-slate-100 p-3 rounded-xl mt-2 text-[12px] font-medium text-slate-500 truncate" id="res3">https://www.canva.com/design/DAHCSyWFhJ4/6YhxK5Qzek6MnYid0jufPA</div>
-                    <div class="mt-4 flex gap-3">
-                        <button onclick="copy('res3')" class="text-xs bg-white border border-slate-200 px-4 py-2 rounded-xl font-bold hover:bg-cyan-50 hover:text-cyan-700 transition">Copy Link</button>
-                        <a href="https://www.canva.com/design/DAHCSyWFhJ4/6YhxK5Qzek6MnYid0jufPA/view?embed" target="_blank" class="text-xs bg-cyan-600 text-white px-4 py-2 rounded-xl font-bold shadow-md shadow-cyan-200 hover:bg-cyan-700 transition">Mở Canva</a>
-                    </div>
-                </div>
             </div>
-        </div>
 
-        <!-- TAB CHECKLIST -->
-        <div id="tools" class="step-content max-w-4xl">
-            <div class="flex items-center space-x-3 mb-8">
-                <div class="w-1.5 h-8 bg-cyan-600 rounded-full"></div>
-                <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Checklist Vận hành Tháng</h2>
-            </div>
-            
-            <div class="bg-white rounded-3xl p-10 border border-slate-200 shadow-xl shadow-slate-200/20">
-                <h3 class="text-xl font-black mb-8 flex items-center text-slate-800"><i data-lucide="check-square" class="mr-3 text-cyan-600 w-6 h-6"></i>Công việc cần đảm bảo</h3>
-                <div class="space-y-4" id="checklist">
-                    <label class="flex items-center p-5 bg-slate-50 border border-slate-100 rounded-2xl cursor-pointer hover:bg-cyan-50 hover:border-cyan-200 transition-all group">
-                        <input type="checkbox" onchange="checkTask(0)" class="w-6 h-6 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 mr-5">
-                        <span class="text-sm font-bold text-slate-700 group-hover:text-cyan-800">1. Lọc HRM, tổng hợp danh sách & Gửi mail đầu tháng</span>
-                    </label>
-                    <label class="flex items-center p-5 bg-slate-50 border border-slate-100 rounded-2xl cursor-pointer hover:bg-cyan-50 hover:border-cyan-200 transition-all group">
-                        <input type="checkbox" onchange="checkTask(1)" class="w-6 h-6 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 mr-5">
-                        <span class="text-sm font-bold text-slate-700 group-hover:text-cyan-800">2. Tạo Lịch trên Calendar (Hạn chót ngày 15) & Lập Group Chat</span>
-                    </label>
-                    <label class="flex items-center p-5 bg-slate-50 border border-slate-100 rounded-2xl cursor-pointer hover:bg-cyan-50 hover:border-cyan-200 transition-all group">
-                        <input type="checkbox" onchange="checkTask(2)" class="w-6 h-6 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 mr-5">
-                        <span class="text-sm font-bold text-slate-700 group-hover:text-cyan-800">3. Nhắc nhở qua Group Chat (5 ngày trước Deadline)</span>
-                    </label>
-                    <label class="flex items-center p-5 bg-slate-50 border border-slate-100 rounded-2xl cursor-pointer hover:bg-cyan-50 hover:border-cyan-200 transition-all group">
-                        <input type="checkbox" onchange="checkTask(3)" class="w-6 h-6 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 mr-5">
-                        <span class="text-sm font-bold text-slate-700 group-hover:text-cyan-800">4. Chốt kết quả Test LMS L1, gửi Mail báo cáo L1 & Mail chốt L2</span>
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <!-- FORM HOÀN THÀNH -->
-        <div id="finalize" class="step-content">
-            <div class="max-w-4xl mx-auto space-y-12">
-                <div class="text-center">
-                    <h2 class="text-4xl font-black text-slate-900 tracking-tight">Xác nhận nộp báo cáo Khóa</h2>
-                    <p class="text-slate-500 mt-3 font-medium text-lg">Dữ liệu sẽ được đồng bộ và hiển thị trực tiếp trên Dashboard chính của Trainer.</p>
+            <!-- TAB CHECKLIST -->
+            <div id="tools" class="step-content space-y-8">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-black text-emerald-600 tracking-tight">Checklist Vận hành</h2>
+                    <p class="text-sm text-slate-500 font-medium mt-2">Các tác vụ cần đảm bảo trong tháng</p>
                 </div>
                 
-                <div class="bg-white p-12 rounded-[40px] border border-slate-100 shadow-2xl shadow-slate-200/40 space-y-10 relative overflow-hidden">
-                    <!-- Deco bg -->
-                    <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-50 rounded-full blur-3xl -mr-20 -mt-20 z-0"></div>
-                    <div class="relative z-10 space-y-10">
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            <div><label class="form-label">Mã Khóa (Định danh)</label><input type="text" id="courseId" value="KV1 RETAIL" class="form-input font-black text-cyan-600 tracking-wider"></div>
-                            <div><label class="form-label">Tháng vận hành</label><select id="month" class="form-input font-bold text-slate-700"><option value="1">Tháng 1</option><option value="2">Tháng 2</option><option value="3">Tháng 3</option><option value="4">Tháng 4</option><option value="5">Tháng 5</option><option value="6">Tháng 6</option><option value="7">Tháng 7</option><option value="8">Tháng 8</option><option value="9">Tháng 9</option><option value="10">Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option></select></div>
-                            <div><label class="form-label">Trạng thái</label><select id="status" onchange="toggleReason()" class="form-input font-bold text-slate-700"><option value="Hoàn thành">Hoàn thành</option><option value="Đang diễn ra">Đang diễn ra</option><option value="Hủy">Hủy</option><option value="Dời lịch">Dời lịch</option><option value="Khác">Khác</option></select></div>
-                        </div>
-                        
-                        <div id="reasonBox" class="hidden transition-all"><label class="form-label">Lý do cụ thể</label><input type="text" id="reason" placeholder="Nhập lý do dời/hủy khóa..." class="form-input italic bg-slate-50"></div>
-
-                        <div class="grid grid-cols-2 gap-8">
-                            <div><label class="form-label text-slate-500">Ngày gửi Mail (Bắt đầu)</label><input type="date" id="start" class="form-input"></div>
-                            <div><label class="form-label text-slate-500">Ngày chốt Test L2 (Kết thúc)</label><input type="date" id="finish" class="form-input border-cyan-200 bg-cyan-50"></div>
-                        </div>
-
-                        <div class="space-y-5 pt-6 border-t border-slate-100">
-                            <label class="form-label">Lưu trữ Links Dữ Liệu (Drive/Sheet)</label>
-                            <div class="relative">
-                                <i data-lucide="users" class="absolute left-5 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5"></i>
-                                <input type="url" id="listLink" placeholder="Link danh sách lọc từ HRM..." class="form-input pl-14">
+                <div class="glass-panel p-8 rounded-[32px] shadow-[0_20px_40px_-15px_rgba(16,185,129,0.15)] border border-emerald-100/50">
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center"><i class="fas fa-tasks text-emerald-500 mr-2 text-lg"></i> Check Point</h3>
+                    
+                    <div class="space-y-3" id="checklist">
+                        <label class="checkbox-container flex items-center p-4 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-2xl cursor-pointer transition relative group">
+                            <input type="checkbox" onchange="checkTask(0)" class="absolute opacity-0 cursor-pointer w-0 h-0">
+                            <div class="w-6 h-6 rounded-lg border-2 border-slate-300 flex items-center justify-center mr-4 transition-all duration-300 bg-white">
+                                <i class="fas fa-check text-white text-[10px] opacity-0 transform scale-50 transition-all duration-300"></i>
                             </div>
-                            <div class="relative">
-                                <i data-lucide="file-spreadsheet" class="absolute left-5 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5"></i>
-                                <input type="url" id="quizLink" placeholder="Link kết quả Test Lần 1 & 2..." class="form-input pl-14">
+                            <span class="text-sm font-medium text-slate-700 group-hover:text-emerald-700 transition">1. Lọc HRM, tổng hợp DS & Gửi mail đầu tháng</span>
+                        </label>
+                        
+                        <label class="checkbox-container flex items-center p-4 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-2xl cursor-pointer transition relative group">
+                            <input type="checkbox" onchange="checkTask(1)" class="absolute opacity-0 cursor-pointer w-0 h-0">
+                            <div class="w-6 h-6 rounded-lg border-2 border-slate-300 flex items-center justify-center mr-4 transition-all duration-300 bg-white">
+                                <i class="fas fa-check text-white text-[10px] opacity-0 transform scale-50 transition-all duration-300"></i>
+                            </div>
+                            <span class="text-sm font-medium text-slate-700 group-hover:text-emerald-700 transition">2. Tạo Lịch Calendar (Hạn chót 15) & Lập Group</span>
+                        </label>
+
+                        <label class="checkbox-container flex items-center p-4 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-2xl cursor-pointer transition relative group">
+                            <input type="checkbox" onchange="checkTask(2)" class="absolute opacity-0 cursor-pointer w-0 h-0">
+                            <div class="w-6 h-6 rounded-lg border-2 border-slate-300 flex items-center justify-center mr-4 transition-all duration-300 bg-white">
+                                <i class="fas fa-check text-white text-[10px] opacity-0 transform scale-50 transition-all duration-300"></i>
+                            </div>
+                            <span class="text-sm font-medium text-slate-700 group-hover:text-emerald-700 transition">3. Nhắc nhở Group Zalo (5 ngày trước DL)</span>
+                        </label>
+
+                        <label class="checkbox-container flex items-center p-4 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-2xl cursor-pointer transition relative group">
+                            <input type="checkbox" onchange="checkTask(3)" class="absolute opacity-0 cursor-pointer w-0 h-0">
+                            <div class="w-6 h-6 rounded-lg border-2 border-slate-300 flex items-center justify-center mr-4 transition-all duration-300 bg-white">
+                                <i class="fas fa-check text-white text-[10px] opacity-0 transform scale-50 transition-all duration-300"></i>
+                            </div>
+                            <span class="text-sm font-medium text-slate-700 group-hover:text-emerald-700 transition">4. Chốt LMS L1, gửi Mail L1 & Mail chốt L2</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FORM ĐÓNG KHÓA (CẬP NHẬT CẤU TRÚC DATA CHUẨN) -->
+            <div id="finalize" class="step-content">
+                <div class="glass-panel rounded-[32px] overflow-hidden border border-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)]">
+                    
+                    <div class="px-10 py-8 bg-slate-900 text-white relative overflow-hidden">
+                        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+                        <h2 class="text-3xl font-black tracking-tight relative z-10">Nộp Báo cáo Khóa</h2>
+                        <p class="text-slate-400 mt-2 text-sm font-medium relative z-10"><i class="fas fa-satellite-dish text-cyan-400 animate-pulse mr-2"></i> Dữ liệu sẽ được mã hóa và bắn trực tiếp về <b class="text-white">Master Hub</b>.</p>
+                    </div>
+                    
+                    <div class="p-10 space-y-8 bg-white/50">
+                        <!-- Box 1: Info -->
+                        <div class="bg-cyan-50/30 p-6 rounded-2xl border border-cyan-50 space-y-5">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="form-label">Mã Khóa (Identify ID)</label>
+                                    <input type="text" id="courseId" value="KV1 RETAIL" class="form-input text-cyan-600 uppercase">
+                                </div>
+                                <div>
+                                    <label class="form-label">Trạng thái</label>
+                                    <select id="status" onchange="toggleReason()" class="form-input cursor-pointer">
+                                        <option value="Hoàn thành">Hoàn thành</option>
+                                        <option value="Đang diễn ra">Đang diễn ra</option>
+                                        <option value="Dời lịch">Dời lịch</option>
+                                        <option value="Hủy">Hủy</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div><label class="form-label">Ngày gửi Mail (Bắt đầu)</label><input type="date" id="start" class="form-input cursor-pointer"></div>
+                                <div><label class="form-label">Ngày chốt Test L2 (Kết thúc)</label><input type="date" id="finish" class="form-input cursor-pointer"></div>
+                            </div>
+                            <div id="reasonBox" class="hidden">
+                                <label class="form-label text-rose-500">Lý do dời/hủy</label>
+                                <input type="text" id="reason" placeholder="Ghi chú lý do..." class="form-input border-rose-100 bg-rose-50/30 focus:border-rose-300 focus:ring-rose-100">
                             </div>
                         </div>
 
-                        <button type="button" onclick="submitFinal(event)" class="w-full bg-cyan-600 text-white font-black py-5 rounded-3xl shadow-xl hover:bg-cyan-700 transition-all transform hover:-translate-y-1 uppercase tracking-widest text-sm shadow-cyan-200 flex items-center justify-center relative z-20">
-                            <i data-lucide="send" class="w-5 h-5 mr-2 pointer-events-none"></i> Xác nhận & Gửi dữ liệu
+                        <!-- Box 2: DATA YÊU CẦU CHO CHART -->
+                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                            <p class="text-[11px] font-black text-slate-700 uppercase tracking-widest mb-4 flex items-center"><i class="fas fa-chart-pie mr-2 text-indigo-500"></i> Hiệu suất Học viên</p>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="form-label text-slate-500">Tổng HV</label>
+                                    <input type="number" id="totalTrainees" placeholder="0" class="form-input text-center text-lg">
+                                </div>
+                                <div>
+                                    <label class="form-label text-emerald-600">Pass</label>
+                                    <input type="number" id="passedTrainees" placeholder="0" class="form-input text-center text-lg border-emerald-100 focus:border-emerald-300 focus:ring-emerald-100">
+                                </div>
+                                <div>
+                                    <label class="form-label text-rose-500">Fail</label>
+                                    <input type="number" id="failedTrainees" placeholder="0" class="form-input text-center text-lg border-rose-100 focus:border-rose-300 focus:ring-rose-100">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Box 3: Links -->
+                        <div class="space-y-4">
+                            <div class="relative group">
+                                <i class="fas fa-users absolute left-4 top-[14px] text-slate-400 z-10"></i>
+                                <input type="url" id="listLink" placeholder="Link danh sách lọc từ HRM..." class="form-input pl-10">
+                            </div>
+                            <div class="relative group">
+                                <i class="fas fa-poll absolute left-4 top-[14px] text-cyan-500 z-10"></i>
+                                <input type="url" id="quizLink" placeholder="Link kết quả Test Lần 1 & 2..." class="form-input pl-10">
+                            </div>
+                        </div>
+
+                        <button onclick="submitFinal(event)" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-black py-5 rounded-2xl shadow-[0_15px_30px_-10px_rgba(8,145,178,0.5)] hover:from-cyan-700 hover:to-blue-700 transition-all duration-300 transform hover:-translate-y-1 uppercase tracking-[0.2em] text-xs">
+                            <i class="fas fa-cloud-upload-alt mr-2 text-sm"></i> Xác nhận Đẩy Dữ liệu
                         </button>
                     </div>
                 </div>
             </div>
-        </div>
 
+        </div>
     </main>
 
-    <!-- SUCCESS MODAL -->
-    <div id="successModal" class="hidden fixed inset-0 modal-overlay items-center justify-center p-6 transition-opacity">
-        <div class="bg-white rounded-[40px] p-12 max-w-md w-full text-center shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transform transition-transform scale-100 border border-slate-100">
-            <div class="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner border border-green-100">
-                <i data-lucide="check-circle-2" class="w-12 h-12"></i>
+    <!-- SUCCESS MODAL (5D Style) -->
+    <div id="successModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-[32px] p-10 max-w-sm w-full text-center shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] border border-white transform scale-95 transition-transform duration-300" id="successContent">
+            
+            <div class="relative w-24 h-24 mx-auto mb-6">
+                <div class="absolute inset-0 bg-emerald-100 rounded-full animate-ping opacity-50"></div>
+                <div class="relative w-full h-full bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center border border-emerald-100 shadow-inner text-4xl">
+                    <i class="fas fa-check"></i>
+                </div>
             </div>
-            <h3 class="text-3xl font-black text-slate-900 mb-3 tracking-tight">Thành công!</h3>
-            <p class="text-base text-slate-500 font-medium mb-10 leading-relaxed">Báo cáo khóa KV1 RETAIL đã được cập nhật an toàn vào Master Hub.</p>
-            <div class="flex flex-col gap-4">
-                <button onclick="window.location.href='trainer.html'" class="bg-cyan-600 text-white font-bold py-4 rounded-2xl shadow-xl shadow-cyan-200 hover:bg-cyan-700 transition text-sm uppercase tracking-widest">
-                    Về Dashboard chính
-                </button>
-                <button onclick="closeModal()" class="text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-slate-600 transition p-2">
-                    Tiếp tục ở lại
+            
+            <h3 class="text-2xl font-black text-slate-800 mb-2 tracking-tight">Sync Success!</h3>
+            <p class="text-xs text-slate-500 font-medium mb-8 leading-relaxed px-4">Dữ liệu khóa học KV1 đã được đóng gói và bắn thẳng vào Master DB thành công.</p>
+            
+            <div class="flex flex-col gap-3">
+                <a href="index.html" class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-4 rounded-xl shadow-[0_10px_20px_-10px_rgba(16,185,129,0.6)] hover:from-emerald-600 hover:to-teal-600 transition transform hover:-translate-y-0.5">
+                    Về Dashboard Master
+                </a>
+                <button onclick="closeSuccess()" class="text-slate-400 font-black text-[10px] uppercase tracking-widest hover:text-slate-600 transition py-2">
+                    Tiếp tục ở lại đây
                 </button>
             </div>
         </div>
     </div>
 
     <script>
-        lucide.createIcons();
-
+        // Tab Navigation
         function showStep(id) {
             document.querySelectorAll('.step-content').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
+            
             document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
             document.getElementById('btn-' + id).classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
-        function toggleReason() {
-            const s = document.getElementById('status').value;
-            const reasonBox = document.getElementById('reasonBox');
-            if (['Hủy','Dời lịch','Khác'].includes(s)) {
-                reasonBox.classList.remove('hidden');
-            } else {
-                reasonBox.classList.add('hidden');
-                document.getElementById('reason').value = '';
-            }
-        }
-
-        function copy(id) {
+        // Copy Logic with UI Feedback
+        function copyScript(btnElement, id) {
             const t = document.getElementById(id).innerText;
             navigator.clipboard.writeText(t).then(() => {
-                const btn = event.currentTarget;
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i data-lucide="check" class="w-3 h-3 inline mr-1"></i> Đã Copy!';
-                btn.classList.add('bg-cyan-600', 'text-white', 'border-cyan-600');
-                lucide.createIcons();
+                const originalHTML = btnElement.innerHTML;
+                btnElement.classList.add('copied');
+                btnElement.innerHTML = '<i class="fas fa-check mr-1"></i> Copied!';
                 setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.classList.remove('bg-cyan-600', 'text-white', 'border-cyan-600');
-                    lucide.createIcons();
+                    btnElement.classList.remove('copied');
+                    btnElement.innerHTML = originalHTML;
                 }, 2000);
             });
         }
 
-        // Logic Checklist
+        function toggleReason() {
+            const s = document.getElementById('status').value;
+            document.getElementById('reasonBox').classList.toggle('hidden', !['Hủy','Dời lịch'].includes(s));
+        }
+
+        // Checklist Logic (Mapped to KV1)
         function checkTask(i) {
             let data = {};
             try {
@@ -419,69 +519,88 @@ Trân trọng,</div>
             localStorage.setItem('trainer_checklists', JSON.stringify(data));
         }
 
-        // LOGIC SUBMIT (Nâng cấp Bulletproof)
-        function submitFinal(event) {
-            // Ngăn trình duyệt tự tải lại trang
-            if(event) event.preventDefault(); 
-            
-            try {
-                const courseIdVal = document.getElementById('courseId').value.trim();
-                const finishVal = document.getElementById('finish').value;
-
-                // Validate
-                if(!courseIdVal || !finishVal) {
-                    alert('⚠️ Vui lòng điền tối thiểu: Mã Khóa (Định danh) và Ngày chốt Test L2 (Kết thúc)!');
-                    return;
-                }
-
-                // Object chuẩn để khớp với trainer.html
-                const newEntry = {
-                    category: 'RETAIL',
-                    groupName: 'Sản phẩm KV1 RETAIL', // groupName chứa "KV1" để chuông bên file trainer.html tắt
-                    courseId: courseIdVal,
-                    month: document.getElementById('month').value,
-                    status: document.getElementById('status').value,
-                    reason: document.getElementById('reason') ? document.getElementById('reason').value : '',
-                    startDate: document.getElementById('start') ? document.getElementById('start').value : '',
-                    finishDate: finishVal,
-                    listLink: document.getElementById('listLink') ? document.getElementById('listLink').value : '#',
-                    quizLink: document.getElementById('quizLink') ? document.getElementById('quizLink').value : '#',
-                    recordLink: '#' 
-                };
-
-                // Lấy db cũ ra một cách an toàn
-                let db = [];
-                try {
-                    const storedDb = localStorage.getItem('kv_master_db');
-                    if(storedDb) {
-                        db = JSON.parse(storedDb);
-                        if (!Array.isArray(db)) db = []; 
-                    }
-                } catch (parseError) {
-                    console.warn("Dữ liệu cũ bị hỏng, tạo database báo cáo mới.");
-                    db = []; 
-                }
-
-                // Thêm và lưu lại
-                db.push(newEntry);
-                localStorage.setItem('kv_master_db', JSON.stringify(db));
-                
-                // Kích hoạt Modal thành công (Ép lên lớp Layer cao nhất)
-                const modal = document.getElementById('successModal');
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                modal.style.zIndex = '99999';
-
-            } catch (error) {
-                console.error("Lỗi khi Submit: ", error);
-                alert("Đã xảy ra lỗi! Vui lòng F12 xem Console.");
+        // Restore Checklist state on load
+        window.addEventListener('DOMContentLoaded', () => {
+            let data = JSON.parse(localStorage.getItem('trainer_checklists'));
+            if(data && data.KV1 && data.KV1.steps) {
+                const checkboxes = document.querySelectorAll('#checklist input[type="checkbox"]');
+                checkboxes.forEach((cb, idx) => {
+                    if(data.KV1.steps[idx]) cb.checked = true;
+                });
             }
+        });
+
+        // SUBMIT TO TRAINER HUB
+        function submitFinal(event) {
+            if(event) event.preventDefault();
+
+            const startStr = document.getElementById('start').value;
+            const finishStr = document.getElementById('finish').value;
+            const cId = document.getElementById('courseId').value.toUpperCase();
+
+            if(!cId || !startStr || !finishStr) {
+                alert('Vui lòng nhập đầy đủ Mã Khóa, Ngày Bắt Đầu và Ngày Kết Thúc!');
+                return;
+            }
+
+            // Tự động tính THÁNG dựa trên ngày bắt đầu
+            const dateObj = new Date(startStr);
+            const calcMonth = dateObj.getMonth() + 1;
+
+            const newEntry = {
+                timestamp: new Date().getTime(),
+                groupName: 'KV1', // Khớp với config trong trainer.html
+                courseId: cId,
+                month: calcMonth, 
+                status: document.getElementById('status').value,
+                reason: document.getElementById('reason') ? document.getElementById('reason').value : '',
+                startDate: startStr,
+                finishDate: finishStr,
+                
+                totalTrainees: document.getElementById('totalTrainees').value || "0",
+                passedTrainees: document.getElementById('passedTrainees').value || "0",
+                failedTrainees: document.getElementById('failedTrainees').value || "0",
+
+                listLink: document.getElementById('listLink').value || '',
+                quizLink: document.getElementById('quizLink').value || '',
+                recordLink: '' // KV1 không dùng record
+            };
+
+            let db = [];
+            try {
+                const storedDb = localStorage.getItem('kv_master_db');
+                if(storedDb) {
+                    db = JSON.parse(storedDb);
+                    if (!Array.isArray(db)) db = []; 
+                }
+            } catch (e) { db = []; }
+
+            db.push(newEntry);
+            localStorage.setItem('kv_master_db', JSON.stringify(db));
+            
+            // Show Modal with Animation
+            const modal = document.getElementById('successModal');
+            const content = document.getElementById('successContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('opacity-100');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
         }
 
-        function closeModal() {
+        function closeSuccess() {
             const modal = document.getElementById('successModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            const content = document.getElementById('successContent');
+            modal.classList.remove('opacity-100');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            
+            // Xóa data form
+            document.getElementById('totalTrainees').value = '';
+            document.getElementById('passedTrainees').value = '';
+            document.getElementById('failedTrainees').value = '';
         }
     </script>
 </body>
