@@ -1,64 +1,234 @@
 <div class="h-full flex flex-col max-w-6xl mx-auto pb-10">
+    <!-- HEADER -->
     <div class="flex justify-between items-start mb-6">
-        <div><h1 class="text-2xl font-black text-slate-800 tracking-tight" id="cd-title">...</h1><p class="text-xs font-mono text-slate-400 mt-1" id="cd-id">Mã khóa: ...</p></div>
-        <a href="#courses" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 transition shadow-sm">Quay lại</a>
+        <div>
+            <h1 class="text-2xl font-black text-slate-800 tracking-tight" id="cd-title">...</h1>
+            <p class="text-xs font-mono text-slate-400 mt-1" id="cd-id">Mã khóa: ...</p>
+        </div>
+        <a href="#courses" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 transition shadow-sm">
+            Quay lại
+        </a>
     </div>
 
+    <!-- TABS NAVBAR -->
     <div class="bg-slate-100 p-1 rounded-xl flex gap-1 mb-6 border border-slate-200 w-full shrink-0">
         <button onclick="openTab('script')" id="tab-script" class="c-tab active flex-1 py-2 text-sm font-bold rounded-lg text-slate-700 bg-white shadow-sm transition">Kịch Bản</button>
         <button onclick="openTab('docs')" id="tab-docs" class="c-tab flex-1 py-2 text-sm font-bold rounded-lg text-slate-500 transition">Tài Liệu</button>
         <button onclick="openTab('info')" id="tab-info" class="c-tab flex-1 py-2 text-sm font-bold rounded-lg text-slate-500 transition">Thông Tin</button>
     </div>
 
-    <div class="flex-grow bg-white border border-slate-200 rounded-[32px] overflow-hidden shadow-sm relative flex flex-col">
-        <div id="view-script" class="c-view h-full flex flex-col md:flex-row">
-            <div class="w-full md:w-60 border-r border-slate-100 p-3 space-y-1 overflow-y-auto custom-scrollbar" id="vertical-menu"></div>
-            <div class="flex-1 p-6 overflow-y-auto custom-scrollbar" id="script-body"></div>
+    <!-- CONTENT AREA -->
+    <div class="flex-grow bg-white border border-slate-200 rounded-[32px] overflow-hidden shadow-sm relative flex flex-col min-h-0">
+        <!-- Tab Kịch Bản -->
+        <div id="view-script" class="c-view h-full flex flex-col md:flex-row min-h-0">
+            <!-- Menu dọc -->
+            <div class="w-full md:w-64 border-r border-slate-100 p-3 space-y-1 overflow-y-auto custom-scrollbar bg-slate-50/30" id="vertical-menu">
+                <!-- JS render menu ở đây -->
+            </div>
+            <!-- Vùng nội dung copy -->
+            <div class="flex-1 p-8 overflow-y-auto custom-scrollbar" id="script-body">
+                <!-- JS render nội dung ở đây -->
+            </div>
         </div>
-        <div id="view-docs" class="c-view hidden h-full p-8 overflow-y-auto"><div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="docs-area"></div></div>
-        <div id="view-info" class="c-view hidden h-full p-8"><div class="max-w-xl space-y-6" id="info-area"></div></div>
+
+        <!-- Tab Tài Liệu -->
+        <div id="view-docs" class="c-view hidden h-full p-8 overflow-y-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="docs-area"></div>
+        </div>
+
+        <!-- Tab Thông Tin -->
+        <div id="view-info" class="c-view hidden h-full p-8 overflow-y-auto">
+            <div class="max-w-xl space-y-6" id="info-area"></div>
+        </div>
     </div>
 </div>
 
 <script>
-    const cid = localStorage.getItem('currentCourseId') || 'SPCB';
-    const conf = window.courseConfig.find(c => c.id === cid);
-    document.getElementById('cd-title').innerText = conf.title;
-    document.getElementById('cd-id').innerText = `Mã: ${conf.prefix}XX`;
+    const currentCourseId = localStorage.getItem('currentCourseId') || 'SPCB';
+    const currentConf = window.AppState.courseConfig.find(c => c.id === currentCourseId);
 
-    const db = {
+    // ==========================================
+    // DATABASE KỊCH BẢN (KHÔI PHỤC 100% TỪ BẢN GỐC)
+    // ==========================================
+    const courseDB = {
         'SPCB': {
-            menu: ['Chào mừng Group Zalo', 'Thứ 2 (Nhắc lịch)', 'Thứ 3 (Buổi 1)', 'Thứ 4 (Buổi 2)', 'Thứ 5 (Buổi 3)', 'Thứ 6 (TEST)'],
+            menu: ['T7 - Chủ Nhật', 'Thứ 2 (Gửi Lịch)', 'Thứ 3 (Buổi 1)', 'Thứ 4 (Buổi 2)', 'Thứ 5 (Buổi 3)', 'Thứ 6 (TEST)'],
             content: [
-                `<h3 class="text-lg font-bold mb-4">Chào mừng Group Zalo (10:00 Sáng CN)</h3><div class="space-y-3"><div class="p-4 bg-slate-50 rounded-xl relative"><button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-bold bg-white px-2 py-1 border rounded shadow-sm">Copy</button><pre class="text-sm font-sans whitespace-pre-wrap">Chào mừng các bạn tới Group Zalo Đào tạo KiotViet</pre></div><div class="p-4 bg-blue-50 rounded-xl relative"><button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-bold bg-white px-2 py-1 border rounded shadow-sm text-blue-600">Copy</button><pre class="text-sm font-sans font-bold whitespace-pre-wrap text-blue-800">Link đăng ký trải nghiệm phần mềm KiotViet:\nhttps://www.kiotviet.vn/?refcode=3670</pre></div></div>`,
-                `<h3 class="text-lg font-bold mb-4">Thứ 2: Nhắc lịch học</h3><div class="p-4 bg-slate-50 rounded-xl relative"><button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-bold bg-white px-2 py-1 border rounded shadow-sm">Copy</button><pre class="text-sm font-sans whitespace-pre-wrap">Chào mọi người @All,\nTừ sáng mai Vi đồng hành cùng mọi người học SPCB 3 buổi (T3-T4-T5).\nThời gian: 8:30 – 10:30am\nLink Meet: https://meet.google.com/sxr-hnuk-fob</pre></div>`,
-                `<h3 class="text-lg font-bold mb-4">Thứ 3: Buổi 1</h3><div class="p-4 bg-slate-50 rounded-xl relative"><button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-bold bg-white px-2 py-1 border rounded shadow-sm">Copy</button><pre class="text-sm font-sans whitespace-pre-wrap">Nội dung học Buổi 1: Đào tạo Sản phẩm Cơ bản 01\nHoàn thành bài quiz trước 12h nhé!</pre></div>`
+                // Chủ Nhật
+                `<h3 class="text-xl font-black text-slate-800 mb-6">Chào mừng Group Zalo <span class="text-blue-500 text-sm font-bold ml-2">(10:00 Sáng CN)</span></h3>
+                <div class="space-y-4">
+                    <div class="p-5 bg-slate-50 border border-slate-200 rounded-2xl relative">
+                        <button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-black bg-white px-3 py-1 border rounded-lg shadow-sm hover:bg-blue-50 transition">COPY</button>
+                        <pre class="text-[13px] text-slate-700 font-medium whitespace-pre-wrap font-sans">Chào mừng các bạn tới Group Zalo Đào tạo KiotViet</pre>
+                    </div>
+                    <div class="p-5 bg-slate-50 border border-slate-200 rounded-2xl relative">
+                        <button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-black bg-white px-3 py-1 border rounded-lg shadow-sm">COPY</button>
+                        <pre class="text-[13px] text-slate-700 font-medium whitespace-pre-wrap font-sans">Xin chào các bạn 😉\nMình là Nhật Vi - Chuyên viên đào tạo, tuần này mình và bạn @Nguyễn Phương sẽ đồng hành cùng các bạn tham gia khóa đào tạo tại KiotViet.</pre>
+                    </div>
+                    <div class="p-5 bg-blue-50 border border-blue-100 rounded-2xl relative">
+                        <button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-black bg-white text-blue-600 px-3 py-1 border rounded-lg shadow-sm">COPY</button>
+                        <pre class="text-[13px] text-blue-800 font-black whitespace-pre-wrap font-sans">Link dùng để đăng ký trải nghiệm phần mềm KiotViet dành cho nhân viên mới tham gia đào tạo:\nhttps://www.kiotviet.vn/?refcode=3670</pre>
+                    </div>
+                    <p class="text-[11px] text-slate-400 font-medium italic">*Lưu ý: Gửi 9 tin nhắn tuần tự như kịch bản cũ.</p>
+                </div>`,
+                // Thứ 2
+                `<h3 class="text-xl font-black text-slate-800 mb-6">Chiều Thứ 2: Nhắc lịch học</h3>
+                <div class="p-5 bg-slate-50 border border-slate-200 rounded-2xl relative">
+                    <button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-black bg-white px-3 py-1 border rounded-lg shadow-sm">COPY ALL</button>
+                    <pre class="text-[13px] text-slate-700 font-medium whitespace-pre-wrap font-sans">Chào mọi người @All ,\nTừ sáng mai, Vi sẽ đồng hành cùng mọi người trong chương trình Đào tạo sản phẩm cơ bản, diễn ra trong 3 buổi: Thứ 3, Thứ 4, Thứ 5.\nThời gian: 8:30 – 10:30am\n\nLink tham gia đào tạo online trên Google Meet\nBuổi 1: https://meet.google.com/sxr-hnuk-fob?authuser=0</pre>
+                </div>`,
+                // Thứ 3
+                `<h3 class="text-xl font-black text-slate-800 mb-6">Thứ 3: Buổi 1 (Tổng quan & 6 Bước)</h3>
+                <div class="space-y-6">
+                    <div class="p-5 bg-blue-50 border border-blue-100 rounded-2xl relative">
+                        <p class="text-[10px] font-black text-blue-500 uppercase mb-2">Gửi 10:30</p>
+                        <button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-black bg-white text-blue-600 px-3 py-1 border rounded-lg shadow-sm">COPY</button>
+                        <pre class="text-[13px] text-blue-900 font-bold whitespace-pre-wrap font-sans">NỘI DUNG ĐÀO TẠO SẢN PHẨM - TỔNG QUAN KHÓA HỌC + 6 BƯỚC DEMO CƠ BẢN\nNội dung học Buổi 1: Đào tạo Sản phẩm Cơ bản 01\n---------------------------------</pre>
+                    </div>
+                    <div class="p-5 bg-slate-50 border border-slate-200 rounded-2xl relative">
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Gửi 13:30 (Kết quả & Bài tập)</p>
+                        <button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-black bg-white px-3 py-1 border rounded-lg shadow-sm">COPY</button>
+                        <pre class="text-[13px] text-slate-700 font-medium whitespace-pre-wrap font-sans">Vi gửi kết quả học sáng nay của mọi người nha... Mọi người vào LMS - Buổi 1 -> Tab tài liệu tải file Word B1... hoàn thành bài tập trước 16:00 nhé.</pre>
+                    </div>
+                </div>`,
+                // Thứ 4
+                `<h3 class="text-xl font-black text-slate-800 mb-6">Thứ 4: Buổi 2 (Tính năng & FAQ)</h3>
+                <div class="p-5 bg-emerald-50 border border-emerald-100 rounded-2xl relative">
+                    <button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-black bg-white text-emerald-600 px-3 py-1 border rounded-lg shadow-sm">COPY NOTE</button>
+                    <pre class="text-[13px] text-emerald-800 font-medium whitespace-pre-wrap font-sans text-justify">Có 1 vài bạn đang hiểu chưa đúng phần tạo Nhóm khách hàng, Vi diễn giải lại 1 chút phần này nha:\n1. Thêm theo điều kiện: Khách đủ điều kiện được thêm tự động, nhưng không tự động loại ra nếu sau này hết đủ điều kiện.\n2. Cập nhật lại theo điều kiện: Phần mềm liên tục cập nhật danh sách (đủ thì thêm, không đủ thì loại).\n3. Không cập nhật lại: Danh sách thành viên được giữ nguyên.</pre>
+                </div>`,
+                // Thứ 5
+                `<h3 class="text-xl font-black text-slate-800 mb-6">Thứ 5: Buổi 3 (Mobile App & Ôn thi)</h3>
+                <div class="p-5 bg-rose-50 border border-rose-100 rounded-2xl relative">
+                    <button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-black bg-white text-rose-600 px-3 py-1 border rounded-lg shadow-sm">COPY ALL</button>
+                    <pre class="text-[13px] text-rose-800 font-black whitespace-pre-wrap font-sans">📌 [QUAN TRỌNG] TÀI LIỆU & HƯỚNG DẪN ÔN TẬP SẢN PHẨM CƠ BẢN\n\nHình thức: Online 30p - 30 câu (80% Pass). Được mở phần mềm thao tác.\n1. Ôn lý thuyết trên Github (B1-B2-B3).\n2. Ôn Quiz trên LMS.\n3. Xem Record khóa 26KV06: https://drive.google.com/drive/folders/15ghXFGcR67ErIxB_SPIaSrHt3QiNhfJh</pre>
+                </div>`,
+                // Thứ 6
+                `<h3 class="text-xl font-black text-slate-800 mb-6">Thứ 6: Ngày TEST & Đóng khóa</h3>
+                <div class="p-5 bg-emerald-50 border border-emerald-100 rounded-2xl relative">
+                    <button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-black bg-white text-emerald-600 px-3 py-1 border rounded-lg shadow-sm">COPY</button>
+                    <pre class="text-[13px] text-emerald-800 font-medium whitespace-pre-wrap font-sans">Sau khi PASS bài kiểm tra, chương trình Đào tạo Cơ bản kết thúc!\n- Khối Non-Sale: Điền khảo sát và OUT NHÓM.\n- Khối Sale: Ở lại chờ thông tin khóa COC-CRM.\n- Link Group chat "Xóm Đào": https://chat.google.com/room/AAAAEOKr7G8?cls=4\n- Link khảo sát: https://docs.google.com/forms/d/1_LhtIYlk-nMqcdZLIpn_wFitwj6K6-LeVOF1b9-TY9k/preview</pre>
+                </div>`
             ],
-            docs: [{t:'Slide dạy B1', l:'https://kiotvietlnd.github.io/slides/san-pham-retail'}, {t:'Playlist KH Review', l:'https://www.youtube.com/playlist?list=PLjB-7CLwd9mFRlvz4U4FW8HJfMLpBgaMa'}]
+            docs: [{t:'Slide giảng dạy B1', l:'https://kiotvietlnd.github.io/slides/san-pham-retail'}, {t:'Playlist KH Review', l:'https://www.youtube.com/playlist?list=PLjB-7CLwd9mFRlvz4U4FW8HJfMLpBgaMa'}, {t:'HDSD LMS cho NV', l:'https://kiotvietlnd.github.io/training/hdsd-lms-sales#dangnhap'}, {t:'Game SPCB', l:'https://vinguyen14.github.io/camnang/gamification'}]
         },
         'KV1': {
-            menu: ['Gửi Mail đầu tháng', 'Truyền thông Group', 'Kết quả Test L1', 'Kết quả Test L2'],
+            menu: ['Lọc HRM & Mail', 'Truyền thông Group', 'Kết quả Test L1', 'Kết quả Test L2'],
             content: [
-                `<h3 class="text-lg font-bold mb-4">Mail Đầu Tháng (Lọc HRM)</h3><div class="p-4 bg-indigo-50 rounded-xl relative"><button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-bold bg-white px-2 py-1 border rounded shadow-sm">Copy</button><pre class="text-sm font-sans whitespace-pre-wrap">Dear anh/chị,\nTeam LnD gửi thông tin chi tiết về Chương trình Đào tạo và Test Sản phẩm KV1 dành cho nhân viên sales gia nhập sau tháng đầu tiên.\n4. Thời gian hoàn thành bài kiểm tra: Trước 11:00, thứ 2 ngày 16/03/2026</pre></div>`
+                // Mail HRM
+                `<h3 class="text-xl font-black text-slate-800 mb-6">Gửi Mail Đầu Tháng (Lọc HRM)</h3>
+                <div class="p-5 bg-indigo-50 border border-indigo-100 rounded-2xl relative">
+                    <button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-black bg-white text-indigo-600 px-3 py-1 border rounded-lg shadow-sm">COPY MAIL</button>
+                    <pre class="text-[13px] text-slate-700 font-medium whitespace-pre-wrap font-sans">Dear anh/chị,\nTeam LnD gửi thông tin chi tiết về Chương trình Đào tạo và Test Sản phẩm KV1 dành cho nhân viên sales gia nhập sau tháng đầu tiên.\n\n4. Thời gian hoàn thành bài kiểm tra: Trước 11:00, thứ 2 ngày 16/03/2026\n5. Số lượng câu hỏi: 40 câu\n6. Thời gian làm bài: 60 phút\n7. Tỉ lệ đạt: 80%</pre>
+                </div>`,
+                // Truyền thông Zalo
+                `<h3 class="text-xl font-black text-slate-800 mb-6">Truyền thông Group Zalo</h3>
+                <div class="p-5 bg-slate// (Tiếp tục của khóa KV1) Truyền thông Zalo
+                `<h3 class="text-xl font-black text-slate-800 mb-6">Truyền thông Group Zalo (Nhắc nhở)</h3>
+                <div class="p-5 bg-slate-50 border border-slate-200 rounded-2xl relative">
+                    <button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-black bg-white text-slate-600 px-3 py-1 border rounded-lg shadow-sm">COPY</button>
+                    <pre class="text-[13px] text-slate-700 font-medium whitespace-pre-wrap font-sans">Hi các bạn @all , \nChỉ còn 5 ngày nữa để chúng ta hoàn thành bài kiểm tra KV1, các bạn nào chưa vào học thì tranh thủ vào học và làm bài kiểm tra nhé!\n\nLink truy cập Khóa học: https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-retail-kv1/\n\nĐánh giá sau đào tạo: Đạt 80% kết quả (40 câu hỏi trắc nghiệm / 60 phút) trong thời gian quy định.</pre>
+                </div>`,
+                // Kết quả L1
+                `<h3 class="text-xl font-black text-slate-800 mb-6">Kết quả Kiểm tra Lần 1</h3>
+                <div class="p-5 bg-orange-50 border border-orange-100 rounded-2xl relative">
+                    <button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-black bg-white text-orange-600 px-3 py-1 border rounded-lg shadow-sm">COPY MAIL</button>
+                    <pre class="text-[13px] text-slate-700 font-medium whitespace-pre-wrap font-sans">Dear các bạn,\n\nTeam LnD gửi kết quả bài kiểm tra KV1 lần 1 ngày [16/03/2026] và thông báo lịch test lần 2 với trường hợp Fail/ Chưa test.\n\nHạn chót Test Lần 2: 16:00 Thứ Tư, ngày [18/03/2026].\n\nChúc các bạn ôn tập tốt và hoàn thành bài thi!</pre>
+                </div>`,
+                // Kết quả L2
+                `<h3 class="text-xl font-black text-slate-800 mb-6">Kết quả Kiểm tra Lần 2 (Final)</h3>
+                <div class="p-5 bg-rose-50 border border-rose-100 rounded-2xl relative">
+                    <button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-black bg-white text-rose-600 px-3 py-1 border rounded-lg shadow-sm">COPY FINAL</button>
+                    <pre class="text-[13px] text-slate-700 font-medium whitespace-pre-wrap font-sans">Dear các bạn,\n\nTeam LnD gửi kết quả bài kiểm tra KV1 lần 2 ngày [18/03/2026].\nĐây là kết quả cuối cùng của chương trình đánh giá Sản phẩm KV1 tháng này.\n\nCảm ơn các bạn đã tham gia khóa học.\nTrân trọng,</pre>
+                </div>`
             ],
-            docs: [{t:'Thư viện Github KV1', l:'https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-retail'}]
+            docs: [
+                {t:'Thư viện Github KV1', l:'https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-retail'},
+                {t:'Hệ thống LMS (Test)', l:'https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-retail-kv1/'},
+                {t:'Slide hướng dẫn trên Github', l:'https://www.canva.com/design/DAHCSyWFhJ4/6YhxK5Qzek6MnYid0jufPA'}
+            ]
+        },
+        'TAX': {
+            menu: ['Gửi Mail Mời Học', 'Chat Nhắc Sát Giờ', 'Hối thúc LMS'],
+            content: [
+                // Mail mời học
+                `<h3 class="text-xl font-black text-slate-800 mb-6">Gửi Email Mời Học (Đầu tuần)</h3>
+                <div class="p-5 bg-slate-50 border border-slate-200 rounded-2xl relative">
+                    <button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-black bg-white text-slate-600 px-3 py-1 border rounded-lg shadow-sm">COPY MAIL</button>
+                    <pre class="text-[13px] text-slate-700 font-medium whitespace-pre-wrap font-sans">Dear các bạn,\n\nTeam LND gửi các bạn thông tin Chương trình Đào tạo Sản phẩm - Tính năng Hóa đơn điện tử - Tháng [Tháng/Năm]:\n\nPhần 1: Học online tập trung cùng giảng viên\nThời gian: 09:00 - 12:00, Thứ 6\nLink tham gia: meet.google.com/jpp-kpzc-iku\n\nPhần 2: Tự học trên hệ thống Github và LMS\nThời gian: Từ Thứ 6 đến hết tuần sau.\n\nTrường hợp bất khả kháng không thể tham gia, vui lòng phản hồi lại email này.</pre>
+                </div>`,
+                // Chat T6
+                `<h3 class="text-xl font-black text-slate-800 mb-6">Chat Nhắc Sát Giờ (Sáng T6)</h3>
+                <div class="p-5 bg-emerald-50 border border-emerald-100 rounded-2xl relative">
+                    <button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-black bg-white text-emerald-600 px-3 py-1 border rounded-lg shadow-sm">COPY CHAT</button>
+                    <pre class="text-[13px] text-emerald-800 font-medium whitespace-pre-wrap font-sans">Mình gửi thông tin tham gia Khóa học HĐĐT - Thuế - Kế toán sáng nay:\n\nThời gian học: 09:00 - 12:00, Thứ 6\nHình thức: Google Meet\nLink tham gia: meet.google.com/jpp-kpzc-iku\n\nCác bạn tham gia điền giúp mình form điểm danh tại đây nha:\nhttps://docs.google.com/forms/d/e/1FAIpQLSdM_-jSquep4EHJkd0WubTnj3xaXfPzOoDOhmTQluJJ9p3bxg/viewform</pre>
+                </div>`,
+                // Hối thúc LMS
+                `<h3 class="text-xl font-black text-slate-800 mb-6">Hối thúc hoàn thành LMS</h3>
+                <div class="p-5 bg-orange-50 border border-orange-200 rounded-2xl relative">
+                    <button onclick="copyPre(this)" class="absolute top-4 right-4 text-[10px] font-black bg-white text-orange-600 px-3 py-1 border rounded-lg shadow-sm">COPY CHAT</button>
+                    <pre class="text-[13px] text-slate-700 font-medium whitespace-pre-wrap font-sans">Hi @all ,\nSau khi hoàn thành Phần 1: Học online tập trung cùng giảng viên\nTiếp tục chúng ta sẽ đến với phần tiếp theo,\n\nPhần 2: Tự học trên hệ thống Github và LMS\nLink truy cập Khóa học: https://daotao.kiotviet.vn/khoa-hoc/ke-toan-01/\nUser & Password: Mail Công ty + 123456A@\n\nHoàn tất học phần: Đạt 80% kết quả bài kiểm tra cuối khóa.</pre>
+                </div>`
+            ],
+            docs: [
+                {t:'Slide Bài Giảng (Canva)', l:'https://www.canva.com/design/DAHAO9by6Uc/DbIkB7psM39Jx0d8BCmGgA/edit'},
+                {t:'Thư viện Github (Thuế)', l:'https://kiotvietlnd.github.io/elearning/thuehkd/#ke-toan-01'},
+                {t:'Form Điểm Danh', l:'https://docs.google.com/forms/d/e/1FAIpQLSdM_-jSquep4EHJkd0WubTnj3xaXfPzOoDOhmTQluJJ9p3bxg/viewform'},
+                {t:'Form Khảo Sát', l:'https://docs.google.com/forms/d/e/1FAIpQLSfUjSF4NzBAf9AQhWhs09eE-a7InRHjAFcc_ZdeqlQl3F7R0A/viewform'}
+            ]
         }
     };
 
-    const myDb = db[cid] || db['SPCB'];
-    document.getElementById('vertical-menu').innerHTML = myDb.menu.map((m,i) => `<button onclick="showScript(${i})" class="v-btn w-full text-left px-4 py-3 rounded-xl text-xs font-bold ${i===0?'bg-blue-50 text-blue-600 shadow-sm':'text-slate-500 hover:bg-slate-50'} transition mb-1">${m}</button>`).join('');
+    // Render Menu dọc và Nội dung Kịch bản
+    const myDb = db[currentCourseId] || db['SPCB'];
+    
+    document.getElementById('vertical-menu').innerHTML = myDb.menu.map((m, i) => `
+        <button onclick="showScript(${i})" class="v-btn w-full text-left px-4 py-3 rounded-xl text-xs font-bold ${i===0?'bg-blue-50 text-blue-600 shadow-sm':'text-slate-500 hover:bg-slate-50'} transition mb-1">${m}</button>
+    `).join('');
+    
     document.getElementById('script-body').innerHTML = myDb.content[0] || '<p class="text-slate-400 italic">Nội dung đang cập nhật...</p>';
-    document.getElementById('docs-area').innerHTML = myDb.docs.map(d => `<div class="p-5 bg-slate-50 border rounded-2xl"><b>${d.t}</b><p class="text-blue-500 text-xs truncate my-2">${d.l}</p><a href="${d.l}" target="_blank" class="text-xs font-bold text-slate-400 hover:text-blue-600 transition">Mở Link <i class="fas fa-external-link-alt ml-1"></i></a></div>`).join('');
-    document.getElementById('info-area').innerHTML = `<div class="p-6 bg-slate-50 rounded-2xl">Mô tả: <p class="mt-2 text-slate-600">${conf.desc}</p></div>`;
+    
+    // Render Tài Liệu
+    document.getElementById('docs-area').innerHTML = myDb.docs.map(d => `
+        <div class="p-5 bg-slate-50 border rounded-2xl">
+            <b class="text-sm text-slate-800">${d.t}</b>
+            <p class="text-blue-500 text-xs truncate my-2">${d.l}</p>
+            <a href="${d.l}" target="_blank" class="text-xs font-bold text-slate-500 hover:text-blue-600 border border-slate-200 bg-white px-4 py-1.5 rounded-md inline-block shadow-sm">Truy cập</a>
+        </div>
+    `).join('');
+    
+    // Render Thông Tin Khóa Học
+    document.getElementById('info-area').innerHTML = `
+        <div class="p-6 bg-slate-50 rounded-2xl">
+            <p class="text-xs font-bold text-slate-400 uppercase">Mô tả khóa học</p>
+            <p class="text-sm mt-1 text-slate-600 font-medium">${currentConf.desc}</p>
+        </div>
+        <div class="p-6 bg-slate-50 rounded-2xl">
+            <p class="text-xs font-bold text-slate-400 uppercase">Lộ trình dự kiến</p>
+            <p class="text-sm mt-1 text-slate-600 font-medium">${currentConf.sessions} buổi học tập trung cùng bài kiểm tra LMS.</p>
+        </div>
+    `;
 
+    // Hàm chuyển kịch bản qua menu dọc
     function showScript(i) {
         document.getElementById('script-body').innerHTML = myDb.content[i] || '<p class="text-slate-400 italic">Nội dung đang cập nhật...</p>';
-        document.querySelectorAll('.v-btn').forEach((btn,idx) => btn.className = `v-btn w-full text-left px-4 py-3 rounded-xl text-xs font-bold ${i===idx?'bg-blue-50 text-blue-600 shadow-sm':'text-slate-500 hover:bg-slate-50'} transition mb-1`);
+        document.querySelectorAll('.v-btn').forEach((btn, idx) => btn.className = `v-btn w-full text-left px-4 py-3 rounded-xl text-xs font-bold ${i===idx?'bg-blue-50 text-blue-600 shadow-sm':'text-slate-500 hover:bg-slate-50'} transition mb-1`);
     }
+
+    // Hàm chuyển Tab ngang chính
     function openTab(id) {
-        document.querySelectorAll('.c-view').forEach(v => v.classList.add('hidden')); document.getElementById('view-'+id).classList.remove('hidden');
+        document.querySelectorAll('.c-view').forEach(v => v.classList.add('hidden')); 
+        document.getElementById(`view-${id}`).classList.remove('hidden');
         document.querySelectorAll('.c-tab').forEach(t => t.className = "c-tab flex-1 py-2 text-sm font-bold rounded-lg text-slate-500 transition");
-        document.getElementById('tab-'+id).className = "c-tab active flex-1 py-2 text-sm font-bold rounded-lg text-slate-700 bg-white shadow-sm transition";
+        document.getElementById(`tab-${id}`).className = "c-tab active flex-1 py-2 text-sm font-bold rounded-lg text-slate-700 bg-white shadow-sm transition";
     }
-    window.copyPre = btn => { const t = btn.nextElementSibling.innerText; navigator.clipboard.writeText(t).then(() => { const old = btn.innerText; btn.innerText='Đã Copy!'; setTimeout(()=>btn.innerText=old, 1500); }); };
+
+    // Hàm copy xử lý cho nút
+    window.copyPre = btn => { 
+        const t = btn.nextElementSibling.innerText; 
+        navigator.clipboard.writeText(t).then(() => { 
+            const old = btn.innerText; btn.innerText='Đã Copy!'; 
+            setTimeout(()=>btn.innerText=old, 1500); 
+        }); 
+    };
 </script>
