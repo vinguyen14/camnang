@@ -12,182 +12,112 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow: hidden; }
         .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-right: 1px solid #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        .menu-item { transition: all 0.2s ease; border-radius: 12px; margin-bottom: 4px; }
-        .menu-item:hover { background-color: #f1f5f9; color: #0f172a; }
-        .menu-item.active { background-color: #eff6ff; color: #2563eb; font-weight: 700; }
-        .menu-item.active i { color: #2563eb; }
+        .menu-item { transition: all 0.2s ease; border-radius: 12px; margin-bottom: 4px; border: 1px solid transparent; }
+        .menu-item.active { background-color: #eff6ff; color: #2563eb; font-weight: 700; border-color: #dbeafe; }
         #app-root { transition: opacity 0.2s ease, transform 0.2s ease; }
-        #app-root.fade-out { opacity: 0; transform: translateY(5px); }
-        #app-root.fade-in { opacity: 1; transform: translateY(0); }
+        #app-root.fade-out { opacity: 0; transform: translateY(10px); }
         .modal { display: none; opacity: 0; transition: opacity 0.3s ease; }
         .modal.active { display: flex; opacity: 1; }
-        .modal .modal-content { transform: scale(0.95); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.15); }
-        .modal.active .modal-content { transform: scale(1); opacity: 1; }
+        .modal .modal-content { transform: scale(0.9); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal.active .modal-content { transform: scale(1); }
+        /* Background Orbs */
+        .orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.15; z-index: -1; pointer-events: none; }
     </style>
 </head>
 <body class="flex h-screen antialiased relative">
-    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-50/20 via-transparent to-emerald-50/20 -z-10 pointer-events-none"></div>
+    <div class="orb w-96 h-96 bg-blue-400 top-[-10%] left-[-10%]"></div>
+    <div class="orb w-80 h-80 bg-emerald-400 bottom-[-10%] right-[-5%]"></div>
 
-    <aside class="w-64 glass-panel flex flex-col flex-shrink-0 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-        <div class="h-16 flex items-center px-6">
-            <i class="fas fa-layer-group text-slate-400 mr-3 text-lg"></i>
-            <span class="text-[15px] font-black tracking-tight text-slate-800">Trainer Hub</span>
-        </div>
-        <nav class="flex-1 overflow-y-auto custom-scrollbar py-2 px-3" id="sidebar-menu">
-            <a href="#dashboard" class="menu-item active flex items-center px-4 py-2.5 text-[13px] font-semibold text-slate-500"><i class="fas fa-border-all w-7 text-slate-400 text-[15px]"></i> Dashboard</a>
-            <a href="#courses" class="menu-item flex items-center px-4 py-2.5 text-[13px] font-semibold text-slate-500"><i class="fas fa-book-open w-7 text-slate-400 text-[15px]"></i> Khóa Học</a>
-            <a href="#analytics" class="menu-item flex items-center px-4 py-2.5 text-[13px] font-semibold text-slate-500"><i class="fas fa-chart-bar w-7 text-slate-400 text-[15px]"></i> Analytics</a>
-            <a href="#tools" class="menu-item flex items-center px-4 py-2.5 text-[13px] font-semibold text-slate-500"><i class="fas fa-wrench w-7 text-slate-400 text-[15px]"></i> Công Cụ</a>
-            <a href="#calendar" class="menu-item flex items-center px-4 py-2.5 text-[13px] font-semibold text-slate-500"><i class="far fa-calendar-alt w-7 text-slate-400 text-[15px]"></i> Lịch Năm</a>
+    <!-- SIDEBAR -->
+    <aside class="w-64 glass-panel flex flex-col flex-shrink-0 z-20 shadow-xl">
+        <div class="h-16 flex items-center px-6"><i class="fas fa-layer-group text-blue-500 mr-3 text-xl"></i><span class="font-black text-slate-800">Trainer Hub</span></div>
+        <nav class="flex-1 py-4 px-3 space-y-1" id="sidebar-menu">
+            <a href="#dashboard" class="menu-item active flex items-center px-4 py-2.5 text-[13px] font-semibold text-slate-500"><i class="fas fa-border-all w-7"></i> Dashboard</a>
+            <a href="#courses" class="menu-item flex items-center px-4 py-2.5 text-[13px] font-semibold text-slate-500"><i class="fas fa-book-open w-7"></i> Khóa Học</a>
+            <a href="#analytics" class="menu-item flex items-center px-4 py-2.5 text-[13px] font-semibold text-slate-500"><i class="fas fa-chart-bar w-7"></i> Analytics</a>
+            <a href="#tools" class="menu-item flex items-center px-4 py-2.5 text-[13px] font-semibold text-slate-500"><i class="fas fa-wrench w-7"></i> Công Cụ</a>
+            <a href="#calendar" class="menu-item flex items-center px-4 py-2.5 text-[13px] font-semibold text-slate-500"><i class="far fa-calendar-alt w-7"></i> Lịch Năm</a>
         </nav>
-        <div class="p-4 border-t border-slate-100">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold border border-slate-200">N</div>
-                <div>
-                    <p class="text-xs font-bold text-slate-800">Nguyễn Lê Nhật Vi - L&D</p>
-                    <p class="text-[10px] font-medium text-slate-400">vi.nln@kiotviet.com</p>
-                </div>
-            </div>
+        <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">V</div>
+            <div class="text-[11px]"><p class="font-bold text-slate-800">Nhật Vi - L&D</p><p class="text-slate-400">vi.nln@kiotviet.com</p></div>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col h-screen relative z-10 bg-transparent">
-        <header class="h-16 flex items-center justify-between px-8 z-20 shrink-0">
-            <div id="header-title" class="flex flex-col justify-center h-full"></div>
-            <div class="flex items-center gap-4 relative group cursor-default">
-                <button class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all relative z-20 shadow-sm"><i class="fas fa-bell text-xs"></i><span id="bell-badge" class="absolute top-0 right-0 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full hidden"></span></button>
-                <div class="absolute top-10 right-0 w-72 bg-white border border-slate-200 rounded-2xl shadow-[0_15px_30px_-10px_rgba(0,0,0,0.1)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 p-4"><h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">Thông báo hệ thống</h4><div id="notification-content"></div></div>
+    <main class="flex-1 flex flex-col relative z-10 bg-transparent">
+        <header class="h-14 flex items-center justify-between px-8 bg-white/50 border-b border-slate-100 backdrop-blur-md">
+            <div id="header-title"></div>
+            <div class="flex items-center gap-4 relative group">
+                <button class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-blue-500 transition relative">
+                    <i class="fas fa-bell text-xs"></i>
+                    <span id="bell-badge" class="absolute top-0 right-0 w-2 h-2 bg-rose-500 border-2 border-white rounded-full hidden"></span>
+                </button>
             </div>
         </header>
-        <div id="app-root" class="flex-1 overflow-y-auto custom-scrollbar px-8 pb-12 z-10 fade-in"></div>
+        <div id="app-root" class="flex-1 overflow-y-auto custom-scrollbar px-8 py-6 fade-in"></div>
     </main>
-    
-    <!-- MODAL MẬT KHẨU (GLOBAL) -->
+
+    <!-- MODAL AUTH (NHẬP PIN XÓA) -->
     <div id="authModal" class="modal fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4 z-[9999]">
-        <div class="modal-content bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl text-center relative">
-            <button onclick="closeModal('authModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full hover:bg-slate-100"><i class="fas fa-times"></i></button>
+        <div class="modal-content bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl text-center relative border border-white">
             <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl border border-rose-100"><i class="fas fa-shield-alt"></i></div>
             <h3 class="text-xl font-black text-slate-800 mb-2">Xác thực Bảo mật</h3>
-            <p class="text-xs text-slate-500 mb-8 px-2">Bạn đang yêu cầu xóa dữ liệu. Vui lòng nhập mã PIN và nhấn Enter.</p>
-            <input type="password" id="authPassword" onkeypress="handleAuthKeyPress(event)" placeholder="••••••" class="w-full text-center border-2 border-slate-200 bg-slate-50 rounded-2xl p-4 font-mono text-2xl tracking-[0.5em] focus:border-rose-400 outline-none mb-8">
+            <p class="text-xs text-slate-500 mb-6">Bạn đang yêu cầu xóa dữ liệu. Vui lòng nhập mã PIN và nhấn Enter.</p>
+            <input type="password" id="authPassword" onkeypress="handleAuthKeyPress(event)" placeholder="••••••" class="w-full text-center border-2 border-slate-100 bg-slate-50 rounded-2xl p-4 font-mono text-2xl tracking-[0.5em] focus:border-rose-400 outline-none mb-6">
             <button onclick="executeDelete()" class="w-full py-4 rounded-2xl text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 transition shadow-lg uppercase">Thực thi Xóa</button>
         </div>
     </div>
-    
-    <!-- MODAL THÀNH CÔNG (GLOBAL) -->
+
+    <!-- MODAL SUCCESS (SUBMIT THÀNH CÔNG) -->
     <div id="successModal" class="modal fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4 z-[9999]">
-        <div class="modal-content bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl text-center relative">
-            <button onclick="closeModal('successModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full hover:bg-slate-100"><i class="fas fa-times"></i></button>
-            <div class="relative w-20 h-20 mx-auto mb-5"><div class="absolute inset-0 bg-emerald-100 rounded-full animate-ping opacity-50"></div><div class="relative w-full h-full bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center border border-emerald-100 text-3xl"><i class="fas fa-check"></i></div></div>
+        <div class="modal-content bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl text-center relative border border-white">
+            <button onclick="closeModal('successModal')" class="absolute top-4 right-4 text-slate-400"><i class="fas fa-times"></i></button>
+            <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl"><i class="fas fa-check-circle"></i></div>
             <h3 class="text-xl font-black text-slate-800 mb-2">Nộp báo cáo thành công</h3>
-            <p class="text-xs text-slate-500 mb-8">Dữ liệu đã được cập nhật vào hệ thống Analytics.</p>
-            <a href="#analytics" onclick="closeModal('successModal')" class="w-full block py-3.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-md">Xem trang báo cáo</a>
+            <p class="text-xs text-slate-500 mb-8">Dữ liệu đã được cập nhật vào Analytics.</p>
+            <a href="#analytics" onclick="closeModal('successModal')" class="w-full block py-3.5 rounded-xl bg-blue-600 text-white font-bold text-sm">Xem bảng báo cáo chi tiết</a>
         </div>
     </div>
-    
+
     <script>
-        // ==========================================
-        // KHỐI LOGIC TOÀN CỤC (GLOBAL LOGIC)
-        // ==========================================
-        window.SECRET_KEY = "014023"; // Mã PIN bảo mật
-        window.holidays = { "1-1": "Tết Dương", "2-17": "Mùng 1 Tết", "4-30": "Giải Phóng", "5-1": "Lao Động", "9-2": "Quốc Khánh" };
+        window.SECRET_KEY = "014023";
         window.courseConfig = [
-            { id: 'SPCB', prefix: '26KV', title: 'Sản phẩm Cơ bản', desc: 'Khóa học về sản phẩm cơ bản...', sessions: 5, color: 'blue', status: 'Đang diễn ra' },
-            { id: 'KV1', prefix: 'KV1-26', title: 'Sản phẩm KV1', desc: 'Nâng cao kỹ năng quản lý...', sessions: 1, color: 'indigo', status: 'Đang diễn ra' },
-            { id: 'TAX', prefix: 'INV-26', title: 'HĐĐT - Thuế - Kế toán', desc: 'Khóa học chuyên sâu về hóa đơn...', sessions: 4, color: 'slate', status: 'Đang lên kế hoạch' },
-            { id: 'FNB', prefix: 'FNB-26', title: 'KiotViet FNB', desc: 'Nghiệp vụ dành cho Nhà hàng, Cafe', sessions: 2, color: 'orange', status: 'Đã hoàn thành' },
-            { id: 'SALON', prefix: 'SL-26', title: 'KiotViet Salon', desc: 'Nghiệp vụ quản lý Spa, Salon', sessions: 2, color: 'fuchsia', status: 'Đang lên kế hoạch' },
-            { id: 'HOTEL', prefix: 'HL-26', title: 'KiotViet Hotel', desc: 'Giải pháp quản lý khách sạn', sessions: 2, color: 'emerald', status: 'Đang lên kế hoạch' }
+            { id: 'SPCB', prefix: '26KV', title: 'Sản phẩm Cơ bản', sessions: 5, color: 'blue', status: 'Đang diễn ra', label: 'RETAIL' },
+            { id: 'KV1', prefix: 'KV1-26', title: 'Sản phẩm KV1', sessions: 1, color: 'indigo', status: 'Đang diễn ra', label: 'ADVANCED' },
+            { id: 'TAX', prefix: 'INV-26', title: 'HĐĐT - Thuế - Kế toán', sessions: 4, color: 'slate', status: 'Đang lên kế hoạch', label: 'SPECIALIST' },
+            { id: 'FNB', prefix: 'FNB-26', title: 'KiotViet FNB', sessions: 2, color: 'orange', status: 'Đã hoàn thành', label: 'INDUSTRY' },
+            { id: 'SALON', prefix: 'SL-26', title: 'KiotViet Salon', sessions: 2, color: 'fuchsia', status: 'Đang lên kế hoạch', label: 'INDUSTRY' },
+            { id: 'HOTEL', prefix: 'HL-26', title: 'KiotViet Hotel', sessions: 2, color: 'emerald', status: 'Đang lên kế hoạch', label: 'INDUSTRY' }
         ];
 
-        // Hàm đọc DB từ localStorage (An toàn)
         window.loadMasterDB = () => JSON.parse(localStorage.getItem('kv_master_db') || '[]');
-
-        // Hàm debounce cho ô tìm kiếm
-        window.debounce = (func, delay) => { let timeout; return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; };
-
-        // Logic Modal toàn cục
         window.openModal = id => document.getElementById(id).classList.add('active');
         window.closeModal = id => document.getElementById(id).classList.remove('active');
-        window.deleteTargetIdx = null;
-        window.requestDelete = idx => { window.deleteTargetIdx = idx; document.getElementById('authPassword').value=''; openModal('authModal'); setTimeout(()=>document.getElementById('authPassword').focus(), 50); };
-        window.handleAuthKeyPress = e => { if (e.key === 'Enter') executeDelete(); };
-        window.executeDelete = () => {
-            if (document.getElementById('authPassword').value !== window.SECRET_KEY) return alert("Sai mã PIN!");
-            setTimeout(() => {
-                const msg = window.deleteTargetIdx === -1 ? "XÓA SẠCH toàn bộ dữ liệu?" : "Xóa báo cáo này?";
-                if (confirm(msg)) {
-                    let db = window.loadMasterDB();
-                    if (window.deleteTargetIdx === -1) db = []; else db.splice(window.deleteTargetIdx, 1);
-                    localStorage.setItem('kv_master_db', JSON.stringify(db));
-                    closeModal('authModal');
-                    // Tự động refresh lại trang Analytics nếu đang mở
-                    if(location.hash === '#analytics' && typeof renderAnalytics === 'function') renderAnalytics();
-                }
-            }, 100);
-        };
-
-        // Chuông thông báo
-        function checkNotifications() { /* Logic giữ nguyên */ }
-
-        // ==========================================
-        // BỘ NÃO ĐỊNH TUYẾN (SPA ROUTER)
-        // ==========================================
-        const routes = {
-            'dashboard': { file: 'views/dashboard.html', sidebar: 'dashboard', title: 'Dashboard' },
-            'courses': { file: 'views/courses.html', sidebar: 'courses', title: 'Danh Sách Khóa Học' },
-            'analytics': { file: 'views/analytics.html', sidebar: 'analytics', title: 'Analytics & Báo Cáo' },
-            'tools': { file: 'views/tools.html', sidebar: 'tools', title: 'Công Cụ Trợ Lý' },
-            'calendar': { file: 'views/calendar.html', sidebar: 'calendar', title: 'Lịch Đào Tạo 2026' },
-            'course-detail': { file: 'views/course-detail.html', sidebar: 'courses' },
-            'tasks': { file: 'views/tasks.html', sidebar: 'courses' }
-        };
-        const appRoot = document.getElementById('app-root');
-        const headerTitle = document.getElementById('header-title');
-
+        
         async function router() {
-            let hash = window.location.hash.slice(1) || 'dashboard';
+            let hash = location.hash.slice(1) || 'dashboard';
             let routeKey = hash;
-            if (hash.startsWith('course-') || hash.startsWith('tasks-')) {
-                const [type, id] = hash.split('-');
-                localStorage.setItem('currentCourseId', id.toUpperCase());
-                routeKey = (type === 'course') ? 'course-detail' : 'tasks';
+            if(hash.startsWith('course-') || hash.startsWith('tasks-')) {
+                const [type, id] = hash.split('-'); 
+                localStorage.setItem('currentCourseId', id.toUpperCase()); 
+                routeKey = type === 'course' ? 'course-detail' : 'tasks';
             }
-            if (!routes[routeKey]) routeKey = 'dashboard';
-
-            updateSidebarActive(routes[routeKey].sidebar);
-            headerTitle.innerHTML = routes[routeKey].title ? `<h1 class="text-xl font-black text-slate-800 tracking-tight">${routes[routeKey].title}</h1>` : '';
-            appRoot.classList.add('fade-out');
-
+            const routes = { 'dashboard':'views/dashboard.html', 'courses':'views/courses.html', 'analytics':'views/analytics.html', 'tools':'views/tools.html', 'calendar':'views/calendar.html', 'course-detail':'views/course-detail.html', 'tasks':'views/tasks.html' };
+            const app = document.getElementById('app-root');
+            app.classList.add('fade-out');
             try {
-                const res = await fetch(`${routes[routeKey].file}?v=${new Date().getTime()}`);
+                const res = await fetch(`${routes[routeKey]}?v=${Date.now()}`);
                 const html = await res.text();
                 setTimeout(() => {
-                    appRoot.innerHTML = html;
-                    appRoot.querySelectorAll('script').forEach(s => { const newS = document.createElement('script'); newS.text = s.text; s.parentNode.replaceChild(newS, s); });
-                    appRoot.classList.remove('fade-out');
+                    app.innerHTML = html;
+                    app.querySelectorAll('script').forEach(s => { const newS = document.createElement('script'); newS.text = s.text; s.parentNode.replaceChild(newS, s); });
+                    app.classList.remove('fade-out');
                 }, 150);
-            } catch (e) {
-                appRoot.innerHTML = `<div class="text-center mt-20">Đang phát triển file: <b>${routes[routeKey].file}</b></div>`;
-                appRoot.classList.remove('fade-out');
-            }
+            } catch (e) { app.innerHTML = `<div class="p-20 text-center">Trang đang xây dựng...</div>`; }
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.toggle('active', el.getAttribute('href') === `#${routeKey}`));
         }
-        
-        function updateSidebarActive(id) { document.querySelectorAll('.menu-item').forEach(el => el.classList.toggle('active', el.getAttribute('href') === `#${id}`)); }
-        
-        // **FIX LỖI DATA KHÔNG SYNC:** Lắng nghe sự thay đổi ở tab khác
-        window.addEventListener('storage', (event) => {
-            if (event.key === 'kv_master_db') {
-                console.log("Phát hiện thay đổi DB từ tab khác, tự động cập nhật!");
-                if(location.hash === '#analytics' && typeof renderAnalytics === 'function') renderAnalytics();
-                if(location.hash === '#dashboard' && typeof renderDashboardData === 'function') renderDashboardData();
-            }
-        });
-
-        window.addEventListener('DOMContentLoaded', () => { router(); checkNotifications(); });
-        window.addEventListener('hashchange', router);
+        window.addEventListener('hashchange', router); window.addEventListener('DOMContentLoaded', router);
     </script>
 </body>
 </html>
