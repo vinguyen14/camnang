@@ -512,4 +512,557 @@
                             </div>
                         </div>
                         <div class="space-y-3">
-                            <div class="relative"><i class="fas fa-file-excel absolute left-4 top-4 text-emerald-600"></i><input type="text" id="editListLink" class="w
+                            <div class="relative"><i class="fas fa-file-excel absolute left-4 top-4 text-emerald-600"></i><input type="text" id="editListLink" class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-xs outline-none focus:border-blue-400" placeholder="Link Danh sách..."></div>
+                            <div class="relative"><i class="fas fa-poll absolute left-4 top-4 text-purple-500"></i><input type="text" id="editQuizLink" class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-xs outline-none focus:border-blue-400" placeholder="Link Quiz..."></div>
+                            <div class="relative"><i class="fab fa-google-drive absolute left-4 top-4 text-blue-500"></i><input type="text" id="editRecordLink" class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-xs outline-none focus:border-blue-400" placeholder="Link Record..."></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-10 py-6 bg-slate-50/50 border-t border-slate-100 flex justify-end gap-4 rounded-b-[32px] flex-shrink-0">
+                <button onclick="closeModal('editModal')" class="px-6 py-3 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-200 transition">Hủy</button>
+                <button onclick="saveEdit()" class="px-8 py-3 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg transition">Lưu Báo Cáo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PASSWORD XÓA BÁO CÁO -->
+    <div id="authModal" class="modal fixed inset-0 bg-slate-900/80 backdrop-blur-xl items-center justify-center p-4 z-[9999]">
+        <div class="modal-content bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl text-center relative border border-white">
+            <button onclick="closeModal('authModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full hover:bg-slate-100"><i class="fas fa-times"></i></button>
+            <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl border border-rose-100 shadow-inner"><i class="fas fa-shield-alt"></i></div>
+            <h3 class="text-xl font-black text-slate-800 mb-2 tracking-tight">Xác thực Bảo mật</h3>
+            <p class="text-xs text-slate-500 mb-8 px-2 font-medium">Vui lòng nhập mã PIN an toàn và <b class="text-slate-700">nhấn Enter</b>.</p>
+            <input type="password" id="authPassword" onkeypress="handleAuthKeyPress(event)" placeholder="••••••" class="w-full text-center border-2 border-slate-100 bg-slate-50 rounded-2xl px-4 py-4 font-mono text-2xl tracking-[0.5em] focus:border-rose-400 focus:bg-white outline-none mb-8 transition shadow-inner">
+            <button onclick="executeDelete()" class="w-full py-4 rounded-2xl text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 transition shadow-lg uppercase tracking-wider">Thực thi Xóa</button>
+        </div>
+    </div>
+
+    <!-- Toast Copy -->
+    <div id="copy-toast" class="fixed bottom-5 right-5 bg-emerald-500 text-white font-bold text-sm py-3 px-6 rounded-xl shadow-xl opacity-0 transform translate-y-10 z-[10000] pointer-events-none flex items-center gap-2"><i class="fas fa-check-circle"></i> <span>Đã sao chép!</span></div>
+    <textarea id="copy-helper" style="position: absolute; left: -9999px;"></textarea>
+
+    <!-- ======================================================= -->
+    <!-- TẤT CẢ SCRIPTS VANILLA JS (LOGIC VẬN HÀNH)              -->
+    <!-- ======================================================= -->
+    <script>
+        const AppState = { 
+            currentView: 'view-dashboard',
+            filters: { month: 'all', search: '', status: '' }, 
+            sort: { col: '', asc: true }, 
+            pagination: { page: 1, limit: 10 },
+            emailDB: []
+        };
+        let statusChartInstance = null, perfChartInstance = null, deleteTargetIndex = null;
+        const SECRET_KEY = "014023"; 
+
+        // --- HỆ THỐNG MENU VÀ TABS ---
+        function switchMainView(viewId) {
+            AppState.currentView = viewId;
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const navId = 'nav-' + viewId;
+            if(document.getElementById(navId)) document.getElementById(navId).classList.add('active');
+
+            if (viewId === 'view-analytics') renderAll();
+            if (viewId === 'view-dashboard') renderDashboardStatsOnly();
+        }
+
+        function switchSubTab(groupId, tabId, viewId) {
+            let containerId = '';
+            if (groupId === 'tools') containerId = 'view-tools';
+            if (groupId === 'calendar') containerId = 'view-calendar';
+
+            const container = document.getElementById(containerId);
+            container.querySelectorAll('.sub-tab-btn').forEach(el => el.classList.remove('active'));
+            container.querySelectorAll('.sub-view').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        // --- NÂNG CẤP: NHÚNG WEBSITE VÀO IFRAME THAY VÌ MỞ TAB MỚI ---
+        function openCourseDetail(courseTitle, courseCode, link) {
+            document.getElementById('detail-title').innerText = courseTitle;
+            
+            const iframe = document.getElementById('course-iframe');
+            const lockedDiv = document.getElementById('course-locked');
+
+            if (link && link.trim() !== '') {
+                iframe.src = link;
+                iframe.classList.remove('hidden');
+                lockedDiv.classList.add('hidden');
+            } else {
+                iframe.src = '';
+                iframe.classList.add('hidden');
+                lockedDiv.classList.remove('hidden');
+            }
+
+            switchMainView('view-course-detail');
+        }
+
+        // --- BÁO CÁO & DASHBOARD LOGIC ---
+        // Yêu cầu 1: Sửa lại cấu hình link khóa học cho khớp
+        const courseConfig = [
+            { id: 'SPCB', label: 'Retail', title: 'Sản phẩm Cơ bản', desc: 'Lộ trình 3 buổi: Tổng quan, 6 bước demo và App.', sessions: 3, border: 'border-l-blue-500', color: 'text-blue-500', link: 'https://vinguyen14.github.io/camnang/spcb.html' },
+            { id: 'KV1', label: 'Advanced', title: 'Sản phẩm KV1', desc: 'Nâng cao kỹ năng quản lý tình huống nghiệp vụ.', sessions: 1, border: 'border-l-indigo-500', color: 'text-indigo-500', link: 'https://vinguyen14.github.io/camnang/kv1.html' },
+            { id: 'TAX', label: 'Specialist', title: 'HĐĐT - Thuế - Kế toán', desc: 'Kiến thức chuyên sâu về hóa đơn điện tử.', sessions: 1, border: 'border-l-slate-500', color: 'text-slate-500', link: 'https://vinguyen14.github.io/camnang/thuehkd.html' },
+            { id: 'FNB', label: 'Industry', title: 'KiotViet FNB', desc: 'Nghiệp vụ dành riêng cho Nhà hàng, Cafe.', sessions: 0, border: 'border-l-orange-500', color: 'text-orange-500', link: '' },
+            { id: 'SALON', label: 'Industry', title: 'KiotViet Salon', desc: 'Nghiệp vụ quản lý tiệm Spa, Hair Salon.', sessions: 0, border: 'border-l-fuchsia-500', color: 'text-fuchsia-500', link: '' },
+            { id: 'HOTEL', label: 'Industry', title: 'KiotViet Hotel', desc: 'Giải pháp quản lý cơ sở lưu trú, khách sạn.', sessions: 0, border: 'border-l-emerald-500', color: 'text-emerald-500', link: '' }
+        ];
+
+        function renderCourseCards() {
+            const grid = document.getElementById('courseGrid'); grid.innerHTML = '';
+            const today = new Date(); today.setHours(0,0,0,0);
+            let notiCount = 0; let notiHTML = '';
+
+            courseConfig.forEach(course => {
+                let bellHTML = '';
+                if (typeof window.trainingScheduleData !== 'undefined') {
+                    const upcomingClasses = window.trainingScheduleData.filter(s => s.id === course.id).map(s => ({ ...s, dateObj: new Date(s.date) })).filter(s => s.dateObj >= today).sort((a, b) => a.dateObj - b.dateObj);
+                    if (upcomingClasses.length > 0) {
+                        const nextClass = upcomingClasses[0];
+                        const diffTime = nextClass.dateObj - today;
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        
+                        if (diffDays <= 7) {
+                            bellHTML = `
+                            <div class="notification-zone">
+                                <div class="relative flex items-center justify-center w-8 h-8 bg-rose-100 rounded-full shadow-md animate-bounce cursor-pointer border border-rose-200">
+                                    <i class="fas fa-bell text-rose-500 text-sm"></i>
+                                    <span class="absolute top-0 right-0 flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span></span>
+                                </div>
+                                <div class="popup-remind z-50">
+                                    <p class="font-black text-rose-600 mb-1 tracking-tight text-sm uppercase">Sắp diễn ra</p>
+                                    <p class="text-slate-800 text-xs font-bold mb-1 border-b border-slate-100 pb-2 border-dashed">Mã khóa: <span class="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">${nextClass.code || '---'}</span></p>
+                                    <p class="text-slate-500 text-[11px] font-medium mt-2">Ngày dạy: <b>${nextClass.dateObj.toLocaleDateString('vi-VN')}</b></p>
+                                </div>
+                            </div>`;
+                            notiCount++;
+                            notiHTML += `<div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl"><div><p class="font-bold text-slate-800 text-sm">Khóa ${nextClass.code || course.id} sắp bắt đầu</p><p class="text-xs text-slate-500 mt-1"><i class="far fa-calendar-alt"></i> ${nextClass.dateObj.toLocaleDateString('vi-VN')} - ${nextClass.name}</p></div><span class="px-3 py-1 bg-white border border-slate-200 text-slate-400 text-[10px] font-bold rounded-lg cursor-pointer hover:bg-slate-100">Đã đọc</span></div>`;
+                        }
+                    }
+                }
+
+                // Gọi hàm mở Iframe thay vì link ngoài
+                const actionHTML = `<div class="mt-auto pt-5 border-t border-slate-100 flex justify-between items-center"><span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${course.sessions} Sessions</span><button onclick="openCourseDetail('${course.title}', '${course.id}', '${course.link}')" class="${course.color} font-bold text-xs flex items-center hover:underline group bg-${course.color.replace('text-','bg-').replace('-500','-50')} px-3 py-1.5 rounded-lg">Vào Giảng dạy <i class="fas fa-arrow-right ml-1.5 text-[10px] transform group-hover:translate-x-1 transition-all"></i></button></div>`;
+                grid.innerHTML += `<div class="glass-panel course-card p-6 flex flex-col h-full border-l-4 ${course.border} hover-5d">${bellHTML}<span class="text-[9px] bg-slate-100 w-fit px-2 py-1 rounded-md font-black ${course.color} uppercase tracking-[0.1em] mb-3 shadow-sm">${course.label}</span><h3 class="text-lg font-black text-slate-800 mb-2 tracking-tight">${course.title}</h3><p class="text-xs text-slate-500 leading-relaxed mb-6 font-medium pr-4">${course.desc}</p>${actionHTML}</div>`;
+            });
+
+            const navBadge = document.getElementById('nav-noti-badge'); const tabBadge = document.getElementById('noti-tab-badge'); const notiList = document.getElementById('notification-list');
+            if(notiCount > 0) { navBadge.innerText = notiCount; navBadge.classList.remove('hidden'); tabBadge.innerText = notiCount; tabBadge.classList.replace('bg-slate-300', 'bg-rose-500'); notiList.innerHTML = notiHTML; } 
+            else { navBadge.classList.add('hidden'); tabBadge.innerText = '0'; notiList.innerHTML = `<div class="text-center p-10 text-slate-400 italic text-sm border border-dashed border-slate-200 rounded-2xl">Không có thông báo nào</div>`; }
+        }
+
+        function getFilteredAndSortedData() { let allData = loadDB(), displayData = [...allData]; if (AppState.filters.month !== 'all') displayData = displayData.filter(d => d.month == AppState.filters.month); if(AppState.filters.status !== "") displayData = displayData.filter(d => d.status === AppState.filters.status); if(AppState.filters.search !== "") displayData = displayData.filter(d => (d.courseId && d.courseId.toLowerCase().includes(AppState.filters.search)) || (d.groupName && d.groupName.toLowerCase().includes(AppState.filters.search))); if(AppState.sort.col !== "") { displayData.sort((a, b) => { let valA = (a[AppState.sort.col] || '').toString().toLowerCase(), valB = (b[AppState.sort.col] || '').toString().toLowerCase(); if(valA < valB) return AppState.sort.asc ? -1 : 1; if(valA > valB) return AppState.sort.asc ? 1 : -1; return 0; }); } return displayData; }
+        function loadDB() { let data = JSON.parse(localStorage.getItem('kv_master_db')) || []; const now = new Date().getTime(); let isChanged = false; data = data.filter(item => { if (!item.timestamp) { item.timestamp = now; isChanged = true; } return (now - item.timestamp) <= (365 * 24 * 60 * 60 * 1000); }); if (isChanged) localStorage.setItem('kv_master_db', JSON.stringify(data)); return data; }
+        function handleSearchReport(val) { AppState.filters.search = val.toLowerCase(); AppState.pagination.page = 1; renderAll(); }
+        function handlePageSize(val) { AppState.pagination.limit = parseInt(val); AppState.pagination.page = 1; renderAll(); }
+        function goToPage(p) { AppState.pagination.page = p; renderAll(); }
+        function handleSort(colName) { if(AppState.sort.col === colName) AppState.sort.asc = !AppState.sort.asc; else { AppState.sort.col = colName; AppState.sort.asc = true; } renderAll(); }
+        function clearReportFilters() { AppState.filters = { month: 'all', search: '', status: '' }; AppState.pagination.page = 1; document.getElementById('searchInput').value = ''; document.getElementById('monthFilter').value = 'all'; renderAll(); }
+        function renderAll() { AppState.filters.month = document.getElementById('monthFilter').value; if(AppState.filters.status !== "") { document.getElementById('filterIndicator').classList.remove('hidden'); } else { document.getElementById('filterIndicator').classList.add('hidden'); } const displayData = getFilteredAndSortedData(), allDBData = loadDB(); renderDashboard(displayData); renderTableWithPagination(displayData, allDBData); }
+        
+        function renderTableWithPagination(displayData, allDBData) {
+            const tbody = document.getElementById('reportBody'); tbody.innerHTML = ''; const totalItems = displayData.length; const totalPages = Math.ceil(totalItems / AppState.pagination.limit) || 1; if (AppState.pagination.page > totalPages) AppState.pagination.page = totalPages; const startIdx = (AppState.pagination.page - 1) * AppState.pagination.limit; const endIdx = startIdx + AppState.pagination.limit; const paginatedData = displayData.slice(startIdx, endIdx); document.getElementById('pageInfo').innerText = `Dòng ${totalItems > 0 ? startIdx + 1 : 0} - ${Math.min(endIdx, totalItems)} / Tổng ${totalItems}`; let btnHTML = ''; for(let i=1; i<=totalPages; i++) { if(i === AppState.pagination.page) btnHTML += `<button class="w-7 h-7 rounded bg-blue-600 text-white font-bold text-[11px] shadow-md transform scale-105">${i}</button>`; else btnHTML += `<button onclick="goToPage(${i})" class="w-7 h-7 rounded bg-slate-100 text-slate-500 hover:bg-slate-200 font-bold text-[11px] transition">${i}</button>`; } document.getElementById('pageButtons').innerHTML = btnHTML; if(paginatedData.length === 0) { tbody.innerHTML = `<tr><td colspan="13" class="text-center py-16 text-slate-400 italic text-sm"><i class="fas fa-inbox text-3xl mb-3 block opacity-20"></i>Không có báo cáo nào khớp với bộ lọc.</td></tr>`; return; }
+            paginatedData.forEach((item, displayIndex) => { const realIndex = allDBData.findIndex(d => d.courseId === item.courseId && d.timestamp === item.timestamp); const linkDS = item.listLink ? `<a href="${item.listLink}" target="_blank" class="icon-link icon-excel"><i class="fas fa-file-excel"></i></a>` : `<span class="text-slate-300" title="Trống"><i class="fas fa-file-excel"></i></span>`; const linkQ = item.quizLink ? `<a href="${item.quizLink}" target="_blank" class="icon-link icon-quiz"><i class="fas fa-poll"></i></a>` : `<span class="text-slate-300" title="Trống"><i class="fas fa-poll"></i></span>`; const linkR = item.recordLink ? `<a href="${item.recordLink}" target="_blank" class="icon-link icon-drive"><i class="fab fa-google-drive"></i></a>` : `<span class="text-slate-300" title="Trống"><i class="fab fa-google-drive"></i></span>`; const tTotal = parseInt(item.totalTrainees) || 0, tPass = parseInt(item.passedTrainees) || 0, tFail = parseInt(item.failedTrainees) || 0; const rateText = tTotal > 0 ? `<span class="font-black text-slate-800">${Math.round((tPass/tTotal)*100)}%</span>` : `<span class="text-slate-300 font-bold">--</span>`; tbody.innerHTML += `<tr class="table-row-5d border-b border-slate-100"><td class="px-5 py-4 text-center text-slate-400 text-[10px] font-black">${startIdx + displayIndex + 1}</td><td class="px-5 py-4 font-black text-slate-800 text-[11px]">${item.groupName}</td><td class="px-5 py-4 font-black text-blue-600 text-[11px]">${item.courseId}</td><td class="px-5 py-4 text-center font-black text-slate-400 text-[10px] uppercase">Tháng ${item.month}</td><td class="px-5 py-4 text-center text-slate-600 text-xs font-medium">${item.startDate || '--'}</td><td class="px-5 py-4 text-center text-slate-600 text-xs font-medium">${item.finishDate || '--'}</td><td class="px-5 py-4 text-center bg-indigo-50/50 font-bold text-indigo-700">${tTotal > 0 ? tTotal : '-'}</td><td class="px-5 py-4 text-center bg-emerald-50/50 text-emerald-600 font-bold">${tPass > 0 ? tPass : '-'}</td><td class="px-5 py-4 text-center bg-rose-50/50 text-rose-500 font-bold">${tFail > 0 ? tFail : '-'}</td><td class="px-5 py-4 text-center bg-slate-50/50">${rateText}</td><td class="px-5 py-4 text-center"><div class="flex justify-center space-x-3 text-sm">${linkDS}${linkQ}${linkR}</div></td><td class="px-5 py-4 text-center"><span class="status-pill ${getStatusColor(item.status)} shadow-sm">${item.status}</span></td><td class="px-5 py-4 text-center space-x-1"><button onclick="openEditModal(${realIndex})" class="action-icon icon-edit"><i class="fas fa-pen text-xs"></i></button><button onclick="requestDelete(${realIndex})" class="action-icon icon-delete"><i class="fas fa-trash text-xs"></i></button></td></tr>`; });
+        }
+        function renderDashboard(chartData) { 
+            let totalClasses = chartData.length, sumTotal = 0, sumPass = 0, sumFail = 0; const statusCounts = { 'Hoàn thành': 0, 'Đang diễn ra': 0, 'Dời lịch': 0, 'Hủy': 0 }; chartData.forEach(item => { if(statusCounts[item.status] !== undefined) statusCounts[item.status]++; sumTotal += parseInt(item.totalTrainees) || 0; sumPass += parseInt(item.passedTrainees) || 0; sumFail += parseInt(item.failedTrainees) || 0; }); const passRate = sumTotal > 0 ? Math.round((sumPass/sumTotal)*100) : 0; 
+            document.getElementById('stat-total').innerText = totalClasses; document.getElementById('stat-trainees').innerText = sumTotal; document.getElementById('stat-passrate').innerText = passRate + '%'; 
+            const aiBox = document.getElementById('ai-suggestion'); if(totalClasses === 0) aiBox.innerHTML = "<span class='text-slate-400'>Hệ thống trống. Cần tối thiểu 1 khóa để phân tích.</span>"; else if(passRate >= 85) aiBox.innerHTML = "<span class='text-emerald-400 font-bold'>Excellent</span><br>Tỷ lệ tiếp thu tuyệt vời."; else if(passRate >= 60) aiBox.innerHTML = "<span class='text-yellow-400 font-bold'>Warning</span><br>Tỷ lệ rớt >15%. Cần xem xét câu hỏi Quiz."; else aiBox.innerHTML = "<span class='text-rose-400 font-bold'>Critical</span><br>Đa số học viên rớt. Cần tăng thực hành."; 
+            Chart.defaults.font.family = 'Inter'; Chart.defaults.color = '#94a3b8'; 
+            const ctxStatus = document.getElementById('statusChart').getContext('2d'); if(statusChartInstance) statusChartInstance.destroy(); statusChartInstance = new Chart(ctxStatus, { type: 'doughnut', data: { labels: ['Hoàn thành', 'Đang diễn', 'Dời lịch', 'Hủy'], datasets: [{ data: [statusCounts['Hoàn thành'], statusCounts['Đang diễn ra'], statusCounts['Dời lịch'], statusCounts['Hủy']], backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'], borderWidth: 0, hoverOffset: 8 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 6, font: {size: 11, weight: 'bold'} } } }, onClick: (evt, el, chart) => { if(el.length > 0) { let label = chart.data.labels[el[0].index]; if(label === 'Đang diễn') label = 'Đang diễn ra'; AppState.filters.status = (AppState.filters.status === label) ? "" : label; } else AppState.filters.status = ""; renderAll(); } } }); 
+            const ctxPerf = document.getElementById('performanceChart').getContext('2d'); if(perfChartInstance) perfChartInstance.destroy(); let gradientPass = ctxPerf.createLinearGradient(0, 0, 0, 400); gradientPass.addColorStop(0, '#10b981'); gradientPass.addColorStop(1, '#059669'); let gradientFail = ctxPerf.createLinearGradient(0, 0, 0, 400); gradientFail.addColorStop(0, '#f43f5e'); gradientFail.addColorStop(1, '#e11d48'); perfChartInstance = new Chart(ctxPerf, { type: 'bar', data: { labels: ['Học viên Đạt', 'Học viên Fail'], datasets: [{ data: [sumPass, sumFail], backgroundColor: [gradientPass, gradientFail], borderRadius: 8, barThickness: 40 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#f1f5f9' }, border: {display: false}, ticks: {stepSize: 1, font:{size: 11, weight: 'bold'}} }, x: { grid: { display: false }, border: {display: false}, ticks: {font:{size: 12, weight: '900'}} } } } }); 
+        }
+
+        function renderDashboardStatsOnly() {
+            let allData = loadDB();
+            let totalClasses = allData.length, sumTotal = 0, sumPass = 0;
+            allData.forEach(item => { sumTotal += parseInt(item.totalTrainees) || 0; sumPass += parseInt(item.passedTrainees) || 0; });
+            const passRate = sumTotal > 0 ? Math.round((sumPass/sumTotal)*100) : 0;
+            document.getElementById('dash-stat-total').innerText = totalClasses; document.getElementById('dash-stat-trainees').innerText = sumTotal; document.getElementById('dash-stat-pass').innerText = sumPass; document.getElementById('dash-stat-rate').innerText = passRate + '%';
+        }
+
+        function getStatusColor(s) { if(s === 'Hoàn thành') return 'bg-emerald-100 text-emerald-700 border border-emerald-200'; if(s === 'Đang diễn ra') return 'bg-blue-100 text-blue-700 border border-blue-200'; if(s === 'Dời lịch') return 'bg-amber-100 text-amber-700 border border-amber-200'; if(s === 'Hủy') return 'bg-rose-100 text-rose-700 border border-rose-200'; return 'bg-slate-100 text-slate-600'; }
+
+        // --- YÊU CẦU NÂNG CẤP: THÊM BÁO CÁO MỚI ---
+        function openAddReportModal() {
+            document.getElementById('modal-report-title').innerText = "Thêm Báo Cáo Mới";
+            document.getElementById('editIndex').value = ""; // Đánh dấu là rỗng -> Thêm mới
+            // Reset form
+            document.getElementById('editCourseId').value = ''; 
+            document.getElementById('editGroupName').value = 'SPCB'; 
+            document.getElementById('editStatus').value = 'Hoàn thành'; 
+            document.getElementById('editStart').value = ''; 
+            document.getElementById('editFinish').value = ''; 
+            document.getElementById('editTotal').value = ''; 
+            document.getElementById('editPass').value = ''; 
+            document.getElementById('editFail').value = ''; 
+            document.getElementById('editListLink').value = ''; 
+            document.getElementById('editQuizLink').value = ''; 
+            document.getElementById('editRecordLink').value = ''; 
+            openModal('editModal');
+        }
+
+        function openEditModal(realIndex) { 
+            const d = loadDB()[realIndex]; 
+            document.getElementById('modal-report-title').innerText = "Cập nhật Báo cáo";
+            document.getElementById('editIndex').value = realIndex; // Đánh dấu là index -> Sửa
+            document.getElementById('editCourseId').value = d.courseId || ''; document.getElementById('editGroupName').value = d.groupName || 'SPCB'; document.getElementById('editStatus').value = d.status || 'Hoàn thành'; document.getElementById('editStart').value = d.startDate || ''; document.getElementById('editFinish').value = d.finishDate || ''; document.getElementById('editTotal').value = d.totalTrainees || ''; document.getElementById('editPass').value = d.passedTrainees || ''; document.getElementById('editFail').value = d.failedTrainees || ''; document.getElementById('editListLink').value = d.listLink || ''; document.getElementById('editQuizLink').value = d.quizLink || ''; document.getElementById('editRecordLink').value = d.recordLink || ''; 
+            openModal('editModal'); 
+        }
+
+        function saveEdit() { 
+            const idx = document.getElementById('editIndex').value; 
+            let d = loadDB(); 
+            
+            const newObj = {
+                courseId: document.getElementById('editCourseId').value.toUpperCase(),
+                groupName: document.getElementById('editGroupName').value,
+                status: document.getElementById('editStatus').value,
+                startDate: document.getElementById('editStart').value,
+                finishDate: document.getElementById('editFinish').value,
+                totalTrainees: document.getElementById('editTotal').value,
+                passedTrainees: document.getElementById('editPass').value,
+                failedTrainees: document.getElementById('editFail').value,
+                listLink: document.getElementById('editListLink').value,
+                quizLink: document.getElementById('editQuizLink').value,
+                recordLink: document.getElementById('editRecordLink').value,
+            };
+
+            // Logic tính tháng
+            if(newObj.startDate) { const dateObj = new Date(newObj.startDate); newObj.month = dateObj.getMonth() + 1; } 
+            else { newObj.month = new Date().getMonth() + 1; }
+
+            if (idx === "") {
+                // THÊM MỚI
+                newObj.timestamp = new Date().getTime();
+                d.push(newObj);
+            } else {
+                // SỬA CŨ
+                newObj.timestamp = d[idx].timestamp; // Giữ nguyên timestamp cũ
+                d[idx] = newObj;
+            }
+            
+            localStorage.setItem('kv_master_db', JSON.stringify(d)); closeModal('editModal'); renderAll(); renderDashboardStatsOnly(); 
+        }
+
+        // XÓA
+        function requestDelete(idx) { deleteTargetIndex = idx; document.getElementById('authPassword').value = ''; openModal('authModal'); setTimeout(() => document.getElementById('authPassword').focus(), 100); }
+        function handleAuthKeyPress(e) { if (e.key === 'Enter') { executeDelete(); } }
+        function executeDelete() { const pass = document.getElementById('authPassword').value; if(pass !== SECRET_KEY) { alert("Sai mã PIN an toàn! Lệnh bị từ chối."); return; } const msg = deleteTargetIndex === -1 ? "CẢNH BÁO ĐỎ: Bạn đang chuẩn bị xóa SẠCH toàn bộ dữ liệu hệ thống.\nNhấn OK để XÓA.\nNhấn Cancel để HỦY." : "Bạn có chắc chắn muốn xóa báo cáo khóa học này không?\n\nNhấn OK để XÓA."; const isConfirmed = confirm(msg); if (!isConfirmed) { closeModal('authModal'); return; } if(deleteTargetIndex === -1) { localStorage.removeItem('kv_master_db'); alert("Đã xóa sạch hệ thống thành công."); } else { let d = loadDB(); d.splice(deleteTargetIndex, 1); localStorage.setItem('kv_master_db', JSON.stringify(d)); alert("Đã xóa dữ liệu khóa học."); } closeModal('authModal'); renderAll(); renderDashboardStatsOnly(); }
+        function exportCSV() { const dataToExport = getFilteredAndSortedData(); if(!dataToExport.length) { alert('Không có dữ liệu phù hợp!'); return; } let csv = "\uFEFFSTT,Nhóm Khóa,Mã Khóa,Tháng,Bắt Đầu,Kết Thúc,Tổng HV,Đạt,Fail,Trạng Thái\n"; dataToExport.forEach((i, idx) => { csv += `${idx+1},${i.groupName},${i.courseId},${i.month},${i.startDate},${i.finishDate},${i.totalTrainees||0},${i.passedTrainees||0},${i.failedTrainees||0},${i.status}\n`; }); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.setAttribute("download", `Analytics_Trainer_Filtered_${new Date().toLocaleDateString('vi-VN')}.csv`); link.click(); }
+
+        // ==========================================
+        // CÁC MODULE TOOLS ĐÃ CÓ TRƯỚC ĐÓ (GIỮ NGUYÊN)
+        // ==========================================
+        const employeeData = [
+            { role: 'Manager', dept: 'Administration', position: 'Admin Manager', name: 'Nguyễn Thúy An', email: 'an.nt@kiotviet.com', code: 'SG00001' },
+            { role: 'Manager', dept: 'Administration', position: 'Admin Manager', name: 'Phùng Thị Dung', email: 'dungphung@kiotviet.com', code: 'HN00004' },
+            { role: 'Manager', dept: 'BD - KVF', position: 'BDM', name: 'Nguyễn Bảo Anh', email: 'anhnguyen@kiotviet.com', code: 'HN04303' },
+            { role: 'Manager', dept: 'BOD', position: 'Deputy General Director', name: 'Đỗ Tuấn Anh', email: 'tuananh@kiotviet.com', code: 'HN00226' },
+            { role: 'Manager', dept: 'BOD', position: 'Deputy General Director', name: 'Nguyễn Tiến Trung', email: 'tony@kiotviet.com', code: 'HN00002' },
+            { role: 'Manager', dept: 'BOD', position: 'General Director', name: 'Trần Nguyên Hạo', email: 'hao@kiotviet.com', code: 'HN00001' },
+            { role: 'Manager', dept: 'Brand & Content MKT', position: 'Brand Manager', name: 'Nguyễn Thanh Tâm', email: 'tamnguyen@kiotviet.com', code: 'HN04120' },
+            { role: 'Manager', dept: 'Business Development', position: 'Business Development Director', name: 'Vũ Thế Tùng', email: 'tungvu@kiotviet.com', code: 'SG01885' },
+            { role: 'Manager', dept: 'CnB', position: 'CnB Manager', name: 'Nguyễn Quang Sơn', email: 'sonnguyenquang@kiotviet.com', code: 'HN04573' },
+            { role: 'Manager', dept: 'Contract renewal (KVS)', position: 'BDM', name: 'Đặng Thị Thu', email: 'thu.dang@kiotviet.com', code: 'HN00277' },
+            { role: 'Manager', dept: 'Customer Service', position: 'CS Director', name: 'Nguyễn Dũng Hải', email: 'hai.nguyen@kiotviet.com', code: 'HN00259' },
+            { role: 'Manager', dept: 'Customer Service - DNG', position: 'CS Manager', name: 'Huỳnh Ngọc Lâm', email: 'lam.hn@kiotviet.com', code: 'ĐN00010' },
+            { role: 'Manager', dept: 'Customer Service - HCM', position: 'CS Manager', name: 'Võ Minh Thuyết', email: 'thuyet.vm@kiotviet.com', code: 'SG00572' },
+            { role: 'Manager', dept: 'Customer Service - HNI', position: 'CS Manager', name: 'Đào Văn Tuấn', email: 'tuan.dv@kiotviet.com', code: 'HN00364' },
+            { role: 'Manager', dept: 'DSBDH', position: 'SM', name: 'Võ Thị Ánh Nguyệt', email: 'nguyet.vta1@kiotviet.com', code: 'BĐ00099' },
+            { role: 'Manager', dept: 'DSBMT', position: 'SM', name: 'Bùi Thị Thu Hiền', email: 'hien.btt@kiotviet.com', code: 'BMT00016' },
+            { role: 'Manager', dept: 'DSBMT DSGLI DSLDG', position: 'BDM', name: 'Nguyễn Văn Dũng', email: 'dung.nv@kiotviet.com', code: 'BMT00031' },
+            { role: 'Manager', dept: 'DSBNH', position: 'SM', name: 'Nguyễn Tiến Hợp', email: 'hop.nt1@kiotviet.com', code: 'BN00040' },
+            { role: 'Manager', dept: 'DSCTO1', position: 'SM', name: 'Tống Tùng Sơn', email: 'son.tt@kiotviet.com', code: 'CT00202' },
+            { role: 'Manager', dept: 'DSDNG DSBDH DSQNI', position: 'BDM', name: 'Bùi Văn Trung', email: 'trung.bv@kiotviet.com', code: 'ĐN00005' },
+            { role: 'Manager', dept: 'DSHNI DSTNN DSPTO', position: 'Deputy Sales Director', name: 'Nguyễn Tiến Đạt', email: 'dat.nguyen@kiotviet.com', code: 'HN00229' },
+            { role: 'Manager', dept: 'DSHPG DSQNH DSHDG', position: 'BDM', name: 'Huỳnh Thái Việt', email: 'viet.ht@kiotviet.com', code: 'HP00057' },
+            { role: 'Manager', dept: 'DSSG DSCTO DSDTP', position: 'Deputy Sales Director', name: 'Ngô Trung Dũng', email: 'dungngo@kiotviet.com', code: 'CT00016' },
+            { role: 'Manager', dept: 'Executive Office', position: 'Head', name: 'Trần Thu Thủy', email: 'thuytran@kiotviet.com', code: 'HN03488' },
+            { role: 'Manager', dept: 'HR', position: 'HRD', name: 'Nguyễn Thị Kim Oanh', email: 'oanh@kiotviet.com', code: 'HN01183' },
+            { role: 'Manager', dept: 'L&D', position: 'L&D Manager', name: 'Nguyễn Thanh Vân', email: 'van.nt@kiotviet.com', code: 'HN01213' }
+        ];
+
+        let selectedEmails = new Set();
+        function renderEmailTable(data) { const tableBody = document.getElementById('emailTableBody'); tableBody.innerHTML = ''; if (data.length === 0) { document.getElementById('email-no-results').classList.remove('hidden'); } else { document.getElementById('email-no-results').classList.add('hidden'); data.forEach(emp => { const isChecked = selectedEmails.has(emp.email); tableBody.innerHTML += `<tr class="hover:bg-blue-50/30 transition border-b border-slate-100"><td class="px-4 py-3 text-center"><input type="checkbox" class="email-checkbox w-4 h-4 cursor-pointer accent-blue-600" data-email="${emp.email}" ${isChecked ? 'checked' : ''}></td><td class="px-4 py-3 font-bold text-slate-800">${emp.name}</td><td class="px-4 py-3 text-xs text-slate-500">${emp.position}</td><td class="px-4 py-3 text-xs text-slate-500">${emp.dept}</td><td class="px-4 py-3 text-xs font-mono text-slate-400">${emp.code}</td><td class="px-4 py-3 text-xs font-medium text-blue-600">${emp.email}</td></tr>`; }); } updateSelectAllCheckbox(); updateSelectedCount(); }
+        function filterEmailTable() { const query = document.getElementById('emailSearchInput').value.toLowerCase(); const filtered = employeeData.filter(emp => emp.dept.toLowerCase().includes(query) || emp.name.toLowerCase().includes(query) || emp.position.toLowerCase().includes(query)); renderEmailTable(filtered); }
+        function toggleSelectAll(cb) { const isChecked = cb.checked; const visibleCheckboxes = document.querySelectorAll('#emailTableBody .email-checkbox'); visibleCheckboxes.forEach(checkbox => { checkbox.checked = isChecked; if (isChecked) selectedEmails.add(checkbox.dataset.email); else selectedEmails.delete(checkbox.dataset.email); }); updateSelectedCount(); }
+        document.getElementById('emailTableBody')?.addEventListener('change', (e) => { if (e.target.classList.contains('email-checkbox')) { if (e.target.checked) selectedEmails.add(e.target.dataset.email); else selectedEmails.delete(e.target.dataset.email); updateSelectedCount(); updateSelectAllCheckbox(); } });
+        function updateSelectedCount() { const cntSpan = document.getElementById('selectedCount'); cntSpan.textContent = selectedEmails.size; if(selectedEmails.size > 0) cntSpan.classList.remove('hidden'); else cntSpan.classList.add('hidden'); }
+        function updateSelectAllCheckbox() { const visible = document.querySelectorAll('#emailTableBody .email-checkbox'); const checked = document.querySelectorAll('#emailTableBody .email-checkbox:checked'); const saCb = document.getElementById('selectAllCheckbox'); if(visible.length === 0) { saCb.checked = false; saCb.indeterminate = false; return; } if(checked.length === 0) { saCb.checked = false; saCb.indeterminate = false; } else if(checked.length === visible.length) { saCb.checked = true; saCb.indeterminate = false; } else { saCb.checked = false; saCb.indeterminate = true; } }
+        function copySelectedEmails() { if (selectedEmails.size === 0) { alert('Vui lòng chọn ít nhất một email!'); return; } const btn = document.getElementById('copySelectedBtn'); btn.classList.add('btn-press'); const emails = Array.from(selectedEmails).join(', '); const copyHelper = document.getElementById('copy-helper'); copyHelper.value = emails; copyHelper.select(); copyHelper.setSelectionRange(0, 99999); document.execCommand('copy'); const toast = document.getElementById('copy-toast'); toast.classList.remove('opacity-0', 'translate-y-10'); toast.classList.add('opacity-100', 'translate-y-0'); setTimeout(() => { toast.classList.add('opacity-0', 'translate-y-10'); toast.classList.remove('opacity-100', 'translate-y-0'); }, 2000); setTimeout(() => btn.classList.remove('btn-press'), 150); }
+
+        function toggleRawEmailMode(btn) { const normalView = document.getElementById('email-normal-view'); const rawView = document.getElementById('email-raw-view'); const isRawMode = !rawView.classList.contains('hidden'); if (!isRawMode) { normalView.classList.add('hidden'); rawView.classList.remove('hidden'); rawView.classList.add('flex'); document.getElementById('raw-email-input').value = JSON.stringify(AppState.emailDB, null, 4); btn.innerHTML = '<i class="fas fa-arrow-left"></i> Quay lại'; btn.classList.replace('bg-rose-50', 'bg-slate-700'); btn.classList.replace('text-rose-600', 'text-white'); } else { rawView.classList.add('hidden'); rawView.classList.remove('flex'); normalView.classList.remove('hidden'); btn.innerHTML = '<i class="fas fa-code"></i> Cấu hình Raw Data'; btn.classList.replace('bg-slate-700', 'bg-rose-50'); btn.classList.replace('text-white', 'text-rose-600'); } }
+        function saveRawEmailData() { const rawValue = document.getElementById('raw-email-input').value; try { const parsedData = JSON.parse(rawValue); if (!Array.isArray(parsedData)) throw new Error("Dữ liệu phải là một Mảng (Array) các Object."); AppState.emailDB = parsedData; localStorage.setItem('kv_email_db', JSON.stringify(AppState.emailDB)); alert('Cập nhật dữ liệu Email hệ thống thành công!'); toggleRawEmailMode(document.getElementById('raw-email-btn')); renderEmailCopyTool(); } catch (e) { alert('LỖI ĐỊNH DẠNG JSON:\n' + e.message + '\n\nVui lòng kiểm tra lại dấu ngoặc phẩy, ngoặc kép trong code.'); } }
+
+        function processModuleEmails() { const input = document.getElementById('mod-input').value; const validBadge = document.getElementById('mod-valid-count'); const invalidBadge = document.getElementById('mod-invalid-count'); const outputArea = document.getElementById('mod-output'); const invalidZone = document.getElementById('mod-invalid-zone'); const invalidListDOM = document.getElementById('mod-invalid-list'); if (!input.trim()) return; const rawItems = input.split(/[\n,;\s]+/).filter(item => item.trim() !== ''); const validSet = new Set(); const invalidList = []; rawItems.forEach(item => { const clean = item.trim().toLowerCase(); if (clean.endsWith('@kiotviet.com')) validSet.add(clean); else invalidList.push(item); }); const result = Array.from(validSet); outputArea.value = result.join(', '); validBadge.innerHTML = `<i class="fas fa-check-circle"></i> ${result.length} Hợp lệ`; invalidBadge.innerHTML = `<i class="fas fa-times-circle"></i> ${invalidList.length} Loại bỏ`; if (invalidList.length > 0) { invalidZone.classList.remove('hidden'); invalidListDOM.innerHTML = invalidList.map(email => `<span class="bg-white border border-rose-200 text-rose-600 px-2.5 py-1 rounded-md text-[10px] font-mono shadow-sm"><i class="fas fa-ban mr-1 text-rose-400"></i>${email}</span>`).join(''); } else { invalidZone.classList.add('hidden'); invalidListDOM.innerHTML = ''; } }
+        function copyModuleEmails(btn) { const output = document.getElementById('mod-output'); if (!output.value) return; navigator.clipboard.writeText(output.value).then(() => { const originalText = btn.innerHTML; btn.innerHTML = '<i class="fas fa-check mr-1.5"></i> Đã Copy'; btn.classList.replace('bg-blue-600', 'bg-emerald-500'); btn.classList.replace('hover:bg-blue-700', 'hover:bg-emerald-600'); setTimeout(() => { btn.innerHTML = originalText; btn.classList.replace('bg-emerald-500', 'bg-blue-600'); btn.classList.replace('hover:bg-emerald-600', 'hover:bg-blue-700'); }, 2000); }); }
+        
+        let attStudentDB = [];
+        function normalizeString(str) { if (!str) return ""; return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().replace(/[.,()\[\]\n\t\-]/g, " ").replace(/\s+/g, " ").trim(); }
+        function loadRoster() { const raw = document.getElementById('input-roster').value.trim(); attStudentDB = []; if(!raw) { document.getElementById('count-original').innerText = "0 HV"; return; } const lines = raw.split('\n').map(l => l.trim()).filter(l => l !== ""); lines.forEach((name, index) => { attStudentDB.push({ stt: index + 1, originalName: name, searchName: normalizeString(name), status: 'absent' }); }); document.getElementById('count-original').innerText = attStudentDB.length + " HV"; }
+        function scanAttendance() { if(attStudentDB.length === 0) { alert("Vui lòng dán danh sách gốc vào ô số 1 trước!"); return; } const rawMeet = document.getElementById('input-meet').value; if(!rawMeet.trim()) { alert("Bạn chưa dán dữ liệu điểm danh từ Google Meet!"); return; } const cleanMeetText = " " + normalizeString(rawMeet) + " "; attStudentDB.forEach(student => { const nameToFind = " " + student.searchName + " "; student.status = cleanMeetText.includes(nameToFind) ? 'present' : 'absent'; }); document.getElementById('att-view-input').classList.add('hidden'); document.getElementById('att-view-result').classList.remove('hidden'); document.getElementById('att-view-result').classList.add('flex'); updateAttendanceStats(); renderAttendanceResult(); }
+        function renderAttendanceResult() { const listDOM = document.getElementById('result-list'); const searchVal = normalizeString(document.getElementById('search-box-att').value); let html = ``; const filtered = attStudentDB.filter(s => s.searchName.includes(searchVal)); filtered.forEach(s => { const isPresent = s.status === 'present'; const bgClass = isPresent ? "bg-emerald-50/50 border-emerald-100" : "bg-rose-50/50 border-rose-100"; const iconHTML = isPresent ? `<div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center icon-pop shadow-md"><i class="fas fa-check"></i></div>` : `<div class="w-8 h-8 rounded-lg bg-white text-rose-400 border border-rose-200 flex items-center justify-center"><i class="fas fa-times"></i></div>`; html += `<div class="flex items-center justify-between px-4 py-3 rounded-xl border ${bgClass} transition hover:bg-white cursor-default"><div class="flex items-center gap-3"><span class="w-7 text-center text-[11px] font-black text-slate-400 bg-white rounded-md py-1 border border-slate-100">${s.stt}</span><span class="text-sm font-bold ${isPresent ? 'text-slate-800' : 'text-slate-600 line-through decoration-rose-300'}">${s.originalName}</span></div>${iconHTML}</div>`; }); listDOM.innerHTML = html; }
+        function updateAttendanceStats() { const present = attStudentDB.filter(s => s.status === 'present').length; document.getElementById('res-total').innerText = attStudentDB.length; document.getElementById('res-present').innerText = present; document.getElementById('res-absent').innerText = attStudentDB.length - present; }
+        function backToInput() { document.getElementById('att-view-result').classList.add('hidden'); document.getElementById('att-view-result').classList.remove('flex'); document.getElementById('att-view-input').classList.remove('hidden'); }
+        function copyAbsent() { const absentNames = attStudentDB.filter(s => s.status === 'absent').map(s => s.originalName).join('\n'); if(!absentNames) { alert("Tuyệt vời! Không có ai vắng mặt."); return; } navigator.clipboard.writeText(absentNames).then(() => alert("Đã copy danh sách Tên học viên vắng mặt!")); }
+        function resetAllAttendance() { document.getElementById('input-roster').value = ''; document.getElementById('input-meet').value = ''; document.getElementById('search-box-att').value = ''; backToInput(); loadRoster(); }
+
+        // INIT KHI LOAD TRANG
+        window.onload = () => { 
+            renderCourseCards(); 
+            renderEmailTable(employeeData);
+            renderAll(); 
+            renderDashboardStatsOnly();
+            
+            const today = new Date(); const todayStr = `${today.getMonth() + 1}-${today.getDate()}`; const isWknd = today.getDay() === 0 || today.getDay() === 6; const banner = document.getElementById('globalNotificationArea');
+            const holName = typeof window.holidays !== 'undefined' ? window.holidays[todayStr] : null;
+
+            if (holName) {
+                banner.innerHTML = `<i class="fas fa-glass-cheers mr-2"></i> Hôm nay là: <b>${holName}</b>. Nghỉ ngơi nhé các Trainer!`;
+                banner.className = 'py-2 text-center text-xs font-bold transition-all text-white bg-gradient-to-r from-rose-500 to-orange-500 shadow-lg';
+            } else if (isWknd) {
+                banner.innerHTML = `<i class="fas fa-umbrella-beach mr-2"></i> Cuối tuần rồi! Chúc bạn có những ngày nghỉ ngơi và tái tạo năng lượng!`;
+                banner.className = 'py-2 text-center text-xs font-bold transition-all text-indigo-700 bg-indigo-50';
+            }
+        };
+    </script>
+
+    <!-- ======================================================= -->
+    <!-- MÃ NGUỒN REACT: FLOWCHART ROADMAP VÀ LỊCH CHUYÊN NGHIỆP -->
+    <!-- ======================================================= -->
+    <script type="text/babel">
+        const { useState, useMemo } = React;
+        const currentYear = 2026;
+
+        window.holidays = { "1-1": "Tết Dương", "1-2": "Nghỉ Tết Dương", "1-3": "Nghỉ Tết Dương", "1-4": "Nghỉ Tết Dương", "2-16": "Giao Thừa", "2-17": "Mùng 1", "2-18": "Mùng 2", "2-19": "Mùng 3", "2-20": "Mùng 4", "2-21": "Mùng 5", "4-27": "Giỗ Tổ", "4-30": "Giải Phóng MN", "5-1": "Quốc Tế LĐ", "5-2": "Nghỉ 30/4", "5-3": "Nghỉ 30/4", "9-1": "Nghỉ 2/9", "9-2": "Quốc Khánh" };
+        const isHoliday = (d) => !!window.holidays[`${d.getMonth()+1}-${d.getDate()}`];
+        const isWeekend = (d) => d.getDay() === 0 || d.getDay() === 6;
+
+        // UI NÂNG CẤP: DẠNG KHỐI SƠ ĐỒ (FLOWCHART)
+        const FlowNode = ({ title, desc, tag, color = "blue", noArrow = false }) => (
+            <div className="flex items-center group">
+                <div className={`relative bg-white border border-${color}-200 p-4 rounded-xl shadow-sm min-w-[180px] hover:shadow-md hover:-translate-y-1 transition-all z-10`}>
+                    <div className={`absolute top-0 left-0 w-1.5 h-full bg-${color}-500 rounded-l-xl`}></div>
+                    <h4 className={`font-black text-sm text-slate-800 mb-1 leading-tight`}>{title}</h4>
+                    {desc && <p className="text-[10px] text-slate-500 font-medium leading-snug">{desc}</p>}
+                    {tag && <span className={`inline-block mt-2 px-2 py-0.5 bg-${color}-50 text-${color}-600 border border-${color}-100 text-[9px] font-black uppercase rounded`}>{tag}</span>}
+                </div>
+                {!noArrow && (
+                    <div className="flex items-center text-slate-300 px-2 group-hover:text-slate-400 transition-colors">
+                        <i className="fas fa-arrow-right text-lg"></i>
+                    </div>
+                )}
+            </div>
+        );
+
+        const MonthBlock = ({ title, subtitle, color, children }) => (
+            <div className="mb-12 relative">
+                <div className={`inline-block px-4 py-1.5 bg-${color}-100 text-${color}-700 font-black uppercase text-xs rounded-lg mb-4 tracking-widest shadow-sm`}>
+                    {title} <span className="opacity-70 font-medium normal-case ml-2">{subtitle}</span>
+                </div>
+                <div className="pl-4 border-l-2 border-slate-200 border-dashed space-y-6">
+                    {children}
+                </div>
+            </div>
+        );
+
+        const WeekRow = ({ label, children }) => (
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-4 relative">
+                <div className="w-16 shrink-0 text-[10px] font-black text-slate-400 uppercase tracking-wider bg-white py-1 px-2 rounded border border-slate-100 text-center shadow-sm">
+                    {label}
+                </div>
+                <div className="flex flex-wrap items-center gap-y-4">
+                    {children}
+                </div>
+            </div>
+        );
+
+        const TrainingHubApp = () => {
+            const [activeTab, setActiveTab] = useState('calendar'); 
+            const [salesType, setSalesType] = useState('direct'); 
+            const [isZoomed, setIsZoomed] = useState(false);
+
+            const calendarData = useMemo(() => {
+                let evs = {}; Object.keys(window.holidays).forEach(k => evs[k] = { type: 'holiday', label: window.holidays[k], markers: [] });
+                for (let m = 0; m < 12; m++) {
+                    let fri = new Date(currentYear, m, 1); while (fri.getDay() !== 5) fri.setDate(fri.getDate() + 1);
+                    let mon = new Date(fri); mon.setDate(fri.getDate() - 4); let holInWeek = false;
+                    for(let i=0; i<5; i++){ let c = new Date(mon); c.setDate(mon.getDate()+i); if(isHoliday(c)) holInWeek = true; }
+                    let taxD = holInWeek ? new Date(fri.getTime() + 7 * 86400000) : fri;
+                    let tK = `${taxD.getMonth()+1}-${taxD.getDate()}`; if(!evs[tK]) evs[tK] = { markers: [] }; evs[tK].markers.push({ type: 'tax', label: 'Đào tạo Thuế - HĐĐT' });
+                    let kv = new Date(currentYear, m, 15); while (isWeekend(kv) || isHoliday(kv)) kv.setDate(kv.getDate() + 1);
+                    if (m === 1 && kv.getDate() === 23) kv = new Date(currentYear, 1, 27);
+                    let kK = `${kv.getMonth()+1}-${kv.getDate()}`; if(!evs[kK]) evs[kK] = { markers: [] }; evs[kK].markers.push({ type: 'kv1', label: 'Test KV1' });
+                }
+                const curr = ["Onboard", "SP B1", "SP B2", "SP B3", "Test SP"];
+                const starts = [ [5,26], [2], [2,9,30], [6,13], [4,26], [2,8,29], [6,27], [3,10,31], [7,28], [5,26], [2,9,30], [7] ];
+                starts.forEach((dates, m) => { dates.forEach(d => { let c = new Date(currentYear, m, d); while(c.getDay() !== 1) c.setDate(c.getDate() - 1); let step = 0; for(let i=0; i<7 && step < 5; i++) { let t = new Date(c); t.setDate(c.getDate()+i); if(!isWeekend(t) && !isHoliday(t)) { let k = `${t.getMonth()+1}-${t.getDate()}`; if(!evs[k]) evs[k] = { markers: [] }; evs[k].type = 'training'; evs[k].label = curr[step++]; } } }); });
+                return evs;
+            }, []);
+
+            const mNames = ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"];
+
+            return (
+                <div className={`flex flex-col bg-white ${isZoomed ? 'fixed inset-0 z-[10000] overflow-y-auto p-4 md:p-10 bg-slate-900 custom-scrollbar' : 'h-full'}`}>
+                    {activeTab === 'roadmap' && (
+                        <button onClick={() => setIsZoomed(!isZoomed)} className={`absolute top-6 right-16 md:right-6 px-4 py-2 rounded-lg font-bold text-xs shadow-lg transition-all z-[10002] flex items-center gap-2 ${isZoomed ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-slate-800 text-white hover:bg-slate-700'}`}>
+                            <i className={`fas ${isZoomed ? 'fa-compress' : 'fa-expand'}`}></i> {isZoomed ? 'Thu nhỏ' : 'Phóng to'}
+                        </button>
+                    )}
+                    {isZoomed && ( <button onClick={() => setIsZoomed(false)} className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full bg-white/20 text-white hover:bg-rose-500 z-[10002] transition-colors"><i className="fas fa-times"></i></button> )}
+
+                    <div className={`${isZoomed ? 'hidden' : 'bg-slate-800 p-8 text-white text-center rounded-t-[32px] shrink-0 relative overflow-hidden'}`}>
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-emerald-400 to-indigo-500"></div>
+                        <h1 className="text-3xl font-black tracking-tight uppercase">Lịch & Lộ Trình Đào Tạo</h1>
+                    </div>
+
+                    <div className={`flex border-b border-slate-200 bg-slate-50/90 sticky top-0 z-40 backdrop-blur-xl shrink-0 ${isZoomed ? 'rounded-t-[32px]' : ''}`}>
+                        <button onClick={() => setActiveTab('calendar')} className={`flex-1 py-4 text-center transition-all border-b-4 ${activeTab === 'calendar' ? 'border-slate-800 bg-white' : 'border-transparent hover:bg-white/50'}`}>
+                            <span className={`block font-black uppercase text-sm ${activeTab === 'calendar' ? 'text-slate-800' : 'text-slate-400'}`}>Lịch Tháng (Calendar)</span>
+                        </button>
+                        <button onClick={() => setActiveTab('roadmap')} className={`flex-1 py-4 text-center transition-all border-b-4 ${activeTab === 'roadmap' ? 'border-blue-600 bg-white' : 'border-transparent hover:bg-white/50'}`}>
+                            <span className={`block font-black uppercase text-sm ${activeTab === 'roadmap' ? 'text-blue-600' : 'text-slate-400'}`}>Sơ Đồ Luồng (Workflow)</span>
+                        </button>
+                    </div>
+
+                    <div className={`flex-grow p-8 ${isZoomed ? 'bg-white rounded-b-[32px] shadow-2xl min-h-[90vh]' : 'bg-white'}`}>
+                        
+                        {activeTab === 'calendar' && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 fade-in">
+                                {mNames.map((n, m) => {
+                                    const first = new Date(currentYear, m, 1).getDay(); const off = first === 0 ? 6 : first - 1; const days = new Date(currentYear, m+1, 0).getDate(); const cells = [];
+                                    for(let i=0; i<off; i++) cells.push(<div key={`b-${i}`}></div>);
+                                    for(let d=1; d<=days; d++) {
+                                        const ev = calendarData[`${m+1}-${d}`]; const isW = isWeekend(new Date(currentYear, m, d));
+                                        let cls = "relative aspect-square flex items-center justify-center text-[11px] font-bold rounded-lg border transition-all group ";
+                                        if(ev?.type === 'holiday') cls += "bg-slate-50 text-slate-300 border-transparent"; else if(ev?.type === 'training') cls += "bg-emerald-500 text-white shadow-sm border-emerald-400"; else if(isW) cls += "bg-white text-slate-300 border-transparent"; else cls += "bg-white border-slate-100 text-slate-600 hover:bg-slate-50";
+                                        cells.push(
+                                            <div key={d} className={cls}>{d}
+                                                <div className="absolute top-1 right-1 flex gap-0.5">{ev?.markers.some(x=>x.type==='kv1') && <div className="w-1.5 h-1.5 bg-rose-500 rounded-full shadow-sm"></div>}{ev?.markers.some(x=>x.type==='tax') && <div className="w-1.5 h-1.5 bg-orange-400 rounded-full shadow-sm"></div>}</div>
+                                                {ev && (<div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-50"><div className="bg-slate-800 text-white text-[9px] p-2 rounded shadow-xl whitespace-nowrap">{ev.label && <div className="font-black mb-1 pb-1 border-b border-white/20">{ev.label}</div>}{ev.markers.map((mk, i) => <div key={i}>• {mk.label}</div>)}</div></div>)}
+                                            </div>
+                                        );
+                                    }
+                                    return (
+                                        <div key={m} className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+                                            <h3 className="text-center font-black uppercase text-xs mb-4 text-slate-800 tracking-wider">{n}</h3>
+                                            <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-slate-400 mb-2">{['T2','T3','T4','T5','T6','T7','CN'].map(x => <div key={x}>{x}</div>)}</div>
+                                            <div className="grid grid-cols-7 gap-1.5">{cells}</div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {activeTab === 'roadmap' && (
+                            <div className={`fade-in mx-auto ${isZoomed ? 'max-w-[1200px]' : 'max-w-5xl'}`}>
+                                <div className="flex justify-center mb-10">
+                                    <div className="bg-slate-100 p-1.5 rounded-xl flex gap-1 shadow-inner">
+                                        <button onClick={() => setSalesType('direct')} className={`px-8 py-2.5 rounded-lg text-sm font-black transition-all ${salesType === 'direct' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Direct Sales</button>
+                                        <button onClick={() => setSalesType('tele')} className={`px-8 py-2.5 rounded-lg text-sm font-black transition-all ${salesType === 'tele' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Telesales</button>
+                                    </div>
+                                </div>
+
+                                {salesType === 'direct' && (
+                                    <div className="space-y-4">
+                                        <MonthBlock title="Tháng 1" subtitle="Hội nhập & Cơ bản" color="blue">
+                                            <WeekRow label="Tuần 1">
+                                                <FlowNode color="slate" title="Tự học Hội nhập" desc="Học trên hệ thống LMS. LND không dạy bù." tag="Bắt buộc" />
+                                                <FlowNode color="blue" title="Sản phẩm cơ bản" desc="B1, B2, B3 trực tiếp qua Zoom." />
+                                                <FlowNode color="rose" title="Test Sản phẩm CB" tag="Thứ 6" noArrow />
+                                            </WeekRow>
+                                            <WeekRow label="Tuần 2">
+                                                <FlowNode color="indigo" title="Đào tạo COC - CRM" desc="Hệ thống quản lý nội bộ." />
+                                                <FlowNode color="indigo" title="Quy trình Bán hàng" desc="6 bước bán hàng cơ bản." />
+                                                <FlowNode color="rose" title="Test Kỹ năng Direct" tag="Cuối tuần" noArrow />
+                                            </WeekRow>
+                                            <WeekRow label="Tuần 3">
+                                                <FlowNode color="indigo" title="Tiếp cận Khách hàng" desc="Kỹ năng tìm kiếm và tiếp cận." noArrow />
+                                            </WeekRow>
+                                        </MonthBlock>
+
+                                        <MonthBlock title="Tháng 2" subtitle="Thử việc 1" color="emerald">
+                                            <WeekRow label="Tuần 1">
+                                                <FlowNode color="emerald" title="Hóa Đơn & Chữ ký số" desc="Nghiệp vụ cơ bản" noArrow />
+                                            </WeekRow>
+                                            <WeekRow label="Tuần 2">
+                                                <FlowNode color="amber" title="KiotViet FNB" desc="Tự học qua link (7 ngày)" />
+                                                <FlowNode color="amber" title="KiotViet Salon / Hotel" desc="Tự học qua link (7 ngày)" noArrow />
+                                            </WeekRow>
+                                            <WeekRow label="Tuần 3">
+                                                <FlowNode color="rose" title="Test FNB" tag="Lần 2: T+1" />
+                                                <FlowNode color="rose" title="Test Chuyên đề khác" tag="Lần 2: T+1" noArrow />
+                                            </WeekRow>
+                                        </MonthBlock>
+
+                                        <MonthBlock title="Tháng 3" subtitle="Thử việc 2 & Chính thức" color="purple">
+                                            <WeekRow label="Tuần 1">
+                                                <FlowNode color="purple" title="Văn hóa Doanh nghiệp" noArrow />
+                                            </WeekRow>
+                                            <WeekRow label="Tuần 2">
+                                                <FlowNode color="purple" title="Xử lý Từ chối" desc="Thực hành Roleplay" />
+                                                <FlowNode color="rose" title="Test Sản phẩm KV1" desc="Dời Thứ 2 nếu trùng T7/CN" tag="Ngày 15" noArrow />
+                                            </WeekRow>
+                                        </MonthBlock>
+                                    </div>
+                                )}
+
+                                {salesType === 'tele' && (
+                                    <div className="space-y-4">
+                                        <MonthBlock title="Tháng 1" subtitle="Hội nhập & Cơ bản" color="teal">
+                                            <WeekRow label="Tuần 1">
+                                                <FlowNode color="slate" title="Tự học Hội nhập" desc="Học trên LMS" tag="Bắt buộc" />
+                                                <FlowNode color="teal" title="Sản phẩm cơ bản" desc="B1, B2, B3 trực tiếp qua Zoom" />
+                                                <FlowNode color="rose" title="Test Sản phẩm CB" tag="Thứ 6" noArrow />
+                                            </WeekRow>
+                                            <WeekRow label="Tuần 2">
+                                                <FlowNode color="indigo" title="Đào tạo COC - CRM" />
+                                                <FlowNode color="indigo" title="Call Scripts" desc="Kịch bản telesale chuẩn" />
+                                                <FlowNode color="rose" title="Test Call Scripts" noArrow />
+                                            </WeekRow>
+                                            <WeekRow label="Tuần 3">
+                                                <FlowNode color="indigo" title="Làm chủ cuộc gọi" desc="Kiểm soát tone giọng" noArrow />
+                                            </WeekRow>
+                                        </MonthBlock>
+
+                                        <MonthBlock title="Tháng 2" subtitle="Thử việc 1" color="emerald">
+                                            <WeekRow label="Tuần 1">
+                                                <FlowNode color="emerald" title="Văn hóa Doanh nghiệp" />
+                                                <FlowNode color="rose" title="Test Sản phẩm KV1" desc="Dời Thứ 2 nếu trùng T7/CN" tag="Ngày 15" noArrow />
+                                            </WeekRow>
+                                        </MonthBlock>
+
+                                        <MonthBlock title="Tháng 3" subtitle="Thử việc 2 & Chính thức" color="purple">
+                                            <WeekRow label="Tuần 1">
+                                                <FlowNode color="purple" title="Hóa Đơn & Chữ ký số" noArrow />
+                                            </WeekRow>
+                                            <WeekRow label="Tuần 2">
+                                                <FlowNode color="amber" title="KiotViet FNB" desc="Tự học (7 ngày)" />
+                                                <FlowNode color="amber" title="KiotViet Booking" desc="Tự học (7 ngày)" noArrow />
+                                            </WeekRow>
+                                            <WeekRow label="Tuần 3">
+                                                <FlowNode color="rose" title="Test FNB" tag="Lần 2: T+1" />
+                                                <FlowNode color="rose" title="Test Booking" tag="Lần 2: T+1" />
+                                                <FlowNode color="purple" title="Xử lý tình huống nâng cao" noArrow />
+                                            </WeekRow>
+                                        </MonthBlock>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('react-training-hub-mount')).render(<TrainingHubApp />);
+    </script>
+</body>
+</html>
