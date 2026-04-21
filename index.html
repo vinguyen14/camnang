@@ -10,20 +10,14 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* Tối ưu màu sắc nhạt, nhẹ nhàng, không gây choáng */
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow: hidden; }
-        
         .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-right: 1px solid #f1f5f9; }
-        
-        .hover-5d { transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1); }
-        .hover-5d:hover { transform: translateY(-3px); box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.05); z-index: 10; }
-
         .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #cbd5e1; }
 
-        .menu-item { transition: all 0.2s ease; border-radius: 12px; margin-bottom: 4px; }
+        .menu-item { transition: all 0.2s ease; border-radius: 12px; margin-bottom: 4px; border: 1px solid transparent;}
         .menu-item:hover { background-color: #f1f5f9; color: #0f172a; }
         .menu-item.active { background-color: #eff6ff; color: #2563eb; font-weight: 700; }
         .menu-item.active i { color: #2563eb; }
@@ -31,23 +25,13 @@
         #app-root { transition: opacity 0.3s ease, transform 0.3s ease; }
         #app-root.fade-out { opacity: 0; transform: translateY(10px); }
         #app-root.fade-in { opacity: 1; transform: translateY(0); }
-
-        /* Icon bay bổng nhẹ nhàng */
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        .animate-float { animation: float 6s ease-in-out infinite; }
         
-        /* Hiệu ứng Modal */
         .modal-active { display: flex !important; opacity: 1 !important; }
-        .modal-content-active { transform: scale(1) !important; opacity: 1 !important; }
     </style>
 </head>
 <body class="flex h-screen antialiased relative">
+    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-50/20 via-transparent to-emerald-50/20 -z-10 pointer-events-none"></div>
 
-    <!-- Background Gradient (Siêu nhạt) -->
-    <div class="absolute top-[-15%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-blue-50/50 to-transparent blur-3xl z-0 pointer-events-none"></div>
-    <div class="absolute bottom-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full bg-gradient-to-tl from-emerald-50/40 to-transparent blur-3xl z-0 pointer-events-none"></div>
-
-    <!-- 1. SIDEBAR NAVIGATION -->
     <aside class="w-64 glass-panel flex flex-col flex-shrink-0 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
         <div class="h-16 flex items-center px-6">
             <i class="fas fa-layer-group text-slate-400 mr-3 text-lg"></i>
@@ -83,10 +67,7 @@
         </div>
     </aside>
 
-    <!-- 2. MAIN CONTENT AREA -->
     <main class="flex-1 flex flex-col h-screen relative z-10 bg-transparent">
-        
-        <!-- HEADER (Nhỏ gọn lại) -->
         <header class="h-16 flex items-center justify-between px-8 z-20 shrink-0">
             <div id="header-title" class="flex flex-col justify-center h-full"></div>
             
@@ -104,213 +85,37 @@
             </div>
         </header>
 
-        <!-- NƠI CHỨA NỘI DUNG -->
         <div id="app-root" class="flex-1 overflow-y-auto custom-scrollbar px-8 pb-12 z-10 fade-in"></div>
     </main>
 
-    <!-- ========================================== -->
-    <!-- MODAL 1: MẬT KHẨU XÓA BÁO CÁO (Original) -->
-    <!-- ========================================== -->
+    <!-- POPUP MẬT KHẨU (NÂNG CẤP TỪ FILE CŨ) -->
     <div id="authModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4 z-[9999] opacity-0 transition-opacity duration-300">
-        <div id="authModalContent" class="bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl text-center relative border border-white transform scale-95 transition-transform duration-300">
+        <div id="authModalContent" class="bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl text-center relative border border-white transform scale-95 transition-all duration-300">
             <button onclick="closeModal('authModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full hover:bg-slate-100"><i class="fas fa-times"></i></button>
             <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl border border-rose-100"><i class="fas fa-shield-alt"></i></div>
             <h3 class="text-xl font-black text-slate-800 mb-2 tracking-tight">Xác thực Bảo mật</h3>
             <p class="text-xs text-slate-500 mb-8 px-2 font-medium">Bạn đang yêu cầu xóa dữ liệu. Vui lòng nhập mã PIN an toàn và <b class="text-slate-700">nhấn Enter</b>.</p>
-            <input type="password" id="authPassword" onkeypress="handleAuthKeyPress(event)" placeholder="••••••" class="w-full text-center border-2 border-slate-100 bg-slate-50 rounded-2xl px-4 py-4 font-mono text-2xl tracking-[0.5em] focus:border-rose-400 focus:bg-white outline-none mb-8 transition shadow-inner">
+            <input type="password" id="authPassword" onkeypress="handleAuthKeyPress(event)" placeholder="••••••" class="w-full text-center border-2 border-slate-200 bg-slate-50 rounded-2xl px-4 py-4 font-mono text-2xl tracking-[0.5em] focus:border-rose-400 focus:bg-white outline-none mb-8 transition shadow-inner">
             <button onclick="executeDelete()" class="w-full py-4 rounded-2xl text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 transition shadow-lg uppercase tracking-wider">Thực thi Xóa</button>
         </div>
     </div>
-
-    <!-- ========================================== -->
-    <!-- MODAL 2: THÔNG BÁO SUBMIT THÀNH CÔNG -->
-    <!-- ========================================== -->
+    
+    <!-- POPUP SUBMIT BÁO CÁO THÀNH CÔNG (NÂNG CẤP TỪ FILE CŨ) -->
     <div id="successModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4 z-[9999] opacity-0 transition-opacity duration-300">
-        <div id="successModalContent" class="bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl text-center relative border border-white transform scale-95 transition-transform duration-300">
+        <div id="successModalContent" class="bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl text-center relative border border-white transform scale-95 transition-all duration-300">
             <button onclick="closeModal('successModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full hover:bg-slate-100"><i class="fas fa-times"></i></button>
-            
             <div class="relative w-20 h-20 mx-auto mb-5">
                 <div class="absolute inset-0 bg-emerald-100 rounded-full animate-ping opacity-50"></div>
                 <div class="relative w-full h-full bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center border border-emerald-100 text-3xl"><i class="fas fa-check"></i></div>
             </div>
-            
             <h3 class="text-xl font-black text-slate-800 mb-2 tracking-tight">Nộp báo cáo thành công</h3>
-            <p class="text-xs text-slate-500 font-medium mb-8">Dữ liệu đã được lưu trữ và cập nhật vào hệ thống Analytics.</p>
-            
-            <div class="flex flex-col gap-3">
-                <a href="#analytics" onclick="closeModal('successModal')" class="w-full py-3.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-md">
-                    Về trang báo cáo
-                </a>
-            </div>
+            <p class="text-xs text-slate-500 font-medium mb-8">Dữ liệu đã được cập nhật vào hệ thống Analytics.</p>
+            <a href="#analytics" onclick="closeModal('successModal')" class="w-full py-3.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-md">
+                Về trang báo cáo
+            </a>
         </div>
     </div>
-
-    <!-- 3. SPA ROUTER & GLOBAL DATA -->
-    <script>
-        window.SECRET_KEY = "014023";
-        window.holidays = { "1-1": "Tết Dương Lịch", "1-2": "Nghỉ Tết Dương", "1-3": "Nghỉ Tết Dương", "2-16": "Giao Thừa", "2-17": "Mùng 1 Tết", "2-18": "Mùng 2 Tết", "2-19": "Mùng 3 Tết", "2-20": "Mùng 4 Tết", "2-21": "Mùng 5 Tết", "4-27": "Giỗ Tổ Hùng Vương", "4-30": "Giải Phóng Miền Nam", "5-1": "Quốc Tế Lao Động", "5-2": "Nghỉ Lễ 30/4 - 1/5", "5-3": "Nghỉ Lễ 30/4 - 1/5", "9-1": "Quốc Khánh", "9-2": "Quốc Khánh 2/9" };
-
-        // DATA 6 KHÓA HỌC (CHUẨN)
-        window.courseConfig = [
-            { id: 'SPCB', label: 'RETAIL', title: 'Sản phẩm Cơ bản', desc: 'Khóa học về sản phẩm cơ bản cho nhân viên bán hàng', sessions: 5, color: 'blue', status: 'Đang diễn ra' },
-            { id: 'KV1', label: 'ADVANCED', title: 'Sản phẩm KV1', desc: 'Nâng cao kỹ năng quản lý tình huống nghiệp vụ', sessions: 1, color: 'indigo', status: 'Đang diễn ra' },
-            { id: 'TAX', label: 'SPECIALIST', title: 'HĐĐT - Thuế - Kế toán', desc: 'Khóa học chuyên sâu về hóa đơn, thuế và kế toán', sessions: 4, color: 'slate', status: 'Đang lên kế hoạch' },
-            { id: 'FNB', label: 'INDUSTRY', title: 'KiotViet FNB', desc: 'Nghiệp vụ dành riêng cho Nhà hàng, Cafe', sessions: 2, color: 'orange', status: 'Đã hoàn thành' },
-            { id: 'SALON', label: 'INDUSTRY', title: 'KiotViet Salon', desc: 'Nghiệp vụ quản lý tiệm Spa, Hair Salon', sessions: 2, color: 'fuchsia', status: 'Đang lên kế hoạch' },
-            { id: 'HOTEL', label: 'INDUSTRY', title: 'KiotViet Hotel', desc: 'Giải pháp quản lý cơ sở lưu trú, khách sạn', sessions: 2, color: 'emerald', status: 'Đang lên kế hoạch' }
-        ];
-
-        window.loadMasterDB = function() {
-            let data = JSON.parse(localStorage.getItem('kv_master_db')) || [];
-            const now = new Date().getTime();
-            let isChanged = false;
-            data = data.filter(item => {
-                if (!item.timestamp) { item.timestamp = now; isChanged = true; }
-                return (now - item.timestamp) <= (365 * 24 * 60 * 60 * 1000);
-            });
-            if (isChanged) localStorage.setItem('kv_master_db', JSON.stringify(data));
-            return data;
-        };
-
-        // ==========================================
-        // GLOBAL MODAL LOGIC (DELETE & SUCCESS)
-        // ==========================================
-        window.openModal = function(id) {
-            const modal = document.getElementById(id);
-            const content = document.getElementById(id + 'Content');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            setTimeout(() => { 
-                modal.classList.add('opacity-100'); 
-                content.classList.remove('scale-95'); content.classList.add('scale-100'); 
-            }, 10);
-        };
-
-        window.closeModal = function(id) {
-            const modal = document.getElementById(id);
-            const content = document.getElementById(id + 'Content');
-            modal.classList.remove('opacity-100'); 
-            content.classList.remove('scale-100'); content.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300);
-        };
-
-        window.deleteTargetIdx = null;
-        window.requestDelete = function(idx) {
-            window.deleteTargetIdx = idx;
-            document.getElementById('authPassword').value = '';
-            window.openModal('authModal');
-            setTimeout(() => document.getElementById('authPassword').focus(), 100);
-        };
-
-        window.handleAuthKeyPress = function(e) { if (e.key === 'Enter') executeDelete(); };
-
-        window.executeDelete = function() {
-            const pin = document.getElementById('authPassword').value;
-            if(pin !== window.SECRET_KEY) { alert("Sai mã PIN an toàn!"); return; }
-            
-            setTimeout(() => {
-                if(window.deleteTargetIdx === -1) {
-                    if(confirm("Bạn có chắc chắn muốn XÓA SẠCH toàn bộ dữ liệu không?")) {
-                        localStorage.removeItem('kv_master_db');
-                        window.closeModal('authModal');
-                        if(typeof renderAnalytics === 'function') renderAnalytics();
-                    }
-                } else {
-                    if(confirm("Bạn có chắc chắn muốn xóa báo cáo này không?")) {
-                        let db = window.loadMasterDB(); db.splice(window.deleteTargetIdx, 1);
-                        localStorage.setItem('kv_master_db', JSON.stringify(db));
-                        window.closeModal('authModal');
-                        if(typeof renderAnalytics === 'function') renderAnalytics();
-                    }
-                }
-            }, 100);
-        };
-
-        // CHUÔNG THÔNG BÁO
-        function checkNotifications() {
-            const today = new Date(); const todayStr = `${today.getMonth() + 1}-${today.getDate()}`;
-            const isWknd = today.getDay() === 0 || today.getDay() === 6; const holName = window.holidays[todayStr];
-            const notifBox = document.getElementById('notification-content');
-            const badge1 = document.getElementById('bell-badge'); const badge2 = document.getElementById('bell-badge-solid');
-
-            if (holName) {
-                badge1.classList.remove('hidden'); badge2.classList.remove('hidden');
-                notifBox.innerHTML = `<div class="flex gap-3 items-start p-3 bg-rose-50 rounded-xl border border-rose-100"><div class="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0"><i class="fas fa-glass-cheers text-xs"></i></div><div><p class="text-xs font-bold text-rose-600 mb-1">Hôm nay là: ${holName}</p><p class="text-[10px] text-rose-500 font-medium">Nghỉ ngơi nhé các Trainer! Không phát sinh lớp mới.</p></div></div>`;
-            } else if (isWknd) {
-                badge1.classList.remove('hidden'); badge2.classList.remove('hidden');
-                notifBox.innerHTML = `<div class="flex gap-3 items-start p-3 bg-indigo-50 rounded-xl border border-indigo-100"><div class="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center shrink-0"><i class="fas fa-umbrella-beach text-xs"></i></div><div><p class="text-xs font-bold text-indigo-600 mb-1">Cuối tuần rồi!</p><p class="text-[10px] text-indigo-500 font-medium">Chúc bạn có những ngày nghỉ ngơi.</p></div></div>`;
-            } else {
-                notifBox.innerHTML = `<p class="text-[11px] text-slate-400 text-center py-4 font-medium italic">Không có thông báo mới.</p>`;
-            }
-        }
-
-        // ROUTER CONFIG
-        const routes = {
-            'dashboard': { file: 'views/dashboard.html', sidebar: 'dashboard', title: 'Tổng Quan Hệ Thống', desc: 'Điều khiển trung tâm và kịch bản khóa học' },
-            'courses': { file: 'views/dashboard.html', sidebar: 'courses', title: 'Danh Sách Khóa Học', desc: 'Điều khiển trung tâm và kịch bản khóa học' },
-            'analytics': { file: 'views/analytics.html', sidebar: 'analytics', title: '', desc: '' },
-            'tools': { file: 'views/tools.html', sidebar: 'tools', title: '', desc: '' },
-            'calendar': { file: 'views/calendar.html', sidebar: 'calendar', title: '', desc: '' },
-            'course-detail': { file: 'views/course-detail.html', sidebar: 'courses', title: '', desc: '' },
-            'tasks': { file: 'views/tasks.html', sidebar: 'courses', title: '', desc: '' }
-        };
-
-        const appRoot = document.getElementById('app-root');
-        const headerTitle = document.getElementById('header-title');
-
-        async function router() {
-            let hash = window.location.hash.replace('#', '') || 'dashboard';
-            
-            let routeKey = hash;
-            if(hash.startsWith('course-')) { localStorage.setItem('currentCourseId', hash.split('-')[1].toUpperCase()); routeKey = 'course-detail'; } 
-            else if(hash.startsWith('tasks-')) { localStorage.setItem('currentCourseId', hash.split('-')[1].toUpperCase()); routeKey = 'tasks'; }
-
-            if (!routes[routeKey]) routeKey = 'dashboard';
-
-            updateSidebarActive(routes[routeKey].sidebar);
-
-            if(routes[routeKey].title !== '') {
-                headerTitle.innerHTML = `<h1 class="text-xl font-black text-slate-800 tracking-tight">${routes[routeKey].title}</h1><p class="text-[11px] font-medium text-slate-500 mt-0.5">${routes[routeKey].desc}</p>`;
-            } else { headerTitle.innerHTML = ''; }
-
-            appRoot.classList.remove('fade-in'); appRoot.classList.add('fade-out');
-
-            try {
-                // Thêm timestamp để vô hiệu hóa cache trình duyệt, đảm bảo script luôn lấy HTML mới
-                const response = await fetch(`${routes[routeKey].file}?v=${new Date().getTime()}`);
-                if (!response.ok) throw new Error('File not found');
-                const htmlString = await response.text();
-                
-                setTimeout(() => {
-                    appRoot.innerHTML = htmlString;
-                    executeScripts(appRoot);
-                    appRoot.classList.remove('fade-out'); appRoot.classList.add('fade-in');
-                }, 200);
-            } catch (error) {
-                appRoot.innerHTML = `<div class="text-center mt-20 text-slate-500">Đang phát triển file <b>${routes[routeKey].file}</b>...</div>`;
-                appRoot.classList.remove('fade-out'); appRoot.classList.add('fade-in');
-            }
-        }
-
-        function updateSidebarActive(sidebarId) {
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.remove('active');
-                if (item.getAttribute('href') === `#${sidebarId}`) item.classList.add('active');
-            });
-        }
-
-        function executeScripts(container) {
-            const scripts = container.querySelectorAll('script');
-            scripts.forEach(oldScript => {
-                const newScript = document.createElement('script');
-                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                oldScript.parentNode.replaceChild(newScript, oldScript);
-            });
-        }
-
-        window.addEventListener('DOMContentLoaded', () => { router(); checkNotifications(); });
-        window.addEventListener('hashchange', router);
-    </script>
+    
+    <script src="./scripts/global-logic.js"></script>
 </body>
 </html>
