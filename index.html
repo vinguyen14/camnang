@@ -10,124 +10,137 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* 5D & Fluid UI Core Variables */
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; overflow: hidden; }
+        /* Tối ưu màu sắc nhạt, nhẹ nhàng, không gây choáng */
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow: hidden; }
         
-        /* Hiệu ứng kính và nổi khối mềm mại */
-        .glass-panel { background: #ffffff; border: 1px solid #f1f5f9; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.02); }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-right: 1px solid #f1f5f9; }
+        
         .hover-5d { transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1); }
-        .hover-5d:hover { transform: translateY(-4px); box-shadow: 0 25px 30px -5px rgba(59, 130, 246, 0.08), 0 10px 15px -6px rgba(59, 130, 246, 0.04); border-color: #bfdbfe; z-index: 10; }
+        .hover-5d:hover { transform: translateY(-3px); box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.05); z-index: 10; }
 
-        /* Scrollbar tàng hình */
         .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #cbd5e1; }
 
-        /* Sidebar Menu Style chuẩn SaaS */
-        .menu-item { transition: all 0.2s ease; border-radius: 12px; margin-bottom: 4px; border: 1px solid transparent;}
-        .menu-item:hover { background-color: #f8fafc; color: #334155; }
-        .menu-item.active { background-color: #eff6ff; color: #1d4ed8; font-weight: 700; border-color: #dbeafe; box-shadow: inset 0 2px 4px 0 rgba(59,130,246,0.05); }
-        .menu-item.active i { color: #3b82f6; }
+        .menu-item { transition: all 0.2s ease; border-radius: 12px; margin-bottom: 4px; }
+        .menu-item:hover { background-color: #f1f5f9; color: #0f172a; }
+        .menu-item.active { background-color: #eff6ff; color: #2563eb; font-weight: 700; }
+        .menu-item.active i { color: #2563eb; }
 
-        /* Animation chuyển trang */
         #app-root { transition: opacity 0.3s ease, transform 0.3s ease; }
-        #app-root.fade-out { opacity: 0; transform: translateY(15px); }
+        #app-root.fade-out { opacity: 0; transform: translateY(10px); }
         #app-root.fade-in { opacity: 1; transform: translateY(0); }
 
         /* Icon bay bổng nhẹ nhàng */
-        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(5deg); } }
-        .animate-float { animation: float 8s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        
+        /* Hiệu ứng Modal */
+        .modal-active { display: flex !important; opacity: 1 !important; }
+        .modal-content-active { transform: scale(1) !important; opacity: 1 !important; }
     </style>
 </head>
 <body class="flex h-screen antialiased relative">
 
-    <!-- Background Elements (Chìm, màu pastel) -->
-    <div class="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-gradient-to-br from-blue-100/40 to-transparent blur-3xl z-0 pointer-events-none"></div>
-    <div class="absolute bottom-[-10%] right-[-5%] w-[30vw] h-[30vw] rounded-full bg-gradient-to-tl from-emerald-100/30 to-transparent blur-3xl z-0 pointer-events-none"></div>
+    <!-- Background Gradient (Siêu nhạt) -->
+    <div class="absolute top-[-15%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-blue-50/50 to-transparent blur-3xl z-0 pointer-events-none"></div>
+    <div class="absolute bottom-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full bg-gradient-to-tl from-emerald-50/40 to-transparent blur-3xl z-0 pointer-events-none"></div>
 
     <!-- 1. SIDEBAR NAVIGATION -->
-    <aside class="w-64 glass-panel border-r border-slate-200 flex flex-col flex-shrink-0 z-20 relative bg-white/80 backdrop-blur-xl">
-        <!-- Logo -->
-        <div class="h-20 flex items-center px-6">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white mr-3 shadow-md">
-                <i class="fas fa-layer-group text-sm"></i>
-            </div>
-            <span class="text-base font-black tracking-tight text-slate-800">Trainer Hub</span>
+    <aside class="w-64 glass-panel flex flex-col flex-shrink-0 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+        <div class="h-16 flex items-center px-6">
+            <i class="fas fa-layer-group text-slate-400 mr-3 text-lg"></i>
+            <span class="text-[15px] font-black tracking-tight text-slate-800">Trainer Hub</span>
         </div>
 
-        <!-- Menu Links -->
-        <nav class="flex-1 overflow-y-auto custom-scrollbar py-4 px-3 space-y-1" id="sidebar-menu">
-            <a href="#dashboard" class="menu-item active flex items-center px-4 py-3 text-[13px] font-semibold text-slate-500">
-                <i class="fas fa-border-all w-7 text-slate-400 text-base"></i> Dashboard
+        <nav class="flex-1 overflow-y-auto custom-scrollbar py-2 px-3" id="sidebar-menu">
+            <a href="#dashboard" class="menu-item active flex items-center px-4 py-2.5 text-[13px] font-semibold text-slate-500">
+                <i class="fas fa-border-all w-7 text-slate-400 text-[15px]"></i> Dashboard
             </a>
-            <a href="#courses" class="menu-item flex items-center px-4 py-3 text-[13px] font-semibold text-slate-500">
-                <i class="fas fa-book-open w-7 text-slate-400 text-base"></i> Khóa Học
+            <a href="#courses" class="menu-item flex items-center px-4 py-2.5 text-[13px] font-semibold text-slate-500">
+                <i class="fas fa-book-open w-7 text-slate-400 text-[15px]"></i> Khóa Học
             </a>
-            <a href="#analytics" class="menu-item flex items-center px-4 py-3 text-[13px] font-semibold text-slate-500">
-                <i class="fas fa-chart-bar w-7 text-slate-400 text-base"></i> Analytics
+            <a href="#analytics" class="menu-item flex items-center px-4 py-2.5 text-[13px] font-semibold text-slate-500">
+                <i class="fas fa-chart-bar w-7 text-slate-400 text-[15px]"></i> Analytics
             </a>
-            <a href="#tools" class="menu-item flex items-center px-4 py-3 text-[13px] font-semibold text-slate-500">
-                <i class="fas fa-wrench w-7 text-slate-400 text-base"></i> Công Cụ
+            <a href="#tools" class="menu-item flex items-center px-4 py-2.5 text-[13px] font-semibold text-slate-500">
+                <i class="fas fa-wrench w-7 text-slate-400 text-[15px]"></i> Công Cụ
             </a>
-            <a href="#calendar" class="menu-item flex items-center px-4 py-3 text-[13px] font-semibold text-slate-500">
-                <i class="far fa-calendar-alt w-7 text-slate-400 text-base"></i> Lịch Năm
+            <a href="#calendar" class="menu-item flex items-center px-4 py-2.5 text-[13px] font-semibold text-slate-500">
+                <i class="far fa-calendar-alt w-7 text-slate-400 text-[15px]"></i> Lịch Năm
             </a>
         </nav>
 
-        <!-- User Profile -->
-        <div class="p-4 border-t border-slate-100 bg-slate-50/50">
+        <div class="p-4 border-t border-slate-100">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-blue-600 font-black border border-slate-200 shadow-sm">N</div>
+                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold border border-slate-200">N</div>
                 <div>
-                    <p class="text-[13px] font-bold text-slate-800">Nhật Vi - L&D</p>
-                    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-widest">System Admin</p>
+                    <p class="text-xs font-bold text-slate-800">Nguyễn Lê Nhật Vi - L&D</p>
+                    <p class="text-[10px] font-medium text-slate-400">vi.nln@kiotviet.com</p>
                 </div>
             </div>
         </div>
     </aside>
 
     <!-- 2. MAIN CONTENT AREA -->
-    <main class="flex-1 flex flex-col h-screen relative z-10">
+    <main class="flex-1 flex flex-col h-screen relative z-10 bg-transparent">
         
-        <!-- HEADER (Đã làm mỏng đi, chỉ chứa chuông và công cụ bổ trợ, không chiếm text) -->
-        <header class="h-16 flex items-center justify-end px-8 z-20 shrink-0">
-            <!-- Chuông Thông báo -->
+        <!-- HEADER (Nhỏ gọn lại) -->
+        <header class="h-16 flex items-center justify-between px-8 z-20 shrink-0">
+            <div id="header-title" class="flex flex-col justify-center h-full"></div>
+            
             <div class="flex items-center gap-4 relative group cursor-default">
-                <button class="w-9 h-9 rounded-full bg-white border border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all relative z-20 shadow-sm">
-                    <i class="fas fa-bell text-sm"></i>
+                <button class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all relative z-20 shadow-sm">
+                    <i class="fas fa-bell text-xs"></i>
                     <span id="bell-badge" class="absolute top-0 right-0 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full animate-ping hidden"></span>
                     <span id="bell-badge-solid" class="absolute top-0 right-0 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full hidden"></span>
                 </button>
 
-                <div class="absolute top-10 right-0 w-80 bg-white border border-slate-200 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 p-5">
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-3 flex justify-between items-center">
-                        <span>Thông báo hệ thống</span>
-                        <i class="fas fa-satellite-dish text-blue-400 animate-pulse text-sm"></i>
-                    </h4>
+                <div class="absolute top-10 right-0 w-72 bg-white border border-slate-200 rounded-2xl shadow-[0_15px_30px_-10px_rgba(0,0,0,0.1)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 p-4">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">Thông báo hệ thống</h4>
                     <div id="notification-content"></div>
                 </div>
             </div>
         </header>
 
-        <!-- NƠI CHỨA NỘI DUNG TRANG CON -->
-        <div id="app-root" class="flex-1 overflow-y-auto custom-scrollbar px-8 pb-12 z-10 fade-in">
-            <div class="flex items-center justify-center h-full"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500"></i></div>
-        </div>
+        <!-- NƠI CHỨA NỘI DUNG -->
+        <div id="app-root" class="flex-1 overflow-y-auto custom-scrollbar px-8 pb-12 z-10 fade-in"></div>
     </main>
 
-    <!-- POPUP XÓA DỮ LIỆU TOÀN CỤC (YÊU CẦU CỦA BẠN) -->
-    <div id="global-delete-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl transform scale-95 transition-transform duration-300" id="global-delete-content">
-            <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl border border-rose-100"><i class="fas fa-shield-alt"></i></div>
-            <h3 class="text-xl font-black text-slate-800 mb-1">Xác thực Bảo mật</h3>
-            <p class="text-xs text-slate-500 mb-6">Nhập mã PIN an toàn để thực hiện thao tác xóa.</p>
+    <!-- ========================================== -->
+    <!-- MODAL 1: MẬT KHẨU XÓA BÁO CÁO (Original) -->
+    <!-- ========================================== -->
+    <div id="authModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4 z-[9999] opacity-0 transition-opacity duration-300">
+        <div id="authModalContent" class="bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl text-center relative border border-white transform scale-95 transition-transform duration-300">
+            <button onclick="closeModal('authModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full hover:bg-slate-100"><i class="fas fa-times"></i></button>
+            <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl border border-rose-100"><i class="fas fa-shield-alt"></i></div>
+            <h3 class="text-xl font-black text-slate-800 mb-2 tracking-tight">Xác thực Bảo mật</h3>
+            <p class="text-xs text-slate-500 mb-8 px-2 font-medium">Bạn đang yêu cầu xóa dữ liệu. Vui lòng nhập mã PIN an toàn và <b class="text-slate-700">nhấn Enter</b>.</p>
+            <input type="password" id="authPassword" onkeypress="handleAuthKeyPress(event)" placeholder="••••••" class="w-full text-center border-2 border-slate-100 bg-slate-50 rounded-2xl px-4 py-4 font-mono text-2xl tracking-[0.5em] focus:border-rose-400 focus:bg-white outline-none mb-8 transition shadow-inner">
+            <button onclick="executeDelete()" class="w-full py-4 rounded-2xl text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 transition shadow-lg uppercase tracking-wider">Thực thi Xóa</button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 2: THÔNG BÁO SUBMIT THÀNH CÔNG -->
+    <!-- ========================================== -->
+    <div id="successModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4 z-[9999] opacity-0 transition-opacity duration-300">
+        <div id="successModalContent" class="bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl text-center relative border border-white transform scale-95 transition-transform duration-300">
+            <button onclick="closeModal('successModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full hover:bg-slate-100"><i class="fas fa-times"></i></button>
             
-            <input type="password" id="global-pin" placeholder="••••••" class="w-full text-center border-2 border-slate-100 bg-slate-50 rounded-xl px-4 py-3 font-mono text-xl tracking-[0.5em] focus:border-rose-400 focus:bg-white outline-none mb-6">
+            <div class="relative w-20 h-20 mx-auto mb-5">
+                <div class="absolute inset-0 bg-emerald-100 rounded-full animate-ping opacity-50"></div>
+                <div class="relative w-full h-full bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center border border-emerald-100 text-3xl"><i class="fas fa-check"></i></div>
+            </div>
             
-            <div class="flex gap-3">
-                <button onclick="closeDeleteModal()" class="flex-1 py-3 rounded-xl text-sm font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition">Hủy</button>
-                <button onclick="executeDeleteGlobal()" class="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 transition shadow-md">Xác nhận</button>
+            <h3 class="text-xl font-black text-slate-800 mb-2 tracking-tight">Nộp báo cáo thành công</h3>
+            <p class="text-xs text-slate-500 font-medium mb-8">Dữ liệu đã được lưu trữ và cập nhật vào hệ thống Analytics.</p>
+            
+            <div class="flex flex-col gap-3">
+                <a href="#analytics" onclick="closeModal('successModal')" class="w-full py-3.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-md">
+                    Về trang báo cáo
+                </a>
             </div>
         </div>
     </div>
@@ -137,7 +150,7 @@
         window.SECRET_KEY = "014023";
         window.holidays = { "1-1": "Tết Dương Lịch", "1-2": "Nghỉ Tết Dương", "1-3": "Nghỉ Tết Dương", "2-16": "Giao Thừa", "2-17": "Mùng 1 Tết", "2-18": "Mùng 2 Tết", "2-19": "Mùng 3 Tết", "2-20": "Mùng 4 Tết", "2-21": "Mùng 5 Tết", "4-27": "Giỗ Tổ Hùng Vương", "4-30": "Giải Phóng Miền Nam", "5-1": "Quốc Tế Lao Động", "5-2": "Nghỉ Lễ 30/4 - 1/5", "5-3": "Nghỉ Lễ 30/4 - 1/5", "9-1": "Quốc Khánh", "9-2": "Quốc Khánh 2/9" };
 
-        // 6 KHÓA HỌC CHUẨN XÁC
+        // DATA 6 KHÓA HỌC (CHUẨN)
         window.courseConfig = [
             { id: 'SPCB', label: 'RETAIL', title: 'Sản phẩm Cơ bản', desc: 'Khóa học về sản phẩm cơ bản cho nhân viên bán hàng', sessions: 5, color: 'blue', status: 'Đang diễn ra' },
             { id: 'KV1', label: 'ADVANCED', title: 'Sản phẩm KV1', desc: 'Nâng cao kỹ năng quản lý tình huống nghiệp vụ', sessions: 1, color: 'indigo', status: 'Đang diễn ra' },
@@ -159,47 +172,61 @@
             return data;
         };
 
-        // GLOBAL DELETE LOGIC
-        window.deleteTargetIdx = null;
-        window.openDeleteModal = function(idx) {
-            window.deleteTargetIdx = idx;
-            document.getElementById('global-pin').value = '';
-            const modal = document.getElementById('global-delete-modal');
-            const content = document.getElementById('global-delete-content');
+        // ==========================================
+        // GLOBAL MODAL LOGIC (DELETE & SUCCESS)
+        // ==========================================
+        window.openModal = function(id) {
+            const modal = document.getElementById(id);
+            const content = document.getElementById(id + 'Content');
             modal.classList.remove('hidden');
-            setTimeout(() => { modal.classList.add('opacity-100'); content.classList.remove('scale-95'); content.classList.add('scale-100'); }, 10);
-            setTimeout(() => document.getElementById('global-pin').focus(), 100);
-        };
-        
-        window.closeDeleteModal = function() {
-            const modal = document.getElementById('global-delete-modal');
-            const content = document.getElementById('global-delete-content');
-            modal.classList.remove('opacity-100'); content.classList.remove('scale-100'); content.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            modal.classList.add('flex');
+            setTimeout(() => { 
+                modal.classList.add('opacity-100'); 
+                content.classList.remove('scale-95'); content.classList.add('scale-100'); 
+            }, 10);
         };
 
-        window.executeDeleteGlobal = function() {
-            const pin = document.getElementById('global-pin').value;
+        window.closeModal = function(id) {
+            const modal = document.getElementById(id);
+            const content = document.getElementById(id + 'Content');
+            modal.classList.remove('opacity-100'); 
+            content.classList.remove('scale-100'); content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300);
+        };
+
+        window.deleteTargetIdx = null;
+        window.requestDelete = function(idx) {
+            window.deleteTargetIdx = idx;
+            document.getElementById('authPassword').value = '';
+            window.openModal('authModal');
+            setTimeout(() => document.getElementById('authPassword').focus(), 100);
+        };
+
+        window.handleAuthKeyPress = function(e) { if (e.key === 'Enter') executeDelete(); };
+
+        window.executeDelete = function() {
+            const pin = document.getElementById('authPassword').value;
             if(pin !== window.SECRET_KEY) { alert("Sai mã PIN an toàn!"); return; }
             
             setTimeout(() => {
                 if(window.deleteTargetIdx === -1) {
-                    if(confirm("HỆ THỐNG: Bạn có chắc chắn muốn XÓA SẠCH toàn bộ dữ liệu không?")) {
+                    if(confirm("Bạn có chắc chắn muốn XÓA SẠCH toàn bộ dữ liệu không?")) {
                         localStorage.removeItem('kv_master_db');
-                        closeDeleteModal();
+                        window.closeModal('authModal');
                         if(typeof renderAnalytics === 'function') renderAnalytics();
                     }
                 } else {
-                    if(confirm("HỆ THỐNG: Bạn có chắc chắn muốn xóa dòng báo cáo này không?")) {
+                    if(confirm("Bạn có chắc chắn muốn xóa báo cáo này không?")) {
                         let db = window.loadMasterDB(); db.splice(window.deleteTargetIdx, 1);
                         localStorage.setItem('kv_master_db', JSON.stringify(db));
-                        closeDeleteModal();
+                        window.closeModal('authModal');
                         if(typeof renderAnalytics === 'function') renderAnalytics();
                     }
                 }
-            }, 100); // Đợi modal tắt mượt rồi mới hiện confirm alert
+            }, 100);
         };
 
+        // CHUÔNG THÔNG BÁO
         function checkNotifications() {
             const today = new Date(); const todayStr = `${today.getMonth() + 1}-${today.getDate()}`;
             const isWknd = today.getDay() === 0 || today.getDay() === 6; const holName = window.holidays[todayStr];
@@ -211,45 +238,46 @@
                 notifBox.innerHTML = `<div class="flex gap-3 items-start p-3 bg-rose-50 rounded-xl border border-rose-100"><div class="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0"><i class="fas fa-glass-cheers text-xs"></i></div><div><p class="text-xs font-bold text-rose-600 mb-1">Hôm nay là: ${holName}</p><p class="text-[10px] text-rose-500 font-medium">Nghỉ ngơi nhé các Trainer! Không phát sinh lớp mới.</p></div></div>`;
             } else if (isWknd) {
                 badge1.classList.remove('hidden'); badge2.classList.remove('hidden');
-                notifBox.innerHTML = `<div class="flex gap-3 items-start p-3 bg-indigo-50 rounded-xl border border-indigo-100"><div class="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center shrink-0"><i class="fas fa-umbrella-beach text-xs"></i></div><div><p class="text-xs font-bold text-indigo-600 mb-1">Cuối tuần rồi!</p><p class="text-[10px] text-indigo-500 font-medium">Chúc bạn có những ngày nghỉ ngơi và tái tạo năng lượng.</p></div></div>`;
+                notifBox.innerHTML = `<div class="flex gap-3 items-start p-3 bg-indigo-50 rounded-xl border border-indigo-100"><div class="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center shrink-0"><i class="fas fa-umbrella-beach text-xs"></i></div><div><p class="text-xs font-bold text-indigo-600 mb-1">Cuối tuần rồi!</p><p class="text-[10px] text-indigo-500 font-medium">Chúc bạn có những ngày nghỉ ngơi.</p></div></div>`;
             } else {
                 notifBox.innerHTML = `<p class="text-[11px] text-slate-400 text-center py-4 font-medium italic">Không có thông báo mới.</p>`;
             }
         }
 
-        // ROUTER CONFIG (Áp dụng cơ chế lưu Cache khóa học hiện tại)
+        // ROUTER CONFIG
         const routes = {
-            'dashboard': { file: 'views/dashboard.html', sidebar: 'dashboard' },
-            'courses': { file: 'views/dashboard.html', sidebar: 'courses' },
-            'analytics': { file: 'views/analytics.html', sidebar: 'analytics' },
-            'tools': { file: 'views/tools.html', sidebar: 'tools' },
-            'calendar': { file: 'views/calendar.html', sidebar: 'calendar' },
-            'course-detail': { file: 'views/course-detail.html', sidebar: 'courses' },
-            'tasks': { file: 'views/tasks.html', sidebar: 'courses' }
+            'dashboard': { file: 'views/dashboard.html', sidebar: 'dashboard', title: 'Tổng Quan Hệ Thống', desc: 'Điều khiển trung tâm và kịch bản khóa học' },
+            'courses': { file: 'views/dashboard.html', sidebar: 'courses', title: 'Danh Sách Khóa Học', desc: 'Điều khiển trung tâm và kịch bản khóa học' },
+            'analytics': { file: 'views/analytics.html', sidebar: 'analytics', title: '', desc: '' },
+            'tools': { file: 'views/tools.html', sidebar: 'tools', title: '', desc: '' },
+            'calendar': { file: 'views/calendar.html', sidebar: 'calendar', title: '', desc: '' },
+            'course-detail': { file: 'views/course-detail.html', sidebar: 'courses', title: '', desc: '' },
+            'tasks': { file: 'views/tasks.html', sidebar: 'courses', title: '', desc: '' }
         };
 
         const appRoot = document.getElementById('app-root');
+        const headerTitle = document.getElementById('header-title');
 
         async function router() {
             let hash = window.location.hash.replace('#', '') || 'dashboard';
             
-            // Xử lý Route cho trang con
             let routeKey = hash;
-            if(hash.startsWith('course-')) {
-                localStorage.setItem('currentCourseId', hash.split('-')[1].toUpperCase());
-                routeKey = 'course-detail'; // Quy về 1 file duy nhất để dễ quản lý theo yêu cầu của bạn
-            } else if(hash.startsWith('tasks-')) {
-                localStorage.setItem('currentCourseId', hash.split('-')[1].toUpperCase());
-                routeKey = 'tasks';
-            }
+            if(hash.startsWith('course-')) { localStorage.setItem('currentCourseId', hash.split('-')[1].toUpperCase()); routeKey = 'course-detail'; } 
+            else if(hash.startsWith('tasks-')) { localStorage.setItem('currentCourseId', hash.split('-')[1].toUpperCase()); routeKey = 'tasks'; }
 
             if (!routes[routeKey]) routeKey = 'dashboard';
 
             updateSidebarActive(routes[routeKey].sidebar);
+
+            if(routes[routeKey].title !== '') {
+                headerTitle.innerHTML = `<h1 class="text-xl font-black text-slate-800 tracking-tight">${routes[routeKey].title}</h1><p class="text-[11px] font-medium text-slate-500 mt-0.5">${routes[routeKey].desc}</p>`;
+            } else { headerTitle.innerHTML = ''; }
+
             appRoot.classList.remove('fade-in'); appRoot.classList.add('fade-out');
 
             try {
-                const response = await fetch(routes[routeKey].file);
+                // Thêm timestamp để vô hiệu hóa cache trình duyệt, đảm bảo script luôn lấy HTML mới
+                const response = await fetch(`${routes[routeKey].file}?v=${new Date().getTime()}`);
                 if (!response.ok) throw new Error('File not found');
                 const htmlString = await response.text();
                 
