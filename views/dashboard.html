@@ -1,0 +1,92 @@
+<div>
+    <div class="mb-8">
+        <h1 class="text-3xl font-black text-slate-900 tracking-tight">Trainer Hub</h1>
+        <p class="text-sm text-slate-500 mt-1">Quản lý kịch bản khóa học và công việc đào tạo</p>
+    </div>
+
+    <!-- 4 THẺ CHỈ SỐ -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="border border-slate-200 rounded-2xl p-5 bg-white shadow-sm flex flex-col justify-between h-28">
+            <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-600">Tổng Khóa Học</span><i class="fas fa-book text-slate-400"></i></div>
+            <div class="text-2xl font-black text-slate-800" id="dash-total-course">0</div>
+        </div>
+        <div class="border border-slate-200 rounded-2xl p-5 bg-white shadow-sm flex flex-col justify-between h-28">
+            <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-600">Tổng Học Viên</span><i class="fas fa-users text-slate-400"></i></div>
+            <div class="text-2xl font-black text-slate-800" id="dash-total-trainee">0</div>
+        </div>
+        <div class="border border-slate-200 rounded-2xl p-5 bg-white shadow-sm flex flex-col justify-between h-28">
+            <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-600">Học Viên Đạt</span><i class="fas fa-chart-line text-emerald-500"></i></div>
+            <div class="text-2xl font-black text-emerald-600" id="dash-total-pass">0</div>
+        </div>
+        <div class="border border-slate-200 rounded-2xl p-5 bg-white shadow-sm flex flex-col justify-between h-28">
+            <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-600">Tỷ Lệ Hoàn Thành</span><i class="fas fa-arrow-trend-up text-slate-400"></i></div>
+            <div class="text-2xl font-black text-slate-800" id="dash-rate">0%</div>
+        </div>
+    </div>
+
+    <!-- TÌM KIẾM & BỘ LỌC -->
+    <div class="flex justify-between items-center mb-6 gap-4">
+        <div class="relative flex-1 max-w-md">
+            <input type="text" id="course-search" placeholder="Tìm kiếm mã khóa hoặc tên khóa..." class="w-full pl-4 pr-4 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-400">
+        </div>
+        <select class="border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-600 outline-none cursor-pointer">
+            <option>Tất cả danh mục</option>
+        </select>
+    </div>
+
+    <!-- LƯỚI KHÓA HỌC -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="dashboard-course-grid">
+        <!-- Render bằng JS -->
+    </div>
+</div>
+
+<script>
+    function renderDashboardData() {
+        const db = window.loadMasterDB();
+        let totalClasses = db.length;
+        let sumTrainee = 0, sumPass = 0;
+        
+        db.forEach(item => {
+            sumTrainee += parseInt(item.totalTrainees) || 0;
+            sumPass += parseInt(item.passedTrainees) || 0;
+        });
+
+        const rate = sumTrainee > 0 ? Math.round((sumPass/sumTrainee)*100) : 0;
+        
+        document.getElementById('dash-total-course').innerText = totalClasses;
+        document.getElementById('dash-total-trainee').innerText = sumTrainee;
+        document.getElementById('dash-total-pass').innerText = sumPass;
+        document.getElementById('dash-rate').innerText = rate + '%';
+
+        // Vẽ thẻ Khóa học
+        const grid = document.getElementById('dashboard-course-grid');
+        grid.innerHTML = '';
+        window.courseConfig.forEach(c => {
+            const isActive = c.link !== '';
+            // Giao diện thẻ chuẩn theo ảnh mẫu
+            grid.innerHTML += `
+                <div class="bg-white border-t-4 border-${c.color}-500 border border-slate-200 rounded-2xl p-6 flex flex-col h-full hover:shadow-lg transition-shadow">
+                    <span class="text-[10px] font-black text-${c.color}-500 bg-${c.color}-50 px-2 py-1 rounded uppercase tracking-wider w-fit mb-4">${c.label}</span>
+                    <h3 class="text-lg font-bold text-slate-800 mb-1">${c.title}</h3>
+                    <p class="text-xs text-slate-400 font-mono mb-4">Mã: ${c.id}-2026-XX</p>
+                    <p class="text-sm text-slate-600 mb-8 flex-grow">${c.desc}</p>
+                    
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-sm font-bold text-slate-700">${c.sessions > 0 ? c.sessions + ' buổi' : '-- buổi'}</span>
+                        <span class="text-[10px] font-bold ${isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'} px-2 py-1 rounded-full">${isActive ? 'Đang diễn ra' : 'Đang lên kế hoạch'}</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 mt-auto">
+                        ${isActive 
+                            ? `<a href="#${c.link}" class="text-center py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition">Vào Giảng Dạy</a>` 
+                            : `<button disabled class="text-center py-2 bg-slate-100 text-slate-400 rounded-lg text-sm font-bold cursor-not-allowed">Chưa mở</button>`
+                        }
+                        <button class="text-center py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-50 transition">Công Việc</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    renderDashboardData();
+</script>
