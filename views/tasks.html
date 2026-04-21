@@ -1,79 +1,86 @@
-<div class="max-w-4xl mx-auto pb-20">
-    <!-- HEADER -->
-    <div class="flex justify-between items-start mb-6">
-        <div>
-            <h1 class="text-2xl font-black text-slate-800 tracking-tight">Quản Lý Công Việc</h1>
-            <p class="text-sm font-medium text-slate-500 mt-1" id="task-course-name">...</p>
-        </div>
-        <a href="#courses" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition shadow-sm">Quay lại</a>
+<div class="max-w-4xl mx-auto h-full flex flex-col">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm mb-6">
+        <div class="flex justify-between items-end mb-3"><span class="text-xs font-bold text-slate-500 uppercase">Tiến độ công việc</span><span class="text-xl font-black text-emerald-500" id="pct">50%</span></div>
+        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div id="p-bar" class="bg-emerald-500 h-full transition-all" style="width: 50%"></div></div>
     </div>
 
-    <!-- PROGRESS BAR -->
-    <div class="bg-white border border-slate-200 rounded-[24px] p-6 shadow-sm mb-6">
-        <div class="flex justify-between items-end mb-3"><span class="text-xs font-bold text-slate-500 uppercase">Tiến độ</span><span class="text-xl font-black text-emerald-500" id="task-percent">0%</span></div>
-        <div class="w-full bg-slate-100 h-2.5 rounded-full mb-3 overflow-hidden"><div id="task-progress-bar" class="bg-emerald-500 h-full rounded-full transition-all" style="width: 0%"></div></div>
-        <p class="text-[11px] font-bold text-slate-400" id="task-count-text">0 / 0 công việc</p>
+    <div class="bg-slate-100 p-1 rounded-xl flex gap-1 mb-6 border border-slate-200">
+        <button onclick="openT('before')" id="t-before" class="t-tab active flex-1 py-2 text-sm font-bold rounded-lg text-slate-700 bg-white shadow-sm">Trước Khóa</button>
+        <button onclick="openT('during')" id="t-during" class="t-tab flex-1 py-2 text-sm font-bold rounded-lg text-slate-500">Trong Khóa</button>
+        <button onclick="openT('after')" id="t-after" class="t-tab flex-1 py-2 text-sm font-bold rounded-lg text-slate-500">Sau Khóa</button>
     </div>
 
-    <!-- TABS -->
-    <div class="bg-slate-100 p-1 rounded-xl flex gap-1 mb-6 border border-slate-200 w-full shrink-0">
-        <button onclick="openTaskTab('before')" id="tab-before" class="task-tab active flex-1 py-2.5 text-sm font-bold rounded-lg text-slate-700 bg-white shadow-sm">Trước Khóa</button>
-        <button onclick="openTaskTab('during')" id="tab-during" class="task-tab flex-1 py-2.5 text-sm font-bold rounded-lg text-slate-500">Trong Khóa</button>
-        <button onclick="openTaskTab('after')" id="tab-after" class="task-tab flex-1 py-2.5 text-sm font-bold rounded-lg text-slate-500">Sau Khóa</button>
-    </div>
-
-    <!-- CONTENT -->
-    <div class="bg-white border border-slate-200 rounded-[24px] p-6 shadow-sm min-h-[400px]">
-        <div id="task-before" class="task-content block space-y-4">
-            <h3 class="text-sm font-bold text-slate-800 flex items-center"><i class="far fa-clock text-slate-400 mr-2"></i> Công việc chuẩn bị</h3>
-            <div id="list-before" class="space-y-3"></div>
+    <div class="bg-white border border-slate-200 rounded-3xl p-8 flex-grow shadow-sm overflow-y-auto custom-scrollbar">
+        <div id="t-content-before" class="t-content block space-y-4">
+            <label class="flex items-center gap-3 p-4 bg-slate-50 rounded-xl cursor-pointer"><input type="checkbox" checked class="w-4 h-4 accent-blue-600"><span class="font-bold text-slate-400 line-through">Chuẩn bị slide và tài liệu</span></label>
+            <label class="flex items-center gap-3 p-4 bg-slate-50 rounded-xl cursor-pointer"><input type="checkbox" class="w-4 h-4 accent-blue-600"><span class="font-bold text-slate-700">Lọc HRM & Gửi Mail</span></label>
         </div>
-        <div id="task-during" class="task-content hidden space-y-4">
-            <h3 class="text-sm font-bold text-slate-800 flex items-center"><i class="fas fa-video text-blue-400 mr-2"></i> Công việc vận hành</h3>
-            <div id="list-during" class="space-y-3"></div>
-        </div>
-        <div id="task-after" class="task-content hidden space-y-4">
-            <h3 class="text-sm font-bold text-slate-800 flex items-center"><i class="fas fa-flag-checkered text-emerald-400 mr-2"></i> Tổng kết & Báo cáo</h3>
-            <div id="list-after" class="space-y-3 mb-8"></div>
-            
-            <div class="h-px bg-slate-100 my-8"></div>
-            
-            <!-- FORM ĐÓNG KHÓA (NÂNG CẤP) -->
-            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6">
-                <h4 class="text-base font-black text-slate-800 mb-6">Nộp Báo Cáo Khóa Học</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <!-- Tab Sau khóa chứa Form Submit -->
+        <div id="t-content-after" class="t-content hidden space-y-6">
+            <div class="bg-blue-50 border border-blue-100 p-6 rounded-2xl">
+                <h4 class="text-base font-black text-blue-900 mb-4">Nộp Báo Cáo & Đóng Khóa</h4>
+                <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Mã Khóa <span class="text-rose-500">*</span></label>
-                        <div class="flex items-center gap-2">
-                            <input type="text" id="db-prefix" class="w-2/3 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-blue-600 bg-slate-100" readonly>
-                            <input type="text" id="db-suffix" maxlength="2" class="w-1/3 border border-slate-200 rounded-xl px-4 py-2.5 text-sm uppercase font-bold text-blue-600 focus:border-blue-500 outline-none text-center" placeholder="XX">
+                        <label class="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Mã Khóa</label>
+                        <div class="flex gap-1">
+                            <input type="text" id="prefix" readonly class="w-2/3 bg-slate-200 border rounded-lg px-3 py-2 text-xs font-black">
+                            <input type="text" id="suffix" maxlength="2" placeholder="XX" class="w-1/3 border-2 border-blue-300 rounded-lg px-3 py-2 text-xs font-black text-center focus:border-blue-600">
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Trạng thái</label>
-                        <select id="db-status" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold"><option>Hoàn thành</option><option>Hủy</option></select>
-                    </div>
+                    <div><label class="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Trạng thái</label><select id="st" class="w-full border rounded-lg px-3 py-2 text-xs font-bold"><option>Hoàn thành</option><option>Hủy</option></select></div>
                 </div>
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Ngày bắt đầu</label><input type="date" id="db-start" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm"></div>
-                    <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Ngày kết thúc</label><input type="date" id="db-finish" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm"></div>
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    <input type="number" id="t-trainee" placeholder="Tổng HV" class="border rounded-lg p-2 text-xs font-bold">
+                    <input type="number" id="t-pass" placeholder="Đạt" class="border border-emerald-200 rounded-lg p-2 text-xs font-bold text-emerald-600">
+                    <input type="number" id="t-fail" placeholder="Fail" class="border border-rose-200 rounded-lg p-2 text-xs font-bold text-rose-600">
                 </div>
-                <div class="grid grid-cols-3 gap-4 mb-6">
-                    <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 text-center">Tổng HV</label><input type="number" id="db-total" class="w-full border rounded-xl p-2.5 text-center font-black"></div>
-                    <div><label class="block text-[10px] font-bold text-emerald-600 uppercase mb-1.5 text-center">Đạt</label><input type="number" id="db-pass" class="w-full border-emerald-200 rounded-xl p-2.5 text-center font-black text-emerald-600"></div>
-                    <div><label class="block text-[10px] font-bold text-rose-500 uppercase mb-1.5 text-center">Fail</label><input type="number" id="db-fail" class="w-full border-rose-200 rounded-xl p-2.5 text-center font-black text-rose-500"></div>
+                <div class="space-y-2 mb-6">
+                    <input type="text" id="l1" placeholder="Link Danh Sách..." class="w-full border rounded-lg px-3 py-2 text-xs">
+                    <input type="text" id="l2" placeholder="Link Quiz / Kết quả..." class="w-full border rounded-lg px-3 py-2 text-xs">
+                    <input type="text" id="l3" placeholder="Link Record..." class="w-full border rounded-lg px-3 py-2 text-xs">
                 </div>
-                <div class="space-y-3 mb-6">
-                    <input type="text" id="db-link-ds" placeholder="Link danh sách (Excel)..." class="w-full border rounded-xl px-4 py-2 text-sm">
-                    <input type="text" id="db-link-quiz" placeholder="Link Quiz/Kết quả (Google)..." class="w-full border rounded-xl px-4 py-2 text-sm">
-                    <input type="text" id="db-link-record" placeholder="Link Record buổi học (Video)..." class="w-full border rounded-xl px-4 py-2 text-sm">
-                </div>
-                <button onclick="submitCourseReport()" class="w-full py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 shadow-lg text-sm"><i class="fas fa-cloud-upload-alt mr-2"></i> LƯU BÁO CÁO</button>
+                <button onclick="submitReport()" class="w-full py-3 bg-blue-600 text-white font-black rounded-xl text-sm shadow-lg">XÁC NHẬN NỘP BÁO CÁO</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Logic render và submit y hệt file cũ, chỉ thêm các trường link mới
+    const currentId = localStorage.getItem('currentCourseId') || 'SPCB';
+    const config = window.courseConfig.find(c => c.id === currentId);
+    document.getElementById('prefix').value = config.prefix;
+
+    function openT(id) {
+        document.querySelectorAll('.t-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById(`t-content-${id}`).classList.remove('hidden');
+        document.querySelectorAll('.t-tab').forEach(el => el.className = "t-tab flex-1 py-2 text-sm font-bold rounded-lg text-slate-500");
+        document.getElementById(`t-${id}`).className = "t-tab active flex-1 py-2 text-sm font-bold rounded-lg text-slate-700 bg-white shadow-sm";
+    }
+
+    function submitReport() {
+        const fullId = document.getElementById('prefix').value + document.getElementById('suffix').value;
+        const total = document.getElementById('t-trainee').value;
+        if(!total || !document.getElementById('suffix').value) return alert("Vui lòng điền đủ Mã khóa và Số lượng!");
+        
+        const data = {
+            timestamp: new Date().getTime(),
+            groupName: currentId,
+            courseId: fullId,
+            month: new Date().getMonth() + 1,
+            status: document.getElementById('st').value,
+            totalTrainees: total,
+            passedTrainees: document.getElementById('t-pass').value || 0,
+            failedTrainees: document.getElementById('t-fail').value || 0,
+            listLink: document.getElementById('l1').value,
+            quizLink: document.getElementById('l2').value,
+            recordLink: document.getElementById('l3').value
+        };
+
+        let db = window.loadMasterDB();
+        db.push(data);
+        localStorage.setItem('kv_master_db', JSON.stringify(db));
+        
+        // Hiển thị Popup thành công từ index.html
+        window.openModal('successModal');
+    }
 </script>
