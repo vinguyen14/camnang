@@ -1,0 +1,227 @@
+<div class="h-full flex flex-col">
+    <div class="mb-6">
+        <h1 class="text-3xl font-black text-slate-900 tracking-tight">Công Cụ Trợ Lý</h1>
+        <p class="text-sm text-slate-500 mt-1">Các công cụ hỗ trợ quản lý email, danh sách và điểm danh</p>
+    </div>
+
+    <!-- TABS NAVBAR -->
+    <div class="bg-slate-100 p-1 rounded-xl flex gap-1 mb-6 border border-slate-200 w-full">
+        <button onclick="openToolTab('email-search')" id="tab-email-search" class="tool-tab active flex-1 py-2.5 text-sm font-bold rounded-lg text-slate-700 bg-white shadow-sm transition"><i class="far fa-envelope mr-2"></i> Tra Cứu Email</button>
+        <button onclick="openToolTab('email-filter')" id="tab-email-filter" class="tool-tab flex-1 py-2.5 text-sm font-bold rounded-lg text-slate-500 hover:text-slate-700 transition"><i class="fas fa-filter mr-2"></i> Lọc Email</button>
+        <button onclick="openToolTab('attendance')" id="tab-attendance" class="tool-tab flex-1 py-2.5 text-sm font-bold rounded-lg text-slate-500 hover:text-slate-700 transition"><i class="fas fa-user-check mr-2"></i> Điểm Danh</button>
+    </div>
+
+    <!-- NỘI DUNG TABS -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 flex-grow overflow-hidden flex flex-col relative">
+        
+        <!-- TAB 1: TRA CỨU EMAIL ADMIN -->
+        <div id="email-search" class="tool-content h-full flex flex-col">
+            <h2 class="text-base font-bold text-slate-800 mb-1">Tra Cứu & Sao Chép Email Admin</h2>
+            <p class="text-xs text-slate-500 mb-4">Tìm kiếm và chọn email admin để sao chép</p>
+            
+            <label class="text-xs font-bold text-slate-700 mb-2">Tìm kiếm (tên, phòng ban, email)</label>
+            <input type="text" id="toolEmailSearch" oninput="runEmailFilter()" placeholder="Nhập tên hoặc phòng ban..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm mb-4 outline-none focus:border-blue-500">
+            
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-bold text-slate-700">Danh Sách Admin (<span id="admin-count">0</span>)</span>
+                <button onclick="toolCopyEmails()" class="px-4 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-blue-600 transition">Copy Email Đã Chọn</button>
+            </div>
+
+            <div class="border border-slate-200 rounded-xl flex-grow overflow-y-auto custom-scrollbar p-2">
+                <div id="admin-list" class="space-y-1"></div>
+            </div>
+            <textarea id="copy-helper-tools" class="hidden"></textarea>
+        </div>
+
+        <!-- TAB 2: LỌC EMAIL GOOGLE CHAT -->
+        <div id="email-filter" class="tool-content hidden h-full flex flex-col">
+            <h2 class="text-base font-bold text-slate-800 mb-1">Lọc & Định Dạng Email</h2>
+            <p class="text-xs text-slate-500 mb-4">Dán danh sách email thô, làm sạch và định dạng</p>
+            
+            <label class="text-xs font-bold text-slate-700 mb-2">Dán Danh Sách Email (ngăn cách bằng dấu phẩy, dòng mới)</label>
+            <textarea id="rawEmailInput" class="w-full h-32 px-4 py-3 border border-slate-200 rounded-xl text-sm mb-4 outline-none focus:border-blue-500 custom-scrollbar resize-none" placeholder="ví dụ: email1@example.com, email2@example.com..."></textarea>
+            
+            <button onclick="runFilterClean()" class="w-full py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition mb-4 shadow-md">Quét & Làm Sạch Dữ Liệu</button>
+            
+            <label class="text-xs font-bold text-slate-700 mb-2 flex justify-between">
+                <span>Kết quả chuẩn (sẵn sàng Copy)</span>
+                <span class="text-emerald-600" id="valid-count">0 hợp lệ</span>
+            </label>
+            <div class="relative flex-grow">
+                <textarea id="cleanEmailOutput" readonly class="w-full h-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-blue-600 font-medium outline-none custom-scrollbar resize-none"></textarea>
+                <button onclick="copyCleanEmail(this)" class="absolute bottom-4 right-4 px-4 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition">Copy Kết Quả</button>
+            </div>
+        </div>
+
+        <!-- TAB 3: ĐIỂM DANH AI (Nguyên bản 100%) -->
+        <div id="attendance" class="tool-content hidden h-full flex flex-col">
+            <h2 class="text-base font-bold text-slate-800 mb-1">Điểm Danh Tự Động</h2>
+            <p class="text-xs text-slate-500 mb-4">So khớp danh sách gốc và danh sách trên Meet/Zoom</p>
+
+            <div class="grid grid-cols-2 gap-6 h-full">
+                <div class="flex flex-col h-full border border-slate-200 rounded-xl p-4 bg-slate-50">
+                    <label class="text-xs font-bold text-slate-700 mb-2">1. Dán DS Gốc (Cột Họ & Tên)</label>
+                    <textarea id="att-roster" oninput="loadAttRoster()" class="w-full flex-grow border border-slate-200 rounded-lg p-3 text-sm resize-none outline-none focus:border-blue-400 custom-scrollbar mb-2"></textarea>
+                    <div class="text-[10px] font-bold text-slate-500 text-right">Đã load: <span id="att-roster-count">0</span> HV</div>
+                </div>
+                <div class="flex flex-col h-full border border-slate-200 rounded-xl p-4 bg-slate-50">
+                    <label class="text-xs font-bold text-slate-700 mb-2">2. Dán DS Tham gia (Meet/Zoom)</label>
+                    <textarea id="att-meet" class="w-full h-1/2 border border-slate-200 rounded-lg p-3 text-sm resize-none outline-none focus:border-emerald-400 custom-scrollbar mb-4"></textarea>
+                    <button onclick="runAttendance()" class="w-full py-2.5 bg-emerald-500 text-white rounded-lg text-sm font-bold hover:bg-emerald-600 transition shadow-sm mb-4">Quét Điểm Danh</button>
+                    
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <div class="bg-white border border-slate-200 rounded-lg p-2 text-center"><p class="text-[10px] text-slate-400 font-bold">CÓ MẶT</p><p id="att-res-present" class="text-lg font-black text-emerald-500">0</p></div>
+                        <div class="bg-white border border-slate-200 rounded-lg p-2 text-center"><p class="text-[10px] text-slate-400 font-bold">VẮNG MẶT</p><p id="att-res-absent" class="text-lg font-black text-rose-500">0</p></div>
+                    </div>
+                    <button onclick="copyAbsentList()" class="w-full py-2 border border-rose-200 text-rose-500 bg-white rounded-lg text-xs font-bold hover:bg-rose-50 transition">Copy DS Vắng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. CHUYỂN TAB UI
+    function openToolTab(tabId) {
+        document.querySelectorAll('.tool-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById(tabId).classList.remove('hidden');
+        
+        document.querySelectorAll('.tool-tab').forEach(el => {
+            el.className = "tool-tab flex-1 py-2.5 text-sm font-bold rounded-lg text-slate-500 hover:text-slate-700 transition";
+        });
+        document.getElementById('tab-' + tabId).className = "tool-tab active flex-1 py-2.5 text-sm font-bold rounded-lg text-slate-700 bg-white shadow-sm transition";
+    }
+
+    // 2. DATA NHÂN SỰ TỪ WINDOW GỐC (Tránh file quá dài)
+    // Lấy data từ biến toàn cục window.employeeData (Đã định nghĩa trong index.html)
+    // Tuy nhiên để code hoạt động trơn tru nếu chạy độc lập, tôi chèn 1 bản mini ở đây.
+    const toolsEmployeeData = window.employeeData || [
+        { role: 'Manager', dept: 'Administration', position: 'Admin Manager', name: 'Nguyễn Thúy An', email: 'an.nt@kiotviet.com' },
+        { role: 'Manager', dept: 'BOD', position: 'General Director', name: 'Trần Nguyên Hạo', email: 'hao@kiotviet.com' }
+        // Cần copy nguyên cục data nhân sự của bạn paste vào đây nếu biến global thất bại
+    ];
+
+    let selectedToolsEmails = new Set();
+
+    function renderToolsEmailTable(data) {
+        const listDOM = document.getElementById('admin-list');
+        listDOM.innerHTML = '';
+        document.getElementById('admin-count').innerText = data.length;
+        
+        data.forEach(emp => {
+            const isChecked = selectedToolsEmails.has(emp.email);
+            listDOM.innerHTML += `
+                <label class="flex items-start p-3 hover:bg-slate-50 rounded-lg cursor-pointer border border-transparent hover:border-slate-200 transition">
+                    <input type="checkbox" class="mt-1 mr-3 accent-blue-600 tool-emp-cb" data-email="${emp.email}" ${isChecked ? 'checked' : ''} onchange="toggleToolEmail(this)">
+                    <div>
+                        <p class="text-sm font-bold text-slate-800">${emp.name}</p>
+                        <p class="text-[11px] text-slate-500">${emp.email}</p>
+                        <p class="text-[10px] text-slate-400">${emp.dept} - ${emp.position}</p>
+                    </div>
+                </label>
+            `;
+        });
+    }
+
+    function runEmailFilter() {
+        const query = document.getElementById('toolEmailSearch').value.toLowerCase();
+        const filtered = toolsEmployeeData.filter(emp => 
+            emp.dept.toLowerCase().includes(query) || 
+            emp.name.toLowerCase().includes(query) || 
+            emp.email.toLowerCase().includes(query)
+        );
+        renderToolsEmailTable(filtered);
+    }
+
+    function toggleToolEmail(cb) {
+        if(cb.checked) selectedToolsEmails.add(cb.dataset.email);
+        else selectedToolsEmails.delete(cb.dataset.email);
+    }
+
+    function toolCopyEmails() {
+        if (selectedToolsEmails.size === 0) { alert('Chưa chọn email nào!'); return; }
+        const text = Array.from(selectedToolsEmails).join(', ');
+        const helper = document.getElementById('copy-helper-tools');
+        helper.value = text;
+        helper.classList.remove('hidden');
+        helper.select();
+        document.execCommand('copy');
+        helper.classList.add('hidden');
+        alert("Đã copy " + selectedToolsEmails.size + " email!");
+    }
+
+    // 3. LOGIC LỌC EMAIL CHAT
+    function runFilterClean() {
+        const input = document.getElementById('rawEmailInput').value;
+        if (!input.trim()) return;
+
+        const rawItems = input.split(/[\n,;\s]+/).filter(item => item.trim() !== '');
+        const validSet = new Set();
+        
+        rawItems.forEach(item => {
+            const clean = item.trim().toLowerCase();
+            if (clean.endsWith('@kiotviet.com')) validSet.add(clean);
+        });
+
+        const result = Array.from(validSet);
+        document.getElementById('cleanEmailOutput').value = result.join(', ');
+        document.getElementById('valid-count').innerText = result.length + " hợp lệ";
+    }
+
+    function copyCleanEmail(btn) {
+        const out = document.getElementById('cleanEmailOutput');
+        if(!out.value) return;
+        out.select();
+        document.execCommand('copy');
+        btn.innerText = "Đã Copy!";
+        setTimeout(() => btn.innerText = "Copy Kết Quả", 2000);
+    }
+
+    // 4. LOGIC ĐIỂM DANH (Xử lý tiếng Việt bỏ dấu)
+    let attDB = [];
+    function normalizeStr(str) { 
+        if (!str) return ""; 
+        return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().replace(/[.,()\[\]\n\t\-]/g, " ").replace(/\s+/g, " ").trim(); 
+    }
+    
+    function loadAttRoster() {
+        const raw = document.getElementById('att-roster').value.trim();
+        attDB = [];
+        if(!raw) { document.getElementById('att-roster-count').innerText = "0"; return; }
+        const lines = raw.split('\n').map(l => l.trim()).filter(l => l !== "");
+        lines.forEach((name) => {
+            attDB.push({ originalName: name, searchName: normalizeStr(name), status: 'absent' });
+        });
+        document.getElementById('att-roster-count').innerText = attDB.length;
+    }
+
+    function runAttendance() {
+        if(attDB.length === 0) { alert("Vui lòng dán danh sách gốc!"); return; }
+        const rawMeet = document.getElementById('att-meet').value;
+        const cleanMeetText = " " + normalizeStr(rawMeet) + " ";
+        
+        let presentCount = 0;
+        attDB.forEach(student => {
+            const nameToFind = " " + student.searchName + " ";
+            if(cleanMeetText.includes(nameToFind)) {
+                student.status = 'present';
+                presentCount++;
+            } else {
+                student.status = 'absent';
+            }
+        });
+        
+        document.getElementById('att-res-present').innerText = presentCount;
+        document.getElementById('att-res-absent').innerText = attDB.length - presentCount;
+        alert("Quét thành công!");
+    }
+
+    function copyAbsentList() {
+        const absentNames = attDB.filter(s => s.status === 'absent').map(s => s.originalName).join('\n');
+        if(!absentNames) { alert("Không có ai vắng mặt!"); return; }
+        navigator.clipboard.writeText(absentNames).then(() => alert("Đã copy danh sách vắng!"));
+    }
+
+    // Khởi tạo
+    setTimeout(() => { renderToolsEmailTable(toolsEmployeeData); }, 100);
+</script>
