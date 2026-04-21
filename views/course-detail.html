@@ -1,104 +1,39 @@
-<div class="h-full flex flex-col max-w-6xl mx-auto pb-20">
-    <!-- HEADER -->
-    <div class="flex justify-between items-start mb-6">
-        <div>
-            <h1 class="text-2xl font-black text-slate-800 tracking-tight" id="cd-title">...</h1>
-            <p class="text-xs font-medium text-slate-500 mt-1 font-mono" id="cd-id">Mã khóa: ...</p>
+<div class="max-w-6xl mx-auto h-full flex flex-col">
+    <div class="flex justify-between items-start mb-4">
+        <h1 class="text-2xl font-black text-slate-800" id="cd-title">...</h1>
+        <a href="#courses" class="text-xs font-bold text-slate-500 border border-slate-200 px-3 py-1 rounded-lg">Quay lại</a>
+    </div>
+
+    <div class="bg-slate-100 p-1 rounded-xl flex gap-1 mb-6 border border-slate-200">
+        <button onclick="openCourseTab('script')" id="tab-script" class="course-tab active flex-1 py-2 text-sm font-bold rounded-lg text-slate-700 bg-white shadow-sm">Kịch Bản</button>
+        <button onclick="openCourseTab('docs')" id="tab-docs" class="course-tab flex-1 py-2 text-sm font-bold rounded-lg text-slate-500">Tài Liệu</button>
+        <button onclick="openCourseTab('info')" id="tab-info" class="course-tab flex-1 py-2 text-sm font-bold rounded-lg text-slate-500">Thông Tin</button>
+    </div>
+
+    <div class="flex-grow overflow-hidden bg-white border border-slate-200 rounded-2xl p-6 shadow-sm relative">
+        <div id="course-script" class="course-content h-full flex gap-6">
+            <div class="w-56 shrink-0 border-r border-slate-100 pr-4 space-y-1" id="vertical-menu"></div>
+            <div class="flex-1 overflow-y-auto custom-scrollbar" id="script-body"></div>
         </div>
-        <a href="#courses" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 transition shadow-sm">
-            Quay lại
-        </a>
-    </div>
-
-    <!-- TABS NAVBAR -->
-    <div class="bg-slate-100 p-1 rounded-xl flex gap-1 mb-6 border border-slate-200 w-full shrink-0">
-        <button onclick="openCdTab('script')" id="tab-script" class="cd-tab active flex-1 py-2.5 text-sm font-bold rounded-lg text-slate-700 bg-white shadow-sm transition">Kịch Bản</button>
-        <button onclick="openCdTab('docs')" id="tab-docs" class="cd-tab flex-1 py-2.5 text-sm font-bold rounded-lg text-slate-500 hover:text-slate-700 transition">Tài Liệu</button>
-        <button onclick="openCdTab('info')" id="tab-info" class="cd-tab flex-1 py-2.5 text-sm font-bold rounded-lg text-slate-500 hover:text-slate-700 transition">Thông Tin</button>
-    </div>
-
-    <!-- TAB 1: KỊCH BẢN GIẢNG DẠY -->
-    <div id="cd-script" class="cd-content block h-full">
-        <div class="flex flex-col md:flex-row gap-6 h-full">
-            <div class="w-full md:w-64 shrink-0 bg-white border border-slate-200 rounded-2xl p-3 h-fit" id="script-sidebar"></div>
-            <div class="flex-1 bg-white border border-slate-200 rounded-2xl p-6 overflow-y-auto custom-scrollbar" id="script-content-area"></div>
-        </div>
-    </div>
-
-    <!-- TAB 2: TÀI LIỆU -->
-    <div id="cd-docs" class="cd-content hidden bg-white border border-slate-200 rounded-[24px] p-6 shadow-sm">
-        <h2 class="text-lg font-black text-slate-800 mb-6">Links & Tài nguyên</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="docs-content-area"></div>
-    </div>
-
-    <!-- TAB 3: THÔNG TIN KHÓA HỌC -->
-    <div id="cd-info" class="cd-content hidden bg-white border border-slate-200 rounded-[24px] p-6 shadow-sm">
-        <h2 class="text-lg font-black text-slate-800 mb-6">Thông Tin Chi Tiết</h2>
-        <div class="space-y-6 max-w-2xl text-[13px]">
-            <div><p class="text-xs font-bold text-slate-400">Mã khóa</p><p class="font-bold text-slate-700 font-mono" id="info-id">...</p></div>
-            <div><p class="text-xs font-bold text-slate-400">Tên khóa</p><p class="font-bold text-slate-700" id="info-title">...</p></div>
-            <div><p class="text-xs font-bold text-slate-400 mb-2">Danh mục</p><span class="px-3 py-1 text-[10px] font-black rounded-full" id="info-cat">...</span></div>
-            <div><p class="text-xs font-bold text-slate-400">Số buổi</p><p class="font-bold text-slate-700" id="info-sessions">...</p></div>
-            <div><p class="text-xs font-bold text-slate-400 mb-2">Trạng thái</p><span class="px-3 py-1 text-[10px] font-black rounded-md uppercase" id="info-status">...</span></div>
-            <div><p class="text-xs font-bold text-slate-400">Mô tả</p><p class="font-medium text-slate-600" id="info-desc">...</p></div>
+        <div id="course-docs" class="course-content hidden h-full overflow-y-auto grid grid-cols-2 gap-4"></div>
+        <div id="course-info" class="course-content hidden h-full space-y-4 text-sm font-medium text-slate-600">
+            <div class="p-4 bg-slate-50 rounded-xl">Mã khóa: <b class="text-slate-800 font-mono" id="info-id"></b></div>
+            <div class="p-4 bg-slate-50 rounded-xl">Mô tả: <p id="info-desc"></p></div>
         </div>
     </div>
 </div>
 
-<script src="./scripts/course-db.js"></script>
 <script>
     const currentId = localStorage.getItem('currentCourseId') || 'SPCB';
-    const cConfig = window.courseConfig.find(c => c.id === currentId);
+    const config = window.courseConfig.find(c => c.id === currentId);
+    document.getElementById('cd-title').innerText = config.title;
+    document.getElementById('info-id').innerText = config.prefix + "XX";
+    document.getElementById('info-desc').innerText = config.desc;
 
-    // Đổ data chung
-    if(cConfig) {
-        document.getElementById('cd-title').innerText = cConfig.title;
-        document.getElementById('cd-id').innerText = `Mã khóa: ${cConfig.prefix}XX`;
-        document.getElementById('info-id').innerText = `${cConfig.prefix}XX`;
-        document.getElementById('info-title').innerText = cConfig.title;
-        document.getElementById('info-cat').innerText = cConfig.label;
-        document.getElementById('info-cat').className = `px-3 py-1 bg-${cConfig.color}-600 text-white text-[10px] font-black rounded-full`;
-        document.getElementById('info-sessions').innerText = `${cConfig.sessions} buổi`;
-        document.getElementById('info-status').innerText = cConfig.status;
-        document.getElementById('info-status').className = `px-3 py-1 ${cConfig.status==='Đang diễn ra'?'bg-emerald-50 text-emerald-600':'bg-amber-50 text-amber-600'} text-[10px] font-black rounded-md uppercase`;
-        document.getElementById('info-desc').innerText = cConfig.desc;
-    }
-
-    function openCdTab(id) {
-        document.querySelectorAll('.cd-content').forEach(el => el.classList.add('hidden'));
-        document.getElementById(`cd-${id}`).classList.remove('hidden');
-        document.querySelectorAll('.cd-tab').forEach(el => el.className = "cd-tab flex-1 py-2.5 text-sm font-bold rounded-lg text-slate-500 hover:text-slate-700 transition");
-        document.getElementById(`tab-${id}`).className = "cd-tab active flex-1 py-2.5 text-sm font-bold rounded-lg text-slate-700 bg-white shadow-sm transition";
-    }
-
-    // DATABASE KỊCH BẢN (từ file course-db.js)
-    const db = window.courseData[currentId] || window.courseData['SPCB'];
-    
-    // Render Kịch bản
-    let menuHTML = '';
-    db.menu.forEach(m => {
-        menuHTML += `<button onclick="showSub('${m.id}')" id="sub-${m.id}" class="sub-btn w-full text-left px-4 py-3 rounded-xl text-[13px] font-bold ${m.active ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50'} transition mb-1">${m.title}</button>`;
-    });
-    document.getElementById('script-sidebar').innerHTML = `<nav>${menuHTML}</nav>`;
-
-    let contentHTML = '';
-    Object.keys(db.content).forEach(key => {
-        const isActive = db.menu.find(m => m.id === key).active;
-        contentHTML += `<div id="content-${key}" class="sub-content ${isActive ? 'block' : 'hidden'}">${db.content[key]}</div>`;
-    });
-    document.getElementById('script-content-area').innerHTML = contentHTML;
-
-    // Render Tài Liệu
-    let docsHTML = '';
-    db.docs.forEach(d => {
-        docsHTML += `<div class="p-4 bg-slate-50 border border-slate-200 rounded-xl hover:shadow-md transition"><p class="text-sm font-bold text-slate-800 mb-1">${d.title}</p><p class="text-[10px] text-blue-500 truncate mb-3">${d.link}</p><a href="${d.link}" target="_blank" class="text-xs font-bold text-slate-500 hover:text-blue-600 border border-slate-200 bg-white px-4 py-1.5 rounded-md inline-block shadow-sm">Truy cập</a></div>`;
-    });
-    document.getElementById('docs-content-area').innerHTML = docsHTML;
-
-    function showSub(id) {
-        document.querySelectorAll('.sub-content').forEach(el => el.classList.add('hidden'));
-        document.getElementById(`content-${id}`).classList.remove('hidden');
-        document.querySelectorAll('.sub-btn').forEach(el => el.className = "sub-btn w-full text-left px-4 py-3 rounded-xl text-[13px] font-bold text-slate-600 hover:bg-slate-50 transition mb-1");
-        document.getElementById(`sub-${id}`).className = "sub-btn active w-full text-left px-4 py-3 rounded-xl text-[13px] font-bold bg-blue-50 text-blue-600 transition mb-1";
+    function openCourseTab(id) {
+        document.querySelectorAll('.course-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById(`course-${id}`).classList.remove('hidden');
+        document.querySelectorAll('.course-tab').forEach(el => el.className = "course-tab flex-1 py-2 text-sm font-bold rounded-lg text-slate-500");
+        document.getElementById(`tab-${id}`).className = "course-tab active flex-1 py-2 text-sm font-bold rounded-lg text-slate-700 bg-white shadow-sm";
     }
 </script>
