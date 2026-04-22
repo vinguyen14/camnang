@@ -97,6 +97,14 @@
         
         #copy-toast { transition: opacity 0.3s, transform 0.3s; }
         .btn-press { transform: scale(0.95); transition: transform 0.1s; }
+
+        /* Custom Table Inputs for Gift Center */
+        .table-input { width: 100%; text-align: center; background: transparent; border: 1px solid transparent; border-radius: 8px; padding: 6px 4px; font-size: 13px; font-weight: 800; outline: none; transition: all 0.2s; }
+        .table-input:focus { background: white; border-color: #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transform: scale(1.05); }
+        .table-input.input-in { color: #3b82f6; } /* Màu xanh */
+        .table-input.input-out { color: #f43f5e; } /* Màu đỏ */
+        .table-input::-webkit-outer-spin-button, .table-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .table-input[type=number] { -moz-appearance: textfield; }
     </style>
 </head>
 <body class="antialiased">
@@ -146,6 +154,9 @@
                     </button>
                     <button onclick="openModal('attendanceModal')" class="glass-panel px-5 py-3 rounded-2xl font-bold text-sm flex items-center hover-5d text-slate-700 border-blue-200 btn-hover-shake">
                         <i class="fas fa-check-double mr-2 text-blue-500 text-lg"></i> Điểm danh AI
+                    </button>
+                    <button onclick="openModal('giftModal')" class="glass-panel px-5 py-3 rounded-2xl font-bold text-sm flex items-center hover-5d text-slate-700 border-rose-200 btn-hover-animate">
+                        <i class="fas fa-gift mr-2 text-rose-500 text-lg"></i> Quản lý Quà tặng
                     </button>
                 </div>
             </div>
@@ -427,6 +438,82 @@
         </div>
     </div>
 
+    <!-- 7. MODAL QUẢN LÝ QUÀ TẶNG (GIFT CENTER) TƯƠNG TÁC -->
+    <div id="giftModal" class="modal fixed inset-0 bg-slate-900/80 backdrop-blur-xl items-center justify-center p-4 z-[9999]">
+        <div class="modal-content bg-white w-full max-w-7xl h-[90vh] rounded-[32px] shadow-2xl relative flex flex-col overflow-hidden border border-white">
+            <!-- Nút đóng -->
+            <button onclick="closeModal('giftModal')" class="absolute top-6 right-6 text-slate-400 hover:text-rose-500 hover:bg-rose-50 w-10 h-10 rounded-full flex items-center justify-center transition-all z-10 text-xl shadow-sm bg-slate-50 border border-slate-100"><i class="fas fa-times"></i></button>
+            
+            <!-- Header -->
+            <div class="px-10 py-6 bg-rose-50/50 border-b border-rose-100 flex-shrink-0 relative overflow-hidden flex justify-between items-center">
+                <div class="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-rose-400 to-pink-500"></div>
+                <div>
+                    <h3 class="text-2xl font-black text-slate-800 tracking-tight flex items-center"><i class="fas fa-gift text-rose-500 mr-3"></i> Gift Center - Quản lý Quà tặng</h3>
+                    <p class="text-xs text-slate-500 mt-2 font-medium">Hệ thống tính toán tự động lưu trữ trên trình duyệt. Xuất Quà tặng tự động trừ Tồn cuối kỳ.</p>
+                </div>
+                <button onclick="resetGiftData()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-slate-200">
+                    <i class="fas fa-redo-alt"></i> Reset Kho
+                </button>
+            </div>
+            
+            <!-- Body: Split 2 cột -->
+            <div class="flex-grow flex flex-col lg:flex-row bg-slate-50/50 overflow-hidden">
+                
+                <!-- Cột trái: Tình trạng Tồn kho (Dashboard view) -->
+                <div class="w-full lg:w-2/3 p-8 border-r border-slate-200 flex flex-col bg-white overflow-y-auto custom-scrollbar">
+                    <div class="flex justify-between items-center mb-6">
+                        <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center"><i class="fas fa-box-open text-blue-500 mr-2"></i> Bảng kiểm soát Tồn kho</h4>
+                        <span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-blue-100">Khu vực: HCM</span>
+                    </div>
+
+                    <div class="border border-slate-200 rounded-2xl overflow-x-auto custom-scrollbar shadow-sm">
+                        <table class="w-full text-left text-sm min-w-[600px]">
+                            <thead class="bg-slate-100/80 border-b border-slate-200">
+                                <tr>
+                                    <th class="px-4 py-4 font-black text-slate-600 text-[11px] uppercase tracking-wider w-1/4">Tên quà tặng 💐</th>
+                                    <th class="px-2 py-4 font-black text-emerald-700 text-[11px] uppercase tracking-wider text-center bg-emerald-100/50 border-l border-emerald-200">Cost + Vat<br>(2026)</th>
+                                    <th class="px-2 py-4 font-black text-blue-600 text-[11px] uppercase tracking-wider text-center bg-blue-100/50 border-l border-blue-200">Tồn đầu kỳ</th>
+                                    <th class="px-2 py-4 font-black text-rose-500 text-[11px] uppercase tracking-wider text-center bg-rose-100/50 border-l border-rose-200">Xuất</th>
+                                    <th class="px-2 py-4 font-black text-slate-600 text-[11px] uppercase tracking-wider text-center bg-blue-100/50 border-l border-blue-200">Tồn cuối kỳ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="giftTableBody" class="divide-y divide-slate-100 font-medium text-slate-700">
+                                <!-- Javascript sẽ render data vào đây -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Form Submit Ghi nhận tặng quà -->
+                <div class="w-full lg:w-1/3 p-8 bg-slate-50 flex flex-col items-center justify-center relative">
+                    <!-- Ảnh nền mờ mờ -->
+                    <i class="fas fa-gift absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[150px] text-rose-100 opacity-50 z-0 pointer-events-none"></i>
+                    
+                    <div class="relative z-10 w-full max-w-sm space-y-6">
+                        <div class="text-center mb-8">
+                            <div class="w-16 h-16 bg-rose-500 text-white rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 shadow-[0_10px_20px_-5px_rgba(244,63,94,0.4)] animate-float">
+                                <i class="fas fa-paper-plane"></i>
+                            </div>
+                            <h4 class="text-xl font-black text-slate-800">Ghi nhận Thực tế</h4>
+                            <p class="text-xs text-slate-500 mt-2">Sau khi trừ Tồn kho ở bảng bên trái. Vui lòng điền Form để ghi nhận DS Học viên nhận quà.</p>
+                        </div>
+
+                        <!-- Link Google Form được cập nhật -->
+                        <a href="https://docs.google.com/forms/d/e/1FAIpQLScGHcgDXtxID0ufheOvABdozvE3DQUlagJpN0qJVuzt81wRvw/viewform?usp=header" target="_blank" class="w-full flex items-center justify-center px-6 py-4 rounded-2xl font-black text-white bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 transition-all shadow-[0_15px_30px_-10px_rgba(244,63,94,0.5)] transform hover:-translate-y-1 uppercase tracking-wider">
+                            <i class="fas fa-edit mr-2 text-lg"></i> Mở Form Submit
+                        </a>
+
+                        <!-- Link Google Sheet tồn kho được cập nhật -->
+                        <a href="https://docs.google.com/spreadsheets/d/1amqxx2UojQPvK2hqJohvHZNjrw5LV0_V9FoZa_0qzRg/edit" target="_blank" class="w-full flex items-center justify-center px-6 py-4 rounded-2xl font-bold text-emerald-600 bg-white border border-emerald-200 hover:bg-emerald-50 transition-all shadow-sm transform hover:-translate-y-0.5">
+                            <i class="fas fa-file-excel mr-2 text-emerald-500 text-lg"></i> Xem File Master (Kho)
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Copy Bảng Email -->
     <div id="copy-toast" class="fixed bottom-5 right-5 bg-emerald-500 text-white font-bold text-sm py-3 px-6 rounded-xl shadow-xl opacity-0 transform translate-y-10 z-[10000] pointer-events-none flex items-center gap-2"><i class="fas fa-check-circle"></i> <span>Đã sao chép!</span></div>
     <textarea id="copy-helper" style="position: absolute; left: -9999px;"></textarea>
@@ -439,7 +526,7 @@
         let statusChartInstance = null, perfChartInstance = null, deleteTargetIndex = null;
         const SECRET_KEY = "014023"; 
         
-        const courseConfig = [
+        const courseConfig =[
             { id: 'SPCB', label: 'Retail', title: 'Sản phẩm Cơ bản', desc: 'Lộ trình 3 buổi: Tổng quan, 6 bước demo và App.', sessions: 3, border: 'border-blue-500', color: 'text-blue-500', link: 'spcb.html' },
             { id: 'KV1', label: 'Advanced', title: 'Sản phẩm KV1', desc: 'Nâng cao kỹ năng quản lý tình huống nghiệp vụ.', sessions: 1, border: 'border-indigo-500', color: 'text-indigo-500', link: 'kv1.html' },
             { id: 'TAX', label: 'Specialist', title: 'HĐĐT - Thuế - Kế toán', desc: 'Kiến thức chuyên sâu về hóa đơn điện tử.', sessions: 1, border: 'border-slate-500', color: 'text-slate-500', link: 'thuehkd.html' },
@@ -448,7 +535,7 @@
             { id: 'HOTEL', label: 'Industry', title: 'KiotViet Hotel', desc: 'Giải pháp quản lý cơ sở lưu trú, khách sạn.', sessions: 0, border: 'border-emerald-500', color: 'text-emerald-500', link: '' }
         ];
 
-        const employeeData = [
+        const employeeData =[
             { role: 'Manager', dept: 'Administration', position: 'Admin Manager', name: 'Nguyễn Thúy An', email: 'an.nt@kiotviet.com', code: 'SG00001' },
             { role: 'Manager', dept: 'Administration', position: 'Admin Manager', name: 'Phùng Thị Dung', email: 'dungphung@kiotviet.com', code: 'HN00004' },
             { role: 'Manager', dept: 'BD - KVF', position: 'BDM', name: 'Nguyễn Bảo Anh', email: 'anhnguyen@kiotviet.com', code: 'HN04303' },
@@ -717,7 +804,7 @@
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
         function getFilteredAndSortedData() { let allData = loadDB(), displayData = [...allData]; if (AppState.filters.month !== 'all') displayData = displayData.filter(d => d.month == AppState.filters.month); if(AppState.filters.search !== "") displayData = displayData.filter(d => (d.courseId && d.courseId.toLowerCase().includes(AppState.filters.search)) || (d.groupName && d.groupName.toLowerCase().includes(AppState.filters.search))); if(AppState.sort.col !== "") { displayData.sort((a, b) => { let valA = (a[AppState.sort.col] || '').toString().toLowerCase(), valB = (b[AppState.sort.col] || '').toString().toLowerCase(); if(valA < valB) return AppState.sort.asc ? -1 : 1; if(valA > valB) return AppState.sort.asc ? 1 : -1; return 0; }); } return displayData; }
-        function loadDB() { let data = JSON.parse(localStorage.getItem('kv_master_db')) || []; const now = new Date().getTime(); let isChanged = false; data = data.filter(item => { if (!item.timestamp) { item.timestamp = now; isChanged = true; } return (now - item.timestamp) <= (365 * 24 * 60 * 60 * 1000); }); if (isChanged) localStorage.setItem('kv_master_db', JSON.stringify(data)); return data; }
+        function loadDB() { let data = JSON.parse(localStorage.getItem('kv_master_db')) ||[]; const now = new Date().getTime(); let isChanged = false; data = data.filter(item => { if (!item.timestamp) { item.timestamp = now; isChanged = true; } return (now - item.timestamp) <= (365 * 24 * 60 * 60 * 1000); }); if (isChanged) localStorage.setItem('kv_master_db', JSON.stringify(data)); return data; }
         function handleSearchReport(val) { AppState.filters.search = val.toLowerCase(); AppState.pagination.page = 1; renderAll(); }
         function handlePageSize(val) { AppState.pagination.limit = parseInt(val); AppState.pagination.page = 1; renderAll(); }
         function goToPage(p) { AppState.pagination.page = p; renderAll(); }
@@ -730,7 +817,7 @@
             paginatedData.forEach((item, displayIndex) => { const realIndex = allDBData.findIndex(d => d.courseId === item.courseId && d.timestamp === item.timestamp); const linkDS = item.listLink ? `<a href="${item.listLink}" target="_blank" class="icon-link icon-excel"><i class="fas fa-file-excel"></i></a>` : `<span class="text-slate-300" title="Trống"><i class="fas fa-file-excel"></i></span>`; const linkQ = item.quizLink ? `<a href="${item.quizLink}" target="_blank" class="icon-link icon-quiz"><i class="fas fa-poll"></i></a>` : `<span class="text-slate-300" title="Trống"><i class="fas fa-poll"></i></span>`; const linkR = item.recordLink ? `<a href="${item.recordLink}" target="_blank" class="icon-link icon-drive"><i class="fab fa-google-drive"></i></a>` : `<span class="text-slate-300" title="Trống"><i class="fab fa-google-drive"></i></span>`; const tTotal = parseInt(item.totalTrainees) || 0, tPass = parseInt(item.passedTrainees) || 0, tFail = parseInt(item.failedTrainees) || 0; const rateText = tTotal > 0 ? `<span class="font-black text-slate-800">${Math.round((tPass/tTotal)*100)}%</span>` : `<span class="text-slate-300 font-bold">--</span>`; tbody.innerHTML += `<tr class="table-row-5d border-b border-slate-100"><td class="px-5 py-4 text-center text-slate-400 text-[10px] font-black">${startIdx + displayIndex + 1}</td><td class="px-5 py-4 font-black text-slate-800 text-[11px]">${item.groupName}</td><td class="px-5 py-4 font-black text-blue-600 text-[11px]">${item.courseId}</td><td class="px-5 py-4 text-center font-black text-slate-400 text-[10px] uppercase">Tháng ${item.month}</td><td class="px-5 py-4 text-center text-slate-600 text-xs font-medium">${item.startDate || '--'}</td><td class="px-5 py-4 text-center text-slate-600 text-xs font-medium">${item.finishDate || '--'}</td><td class="px-5 py-4 text-center bg-indigo-50/50 font-bold text-indigo-700">${tTotal > 0 ? tTotal : '-'}</td><td class="px-5 py-4 text-center bg-emerald-50/50 text-emerald-600 font-bold">${tPass > 0 ? tPass : '-'}</td><td class="px-5 py-4 text-center bg-rose-50/50 text-rose-500 font-bold">${tFail > 0 ? tFail : '-'}</td><td class="px-5 py-4 text-center bg-slate-50/50">${rateText}</td><td class="px-5 py-4 text-center"><div class="flex justify-center space-x-3 text-sm">${linkDS}${linkQ}${linkR}</div></td><td class="px-5 py-4 text-center"><span class="status-pill ${getStatusColor(item.status)} shadow-sm">${item.status}</span></td><td class="px-5 py-4 text-center space-x-1"><button onclick="openEditModal(${realIndex})" class="action-icon icon-edit"><i class="fas fa-pen text-xs"></i></button><button onclick="requestDelete(${realIndex})" class="action-icon icon-delete"><i class="fas fa-trash text-xs"></i></button></td></tr>`; });
         }
 
-        function renderDashboard(chartData) { let totalClasses = chartData.length, sumTotal = 0, sumPass = 0, sumFail = 0; const statusCounts = { 'Hoàn thành': 0, 'Đang diễn ra': 0, 'Dời lịch': 0, 'Hủy': 0 }; chartData.forEach(item => { if(statusCounts[item.status] !== undefined) statusCounts[item.status]++; sumTotal += parseInt(item.totalTrainees) || 0; sumPass += parseInt(item.passedTrainees) || 0; sumFail += parseInt(item.failedTrainees) || 0; }); const passRate = sumTotal > 0 ? Math.round((sumPass/sumTotal)*100) : 0; document.getElementById('stat-total').innerText = totalClasses; document.getElementById('stat-trainees').innerText = sumTotal; document.getElementById('stat-passrate').innerText = passRate + '%'; const aiBox = document.getElementById('ai-suggestion'); if(totalClasses === 0) aiBox.innerHTML = "<span class='text-slate-400'>Hệ thống trống. Cần tối thiểu 1 khóa để phân tích.</span>"; else if(passRate >= 85) aiBox.innerHTML = "<span class='text-emerald-400 font-bold'>Excellent</span><br>Tỷ lệ tiếp thu tuyệt vời."; else if(passRate >= 60) aiBox.innerHTML = "<span class='text-yellow-400 font-bold'>Warning</span><br>Tỷ lệ rớt >15%. Cần xem xét câu hỏi Quiz."; else aiBox.innerHTML = "<span class='text-rose-400 font-bold'>Critical</span><br>Đa số học viên rớt. Cần tăng thực hành."; Chart.defaults.font.family = 'Inter'; Chart.defaults.color = '#94a3b8'; const ctxStatus = document.getElementById('statusChart').getContext('2d'); if(statusChartInstance) statusChartInstance.destroy(); statusChartInstance = new Chart(ctxStatus, { type: 'doughnut', data: { labels: ['Hoàn thành', 'Đang diễn', 'Dời lịch', 'Hủy'], datasets: [{ data: [statusCounts['Hoàn thành'], statusCounts['Đang diễn ra'], statusCounts['Dời lịch'], statusCounts['Hủy']], backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'], borderWidth: 0, hoverOffset: 8 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 6, font: {size: 11, weight: 'bold'} } } } } }); const ctxPerf = document.getElementById('performanceChart').getContext('2d'); if(perfChartInstance) perfChartInstance.destroy(); let gradientPass = ctxPerf.createLinearGradient(0, 0, 0, 400); gradientPass.addColorStop(0, '#10b981'); gradientPass.addColorStop(1, '#059669'); let gradientFail = ctxPerf.createLinearGradient(0, 0, 0, 400); gradientFail.addColorStop(0, '#f43f5e'); gradientFail.addColorStop(1, '#e11d48'); perfChartInstance = new Chart(ctxPerf, { type: 'bar', data: { labels: ['Học viên Đạt', 'Học viên Fail'], datasets: [{ data: [sumPass, sumFail], backgroundColor: [gradientPass, gradientFail], borderRadius: 8, barThickness: 40 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#f1f5f9' }, border: {display: false}, ticks: {stepSize: 1, font:{size: 11, weight: 'bold'}} }, x: { grid: { display: false }, border: {display: false}, ticks: {font:{size: 12, weight: '900'}} } } } }); }
+        function renderDashboard(chartData) { let totalClasses = chartData.length, sumTotal = 0, sumPass = 0, sumFail = 0; const statusCounts = { 'Hoàn thành': 0, 'Đang diễn ra': 0, 'Dời lịch': 0, 'Hủy': 0 }; chartData.forEach(item => { if(statusCounts[item.status] !== undefined) statusCounts[item.status]++; sumTotal += parseInt(item.totalTrainees) || 0; sumPass += parseInt(item.passedTrainees) || 0; sumFail += parseInt(item.failedTrainees) || 0; }); const passRate = sumTotal > 0 ? Math.round((sumPass/sumTotal)*100) : 0; document.getElementById('stat-total').innerText = totalClasses; document.getElementById('stat-trainees').innerText = sumTotal; document.getElementById('stat-passrate').innerText = passRate + '%'; const aiBox = document.getElementById('ai-suggestion'); if(totalClasses === 0) aiBox.innerHTML = "<span class='text-slate-400'>Hệ thống trống. Cần tối thiểu 1 khóa để phân tích.</span>"; else if(passRate >= 85) aiBox.innerHTML = "<span class='text-emerald-400 font-bold'>Excellent</span><br>Tỷ lệ tiếp thu tuyệt vời."; else if(passRate >= 60) aiBox.innerHTML = "<span class='text-yellow-400 font-bold'>Warning</span><br>Tỷ lệ rớt >15%. Cần xem xét câu hỏi Quiz."; else aiBox.innerHTML = "<span class='text-rose-400 font-bold'>Critical</span><br>Đa số học viên rớt. Cần tăng thực hành."; Chart.defaults.font.family = 'Inter'; Chart.defaults.color = '#94a3b8'; const ctxStatus = document.getElementById('statusChart').getContext('2d'); if(statusChartInstance) statusChartInstance.destroy(); statusChartInstance = new Chart(ctxStatus, { type: 'doughnut', data: { labels:['Hoàn thành', 'Đang diễn', 'Dời lịch', 'Hủy'], datasets: [{ data: [statusCounts['Hoàn thành'], statusCounts['Đang diễn ra'], statusCounts['Dời lịch'], statusCounts['Hủy']], backgroundColor:['#10b981', '#3b82f6', '#f59e0b', '#ef4444'], borderWidth: 0, hoverOffset: 8 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 6, font: {size: 11, weight: 'bold'} } } } } }); const ctxPerf = document.getElementById('performanceChart').getContext('2d'); if(perfChartInstance) perfChartInstance.destroy(); let gradientPass = ctxPerf.createLinearGradient(0, 0, 0, 400); gradientPass.addColorStop(0, '#10b981'); gradientPass.addColorStop(1, '#059669'); let gradientFail = ctxPerf.createLinearGradient(0, 0, 0, 400); gradientFail.addColorStop(0, '#f43f5e'); gradientFail.addColorStop(1, '#e11d48'); perfChartInstance = new Chart(ctxPerf, { type: 'bar', data: { labels:['Học viên Đạt', 'Học viên Fail'], datasets: [{ data: [sumPass, sumFail], backgroundColor: [gradientPass, gradientFail], borderRadius: 8, barThickness: 40 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#f1f5f9' }, border: {display: false}, ticks: {stepSize: 1, font:{size: 11, weight: 'bold'}} }, x: { grid: { display: false }, border: {display: false}, ticks: {font:{size: 12, weight: '900'}} } } } }); }
         function getStatusColor(s) { if(s === 'Hoàn thành') return 'bg-emerald-100 text-emerald-700 border border-emerald-200'; if(s === 'Đang diễn ra') return 'bg-blue-100 text-blue-700 border border-blue-200'; if(s === 'Dời lịch') return 'bg-amber-100 text-amber-700 border border-amber-200'; if(s === 'Hủy') return 'bg-rose-100 text-rose-700 border border-rose-200'; return 'bg-slate-100 text-slate-600'; }
 
         function openEditModal(realIndex) { const d = loadDB()[realIndex]; document.getElementById('editIndex').value = realIndex; document.getElementById('editCourseId').value = d.courseId || ''; document.getElementById('editGroupName').value = d.groupName || 'SPCB'; document.getElementById('editStatus').value = d.status || 'Hoàn thành'; document.getElementById('editStart').value = d.startDate || ''; document.getElementById('editFinish').value = d.finishDate || ''; document.getElementById('editTotal').value = d.totalTrainees || ''; document.getElementById('editPass').value = d.passedTrainees || ''; document.getElementById('editFail').value = d.failedTrainees || ''; document.getElementById('editListLink').value = d.listLink || ''; document.getElementById('editQuizLink').value = d.quizLink || ''; document.getElementById('editRecordLink').value = d.recordLink || ''; openModal('editModal'); }
@@ -740,12 +827,12 @@
         function executeDelete() { const pass = document.getElementById('authPassword').value; if(pass !== SECRET_KEY) { alert("Sai mã PIN an toàn! Lệnh bị từ chối."); return; } const msg = deleteTargetIndex === -1 ? "CẢNH BÁO ĐỎ: Bạn đang chuẩn bị xóa SẠCH toàn bộ dữ liệu hệ thống.\nNhấn OK để XÓA.\nNhấn Cancel để HỦY." : "Bạn có chắc chắn muốn xóa báo cáo khóa học này không?\n\nNhấn OK để XÓA."; const isConfirmed = confirm(msg); if (!isConfirmed) { closeModal('authModal'); return; } if(deleteTargetIndex === -1) { localStorage.removeItem('kv_master_db'); alert("Đã xóa sạch hệ thống thành công."); } else { let d = loadDB(); d.splice(deleteTargetIndex, 1); localStorage.setItem('kv_master_db', JSON.stringify(d)); alert("Đã xóa dữ liệu khóa học."); } closeModal('authModal'); renderAll(); }
         function exportCSV() { const dataToExport = getFilteredAndSortedData(); if(!dataToExport.length) { alert('Không có dữ liệu phù hợp!'); return; } let csv = "\uFEFFSTT,Nhóm Khóa,Mã Khóa,Tháng,Bắt Đầu,Kết Thúc,Tổng HV,Đạt,Fail,Trạng Thái\n"; dataToExport.forEach((i, idx) => { csv += `${idx+1},${i.groupName},${i.courseId},${i.month},${i.startDate},${i.finishDate},${i.totalTrainees||0},${i.passedTrainees||0},${i.failedTrainees||0},${i.status}\n`; }); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.setAttribute("download", `Analytics_Trainer_Filtered_${new Date().toLocaleDateString('vi-VN')}.csv`); link.click(); }
 
-        function processModuleEmails() { const input = document.getElementById('mod-input').value; const validBadge = document.getElementById('mod-valid-count'); const invalidBadge = document.getElementById('mod-invalid-count'); const outputArea = document.getElementById('mod-output'); const invalidZone = document.getElementById('mod-invalid-zone'); const invalidListDOM = document.getElementById('mod-invalid-list'); if (!input.trim()) return; const rawItems = input.split(/[\n,;\s]+/).filter(item => item.trim() !== ''); const validSet = new Set(); const invalidList = []; rawItems.forEach(item => { const clean = item.trim().toLowerCase(); if (clean.endsWith('@kiotviet.com')) validSet.add(clean); else invalidList.push(item); }); const result = Array.from(validSet); outputArea.value = result.join(', '); validBadge.innerHTML = `<i class="fas fa-check-circle"></i> ${result.length} Hợp lệ`; invalidBadge.innerHTML = `<i class="fas fa-times-circle"></i> ${invalidList.length} Loại bỏ`; if (invalidList.length > 0) { invalidZone.classList.remove('hidden'); invalidListDOM.innerHTML = invalidList.map(email => `<span class="bg-white border border-rose-200 text-rose-600 px-2.5 py-1 rounded-md text-[10px] font-mono shadow-sm"><i class="fas fa-ban mr-1 text-rose-400"></i>${email}</span>`).join(''); } else { invalidZone.classList.add('hidden'); invalidListDOM.innerHTML = ''; } }
+        function processModuleEmails() { const input = document.getElementById('mod-input').value; const validBadge = document.getElementById('mod-valid-count'); const invalidBadge = document.getElementById('mod-invalid-count'); const outputArea = document.getElementById('mod-output'); const invalidZone = document.getElementById('mod-invalid-zone'); const invalidListDOM = document.getElementById('mod-invalid-list'); if (!input.trim()) return; const rawItems = input.split(/[\n,;\s]+/).filter(item => item.trim() !== ''); const validSet = new Set(); const invalidList =[]; rawItems.forEach(item => { const clean = item.trim().toLowerCase(); if (clean.endsWith('@kiotviet.com')) validSet.add(clean); else invalidList.push(item); }); const result = Array.from(validSet); outputArea.value = result.join(', '); validBadge.innerHTML = `<i class="fas fa-check-circle"></i> ${result.length} Hợp lệ`; invalidBadge.innerHTML = `<i class="fas fa-times-circle"></i> ${invalidList.length} Loại bỏ`; if (invalidList.length > 0) { invalidZone.classList.remove('hidden'); invalidListDOM.innerHTML = invalidList.map(email => `<span class="bg-white border border-rose-200 text-rose-600 px-2.5 py-1 rounded-md text-[10px] font-mono shadow-sm"><i class="fas fa-ban mr-1 text-rose-400"></i>${email}</span>`).join(''); } else { invalidZone.classList.add('hidden'); invalidListDOM.innerHTML = ''; } }
         function copyModuleEmails(btn) { const output = document.getElementById('mod-output'); if (!output.value) return; navigator.clipboard.writeText(output.value).then(() => { const originalText = btn.innerHTML; btn.innerHTML = '<i class="fas fa-check mr-1.5"></i> Đã Copy'; btn.classList.replace('bg-blue-600', 'bg-emerald-500'); btn.classList.replace('hover:bg-blue-700', 'hover:bg-emerald-600'); setTimeout(() => { btn.innerHTML = originalText; btn.classList.replace('bg-emerald-500', 'bg-blue-600'); btn.classList.replace('hover:bg-emerald-600', 'hover:bg-blue-700'); }, 2000); }); }
         
-        let attStudentDB = [];
+        let attStudentDB =[];
         function normalizeString(str) { if (!str) return ""; return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().replace(/[.,()\[\]\n\t\-]/g, " ").replace(/\s+/g, " ").trim(); }
-        function loadRoster() { const raw = document.getElementById('input-roster').value.trim(); attStudentDB = []; if(!raw) { document.getElementById('count-original').innerText = "0 HV"; return; } const lines = raw.split('\n').map(l => l.trim()).filter(l => l !== ""); lines.forEach((name, index) => { attStudentDB.push({ stt: index + 1, originalName: name, searchName: normalizeString(name), status: 'absent' }); }); document.getElementById('count-original').innerText = attStudentDB.length + " HV"; }
+        function loadRoster() { const raw = document.getElementById('input-roster').value.trim(); attStudentDB =[]; if(!raw) { document.getElementById('count-original').innerText = "0 HV"; return; } const lines = raw.split('\n').map(l => l.trim()).filter(l => l !== ""); lines.forEach((name, index) => { attStudentDB.push({ stt: index + 1, originalName: name, searchName: normalizeString(name), status: 'absent' }); }); document.getElementById('count-original').innerText = attStudentDB.length + " HV"; }
         function scanAttendance() { if(attStudentDB.length === 0) { alert("Vui lòng dán danh sách gốc vào ô số 1 trước!"); return; } const rawMeet = document.getElementById('input-meet').value; if(!rawMeet.trim()) { alert("Bạn chưa dán dữ liệu điểm danh từ Google Meet!"); return; } const cleanMeetText = " " + normalizeString(rawMeet) + " "; attStudentDB.forEach(student => { const nameToFind = " " + student.searchName + " "; student.status = cleanMeetText.includes(nameToFind) ? 'present' : 'absent'; }); document.getElementById('att-view-input').classList.add('hidden'); document.getElementById('att-view-result').classList.remove('hidden'); document.getElementById('att-view-result').classList.add('flex'); updateAttendanceStats(); renderAttendanceResult(); }
         function renderAttendanceResult() { const listDOM = document.getElementById('result-list'); const searchVal = normalizeString(document.getElementById('search-box-att').value); let html = ``; const filtered = attStudentDB.filter(s => s.searchName.includes(searchVal)); filtered.forEach(s => { const isPresent = s.status === 'present'; const bgClass = isPresent ? "bg-emerald-50/50 border-emerald-100" : "bg-rose-50/50 border-rose-100"; const iconHTML = isPresent ? `<div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center icon-pop shadow-md"><i class="fas fa-check"></i></div>` : `<div class="w-8 h-8 rounded-lg bg-white text-rose-400 border border-rose-200 flex items-center justify-center"><i class="fas fa-times"></i></div>`; html += `<div class="flex items-center justify-between px-4 py-3 rounded-xl border ${bgClass} transition hover:bg-white cursor-default"><div class="flex items-center gap-3"><span class="w-7 text-center text-[11px] font-black text-slate-400 bg-white rounded-md py-1 border border-slate-100">${s.stt}</span><span class="text-sm font-bold ${isPresent ? 'text-slate-800' : 'text-slate-600 line-through decoration-rose-300'}">${s.originalName}</span></div>${iconHTML}</div>`; }); listDOM.innerHTML = html; }
         function updateAttendanceStats() { const present = attStudentDB.filter(s => s.status === 'present').length; document.getElementById('res-total').innerText = attStudentDB.length; document.getElementById('res-present').innerText = present; document.getElementById('res-absent').innerText = attStudentDB.length - present; }
@@ -753,10 +840,79 @@
         function copyAbsent() { const absentNames = attStudentDB.filter(s => s.status === 'absent').map(s => s.originalName).join('\n'); if(!absentNames) { alert("Tuyệt vời! Không có ai vắng mặt."); return; } navigator.clipboard.writeText(absentNames).then(() => alert("Đã copy danh sách Tên học viên vắng mặt!")); }
         function resetAllAttendance() { document.getElementById('input-roster').value = ''; document.getElementById('input-meet').value = ''; document.getElementById('search-box-att').value = ''; backToInput(); loadRoster(); }
 
+        /* --- LOGIC QUẢN LÝ QUÀ TẶNG (GIFT CENTER) --- */
+        const defaultGifts =[
+            { name: 'Túi tote', cost: '31,300', in: 0, out: 0, icon: 'fa-shopping-bag', color: 'text-slate-400' },
+            { name: 'Bình nước', cost: '129,600', in: 0, out: 0, icon: 'fa-tint', color: 'text-blue-400' },
+            { name: 'Áo mưa', cost: '97,200', in: 0, out: 0, icon: 'fa-cloud-showers-heavy', color: 'text-slate-400' },
+            { name: 'Cốc', cost: '-', in: 0, out: 0, icon: 'fa-mug-hot', color: 'text-amber-500' },
+            { name: 'Ô', cost: '97,200', in: 0, out: 0, icon: 'fa-umbrella', color: 'text-purple-500' },
+            { name: 'Sổ', cost: '47,000', in: 0, out: 0, icon: 'fa-book', color: 'text-indigo-400' },
+            { name: 'Móc khoá', cost: '-', in: 0, out: 0, icon: 'fa-key', color: 'text-yellow-500' },
+            { name: 'Túi giấy to', cost: '6,480', in: 0, out: 0, icon: 'fa-shopping-cart', color: 'text-slate-400' },
+            { name: 'Túi giấy nhỏ', cost: '5,940', in: 0, out: 0, icon: 'fa-shopping-cart', color: 'text-slate-400' }
+        ];
+
+        function initGiftTable() {
+            let data = JSON.parse(localStorage.getItem('kv_gift_inventory'));
+            if (!data || data.length === 0) data = defaultGifts;
+
+            const tbody = document.getElementById('giftTableBody');
+            tbody.innerHTML = '';
+            
+            data.forEach((item, index) => {
+                const finalQty = (parseInt(item.in) || 0) - (parseInt(item.out) || 0);
+                const finalColor = finalQty < 0 ? 'text-rose-600 bg-rose-50' : 'text-slate-800 bg-blue-50/30';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
+                        <td class="px-4 py-2 font-bold text-slate-800 text-xs whitespace-nowrap"><i class="fas ${item.icon} ${item.color} mr-2 w-4 text-center"></i>${item.name}</td>
+                        <td class="px-2 py-2 text-center bg-emerald-50/30 text-emerald-700 font-bold text-xs border-l border-emerald-100">${item.cost}</td>
+                        <td class="px-2 py-2 bg-blue-50/10 border-l border-blue-100"><input type="number" value="${item.in}" oninput="updateGiftData(${index}, 'in', this.value)" class="table-input input-in"></td>
+                        <td class="px-2 py-2 bg-rose-50/10 border-l border-rose-100"><input type="number" value="${item.out}" oninput="updateGiftData(${index}, 'out', this.value)" class="table-input input-out"></td>
+                        <td class="px-2 py-2 text-center font-black text-sm border-l border-blue-100 ${finalColor} transition-colors" id="gift-final-${index}">${finalQty}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function updateGiftData(index, field, value) {
+            let data = JSON.parse(localStorage.getItem('kv_gift_inventory')) || defaultGifts;
+            
+            let numVal = value === '' ? 0 : parseInt(value);
+            if(isNaN(numVal)) numVal = 0;
+
+            data[index][field] = numVal;
+            localStorage.setItem('kv_gift_inventory', JSON.stringify(data));
+            
+            const finalNode = document.getElementById(`gift-final-${index}`);
+            const inVal = parseInt(data[index].in) || 0;
+            const outVal = parseInt(data[index].out) || 0;
+            const finalVal = inVal - outVal;
+            
+            finalNode.innerText = finalVal;
+            
+            if(finalVal < 0) {
+                finalNode.classList.remove('text-slate-800', 'bg-blue-50/30');
+                finalNode.classList.add('text-rose-600', 'bg-rose-50');
+            } else {
+                finalNode.classList.add('text-slate-800', 'bg-blue-50/30');
+                finalNode.classList.remove('text-rose-600', 'bg-rose-50');
+            }
+        }
+
+        function resetGiftData() {
+            if(confirm("Bạn có chắc chắn muốn Xóa toàn bộ số liệu Tồn kho không?")) {
+                localStorage.removeItem('kv_gift_inventory');
+                initGiftTable();
+            }
+        }
+
         window.onload = () => { 
             renderCourseCards(); 
             renderEmailTable(employeeData);
             renderAll(); 
+            initGiftTable(); // Khởi tạo bảng Tồn kho Quà tặng
             
             const today = new Date(); const todayStr = `${today.getMonth() + 1}-${today.getDate()}`; const isWknd = today.getDay() === 0 || today.getDay() === 6; const banner = document.getElementById('globalNotificationArea');
             const holName = typeof window.holidays !== 'undefined' ? window.holidays[todayStr] : null;
@@ -800,10 +956,10 @@
         const TrainingHubApp = () => {
             const [activeTab, setActiveTab] = useState('calendar'); 
             const [salesType, setSalesType] = useState('direct'); 
-            const [isZoomed, setIsZoomed] = useState(false);
+            const[isZoomed, setIsZoomed] = useState(false);
 
             const calendarData = useMemo(() => {
-                let evs = {}; Object.keys(window.holidays).forEach(k => evs[k] = { type: 'holiday', label: window.holidays[k], markers: [] });
+                let evs = {}; Object.keys(window.holidays).forEach(k => evs[k] = { type: 'holiday', label: window.holidays[k], markers:[] });
                 for (let m = 0; m < 12; m++) {
                     let fri = new Date(currentYear, m, 1); while (fri.getDay() !== 5) fri.setDate(fri.getDate() + 1);
                     let mon = new Date(fri); mon.setDate(fri.getDate() - 4); let holInWeek = false;
@@ -812,15 +968,15 @@
                     let tK = `${taxD.getMonth()+1}-${taxD.getDate()}`; if(!evs[tK]) evs[tK] = { markers: [] }; evs[tK].markers.push({ type: 'tax', label: 'Đào tạo Thuế - HĐĐT' });
                     let kv = new Date(currentYear, m, 15); while (isWeekend(kv) || isHoliday(kv)) kv.setDate(kv.getDate() + 1);
                     if (m === 1 && kv.getDate() === 23) kv = new Date(currentYear, 1, 27);
-                    let kK = `${kv.getMonth()+1}-${kv.getDate()}`; if(!evs[kK]) evs[kK] = { markers: [] }; evs[kK].markers.push({ type: 'kv1', label: 'Test KV1' });
+                    let kK = `${kv.getMonth()+1}-${kv.getDate()}`; if(!evs[kK]) evs[kK] = { markers:[] }; evs[kK].markers.push({ type: 'kv1', label: 'Test KV1' });
                 }
-                const curr = ["Onboard", "SP B1", "SP B2", "SP B3", "Test SP"];
-                const starts = [ [5,26], [2], [2,9,30], [6,13], [4,26], [2,8,29], [6,27], [3,10,31], [7,28], [5,26], [2,9,30], [7] ];
+                const curr =["Onboard", "SP B1", "SP B2", "SP B3", "Test SP"];
+                const starts = [ [5,26], [2],[2,9,30], [6,13], [4,26], [2,8,29], [6,27], [3,10,31], [7,28],[5,26], [2,9,30], [7] ];
                 starts.forEach((dates, m) => { dates.forEach(d => { let c = new Date(currentYear, m, d); while(c.getDay() !== 1) c.setDate(c.getDate() - 1); let step = 0; for(let i=0; i<7 && step < 5; i++) { let t = new Date(c); t.setDate(c.getDate()+i); if(!isWeekend(t) && !isHoliday(t)) { let k = `${t.getMonth()+1}-${t.getDate()}`; if(!evs[k]) evs[k] = { markers: [] }; evs[k].type = 'training'; evs[k].label = curr[step++]; } } }); });
                 return evs;
             }, []);
 
-            const mNames = ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"];
+            const mNames =["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"];
 
             return (
                 <div className={`flex flex-col bg-white ${isZoomed ? 'fixed inset-0 z-[10000] overflow-y-auto p-4 md:p-10 bg-slate-900 custom-scrollbar' : 'h-full'}`}>
@@ -851,7 +1007,7 @@
                         {activeTab === 'calendar' && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 fade-in">
                                 {mNames.map((n, m) => {
-                                    const first = new Date(currentYear, m, 1).getDay(); const off = first === 0 ? 6 : first - 1; const days = new Date(currentYear, m+1, 0).getDate(); const cells = [];
+                                    const first = new Date(currentYear, m, 1).getDay(); const off = first === 0 ? 6 : first - 1; const days = new Date(currentYear, m+1, 0).getDate(); const cells =[];
                                     for(let i=0; i<off; i++) cells.push(<div key={`b-${i}`}></div>);
                                     for(let d=1; d<=days; d++) {
                                         const ev = calendarData[`${m+1}-${d}`]; const isW = isWeekend(new Date(currentYear, m, d));
