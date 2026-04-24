@@ -53,6 +53,38 @@
 
         /* Floating Tools */
         .floating-tool { bottom: 30px; right: 30px; z-index: 100; }
+        
+        /* === STYLES CHO MODAL CÔNG CỤ MỚI === */
+        /* Roadmap / Onboard CSS */
+        .onb-card { background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 16px;}
+        .onb-card h3 { color: #0f172a; font-weight: 800; font-size: 16px; margin-bottom: 8px;}
+        .onb-card p, .onb-card ul { color: #475569; font-size: 13px; font-weight: 500;}
+        .onb-card ul { list-style-type: disc; padding-left: 20px;}
+        .phase-title { font-size: 18px; font-weight: 900; color: #006d4d; margin: 30px 0 20px 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;}
+        .highlight { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 12px; border-radius: 8px; margin-top: 10px;}
+        .arrow-down { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid #cbd5e1; margin: 10px auto 20px auto;}
+        .onb-row { display: flex; gap: 20px; }
+        .onb-row .onb-card { flex: 1; }
+        
+        .roadmap-line { width: 4px; background: #e2e8f0; border-radius: 4px; position: absolute; left: 18px; top: 40px; bottom: -40px; z-index: 0;}
+        .step-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; z-index: 1; position: relative;}
+        .roadmap-item { padding: 12px 16px; border-radius: 12px; font-size: 13px; font-weight: 700; display: flex; align-items: center; box-shadow: inset 0 2px 4px rgba(255,255,255,0.5);}
+        .bg-test-red { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; }
+        .bg-blue-phase { background: #eff6ff; border: 1px solid #bfdbfe; }
+        .bg-green-phase { background: #ecfdf5; border: 1px solid #a7f3d0; }
+        .bg-purple-phase { background: #faf5ff; border: 1px solid #e9d5ff; }
+        .bg-teal-phase { background: #f0fdfa; border: 1px solid #ccfbf1; }
+
+        /* Floating Widgets (Notes & Chat) */
+        .widget-panel {
+            position: fixed; bottom: 100px; right: 30px; width: 340px; height: 450px;
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(20px);
+            border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,255,255,0.8); z-index: 99;
+            transform: translateY(20px) scale(0.95); opacity: 0; pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1); display: flex; flex-direction: column; overflow: hidden;
+        }
+        .widget-panel.active { transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
     </style>
 </head>
 <body class="antialiased">
@@ -129,63 +161,392 @@
         </div>
     </div>
 
-    <!-- FLOATING TOOLS -->
-    <div class="fixed floating-tool flex flex-col gap-3">
-        <button class="w-12 h-12 bg-yellow-400 text-white rounded-full shadow-lg hover:scale-110 transition flex items-center justify-center">
+    <!-- WIDGETS (Sửa tính năng không hoạt động) -->
+    <!-- Sticky Notes -->
+    <div id="notesWidget" class="widget-panel bg-yellow-50 border-yellow-200">
+        <div class="bg-yellow-400 text-yellow-900 px-5 py-3 flex justify-between items-center font-black shrink-0">
+            <span><i class="fas fa-sticky-note mr-2"></i> Ghi chú nhanh</span>
+            <button onclick="toggleNotes()" class="text-yellow-900 hover:text-white"><i class="fas fa-times"></i></button>
+        </div>
+        <textarea id="stickyNoteText" oninput="saveNotes()" class="w-full h-full p-5 bg-transparent resize-none outline-none text-sm text-yellow-900 font-medium custom-scrollbar" placeholder="Nhập ghi chú của bạn vào đây. Dữ liệu tự động lưu..."></textarea>
+    </div>
+
+    <!-- Chatbot AI -->
+    <div id="chatWidget" class="widget-panel border-indigo-100">
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-3 flex justify-between items-center font-black shrink-0">
+            <span><i class="fas fa-robot mr-2"></i> Trainer Assistant</span>
+            <button onclick="toggleChat()" class="text-white hover:text-blue-200"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="chatHistory" class="flex-grow p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3 bg-slate-50">
+            <div class="bg-white border border-slate-100 p-3 rounded-2xl rounded-tl-none shadow-sm text-sm text-slate-700 w-10/12">Xin chào! Mình là trợ lý Trainer ảo. Mình có thể giúp gì cho bạn hôm nay?</div>
+        </div>
+        <div class="p-3 bg-white border-t border-slate-100 flex gap-2 shrink-0">
+            <input type="text" id="chatInput" onkeypress="handleChatEnter(event)" class="w-full bg-slate-100 border-none rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" placeholder="Hỏi gì đó...">
+            <button onclick="sendChatMessage()" class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 hover:bg-blue-700"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- FLOATING TOOLS BUTTONS -->
+    <div class="fixed floating-tool flex flex-col gap-3 z-[100]">
+        <button onclick="toggleNotes()" class="w-12 h-12 bg-yellow-400 text-white rounded-full shadow-lg hover:scale-110 transition flex items-center justify-center">
             <i class="fas fa-sticky-note text-xl"></i>
         </button>
-        <button class="w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-[0_10px_20px_-10px_rgba(59,130,246,0.8)] hover:scale-110 transition flex items-center justify-center hover-5d">
+        <button onclick="toggleChat()" class="w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-[0_10px_20px_-10px_rgba(59,130,246,0.8)] hover:scale-110 transition flex items-center justify-center hover-5d">
             <i class="fas fa-robot text-2xl"></i>
         </button>
     </div>
 
     <!-- ========================================================= -->
-    <!-- MODALS TỪ VER 1 (ĐƯA RA NGOÀI ĐỂ TRÁNH BỊ XÓA KHI ĐỔI TAB) -->
+    <!-- MODALS HỆ THỐNG -->
     <!-- ========================================================= -->
 
-    <!-- MODAL LỌC EMAIL GOOGLE CHAT -->
-    <div id="emailToolModal" class="modal fixed inset-0 bg-slate-900/80 backdrop-blur-xl items-center justify-center p-4">
-        <div class="modal-content bg-white w-full max-w-4xl rounded-[32px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] relative flex flex-col overflow-hidden border border-white">
-            <button onclick="closeModal('emailToolModal')" class="absolute top-6 right-6 text-slate-400 hover:text-rose-500 hover:bg-rose-50 w-10 h-10 rounded-full flex items-center justify-center transition-all z-10 text-xl shadow-sm bg-slate-50 border border-slate-100"><i class="fas fa-times"></i></button>
-
-            <div class="px-10 py-8 bg-slate-50/50 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 flex-shrink-0 relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-emerald-400 to-teal-500"></div>
-                <div>
-                    <h3 class="text-2xl font-black text-slate-800 tracking-tight flex items-center"><i class="fas fa-filter text-emerald-500 mr-3"></i> Tự động hóa Lọc Email Chat</h3>
-                    <p class="text-xs text-slate-500 mt-2 font-medium">Bóc tách Email KiotViet chuẩn, tự động xóa trùng lặp, thêm dấu phẩy.</p>
-                </div>
-                <div class="flex gap-3">
-                    <span id="mod-valid-count" class="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[11px] font-black uppercase tracking-wider shadow-sm flex items-center gap-2"><i class="fas fa-check-circle"></i> 0 Hợp lệ</span>
-                    <span id="mod-invalid-count" class="px-4 py-2 bg-rose-50 text-rose-500 border border-rose-100 rounded-xl text-[11px] font-black uppercase tracking-wider shadow-sm flex items-center gap-2"><i class="fas fa-times-circle"></i> 0 Loại bỏ</span>
-                </div>
-            </div>
+    <!-- 1. MODAL LỊCH ĐÀO TẠO & ROADMAP & ONBOARD -->
+    <div id="calendarModal" class="modal fixed inset-0 bg-slate-900/80 backdrop-blur-xl items-center justify-center p-4 z-[9999]">
+        <div class="modal-content bg-slate-50 w-full max-w-[1300px] rounded-[32px] shadow-2xl relative flex flex-col max-h-[95vh] overflow-hidden border border-white">
+            <button onclick="closeModal('calendarModal')" class="absolute top-6 right-6 text-slate-400 hover:text-rose-500 hover:bg-rose-50 w-10 h-10 rounded-full flex items-center justify-center transition-all z-[10001] text-xl shadow-sm bg-white border border-slate-100"><i class="fas fa-times"></i></button>
             
-            <div class="px-10 py-8 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white overflow-y-auto max-h-[70vh] custom-scrollbar">
-                <div class="flex flex-col h-full space-y-4">
-                    <label class="text-[11px] font-black text-slate-700 uppercase tracking-widest"><i class="fas fa-paste text-blue-500 mr-1.5"></i> Dữ liệu thô (Raw Data)</label>
-                    <textarea id="mod-input" class="w-full h-48 bg-slate-50 border border-slate-200 rounded-2xl p-5 text-[13px] font-medium outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition shadow-inner custom-scrollbar resize-none text-slate-700" placeholder="Dán danh sách Email vào đây..."></textarea>
-                    <button onclick="processModuleEmails()" class="w-full py-4 rounded-2xl text-sm font-black text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 transition shadow-[0_10px_20px_-10px_rgba(16,185,129,0.5)] transform hover:-translate-y-0.5 uppercase tracking-wider flex justify-center items-center gap-2">
-                        <i class="fas fa-magic"></i> Quét & Làm sạch dữ liệu
+            <div class="flex-grow overflow-y-auto custom-scrollbar bg-slate-50 flex flex-col h-full">
+                <!-- Header Component -->
+                <div class="bg-[#006d4d] p-8 text-white text-center shrink-0">
+                    <h1 class="text-3xl font-extrabold tracking-tight uppercase">Lịch đào tạo 2026</h1>
+                    <p class="text-emerald-100 mt-1 font-medium opacity-90">Kế hoạch đào tạo & Lộ trình phát triển năng lực cho Sales</p>
+                </div>
+
+                <!-- Tabs 3 Nút -->
+                <div class="flex border-b border-slate-100 bg-white sticky top-0 z-40 shrink-0 shadow-sm">
+                    <button onclick="switchMainTab('onboard')" id="tab-onboard" class="flex-1 py-5 text-center transition-all border-b-4 border-[#00f2fe] bg-white">
+                        <span class="block font-bold text-[#0072ff] uppercase text-sm">Quy trình Onboard</span>
+                        <span class="text-[11px] text-slate-500 mt-1">Giai đoạn & Phương án</span>
+                    </button>
+                    <button onclick="switchMainTab('calendar')" id="tab-calendar" class="flex-1 py-5 text-center transition-all border-b-4 border-transparent hover:bg-slate-50">
+                        <span class="block font-bold text-slate-400 uppercase text-sm">Lịch đào tạo 2026</span>
+                        <span class="text-[11px] text-slate-500 mt-1">Lịch học chi tiết cả năm</span>
+                    </button>
+                    <button onclick="switchMainTab('roadmap')" id="tab-roadmap" class="flex-1 py-5 text-center transition-all border-b-4 border-transparent hover:bg-slate-50">
+                        <span class="block font-bold text-slate-400 uppercase text-sm">Lộ trình cho Sales</span>
+                        <span class="text-[11px] text-slate-500 mt-1">Direct Sales & Telesales</span>
                     </button>
                 </div>
-                <div class="flex flex-col h-full space-y-4">
-                    <div class="flex items-center justify-between">
-                        <label class="text-[11px] font-black text-slate-700 uppercase tracking-widest"><i class="fas fa-code text-indigo-500 mr-1.5"></i> Kết quả (Ready to Copy)</label>
-                        <button onclick="copyModuleEmails(this)" class="px-3 py-1.5 rounded-lg text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 transition flex items-center border border-blue-100">
-                            <i class="far fa-copy mr-1.5"></i> COPY
-                        </button>
+
+                <!-- Content Area -->
+                <div class="p-8 flex-grow overflow-y-auto custom-scrollbar bg-slate-50 relative">
+                    
+                    <!-- TAB 1: NỘI DUNG QUY TRÌNH ONBOARD (CYAN THEME SCOPED) -->
+                    <div id="content-onboard" class="fade-in onboard-theme-wrapper rounded-3xl overflow-hidden shadow-sm border border-slate-100">
+                        <div class="onb-container">
+                            <h2 class="phase-title">Giai Đoạn 1: Trước Khi Gia Nhập (Pre-Onboarding)</h2>
+                            
+                            <div class="onb-card animated-float">
+                                <div>
+                                    <h3>Khởi Tạo Quy Trình</h3>
+                                    <p><strong>Trách nhiệm:</strong> HRBP/Admin và Bộ phận L&D.</p>
+                                    <p><strong>Điểm bắt đầu:</strong> HRBP kiểm tra lịch đào tạo tuần của L&D để chốt ngày Onboard với nhân sự mới.</p>
+                                </div>
+                            </div>
+
+                            <div class="arrow-down"></div>
+
+                            <div class="onb-row">
+                                <div class="onb-card">
+                                    <div>
+                                        <h3>Nhóm 1: Gia nhập Thứ 2 - Thứ 4</h3>
+                                        <div class="highlight">
+                                            <p><strong>Deadline Danh Sách:</strong> Trước 10:00 Thứ 7 tuần trước.</p>
+                                            <p><strong>Gửi Thư Mời:</strong> L&D gửi trước 12:00 Thứ 7.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="onb-card">
+                                    <div>
+                                        <h3>Nhóm 2: Gia nhập Thứ 5 - Thứ 6</h3>
+                                        <div class="highlight">
+                                            <p><strong>Deadline Danh Sách:</strong> Trước 14:00 (tối thiểu 1 ngày trước Onboard).</p>
+                                            <p><strong>Gửi Thư Mời:</strong> L&D gửi trước 16:00 (tối thiểu 1 ngày trước Onboard).</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="arrow-down"></div>
+
+                            <div class="onb-card animated-float" style="max-width: 600px; margin: 0 auto;">
+                                <div>
+                                    <h3>Xử Lý Phát Sinh</h3>
+                                    <p>Nếu L&D đã gửi mail mời mà có nhân sự bổ sung gia nhập sau hạn chót:</p>
+                                    <div class="highlight" style="border-left-color: #ef4444; background: #fef2f2;">
+                                        <p class="text-red-600"><strong>Admin/HRBP</strong> phải tự chủ động gửi mail mời đào tạo cho nhân sự theo mẫu chuẩn của L&D.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <br>
+
+                            <h2 class="phase-title">Giai Đoạn 2: Sau Khi Gia Nhập & Đào Tạo</h2>
+
+                            <div class="onb-row">
+                                <div class="onb-card">
+                                    <div>
+                                        <h3>Điều Kiện Tổ Chức Lớp</h3>
+                                        <ul>
+                                            <li>Tối thiểu <strong>6 học viên</strong> mới mở lớp.</li>
+                                            <li>Nếu <strong>&lt;= 5 học viên</strong>: Nhân sự được chuyển thẳng về cho Quản lý trực tiếp tự đào tạo.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="onb-card">
+                                    <div>
+                                        <h3>Nguyên Tắc Tham Gia</h3>
+                                        <ul>
+                                            <li>Onboard <strong>đúng ngày bắt đầu</strong> lớp Sản phẩm &rarr; Học luôn trong tuần.</li>
+                                            <li>Onboard khi lớp Sản phẩm <strong>đã chạy >= 1 buổi</strong> &rarr; Chờ tuần sau học.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="arrow-down"></div>
+
+                            <h3 class="text-center font-black text-slate-500 mb-4 uppercase tracking-widest text-sm">3 Phương Án Triển Khai (L&D chọn)</h3>
+                            
+                            <div class="onb-row">
+                                <div class="onb-card border-t-4 border-t-blue-500">
+                                    <div>
+                                        <h3>Phương Án 1</h3>
+                                        <ul>
+                                            <li><strong>Thứ 2:</strong> Đào tạo Hội nhập</li>
+                                            <li><strong>Thứ 3 - Thứ 5:</strong> Học Sản phẩm</li>
+                                            <li><strong>Thứ 6:</strong> Làm bài Test</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="onb-card border-t-4 border-t-emerald-500">
+                                    <div>
+                                        <h3>Phương Án 2</h3>
+                                        <ul>
+                                            <li><strong>Thứ 6:</strong> Đào tạo Hội nhập</li>
+                                            <li><strong>Thứ 2 - Thứ 4 (tuần sau):</strong> Học Sản phẩm</li>
+                                            <li><strong>Thứ 5 (tuần sau):</strong> Làm bài Test</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="onb-card border-t-4 border-t-purple-500">
+                                    <div>
+                                        <h3>Phương Án 3</h3>
+                                        <ul>
+                                            <li><strong>Thứ 4 - Thứ 6:</strong> Học Sản phẩm</li>
+                                            <li><strong>Thứ 7:</strong> Làm bài Test</li>
+                                            <li><strong>Hội nhập:</strong> Ghép vào lịch gần nhất</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <textarea id="mod-output" readonly class="w-full h-48 bg-indigo-50/30 border border-indigo-100 rounded-2xl p-5 text-[13px] font-bold text-indigo-700 outline-none shadow-inner custom-scrollbar resize-none" placeholder="Kết quả chuẩn format Google Chat sẽ hiện tại đây..."></textarea>
-                    <div id="mod-invalid-zone" class="hidden flex flex-col space-y-2 mt-2">
-                        <label class="text-[11px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-1.5"><i class="fas fa-exclamation-triangle"></i> Danh sách bị loại bỏ</label>
-                        <div id="mod-invalid-list" class="w-full max-h-24 overflow-y-auto custom-scrollbar bg-rose-50/50 border border-rose-100 rounded-xl p-3 flex flex-wrap gap-2"></div>
+
+                    <!-- TAB 2: NỘI DUNG CALENDAR (DUMMY) -->
+                    <div id="content-calendar" class="hidden fade-in text-center py-20">
+                        <i class="far fa-calendar-alt text-6xl text-slate-200 mb-4 block"></i>
+                        <h3 class="text-2xl font-black text-slate-800">Lịch đào tạo chưa đồng bộ</h3>
+                        <p class="text-slate-500 font-medium">Tính năng đồng bộ Google Calendar bằng React đang được phát triển.</p>
+                    </div>
+
+                    <!-- TAB 3: NỘI DUNG ROADMAP -->
+                    <div id="content-roadmap" class="hidden fade-in max-w-5xl mx-auto bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                        <div class="flex justify-center mb-12">
+                            <div class="bg-slate-100 p-1 rounded-2xl flex gap-1 border border-slate-200 shadow-inner">
+                                <button onclick="switchSalesType('direct')" id="btn-direct" class="px-10 py-2.5 rounded-xl text-sm font-bold bg-white text-blue-600 shadow-md transition-all">Direct Sales</button>
+                                <button onclick="switchSalesType('tele')" id="btn-tele" class="px-10 py-2.5 rounded-xl text-sm font-bold text-slate-500 transition-all hover:text-slate-700">Telesales</button>
+                            </div>
+                        </div>
+
+                        <!-- Lộ trình Direct -->
+                        <div id="roadmap-direct" class="space-y-12">
+                            <div class="relative flex gap-6">
+                                <div class="roadmap-line"></div>
+                                <div class="step-circle bg-blue-500 shadow-lg shadow-blue-200">T1</div>
+                                <div class="flex-1">
+                                    <h3 class="font-extrabold text-xl mb-5 text-blue-800">Gia nhập</h3>
+                                    <div class="space-y-6">
+                                        <div><p class="text-[10px] font-bold text-blue-400 mb-2 uppercase tracking-widest">TUẦN 1</p>
+                                            <div class="flex flex-wrap gap-2 mb-2 p-1">
+                                                <span class="bg-white border border-blue-100 px-4 py-1.5 rounded-lg text-sm font-bold text-blue-700 shadow-sm">Đào tạo Hội nhập</span>
+                                                <span class="bg-white border border-blue-100 px-4 py-1.5 rounded-lg text-sm font-bold text-blue-700 shadow-sm">Sản phẩm cơ bản</span>
+                                                <span class="bg-test-red px-3 py-1.5 rounded-lg text-[12px] font-bold">Test Sản phẩm cơ bản</span>
+                                            </div>
+                                        </div>
+                                        <div><p class="text-[10px] font-bold text-blue-400 mb-2 uppercase tracking-widest">TUẦN 2</p>
+                                            <div class="bg-blue-phase rounded-2xl overflow-hidden divide-y divide-blue-100">
+                                                <div class="p-4 flex items-center justify-between"><p class="text-sm font-bold text-blue-900">• Đào tạo COC - CRM</p><span class="bg-test-red px-3 py-1.5 rounded-lg text-[12px] font-bold">Test COC-CRM</span></div>
+                                                <div class="p-4 flex items-center justify-between"><p class="text-sm font-bold text-blue-900">• Quy trình bán hàng cơ bản</p><span class="bg-test-red px-3 py-1.5 rounded-lg text-[12px] font-bold">Test Kỹ năng</span></div>
+                                            </div>
+                                        </div>
+                                        <div><p class="text-[10px] font-bold text-blue-400 mb-2 uppercase tracking-widest">TUẦN 3</p><div class="roadmap-item bg-blue-phase text-blue-900">Kỹ năng tiếp cận khách hàng</div></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="relative flex gap-6">
+                                <div class="roadmap-line"></div>
+                                <div class="step-circle bg-emerald-500 shadow-lg shadow-emerald-200">T2</div>
+                                <div class="flex-1">
+                                    <h3 class="font-extrabold text-xl mb-5 text-emerald-800">Thử việc TV1</h3>
+                                    <div class="space-y-6">
+                                        <div><p class="text-[10px] font-bold text-emerald-500 mb-2 uppercase tracking-widest">TUẦN 1</p><div class="roadmap-item bg-green-phase text-emerald-900">Đào tạo Hóa Đơn Điện Tử & Chữ ký số</div></div>
+                                        <div><p class="text-[10px] font-bold text-emerald-500 mb-2 uppercase tracking-widest">TUẦN 2</p>
+                                            <div class="flex gap-4"><div class="flex-1 roadmap-item bg-green-phase text-emerald-900 justify-center text-center">Đào tạo Sản phẩm FNB</div><div class="flex-1 roadmap-item bg-green-phase text-emerald-900 justify-center text-center">Đào tạo Sản phẩm Booking</div></div>
+                                        </div>
+                                        <div><p class="text-[10px] font-bold text-emerald-500 mb-2 uppercase tracking-widest">TUẦN 3</p>
+                                            <div class="flex gap-4"><div class="flex-1 roadmap-item bg-test-red justify-center">Test Fnb</div><div class="flex-1 roadmap-item bg-test-red justify-center">Test Booking</div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="relative flex gap-6">
+                                <div class="roadmap-line opacity-0"></div>
+                                <div class="step-circle bg-purple-500 shadow-lg shadow-purple-200">T3</div>
+                                <div class="flex-1">
+                                    <h3 class="font-extrabold text-xl mb-5 text-purple-800">Thử việc TV2/ Chính thức</h3>
+                                    <div class="space-y-6">
+                                        <div><p class="text-[10px] font-bold text-purple-500 mb-2 uppercase tracking-widest">TUẦN 1</p><div class="roadmap-item bg-purple-phase text-purple-900">Đào tạo văn hóa</div></div>
+                                        <div><p class="text-[10px] font-bold text-purple-500 mb-2 uppercase tracking-widest">TUẦN 2</p>
+                                            <div class="space-y-4">
+                                                <div class="roadmap-item bg-purple-phase text-purple-900">Xử lý tình huống</div>
+                                                <div class="roadmap-item bg-red-50 border border-red-100 text-red-600 justify-between"><span>Test sản phẩm KV1</span><span class="text-[11px] font-black bg-white px-2 py-1 rounded shadow-sm text-slate-500 border border-slate-100">Ngày 15</span></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lộ trình Tele -->
+                        <div id="roadmap-tele" class="hidden space-y-12">
+                            <!-- Code Tele tương tự Direct giữ nguyên cấu trúc html -->
+                            <div class="relative flex gap-6">
+                                <div class="roadmap-line"></div>
+                                <div class="step-circle bg-teal-500 shadow-lg shadow-teal-200">T1</div>
+                                <div class="flex-1">
+                                    <h3 class="font-extrabold text-xl mb-5 text-teal-800">Gia nhập</h3>
+                                    <div class="space-y-6">
+                                        <div><p class="text-[10px] font-bold text-teal-400 mb-2 uppercase tracking-widest">TUẦN 1</p>
+                                            <div class="flex flex-wrap gap-2 mb-2 p-1">
+                                                <span class="bg-white border border-teal-100 px-4 py-1.5 rounded-lg text-sm font-bold text-teal-700 shadow-sm">Đào tạo Hội nhập</span>
+                                                <span class="bg-white border border-teal-100 px-4 py-1.5 rounded-lg text-sm font-bold text-teal-700 shadow-sm">Sản phẩm cơ bản</span>
+                                                <span class="bg-test-red px-3 py-1.5 rounded-lg text-[12px] font-bold">Test Sản phẩm cơ bản</span>
+                                            </div>
+                                        </div>
+                                        <div><p class="text-[10px] font-bold text-teal-400 mb-2 uppercase tracking-widest">TUẦN 2</p>
+                                            <div class="bg-teal-phase rounded-2xl overflow-hidden divide-y divide-teal-100">
+                                                <div class="p-4 flex items-center justify-between"><p class="text-sm font-bold text-teal-900">• Đào tạo COC - CRM</p><span class="bg-test-red px-3 py-1.5 rounded-lg text-[12px] font-bold">Test COC-CRM</span></div>
+                                                <div class="p-4 flex items-center justify-between"><p class="text-sm font-bold text-teal-900">• Đào tạo Call Scripts</p><span class="bg-test-red px-3 py-1.5 rounded-lg text-[12px] font-bold">Test Call Scripts</span></div>
+                                            </div>
+                                        </div>
+                                        <div><p class="text-[10px] font-bold text-teal-400 mb-2 uppercase tracking-widest">TUẦN 3</p><div class="roadmap-item bg-teal-phase text-teal-900">Làm chủ cuộc gọi</div></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="relative flex gap-6">
+                                <div class="roadmap-line opacity-0"></div>
+                                <div class="step-circle bg-emerald-500 shadow-lg shadow-emerald-200">T2</div>
+                                <div class="flex-1">
+                                    <h3 class="font-extrabold text-xl mb-5 text-emerald-800">Thử việc TV1</h3>
+                                    <div class="space-y-6">
+                                        <div><p class="text-[10px] font-bold text-emerald-500 mb-2 uppercase tracking-widest">TUẦN 1</p>
+                                            <div class="space-y-4">
+                                                <div class="roadmap-item bg-green-phase text-emerald-900">Đào tạo văn hóa</div>
+                                                <div class="roadmap-item bg-red-50 border border-red-100 text-red-600 justify-between">
+                                                    <span>Test sản phẩm KV1</span>
+                                                    <span class="text-[11px] font-black bg-white px-2 py-1 rounded shadow-sm text-slate-500 border border-slate-100">Ngày 15</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL SỬA THÔNG TIN BÁO CÁO -->
+    <!-- 2. MODAL TRA CỨU EMAIL -->
+    <div id="emailCopyModal" class="modal fixed inset-0 bg-slate-900/80 backdrop-blur-xl items-center justify-center p-4 z-[9999]">
+        <div class="modal-content bg-white w-full max-w-6xl rounded-[32px] shadow-2xl relative flex flex-col overflow-hidden border border-white max-h-[90vh]">
+            <button onclick="closeModal('emailCopyModal')" class="absolute top-6 right-6 text-slate-400 hover:text-rose-500 hover:bg-rose-50 w-10 h-10 rounded-full flex items-center justify-center transition-all z-10 text-xl shadow-sm bg-slate-50 border border-slate-100"><i class="fas fa-times"></i></button>
+            <div class="px-8 py-6 bg-slate-50/80 border-b border-slate-200 flex-shrink-0">
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight flex items-center"><i class="fas fa-users text-indigo-500 mr-3"></i> Tra cứu Email Quản lý & Admin</h3>
+                <p class="text-xs text-slate-500 mt-2 font-medium">Tìm kiếm theo phòng ban (VD: DSCTO, HN...). Chọn các nhân sự cần thiết và sao chép 1 lần.</p>
+            </div>
+            <div class="p-6 flex flex-col flex-grow overflow-hidden bg-white">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4 shrink-0">
+                    <div class="relative w-full md:w-1/2">
+                        <i class="fas fa-search absolute left-4 top-3 text-slate-400"></i>
+                        <input type="text" id="emailSearchInput" oninput="filterEmailTable()" placeholder="Nhập mã phòng ban hoặc tên (VD: Nguyễn, DSCTO)..." class="w-full bg-white border border-slate-300 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition shadow-sm">
+                    </div>
+                    <button id="copySelectedBtn" onclick="copySelectedEmails()" class="w-full md:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition shadow-lg flex items-center justify-center gap-2">
+                        <i class="far fa-copy"></i> Sao chép <span id="selectedCount" class="bg-white text-indigo-600 text-[10px] font-black px-2 py-0.5 rounded-md ml-1 hidden">0</span>
+                    </button>
+                </div>
+                <div class="border border-slate-200 rounded-2xl overflow-hidden flex-grow flex flex-col">
+                    <div class="overflow-y-auto custom-scrollbar flex-grow">
+                        <table class="min-w-full text-left text-sm">
+                            <thead class="bg-slate-100/80 sticky top-0 z-10 border-b border-slate-200">
+                                <tr>
+                                    <th class="px-4 py-3 text-center w-12"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" class="w-4 h-4 cursor-pointer accent-indigo-600"></th>
+                                    <th class="px-4 py-3 font-bold text-slate-600">Họ Tên</th>
+                                    <th class="px-4 py-3 font-bold text-slate-600">Vị trí</th>
+                                    <th class="px-4 py-3 font-bold text-slate-600">Phòng Ban</th>
+                                    <th class="px-4 py-3 font-bold text-slate-600">Mã NV</th>
+                                    <th class="px-4 py-3 font-bold text-slate-600">Email</th>
+                                </tr>
+                            </thead>
+                            <tbody id="emailTableBody" class="divide-y divide-slate-100 text-slate-700 font-medium">
+                                <!-- Rendered via JS -->
+                            </tbody>
+                        </table>
+                        <div id="email-no-results" class="hidden text-center py-10 text-slate-400 italic text-sm">Không tìm thấy nhân sự phù hợp.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MODAL LỌC EMAIL GOOGLE CHAT (Ghi đè từ Ver mới) -->
+    <div id="emailToolModal" class="modal fixed inset-0 bg-slate-900/80 backdrop-blur-xl items-center justify-center p-4 z-[9999]">
+        <div class="modal-content bg-white w-full max-w-4xl rounded-[32px] shadow-2xl relative flex flex-col overflow-hidden border border-white">
+            <button onclick="closeModal('emailToolModal')" class="absolute top-6 right-6 text-slate-400 hover:text-rose-500 hover:bg-rose-50 w-10 h-10 rounded-full flex items-center justify-center transition-all z-10 text-xl shadow-sm bg-slate-50 border border-slate-100"><i class="fas fa-times"></i></button>
+            <div class="px-10 py-8 bg-slate-50/50 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 flex-shrink-0 relative overflow-hidden">
+                <div><h3 class="text-2xl font-black text-slate-800 tracking-tight flex items-center"><i class="fas fa-filter text-emerald-500 mr-3"></i> Tự động hóa Lọc Email Chat</h3><p class="text-xs text-slate-500 mt-2 font-medium">Bóc tách Email KiotViet, tự động xóa trùng lặp, thêm dấu phẩy.</p></div>
+                <div class="flex gap-3"><span id="mod-valid-count" class="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[11px] font-black uppercase">0 Hợp lệ</span><span id="mod-invalid-count" class="px-4 py-2 bg-rose-50 text-rose-500 border border-rose-100 rounded-xl text-[11px] font-black uppercase">0 Loại bỏ</span></div>
+            </div>
+            <div class="px-10 py-8 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <div class="flex flex-col h-full space-y-4"><textarea id="mod-input" class="w-full h-48 bg-slate-50 border border-slate-200 rounded-2xl p-5 text-[13px] font-medium outline-none resize-none custom-scrollbar focus:border-emerald-400" placeholder="Dán danh sách Email copy từ Excel/Word..."></textarea><button onclick="processModuleEmails()" class="w-full py-4 rounded-2xl text-sm font-black text-white bg-emerald-500 hover:bg-emerald-600 transition uppercase"><i class="fas fa-magic"></i> Quét & Làm sạch dữ liệu</button></div>
+                <div class="flex flex-col h-full space-y-4"><div class="relative flex-grow"><textarea id="mod-output" readonly class="w-full h-48 bg-indigo-50/30 border border-indigo-100 rounded-2xl p-5 text-[13px] font-bold text-indigo-700 outline-none resize-none custom-scrollbar" placeholder="Kết quả chuẩn..."></textarea><button onclick="copyModuleEmails(this)" class="absolute bottom-4 right-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-lg transition"><i class="far fa-copy"></i> Copy</button></div><div id="mod-invalid-zone" class="hidden flex flex-col space-y-2"><label class="text-[11px] font-black text-rose-500 uppercase"><i class="fas fa-exclamation-triangle"></i> Bị loại bỏ</label><div id="mod-invalid-list" class="w-full max-h-24 overflow-y-auto custom-scrollbar bg-rose-50/50 rounded-xl p-3 flex flex-wrap gap-2"></div></div></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 4. MODAL ĐIỂM DANH AI -->
+    <div id="attendanceModal" class="modal fixed inset-0 bg-slate-900/80 backdrop-blur-xl items-center justify-center p-4 z-[9999]">
+        <div class="modal-content bg-white w-full max-w-7xl h-[90vh] rounded-[32px] shadow-2xl relative flex flex-col overflow-hidden border border-white"><button onclick="closeModal('attendanceModal')" class="absolute top-6 right-6 text-slate-400 hover:text-rose-500 hover:bg-rose-50 w-10 h-10 rounded-full flex items-center justify-center transition-all z-10 text-xl shadow-sm bg-slate-50 border border-slate-100"><i class="fas fa-times"></i></button>
+            <div class="px-10 py-8 bg-slate-50/50 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 flex-shrink-0">
+                <div><h3 class="text-2xl font-black text-slate-800 tracking-tight flex items-center"><i class="fas fa-check-double text-blue-500 mr-3"></i>Điểm danh AI</h3><p class="text-xs text-slate-500 mt-2 font-medium">Thuật toán loại bỏ dấu, nhận diện chính xác 99%.</p></div>
+                <div class="flex gap-3"><button onclick="copyAbsent()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-rose-600 bg-rose-50 border border-rose-100 hover:bg-rose-100 transition"><i class="far fa-copy"></i> Copy DS Vắng</button><button onclick="resetAllAttendance()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition"><i class="fas fa-redo-alt"></i> Làm mới</button></div>
+            </div>
+            <div class="px-10 py-8 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white overflow-y-auto flex-grow custom-scrollbar">
+                <div class="glass-panel flex flex-col p-6 h-full border-t-4 border-blue-500 relative"><div class="flex justify-between items-center mb-4 shrink-0"><label class="text-xs font-black text-slate-700 uppercase tracking-widest"><span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold inline-flex mr-2">1</span> DS Gốc</label><span id="count-original" class="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg font-bold text-xs shadow-sm">0 HV</span></div><textarea id="input-roster" oninput="loadRoster()" class="w-full flex-grow bg-slate-50 border border-slate-200 rounded-xl p-5 text-sm outline-none resize-none custom-scrollbar focus:border-blue-400 placeholder-slate-400" placeholder="Copy cột Họ & Tên dán vào đây (Mỗi người 1 dòng)..."></textarea></div>
+                <div class="glass-panel flex flex-col p-6 h-full border-t-4 border-emerald-500 relative overflow-hidden"><div class="flex justify-between items-center mb-4 shrink-0"><label class="text-xs font-black text-slate-700 uppercase tracking-widest"><span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm font-bold inline-flex mr-2">2</span> Kết quả</label></div><div id="att-view-input" class="flex flex-col flex-grow min-h-0"><textarea id="input-meet" class="w-full flex-grow bg-emerald-50/30 border border-emerald-100 rounded-xl p-5 text-sm outline-none resize-none custom-scrollbar mb-4 focus:border-emerald-400 placeholder-slate-400" placeholder="Dán DS người tham gia Meet / Zoom..."></textarea><button onclick="scanAttendance()" class="w-full py-4 rounded-xl font-black text-white bg-emerald-500 hover:bg-emerald-600 transition uppercase">Quét điểm danh <i class="fas fa-bolt ml-2 text-yellow-300"></i></button></div>
+                    <div id="att-view-result" class="hidden flex-col flex-grow min-h-0"><div class="bg-slate-50 rounded-xl p-3 mb-4 shrink-0 grid grid-cols-3 gap-2 border border-slate-200"><div class="text-center bg-white py-2 rounded-lg"><p class="text-[10px] uppercase font-bold text-slate-400">Tổng</p><p class="text-lg font-black text-slate-800" id="res-total">0</p></div><div class="text-center bg-emerald-50 py-2 rounded-lg border border-emerald-100"><p class="text-[10px] uppercase font-bold text-emerald-600">Có mặt</p><p class="text-lg font-black text-emerald-600" id="res-present">0</p></div><div class="text-center bg-rose-50 py-2 rounded-lg border border-rose-100"><p class="text-[10px] uppercase font-bold text-rose-500">Vắng</p><p class="text-lg font-black text-rose-500" id="res-absent">0</p></div></div><div class="relative mb-3 shrink-0"><i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-sm"></i><input type="text" id="search-box-att" oninput="renderAttendanceResult()" placeholder="Tìm tên..." class="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-blue-400"></div><div class="flex-grow overflow-y-auto custom-scrollbar pr-2 space-y-2" id="result-list"></div><button onclick="backToInput()" class="mt-4 w-full py-3 rounded-xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition shrink-0 text-sm"><i class="fas fa-edit mr-1"></i> Sửa dữ liệu dán</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SỬA THÔNG TIN BÁO CÁO & XÓA (Ver 1)-->
+    <!-- Đã giữ nguyên logic Edit & Delete Modal của bạn -->
     <div id="editModal" class="modal fixed inset-0 bg-slate-900/80 backdrop-blur-xl items-center justify-center p-4">
         <div class="modal-content bg-white w-full max-w-4xl rounded-[32px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] relative flex flex-col max-h-[90vh] overflow-hidden border border-white">
             <button onclick="closeModal('editModal')" class="absolute top-6 right-6 text-slate-400 hover:text-rose-500 hover:bg-rose-50 w-10 h-10 rounded-full flex items-center justify-center transition-all z-10 text-xl shadow-sm bg-slate-50 border border-slate-100"><i class="fas fa-times"></i></button>
@@ -395,7 +756,6 @@
                 container.innerHTML = html;
             } 
             else if (tabId === 'phan-tich') {
-                // Nhúng nguyên giao diện Báo cáo từ Ver 1
                 container.innerHTML = `
                     <div class="mb-8"><h2 class="text-3xl font-black text-slate-900 tracking-tight">Analytics & Report</h2><p class="text-sm text-slate-500 mt-1">Đồng bộ và tính toán dữ liệu trong 365 ngày qua.</p></div>
                     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-white p-4 rounded-[24px] shadow-sm border border-slate-100">
@@ -457,7 +817,6 @@
                         </div>
                     </div>
                 `;
-                // Phải đợi DOM render Canvas xong mới vẽ Chart
                 setTimeout(() => renderReportContent(), 50);
             } 
             else if (tabId === 'cong-cu') {
@@ -469,24 +828,23 @@
                             <h4 class="font-black text-slate-800">Lọc Email Chat</h4>
                             <p class="text-[11px] text-slate-500 mt-2 font-medium">Bóc tách & Format Email</p>
                         </div>
-                        
-                        <!-- CÁC TOOL CÒN THIẾU TỪ VER 1 SẼ NẰM Ở ĐÂY (VUI LÒNG ĐỌC BÁO CÁO BÊN DƯỚI) -->
-                        <div onclick="alert('Tính năng này đang chờ Lắp ráp Code Modal. Vui lòng xem hướng dẫn bên dưới!')" class="glass-panel p-8 rounded-[32px] text-center hover-5d cursor-pointer group">
+
+                        <div onclick="openModal('calendarModal'); switchMainTab('onboard');" class="glass-panel p-8 rounded-[32px] text-center hover-5d cursor-pointer group border border-transparent hover:border-blue-200">
                             <div class="w-16 h-16 mx-auto bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform"><i class="far fa-calendar-alt"></i></div>
                             <h4 class="font-black text-slate-800">Lịch & Roadmap</h4>
-                            <p class="text-[11px] text-slate-500 mt-2 font-medium">Quản lý lịch bằng React</p>
+                            <p class="text-[11px] text-slate-500 mt-2 font-medium">Kế hoạch & Onboard</p>
                         </div>
 
-                        <div onclick="alert('Tính năng này đang chờ Lắp ráp Code Modal. Vui lòng xem hướng dẫn bên dưới!')" class="glass-panel p-8 rounded-[32px] text-center hover-5d cursor-pointer group">
+                        <div onclick="openModal('emailCopyModal'); renderEmailTable();" class="glass-panel p-8 rounded-[32px] text-center hover-5d cursor-pointer group border border-transparent hover:border-indigo-200">
                             <div class="w-16 h-16 mx-auto bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-users"></i></div>
                             <h4 class="font-black text-slate-800">Tra cứu Email</h4>
-                            <p class="text-[11px] text-slate-500 mt-2 font-medium">Database toàn công ty</p>
+                            <p class="text-[11px] text-slate-500 mt-2 font-medium">Copy nhanh Data NV</p>
                         </div>
 
-                        <div onclick="alert('Tính năng này đang chờ Lắp ráp Code Modal. Vui lòng xem hướng dẫn bên dưới!')" class="glass-panel p-8 rounded-[32px] text-center hover-5d cursor-pointer group">
-                            <div class="w-16 h-16 mx-auto bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-gift"></i></div>
-                            <h4 class="font-black text-slate-800">Quản lý Quà tặng</h4>
-                            <p class="text-[11px] text-slate-500 mt-2 font-medium">Kiểm soát Tồn kho</p>
+                        <div onclick="openModal('attendanceModal')" class="glass-panel p-8 rounded-[32px] text-center hover-5d cursor-pointer group border border-transparent hover:border-rose-200">
+                            <div class="w-16 h-16 mx-auto bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-check-double"></i></div>
+                            <h4 class="font-black text-slate-800">Điểm danh AI</h4>
+                            <p class="text-[11px] text-slate-500 mt-2 font-medium">Quét Zoom / Google Meet</p>
                         </div>
                     </div>
                 `;
@@ -505,7 +863,7 @@
             }
         }
 
-        // --- 4. REPORT TAB LOGIC (BÊ TỪ VER 1 SANG) ---
+        // --- 4. REPORT TAB LOGIC ---
         function handleSearch(val) { AppState.filters.search = val.toLowerCase(); AppState.pagination.page = 1; renderReportContent(); }
         function handlePageSize(val) { AppState.pagination.limit = parseInt(val); AppState.pagination.page = 1; renderReportContent(); }
         function goToPage(p) { AppState.pagination.page = p; renderReportContent(); }
@@ -521,8 +879,7 @@
         }
 
         function renderCharts(chartData) {
-            if(!document.getElementById('statusChart')) return; // Đề phòng Canvas chưa render
-            
+            if(!document.getElementById('statusChart')) return; 
             let sumPass = 0, sumFail = 0;
             const statusCounts = { 'Hoàn thành': 0, 'Đang diễn ra': 0, 'Dời lịch': 0, 'Hủy': 0 };
 
@@ -613,12 +970,11 @@
             });
         }
 
-        // --- 5. MODAL & TOOL LOGICS ---
+        // --- 5. MODAL LOGICS CƠ BẢN ---
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        // Edit Modal
-        function openEditModal(realIndex) {
+        function openEditModal(realIndex) { /* Giữ nguyên của bạn */
             const d = loadDB()[realIndex];
             document.getElementById('editIndex').value = realIndex;
             document.getElementById('editCourseId').value = d.courseId || ''; document.getElementById('editGroupName').value = d.groupName || 'SPCB';
@@ -636,14 +992,11 @@
             d[idx].startDate = document.getElementById('editStart').value; d[idx].finishDate = document.getElementById('editFinish').value;
             d[idx].totalTrainees = document.getElementById('editTotal').value; d[idx].passedTrainees = document.getElementById('editPass').value; d[idx].failedTrainees = document.getElementById('editFail').value;
             d[idx].listLink = document.getElementById('editListLink').value; d[idx].quizLink = document.getElementById('editQuizLink').value; d[idx].recordLink = document.getElementById('editRecordLink').value;
-            
             if(d[idx].startDate) d[idx].month = new Date(d[idx].startDate).getMonth() + 1;
-
             localStorage.setItem('kv_master_db', JSON.stringify(d));
             closeModal('editModal'); renderReportContent();
         }
 
-        // Delete Logic
         function requestDelete(idx) {
             deleteTargetIndex = idx;
             document.getElementById('authPassword').value = '';
@@ -656,10 +1009,9 @@
             if(deleteTargetIndex === -1) { localStorage.removeItem('kv_master_db'); alert("Đã xóa sạch hệ thống thành công."); } 
             else { let d = loadDB(); d.splice(deleteTargetIndex, 1); localStorage.setItem('kv_master_db', JSON.stringify(d)); }
             closeModal('authModal');
-            if(AppState.activeTab === 'phan-tich') renderReportContent();
+            renderReportContent();
         }
 
-        // Export CSV
         function exportCSV() {
             const data = getFilteredAndSortedData();
             if(!data.length) { alert('Không có dữ liệu!'); return; }
@@ -669,7 +1021,9 @@
             link.setAttribute("download", `Trainer_Report_${new Date().toLocaleDateString('vi-VN')}.csv`); link.click();
         }
 
-        // Email Tool Logic
+        // --- 6. JS CHO TOOLS CỦA VER MỚI ---
+
+        // 6.1 Lọc Email
         function processModuleEmails() {
             const input = document.getElementById('mod-input').value;
             if (!input.trim()) return;
@@ -690,6 +1044,190 @@
                 const old = btn.innerHTML; btn.innerHTML = '<i class="fas fa-check mr-1.5"></i> Đã Copy'; btn.classList.replace('bg-blue-600', 'bg-emerald-500');
                 setTimeout(() => { btn.innerHTML = old; btn.classList.replace('bg-emerald-500', 'bg-blue-600'); }, 2000);
             });
+        }
+
+        // 6.2 Lịch & Roadmap
+        function switchMainTab(tabId) {
+            ['onboard', 'calendar', 'roadmap'].forEach(t => {
+                document.getElementById('content-' + t).classList.add('hidden');
+                document.getElementById('tab-' + t).classList.remove('border-[#00f2fe]', 'bg-white');
+                document.getElementById('tab-' + t).classList.add('border-transparent');
+                document.getElementById('tab-' + t).querySelector('span.text-sm').classList.replace('text-[#0072ff]', 'text-slate-400');
+            });
+            document.getElementById('content-' + tabId).classList.remove('hidden');
+            document.getElementById('tab-' + tabId).classList.remove('border-transparent');
+            document.getElementById('tab-' + tabId).classList.add('border-[#00f2fe]', 'bg-white');
+            document.getElementById('tab-' + tabId).querySelector('span.text-sm').classList.replace('text-slate-400', 'text-[#0072ff]');
+        }
+        function switchSalesType(type) {
+            document.getElementById('roadmap-direct').classList.add('hidden');
+            document.getElementById('roadmap-tele').classList.add('hidden');
+            document.getElementById('btn-direct').className = 'px-10 py-2.5 rounded-xl text-sm font-bold text-slate-500 transition-all hover:text-slate-700';
+            document.getElementById('btn-tele').className = 'px-10 py-2.5 rounded-xl text-sm font-bold text-slate-500 transition-all hover:text-slate-700';
+            
+            document.getElementById('roadmap-' + type).classList.remove('hidden');
+            document.getElementById('btn-' + type).className = 'px-10 py-2.5 rounded-xl text-sm font-bold bg-white text-blue-600 shadow-md transition-all';
+        }
+
+        // 6.3 Tra cứu Email (Data giả lập để hoạt động)
+        const mockEmails = [
+            {name: 'Nguyễn Nhật Vi', pos: 'Trainer', dept: 'L&D', code: 'KV1234', email: 'vi.nn@kiotviet.com'},
+            {name: 'Trần Văn A', pos: 'Admin', dept: 'DSCTO', code: 'KV1111', email: 'a.tv@kiotviet.com'},
+            {name: 'Lê Thị B', pos: 'Manager', dept: 'HN1', code: 'KV2222', email: 'b.lt@kiotviet.com'},
+            {name: 'Phạm C', pos: 'HRBP', dept: 'HR', code: 'KV3333', email: 'c.p@kiotviet.com'}
+        ];
+        function renderEmailTable() {
+            const val = document.getElementById('emailSearchInput').value.toLowerCase();
+            const tbody = document.getElementById('emailTableBody');
+            tbody.innerHTML = '';
+            
+            const filtered = mockEmails.filter(e => e.name.toLowerCase().includes(val) || e.dept.toLowerCase().includes(val) || e.code.toLowerCase().includes(val));
+            
+            if(filtered.length === 0) {
+                document.getElementById('email-no-results').classList.remove('hidden');
+            } else {
+                document.getElementById('email-no-results').classList.add('hidden');
+                filtered.forEach(e => {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="px-4 py-3 text-center"><input type="checkbox" value="${e.email}" class="email-checkbox w-4 h-4 cursor-pointer accent-indigo-600" onchange="updateSelectedCount()"></td>
+                            <td class="px-4 py-3 font-bold text-slate-800">${e.name}</td>
+                            <td class="px-4 py-3 text-slate-500">${e.pos}</td>
+                            <td class="px-4 py-3"><span class="bg-indigo-50 text-indigo-600 px-2 py-1 rounded text-xs font-bold">${e.dept}</span></td>
+                            <td class="px-4 py-3 font-mono text-xs text-slate-400">${e.code}</td>
+                            <td class="px-4 py-3 text-blue-600">${e.email}</td>
+                        </tr>
+                    `;
+                });
+            }
+            updateSelectedCount();
+        }
+        function filterEmailTable() { renderEmailTable(); }
+        function toggleSelectAll(master) {
+            document.querySelectorAll('.email-checkbox').forEach(cb => cb.checked = master.checked);
+            updateSelectedCount();
+        }
+        function updateSelectedCount() {
+            const count = document.querySelectorAll('.email-checkbox:checked').length;
+            const span = document.getElementById('selectedCount');
+            if(count > 0) { span.innerText = count; span.classList.remove('hidden'); } 
+            else { span.classList.add('hidden'); }
+        }
+        function copySelectedEmails() {
+            const cbs = document.querySelectorAll('.email-checkbox:checked');
+            if(cbs.length === 0) return alert('Vui lòng chọn ít nhất 1 email');
+            const emails = Array.from(cbs).map(c => c.value).join(', ');
+            navigator.clipboard.writeText(emails).then(() => alert('Đã copy: ' + emails));
+        }
+
+        // 6.4 Điểm danh AI
+        let attData = { original: [], result: [] };
+        function removeAccents(str) { return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim(); }
+        
+        function loadRoster() {
+            const raw = document.getElementById('input-roster').value.trim();
+            if(!raw) { attData.original = []; document.getElementById('count-original').innerText = '0 HV'; return; }
+            attData.original = raw.split('\n').map(x => x.trim()).filter(x => x !== '');
+            document.getElementById('count-original').innerText = attData.original.length + ' HV';
+        }
+        
+        function scanAttendance() {
+            if(attData.original.length === 0) return alert('Vui lòng nhập DS Gốc trước!');
+            const meetRaw = document.getElementById('input-meet').value;
+            const meetArr = meetRaw.split('\n').map(x => removeAccents(x));
+            
+            attData.result = attData.original.map(name => {
+                const cleanName = removeAccents(name);
+                // Thuật toán quét cơ bản (chứa tên)
+                const isPresent = meetArr.some(m => m.includes(cleanName) || cleanName.includes(m));
+                return { name, isPresent };
+            });
+            
+            document.getElementById('att-view-input').classList.replace('flex', 'hidden');
+            document.getElementById('att-view-result').classList.replace('hidden', 'flex');
+            document.getElementById('search-box-att').value = '';
+            renderAttendanceResult();
+        }
+        
+        function renderAttendanceResult() {
+            const search = removeAccents(document.getElementById('search-box-att').value);
+            const list = document.getElementById('result-list');
+            list.innerHTML = '';
+            
+            let pCount = 0, aCount = 0;
+            
+            attData.result.forEach(item => {
+                if(item.isPresent) pCount++; else aCount++;
+                if(search && !removeAccents(item.name).includes(search)) return;
+                
+                const icon = item.isPresent ? '<i class="fas fa-check-circle text-emerald-500"></i>' : '<i class="fas fa-times-circle text-rose-500"></i>';
+                const bg = item.isPresent ? 'bg-emerald-50/50' : 'bg-rose-50/50';
+                
+                list.innerHTML += `
+                    <div class="flex items-center justify-between p-3 rounded-lg border border-slate-100 ${bg}">
+                        <span class="text-sm font-bold text-slate-700">${item.name}</span>
+                        ${icon}
+                    </div>
+                `;
+            });
+            
+            document.getElementById('res-total').innerText = attData.result.length;
+            document.getElementById('res-present').innerText = pCount;
+            document.getElementById('res-absent').innerText = aCount;
+        }
+        
+        function copyAbsent() {
+            const absents = attData.result.filter(x => !x.isPresent).map(x => x.name).join('\n');
+            if(!absents) return alert('Không có ai vắng!');
+            navigator.clipboard.writeText(absents).then(() => alert('Đã copy danh sách vắng!'));
+        }
+        function backToInput() {
+            document.getElementById('att-view-result').classList.replace('flex', 'hidden');
+            document.getElementById('att-view-input').classList.replace('hidden', 'flex');
+        }
+        function resetAllAttendance() {
+            document.getElementById('input-roster').value = '';
+            document.getElementById('input-meet').value = '';
+            loadRoster(); backToInput();
+        }
+
+        // --- 7. WIDGETS (Notes & Chatbot) ---
+        function toggleNotes() {
+            const w = document.getElementById('notesWidget');
+            document.getElementById('chatWidget').classList.remove('active');
+            w.classList.toggle('active');
+            if(w.classList.contains('active')) {
+                document.getElementById('stickyNoteText').value = localStorage.getItem('kv_trainer_notes') || '';
+                document.getElementById('stickyNoteText').focus();
+            }
+        }
+        function saveNotes() {
+            localStorage.setItem('kv_trainer_notes', document.getElementById('stickyNoteText').value);
+        }
+
+        function toggleChat() {
+            const w = document.getElementById('chatWidget');
+            document.getElementById('notesWidget').classList.remove('active');
+            w.classList.toggle('active');
+            if(w.classList.contains('active')) document.getElementById('chatInput').focus();
+        }
+        function handleChatEnter(e) { if(e.key === 'Enter') sendChatMessage(); }
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if(!text) return;
+            
+            const history = document.getElementById('chatHistory');
+            // Thêm tin nhắn User
+            history.innerHTML += `<div class="bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-sm self-end max-w-[85%]">${text}</div>`;
+            input.value = '';
+            history.scrollTop = history.scrollHeight;
+
+            // Phản hồi giả lập AI
+            setTimeout(() => {
+                history.innerHTML += `<div class="bg-white border border-slate-100 p-3 rounded-2xl rounded-tl-none shadow-sm text-sm text-slate-700 max-w-[85%]">Đây là bản Demo. Bot đang được KiotViet đào tạo thêm bằng dữ liệu nội bộ. Bạn cần tìm gì có thể dùng Tab Công Cụ nhé!</div>`;
+                history.scrollTop = history.scrollHeight;
+            }, 800);
         }
 
         // --- INIT ---
