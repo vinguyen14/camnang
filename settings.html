@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cài đặt Hệ thống | Trainer Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* CORE STYLES REUSED FROM MAIN APP */
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background: #f4f7f9; color: #0f172a; overflow-x: hidden; background-image: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.04), transparent 25%), radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.04), transparent 25%);}
+        
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); }
+        .hover-5d { transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.15); }
+        .hover-5d:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 20px 30px -10px rgba(0,0,0,0.08); border-color: #e2e8f0; }
+        
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+        
+        /* Form Inputs */
+        .form-input { w-full; bg-slate-50; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; font-size: 14px; font-weight: 500; color: #334155; outline: none; transition: all 0.3s; }
+        .form-input:focus { background: white; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        
+        /* Toast Notification */
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1); z-index: 9999; }
+        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col relative">
+
+    <!-- Header Navigation -->
+    <header class="h-20 glass-panel border-b border-slate-100 flex items-center px-8 sticky top-0 z-50 shadow-sm">
+        <a href="index.html" class="flex items-center gap-3 text-slate-500 hover:text-blue-600 transition-colors group mr-8">
+            <div class="w-10 h-10 rounded-full bg-slate-100 group-hover:bg-blue-50 flex items-center justify-center border border-transparent group-hover:border-blue-100">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+            <span class="font-bold text-sm uppercase tracking-wider">Trở về Hub</span>
+        </a>
+        <div class="h-8 w-px bg-slate-200 mr-8"></div>
+        <div>
+            <h1 class="text-2xl font-black text-slate-800 tracking-tight">System Settings</h1>
+            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Cấu hình Hệ thống & Sao lưu Dữ liệu</p>
+        </div>
+    </header>
+
+    <main class="flex-grow p-8 max-w-6xl mx-auto w-full">
+        
+        <!-- Storage Health Progress -->
+        <div class="mb-8 glass-panel p-6 rounded-[24px] flex items-center gap-6 shadow-sm border-l-4 border-l-blue-500">
+            <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">
+                <i class="fas fa-hdd"></i>
+            </div>
+            <div class="flex-grow">
+                <div class="flex justify-between items-end mb-2">
+                    <div>
+                        <h4 class="font-black text-slate-800 text-sm">Trạng thái Lưu trữ (Local Storage)</h4>
+                        <p class="text-xs text-slate-500 font-medium">Dữ liệu được lưu trực tiếp trên trình duyệt. Hãy sao lưu định kỳ.</p>
+                    </div>
+                    <span id="storage-text" class="text-xs font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">Đang tính...</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div id="storage-bar" class="bg-gradient-to-r from-blue-400 to-indigo-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- COLUMN 1 -->
+            <div class="space-y-8">
+                <!-- Profile Settings -->
+                <div class="glass-panel p-8 rounded-[32px] hover-5d">
+                    <h3 class="text-lg font-black text-slate-800 mb-6 flex items-center"><i class="fas fa-id-badge text-indigo-500 mr-3"></i> Cá nhân hóa (Profile)</h3>
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Tên hiển thị</label>
+                            <input type="text" id="prof-name" class="form-input" placeholder="VD: Nhật Vi (Ve Ve)">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Chức danh</label>
+                            <input type="text" id="prof-title" class="form-input" placeholder="VD: Trainer - KiotViet">
+                        </div>
+                        <button onclick="saveProfile()" class="w-full py-3 rounded-xl bg-indigo-50 text-indigo-600 font-bold text-sm hover:bg-indigo-600 hover:text-white transition shadow-sm border border-indigo-100">
+                            Lưu thông tin
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Security Settings -->
+                <div class="glass-panel p-8 rounded-[32px] hover-5d">
+                    <h3 class="text-lg font-black text-slate-800 mb-6 flex items-center"><i class="fas fa-shield-alt text-amber-500 mr-3"></i> Bảo mật (Security PIN)</h3>
+                    <p class="text-xs text-slate-500 mb-5 font-medium leading-relaxed">Mã PIN dùng để xác thực khi thực hiện thao tác xóa dữ liệu (Mặc định: <b class="text-slate-700">014023</b>).</p>
+                    <div class="space-y-5">
+                        <div class="relative">
+                            <i class="fas fa-lock absolute left-4 top-3.5 text-slate-400"></i>
+                            <input type="password" id="sec-pin" class="form-input pl-10 tracking-[0.3em] font-mono" placeholder="Nhập mã PIN mới (6 số)">
+                        </div>
+                        <button onclick="savePIN()" class="w-full py-3 rounded-xl bg-amber-50 text-amber-600 font-bold text-sm hover:bg-amber-500 hover:text-white transition shadow-sm border border-amber-100">
+                            Đổi mã PIN
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMN 2 -->
+            <div class="space-y-8">
+                <!-- Data Sync & Backup -->
+                <div class="glass-panel p-8 rounded-[32px] hover-5d border border-transparent hover:border-emerald-100">
+                    <h3 class="text-lg font-black text-slate-800 mb-2 flex items-center"><i class="fas fa-sync-alt text-emerald-500 mr-3"></i> Sao lưu & Phục hồi</h3>
+                    <p class="text-xs text-slate-500 mb-6 font-medium leading-relaxed">Tải file Backup (.json) về máy để phòng trường hợp xóa Cache trình duyệt làm mất dữ liệu đào tạo.</p>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Nút Export -->
+                        <button onclick="exportBackup()" class="flex flex-col items-center justify-center p-6 bg-emerald-50 rounded-2xl border border-emerald-100 hover:bg-emerald-500 hover:text-white text-emerald-600 transition group">
+                            <i class="fas fa-cloud-download-alt text-3xl mb-3 group-hover:scale-110 transition-transform"></i>
+                            <span class="font-black text-sm">Tạo bản Backup</span>
+                            <span class="text-[10px] font-bold opacity-70 mt-1 uppercase tracking-wider">Xuất File JSON</span>
+                        </button>
+                        
+                        <!-- Khu vực Import (Ẩn input file) -->
+                        <div class="relative flex flex-col items-center justify-center p-6 bg-blue-50 rounded-2xl border border-blue-100 hover:bg-blue-600 hover:text-white text-blue-600 transition group cursor-pointer" onclick="document.getElementById('importFile').click()">
+                            <i class="fas fa-cloud-upload-alt text-3xl mb-3 group-hover:scale-110 transition-transform"></i>
+                            <span class="font-black text-sm">Phục hồi dữ liệu</span>
+                            <span class="text-[10px] font-bold opacity-70 mt-1 uppercase tracking-wider">Chọn File JSON</span>
+                            <input type="file" id="importFile" accept=".json" class="hidden" onchange="importBackup(event)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="glass-panel p-8 rounded-[32px] border border-rose-200 bg-rose-50/30">
+                    <h3 class="text-lg font-black text-rose-600 mb-2 flex items-center"><i class="fas fa-exclamation-triangle mr-3"></i> Khu vực Nguy hiểm</h3>
+                    <p class="text-xs text-rose-500/80 mb-6 font-medium leading-relaxed">Hành động này sẽ xóa sạch toàn bộ CSDL Master và CSDL Quà tặng. Không thể hoàn tác nếu chưa Backup.</p>
+                    
+                    <button onclick="triggerWipe()" class="w-full py-4 rounded-xl bg-white text-rose-500 font-black text-sm border-2 border-rose-200 hover:bg-rose-500 hover:border-rose-500 hover:text-white transition uppercase tracking-wider shadow-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-trash-alt"></i> Xóa sạch Hệ thống
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl font-bold text-sm flex items-center gap-3">
+        <i class="fas fa-check-circle text-emerald-400"></i>
+        <span id="toast-msg">Đã lưu cấu hình thành công!</span>
+    </div>
+
+    <!-- MODAL XÁC THỰC PIN XÓA -->
+    <div id="wipeModal" class="modal fixed inset-0 bg-slate-900/80 backdrop-blur-xl items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl text-center relative border border-white">
+            <button onclick="closeWipeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full hover:bg-slate-100"><i class="fas fa-times"></i></button>
+            <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl border border-rose-100 shadow-inner animate-pulse"><i class="fas fa-skull-crossbones"></i></div>
+            <h3 class="text-xl font-black text-slate-800 mb-2 tracking-tight">Cảnh báo Xóa sạch</h3>
+            <p class="text-xs text-slate-500 mb-6 px-2 font-medium">Vui lòng nhập mã PIN bảo mật để xác nhận hành động này.</p>
+            <input type="password" id="wipePassword" placeholder="••••••" class="w-full text-center border-2 border-slate-100 bg-slate-50 rounded-2xl px-4 py-4 font-mono text-2xl tracking-[0.5em] focus:border-rose-400 focus:bg-white outline-none mb-6 transition shadow-inner">
+            <button onclick="executeWipe()" class="w-full py-4 rounded-2xl text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 transition shadow-lg uppercase tracking-wider">Hủy diệt Dữ liệu</button>
+        </div>
+    </div>
+
+    <script>
+        // INIT & LOAD DATA
+        window.onload = () => {
+            calculateStorage();
+            loadProfile();
+        };
+
+        // --- 1. TOAST NOTIFICATION ---
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.innerHTML = isError 
+                ? `<i class="fas fa-exclamation-circle text-rose-400"></i> <span>${msg}</span>` 
+                : `<i class="fas fa-check-circle text-emerald-400"></i> <span>${msg}</span>`;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // --- 2. STORAGE CALCULATION ---
+        function calculateStorage() {
+            let totalBytes = 0;
+            for (let x in localStorage) {
+                if (localStorage.hasOwnProperty(x)) {
+                    totalBytes += ((localStorage[x].length + x.length) * 2);
+                }
+            }
+            const maxBytes = 5 * 1024 * 1024; // ~5MB (Typical limit)
+            const percentage = Math.min((totalBytes / maxBytes) * 100, 100).toFixed(2);
+            const kb = (totalBytes / 1024).toFixed(1);
+            
+            document.getElementById('storage-text').innerText = `${percentage}% (${kb} KB)`;
+            
+            const bar = document.getElementById('storage-bar');
+            bar.style.width = percentage + '%';
+            
+            if(percentage > 80) bar.classList.replace('from-blue-400', 'from-rose-400');
+            else if(percentage > 50) bar.classList.replace('from-blue-400', 'from-amber-400');
+        }
+
+        // --- 3. PROFILE SETTINGS ---
+        function loadProfile() {
+            const prof = JSON.parse(localStorage.getItem('kv_trainer_profile')) || { name: 'Nhật Vi (Ve Ve)', title: 'Trainer - KiotViet' };
+            document.getElementById('prof-name').value = prof.name;
+            document.getElementById('prof-title').value = prof.title;
+        }
+
+        function saveProfile() {
+            const name = document.getElementById('prof-name').value.trim();
+            const title = document.getElementById('prof-title').value.trim();
+            if(!name) return showToast('Vui lòng nhập tên!', true);
+            
+            localStorage.setItem('kv_trainer_profile', JSON.stringify({ name, title }));
+            showToast('Đã lưu thông tin Cá nhân!');
+            calculateStorage();
+        }
+
+        // --- 4. SECURITY PIN ---
+        function getPIN() {
+            return localStorage.getItem('kv_secure_pin') || '014023';
+        }
+
+        function savePIN() {
+            const pin = document.getElementById('sec-pin').value.trim();
+            if(pin.length < 4) return showToast('Mã PIN phải từ 4 ký tự trở lên!', true);
+            localStorage.setItem('kv_secure_pin', pin);
+            document.getElementById('sec-pin').value = '';
+            showToast('Đã thay đổi mã PIN thành công!');
+        }
+
+        // --- 5. BACKUP (EXPORT) & RESTORE (IMPORT) ---
+        function exportBackup() {
+            const masterDB = localStorage.getItem('kv_master_db');
+            const giftDB = localStorage.getItem('kv_gift_db');
+            
+            if(!masterDB && !giftDB) return showToast('Hệ thống trống, không có gì để sao lưu!', true);
+
+            const backupData = {
+                timestamp: new Date().toISOString(),
+                master: JSON.parse(masterDB || '[]'),
+                gifts: JSON.parse(giftDB || 'null')
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `TrainerHub_Backup_${new Date().toLocaleDateString('vi-VN').replace(/\//g,'-')}.json`);
+            dlAnchorElem.click();
+            
+            showToast('Đã xuất file Backup thành công!');
+        }
+
+        function importBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if(data.master) localStorage.setItem('kv_master_db', JSON.stringify(data.master));
+                    if(data.gifts) localStorage.setItem('kv_gift_db', JSON.stringify(data.gifts));
+                    
+                    showToast('Đã phục hồi dữ liệu thành công!');
+                    calculateStorage();
+                    event.target.value = ''; // reset input
+                } catch (err) {
+                    showToast('File không hợp lệ hoặc bị hỏng!', true);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- 6. DANGER ZONE (WIPE DATA) ---
+        function triggerWipe() {
+            document.getElementById('wipePassword').value = '';
+            document.getElementById('wipeModal').classList.add('active');
+            setTimeout(() => document.getElementById('wipePassword').focus(), 100);
+        }
+
+        function closeWipeModal() {
+            document.getElementById('wipeModal').classList.remove('active');
+        }
+
+        function executeWipe() {
+            const inputPIN = document.getElementById('wipePassword').value;
+            const validPIN = getPIN();
+
+            if(inputPIN !== validPIN) {
+                showToast('Sai mã PIN xác thực!', true);
+                return;
+            }
+
+            // Xóa các Key DB
+            localStorage.removeItem('kv_master_db');
+            localStorage.removeItem('kv_gift_db');
+            localStorage.removeItem('kv_trainer_notes');
+            
+            closeWipeModal();
+            showToast('Đã xóa sạch toàn bộ CSDL!');
+            calculateStorage();
+        }
+    </script>
+</body>
+</html>
