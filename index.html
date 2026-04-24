@@ -1504,71 +1504,116 @@
             if(!text) return;
             
             const history = document.getElementById('chatHistory');
-            // 1. Hiển thị tin nhắn của User
+            // 1. Hiển thị tin nhắn User
             history.innerHTML += `<div class="bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-sm self-end max-w-[85%]">${text}</div>`;
             input.value = '';
             history.scrollTop = history.scrollHeight;
 
-            // 2. LOGIC "NÃO" CỦA CHATBOT (Phân tích ý định & Dữ liệu thật)
+            // 2. LOGIC "NÃO" CỦA CHATBOT SUPER ASSISTANT
             setTimeout(() => {
                 const query = removeAccentsBot(text);
                 let response = "";
 
-                // Kịch bản 1: Hỏi về LỊCH DẠY
-                if (query.includes("lich day") || query.includes("co lich") || query.includes("nay hoc gi") || query.includes("mai hoc gi")) {
-                    const today = new Date().getDay(); // 0: CN, 1: T2, 2: T3...
-                    if(today === 1) response = "Hôm nay là Thứ 2. Lịch chuẩn thường là **Đào tạo Hội nhập** cho nhân sự mới nhé Trainer!";
-                    else if(today >= 2 && today <= 4) response = "Hôm nay là giữa tuần. Lịch chuẩn là **Đào tạo Sản phẩm (B1, B2, B3)**. Nhớ chuẩn bị Demo app nhé!";
-                    else if(today === 5) response = "Hôm nay Thứ 6 rồi! Thường sẽ là ngày **Làm bài Test** cho khóa tuần này.";
-                    else response = "Hôm nay là cuối tuần. Không có lịch đào tạo chính thức. Chúc Trainer nghỉ ngơi vui vẻ! 🏕️";
+                // DANH SÁCH NGÀY LỄ 2026 (Dùng để Bot tra cứu)
+                const botHolidays = {
+                    "1-1": "Tết Dương Lịch", "2-16": "Giao Thừa", "2-17": "Mùng 1 Tết", "2-18": "Mùng 2 Tết", 
+                    "2-19": "Mùng 3 Tết", "2-20": "Mùng 4 Tết", "2-21": "Mùng 5 Tết", "4-27": "Giỗ Tổ Hùng Vương", 
+                    "4-30": "Giải Phóng Miền Nam", "5-1": "Quốc Tế Lao Động", "9-2": "Quốc Khánh"
+                };
+
+                // KỊCH BẢN 1: HỎI VỀ TUẦN SAU / TƯƠNG LAI / LỄ
+                if (query.includes("tuan sau") || query.includes("sap toi") || query.includes("le") || query.includes("nghi")) {
+                    const nextWeek = new Date();
+                    nextWeek.setDate(nextWeek.getDate() + 7);
+                    const checkDate = `${nextWeek.getMonth()+1}-${nextWeek.getDate()}`;
+                    
+                    if (botHolidays[checkDate]) {
+                        response = `🎉 Tuần sau có ngày lễ **${botHolidays[checkDate]}** đó nha! Hệ thống sẽ không xếp lịch Onboard. Bạn cứ thoải mái nghỉ ngơi hoặc dành thời gian này để Review lại Slide bài giảng nhé.`;
+                    } else {
+                        response = `📅 **Về lịch tuần sau:** Theo chu kỳ hệ thống, tuần sau vẫn có đợt Onboard mới.\n\n` +
+                                   `💡 **To-do list cho bạn chuẩn bị:**\n` +
+                                   `- Thứ 6 tuần này: Chốt danh sách HRBP gửi.\n` +
+                                   `- Thứ 7: Gửi Mail thư mời và Link Google Meet/Zoom.\n` +
+                                   `- Chủ nhật: Chuẩn bị Data thực hành cho học viên trên hệ thống KiotViet.\n\n` +
+                                   `*Nếu tuần sau công ty báo không có học viên mới, bạn hãy dùng thời gian trống này để R&D, cập nhật tính năng mới của phần mềm vào giáo trình nhé! 🚀*`;
+                    }
                 }
                 
-                // Kịch bản 2: Hỏi về BÁO CÁO / THỐNG KÊ (Đọc Data thật)
-                else if (query.includes("bao cao") || query.includes("hoc vien") || query.includes("co bao nhieu") || query.includes("thong ke")) {
+                // KỊCH BẢN 2: HỎI VỀ CÔNG VIỆC ĐÃ LÀM / ĐANG LÀM
+                else if (query.includes("cong viec") || query.includes("chuan bi") || query.includes("hoan thanh") || query.includes("dang lam")) {
                     const db = JSON.parse(localStorage.getItem('kv_master_db')) || [];
-                    if(db.length === 0) {
-                        response = "Hệ thống hiện tại chưa có dữ liệu báo cáo nào. Bạn hãy vào tab **Báo cáo & Phân tích** để tạo nhé.";
+                    const dangDienRa = db.filter(item => item.status === 'Đang diễn ra');
+                    const hoanThanh = db.filter(item => item.status === 'Hoàn thành' && item.month == (new Date().getMonth() + 1));
+
+                    response = `📝 **Cập nhật tiến độ của bạn:**\n\n`;
+                    
+                    if(hoanThanh.length > 0) {
+                        response += `✅ Bạn vừa hoàn thành xuất sắc **${hoanThanh.length} khóa học** trong tháng này. Đừng quên gửi Form Feedback cho học viên và chốt Báo cáo lên Drive nhé.\n\n`;
                     } else {
-                        let sumTotal = 0, sumPass = 0, sumFail = 0;
-                        db.forEach(i => { 
-                            sumTotal += parseInt(i.totalTrainees)||0; 
-                            sumPass += parseInt(i.passedTrainees)||0; 
-                            sumFail += parseInt(i.failedTrainees)||0;
-                        });
-                        response = `Hệ thống hiện có **${db.length} khóa học** được lưu.\nTổng số học viên: **${sumTotal} người**.\nTrong đó: **${sumPass} Đạt** và **${sumFail} Fail**. 📊`;
+                        response += `Tháng này bạn chưa đóng khóa học nào.\n\n`;
+                    }
+
+                    if(dangDienRa.length > 0) {
+                        response += `🔥 Bạn đang có **${dangDienRa.length} khóa** ở trạng thái "Đang diễn ra" (Mã: ${dangDienRa.map(d=>d.courseId).join(', ')}).\n` +
+                                    `**Cần chuẩn bị gấp:**\n- Chấm điểm danh các buổi đã học.\n- Mở link Quizizz cho bài Test cuối khóa.\n- Chuẩn bị danh sách nhận Quà tặng (nếu học viên đỗ).`;
+                    } else {
+                        response += `☕ Hiện tại bạn không có khóa nào đang chạy. Đây là thời điểm tuyệt vời để thiết kế các Game tương tác mới cho khóa học sắp tới!`;
                     }
                 }
 
-                // Kịch bản 3: Hỏi về CÔNG CỤ
-                else if (query.includes("diem danh") || query.includes("loc email") || query.includes("tra cuu") || query.includes("qua tang")) {
-                    response = "Tính năng này đã được tự động hóa. Bạn hãy bấm vào Tab **Công cụ (Tools)** ở thanh menu bên trái để sử dụng nhé 🛠️";
+                // KỊCH BẢN 3: HƯỚNG DẪN SỬ DỤNG HỆ THỐNG / TOOLS
+                else if (query.includes("huong dan") || query.includes("cach") || query.includes("lam sao") || query.includes("o dau") || query.includes("muc nao")) {
+                    if(query.includes("tao khoa hoc") || query.includes("them khoa") || query.includes("bao cao")) {
+                        response = `📂 **Để tạo/cập nhật Khóa học mới:**\nBạn hãy chuyển sang Tab **Báo cáo & Phân tích**. Trên bảng dữ liệu, bấm vào nút 🖋️ (Cây bút màu vàng) ở cột Action để cập nhật tiến độ, số lượng Đạt/Fail cho khóa học nhé.`;
+                    } 
+                    else if(query.includes("loc email") || query.includes("mail")) {
+                        response = `📧 **Tool Lọc Email Chat:**\nBạn vào Tab **Công cụ**, chọn "Lọc Email Chat". Dán nguyên cục văn bản lộn xộn có chứa email vào, hệ thống sẽ tự động nhặt các email @kiotviet.com ra và thêm dấu phẩy cho bạn copy thả vào Google Chat.`;
+                    }
+                    else if(query.includes("diem danh") || query.includes("zoom") || query.includes("meet")) {
+                        response = `⚡ **Tool Điểm danh AI:**\nCực kỳ nhàn! Bạn vào Tab **Công cụ** -> "Điểm danh AI". Dán danh sách gốc vào ô Trái, dán người tham gia Zoom vào ô Phải. Bấm Quét, hệ thống sẽ lọc ra ai Vắng mặt với độ chính xác 99%.`;
+                    }
+                    else if(query.includes("qua tang") || query.includes("kho")) {
+                        response = `🎁 **Tool Quản lý Quà tặng:**\nBạn vào Tab **Công cụ** -> "Quản lý Quà tặng". Ở đây bạn nhập Tồn đầu kỳ, sau đó mỗi lần có học viên pass, bạn ấn dấu (+) ở cột Xuất, hệ thống sẽ tự trừ kho cho bạn.`;
+                    }
+                    else {
+                        response = `💡 **Cẩm nang Hệ thống:**\n- Dạy học, xem kịch bản -> Tab **Khóa học Sales**.\n- Xem biểu đồ, xuất Excel -> Tab **Phân tích**.\n- Dùng tool tự động hóa -> Tab **Công cụ**.\n- Đổi mã PIN, Backup dữ liệu -> Tab **Cài đặt**.\nBạn cần hướng dẫn chi tiết tool nào cứ gõ tên tool đó ra nhé!`;
+                    }
                 }
 
-                // Kịch bản 4: Xã giao cơ bản
+                // KỊCH BẢN 4: HỎI LỊCH HÔM NAY (Giữ lại logic cũ)
+                else if (query.includes("lich day") || query.includes("co lich") || query.includes("nay hoc gi") || query.includes("mai hoc gi")) {
+                    const today = new Date().getDay(); 
+                    if(today === 1) response = "Hôm nay là Thứ 2. Lịch chuẩn là **Đào tạo Hội nhập**. Bạn nhớ chuẩn bị Slide Văn hóa và Minigame khởi động nhé! 🌟";
+                    else if(today >= 2 && today <= 4) response = "Hôm nay là giữa tuần. Lịch là **Đào tạo Sản phẩm**. Đừng quên chuẩn bị tài khoản Demo KiotViet cho học viên thực hành! 💻";
+                    else if(today === 5) response = "Hôm nay Thứ 6! Ngày **Làm bài Test & Tổng kết**. Bạn nhớ chuẩn bị Link Quizizz và check kho Quà tặng nhé. 🎁";
+                    else response = "Cuối tuần rồi! Không có lịch đào tạo chính thức. Tắt máy và đi chơi thôi Trainer ơi! 🏕️";
+                }
+
+                // KỊCH BẢN 5: XÃ GIAO
                 else if (query.includes("chao") || query.includes("hello") || query.includes("hi")) {
                     const prof = JSON.parse(localStorage.getItem('kv_trainer_profile')) || { name: 'Trainer' };
-                    response = `Xin chào ${prof.name.split(' ')[0]}! Chúc bạn một ngày năng lượng. Cần check lịch hay báo cáo cứ hỏi mình nhé! ☕`;
+                    response = `Xin chào ${prof.name.split(' ')[0]}! Chúc bạn một ngày năng lượng. \nBạn có thể hỏi mình: \n- *Tuần sau có lịch không?*\n- *Tôi cần chuẩn bị công việc gì?*\n- *Cách điểm danh AI như thế nào?*`;
                 }
-                else if (query.includes("cam on") || query.includes("thank")) {
-                    response = "Không có gì! Mình luôn ở đây để giúp bạn tối ưu công việc. ❤️";
+                else if (query.includes("cam on") || query.includes("thank") || query.includes("ok")) {
+                    response = "Luôn sẵn sàng hỗ trợ bạn! Cứ nhắn mình bất cứ khi nào cần nha. ❤️";
                 }
 
-                // Kịch bản 5: Không hiểu
+                // KỊCH BẢN 6: FALLBACK (Không hiểu)
                 else {
-                    response = "Xin lỗi, mình chưa hiểu ý bạn. Mình có thể trả lời các thông tin về: \n- **Lịch dạy hôm nay** \n- **Thống kê học viên/Báo cáo** \n- **Hướng dẫn dùng Tool**";
+                    response = `Xin lỗi, mình chưa hiểu ý bạn. Thử dùng các từ khóa như:\n- **"Tuần sau"** (Xem lịch & việc cần làm)\n- **"Công việc"** (Xem tiến độ khóa học)\n- **"Hướng dẫn" + tên Tool** (Hỏi cách dùng App)`;
                 }
 
-                // Chuyển đổi \n thành <br> và **text** thành <b>text</b> để hiển thị HTML đẹp hơn
+                // Format text đẹp hơn (Xuống dòng và in đậm)
                 response = response.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
 
-                // 3. Hiển thị tin nhắn của Bot
+                // 3. Hiển thị tin nhắn Bot
                 history.innerHTML += `
                     <div class="bg-white border border-slate-200 p-3 rounded-2xl rounded-tl-none shadow-sm text-sm text-slate-700 max-w-[85%] flex gap-2 items-start">
                         <div class="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white flex items-center justify-center text-[10px] shrink-0 mt-0.5"><i class="fas fa-robot"></i></div>
-                        <div>${response}</div>
+                        <div class="leading-relaxed">${response}</div>
                     </div>`;
                 history.scrollTop = history.scrollHeight;
-            }, 600); // Tạo độ trễ 0.6s cho giống người đang gõ chữ
+            }, 800);
         }
 
         // --- INIT ---
