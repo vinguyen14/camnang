@@ -65,7 +65,6 @@
 <body>
 
     <div class="flex h-screen">
-        <!-- SIDEBAR -->
         <aside id="sidebar" class="sidebar-saas w-64 flex flex-col z-50 shrink-0">
             <div class="h-16 flex items-center px-6 border-b border-slate-100 shrink-0">
                 <div class="w-6 h-6 bg-blue-600 rounded flex items-center justify-center text-white text-[10px] mr-3"><i class="fas fa-layer-group"></i></div>
@@ -112,7 +111,8 @@
             <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 shrink-0">
                 <div class="relative w-96">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" placeholder="Tìm kiếm trong báo cáo..." class="saas-input pl-9 bg-slate-50 border-transparent focus:bg-white focus:border-blue-300">
+                    <!-- THANH TÌM KIẾM ĐÃ FIX -->
+                    <input type="text" id="topSearchInput" oninput="handleTopSearch(this.value)" placeholder="Tìm kiếm trong báo cáo..." class="saas-input pl-9 bg-slate-50 border-transparent focus:bg-white focus:border-blue-300">
                 </div>
 
                 <div class="flex items-center gap-5">
@@ -120,8 +120,11 @@
                     <div class="relative">
                         <i onclick="toggleNoti()" class="far fa-bell text-slate-500 hover:text-slate-800 cursor-pointer text-lg relative"><span class="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 rounded-full border border-white"></span></i>
                         <div id="notiDropdown" class="hidden absolute right-0 top-8 w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
-                            <div class="bg-slate-50 px-4 py-3 border-b border-slate-100 font-bold text-slate-800 text-sm flex justify-between items-center"><span>Thông báo</span></div>
-                            <div class="max-h-64 overflow-y-auto custom-scrollbar p-2" id="notiContent"></div>
+                            <div class="bg-slate-50 px-4 py-3 border-b border-slate-100 font-bold text-slate-800 text-sm flex justify-between items-center">
+                                <span>Thông báo Lịch</span>
+                                <span class="text-[10px] text-blue-600 font-normal cursor-pointer hover:underline" onclick="toggleNoti()">Đóng</span>
+                            </div>
+                            <div class="max-h-80 overflow-y-auto custom-scrollbar p-0" id="notiContent"></div>
                         </div>
                     </div>
                 </div>
@@ -210,7 +213,7 @@
         </div>
     </div>
 
-    <!-- 2. Tra cứu Email -->
+    <!-- 2. Tra cứu Email (ĐÃ FIX LƯU TRẠNG THÁI CHECKBOX) -->
     <div id="emailCopyModal" class="modal fixed inset-0 items-center justify-center p-4">
         <div class="modal-content bg-white w-full max-w-5xl h-[80vh] flex flex-col relative overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
@@ -245,7 +248,7 @@
         </div>
     </div>
 
-    <!-- 3. Lọc Email Chat -->
+    <!-- 3. Lọc Email Chat (ĐÃ FIX REGEX CHUẨN XÁC 100%) -->
     <div id="emailToolModal" class="modal fixed inset-0 items-center justify-center p-4">
         <div class="modal-content bg-white w-full max-w-4xl h-[70vh] flex flex-col relative overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
@@ -340,7 +343,7 @@
         </div>
     </div>
 
-    <!-- 6. MODAL LỊCH ĐÀO TẠO & ROADMAP -->
+    <!-- 6. MODAL LỊCH ĐÀO TẠO & ROADMAP (ĐÃ BỔ SUNG ĐẦY ĐỦ 3 PHƯƠNG ÁN ONBOARD) -->
     <div id="calendarModal" class="modal fixed inset-0 items-center justify-center p-4">
         <div class="modal-content bg-white w-full max-w-6xl h-[90vh] flex flex-col relative overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
@@ -358,7 +361,7 @@
                 
                 <!-- TAB 1: ONBOARD ĐẦY ĐỦ PHƯƠNG ÁN -->
                 <div id="content-onboard" class="fade-in max-w-4xl mx-auto">
-                    <h2 class="font-bold text-slate-800 mb-4 uppercase border-b pb-2">Giai Đoạn 1: Trước Khi Gia Nhập (Pre-Onboarding)</h2>
+                    <h2 class="font-bold text-slate-800 mb-4 uppercase">Giai Đoạn 1: Trước Khi Gia Nhập (Pre-Onboarding)</h2>
                     <div class="saas-card p-5 border-l-4 border-blue-500 mb-6 bg-white">
                         <h3 class="font-bold text-slate-800 text-sm mb-2">Khởi Tạo Quy Trình</h3>
                         <p class="text-sm font-semibold text-slate-800 mb-1">Trách nhiệm: HRBP/Admin và Bộ phận L&D.</p>
@@ -381,7 +384,7 @@
                         </div>
                     </div>
 
-                    <h2 class="font-bold text-slate-800 mb-4 uppercase mt-8 border-b pb-2">Giai Đoạn 2: Sau Khi Gia Nhập & Đào Tạo</h2>
+                    <h2 class="font-bold text-slate-800 mb-4 uppercase mt-8 border-t border-slate-200 pt-6">Giai Đoạn 2: Sau Khi Gia Nhập & Đào Tạo</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         <div class="saas-card p-5 bg-white">
                             <h3 class="font-bold text-slate-800 mb-2 text-sm">Điều Kiện Tổ Chức Lớp</h3>
@@ -513,6 +516,7 @@
         };
         let globalMasterDB =[]; 
         let globalGiftsDB =[];
+        let statusChartInstance = null, perfChartInstance = null, merchChartInstance = null;
 
         const courseConfig =[
             { id: 'SPCB', label: 'Retail', title: 'Cơ bản (TS-DS)', desc: 'Quy trình Onboard 3 ngày.', link: 'spcb.html', icon: 'fa-box', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
@@ -694,28 +698,29 @@
             }
         }
 
-        function getFilteredAndSortedData() {
-            let displayData = [...globalMasterDB];
-            if (AppState.filters.month !== 'all') displayData = displayData.filter(d => d.month == AppState.filters.month);
-            if(AppState.filters.search !== "") {
-                displayData = displayData.filter(d => 
-                    (d.courseId && d.courseId.toLowerCase().includes(AppState.filters.search)) || 
-                    (d.groupName && d.groupName.toLowerCase().includes(AppState.filters.search))
-                );
-            }
-            if(AppState.sort.col !== "") {
-                displayData.sort((a, b) => {
-                    let valA = (a[AppState.sort.col] || '').toString().toLowerCase();
-                    let valB = (b[AppState.sort.col] || '').toString().toLowerCase();
-                    if(valA < valB) return AppState.sort.asc ? -1 : 1;
-                    if(valA > valB) return AppState.sort.asc ? 1 : -1;
-                    return 0;
+        // --- DASHBOARD SEARCH (FIXED) ---
+        function handleTopSearch(val) {
+            const query = val.toLowerCase();
+            
+            // Tìm trong bảng Dashboard
+            const dashTable = document.getElementById('dashboard-table-body');
+            if (dashTable) {
+                const rows = dashTable.getElementsByTagName('tr');
+                Array.from(rows).forEach(row => {
+                    if(row.innerText.toLowerCase().includes(query)) row.style.display = '';
+                    else row.style.display = 'none';
                 });
             }
-            return displayData;
+            
+            // Đồng bộ sang bảng Master Data
+            const masterSearch = document.getElementById('searchInput');
+            if(masterSearch) {
+                masterSearch.value = val;
+                handleSearch(val);
+            }
         }
 
-        // TÍNH TOÁN SMART ALERT TỪ DYNAMIC CALENDAR
+        // --- TÍNH TOÁN SMART ALERT (CẢI TIẾN UI CHUÔNG) ---
         function getDynamicCalendar() { return JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {}; }
 
         function generateSmartAlerts(isDropdown = false) {
@@ -726,8 +731,8 @@
             const mKey = `${today.getFullYear()}-${today.getMonth() + 1}`;
             
             if (!calData[mKey]) {
-                if(isDropdown) return `<div class="p-3 text-sm text-slate-600 border-b border-slate-100 flex items-center gap-2"><i class="fas fa-info-circle text-blue-500"></i> Chưa cài lịch tháng này</div>`;
-                return `<div class="saas-card p-4 flex items-start gap-4 mb-6 border-l-4 border-l-blue-500"><i class="fas fa-info-circle text-blue-500 mt-1"></i><div><h4 class="font-semibold text-slate-800 text-sm">Chưa cài đặt lịch</h4><p class="text-xs text-slate-500">Hãy vào Thiết lập để cấu hình lịch cho tháng này.</p></div></div>`;
+                if(isDropdown) return `<div class="p-4 text-sm text-slate-500 text-center">Chưa cài lịch tháng này</div>`;
+                return `<div class="saas-card p-4 flex items-start gap-4 mb-4 border-l-4 border-l-slate-300"><div class="w-10 h-10 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center font-bold text-lg shrink-0"><i class="fas fa-calendar-times"></i></div><div><h4 class="font-semibold text-slate-800 text-sm">Chưa cài đặt lịch</h4><p class="text-xs font-medium text-slate-500 mt-0.5">Vào Thiết lập để cấu hình lịch</p></div></div>`;
             }
 
             const monthData = calData[mKey];
@@ -740,16 +745,35 @@
                 if (diffDays >= 0 && diffDays <= 7) {
                     let dayTxt = diffDays === 0 ? "Hôm nay" : `Còn ${diffDays} ngày`;
                     
+                    let icon = 'fa-calendar-day'; let color = 'text-blue-500'; let bg = 'bg-blue-50'; let border = 'border-l-blue-500';
+                    if(type==='kv1') { icon='fa-laptop-code'; color='text-blue-500'; bg='bg-blue-50'; border='border-l-blue-500'; }
+                    if(type==='tax') { icon='fa-file-invoice-dollar'; color='text-emerald-500'; bg='bg-emerald-50'; border='border-l-emerald-500'; }
+                    if(type==='fnb') { icon='fa-utensils'; color='text-orange-500'; bg='bg-orange-50'; border='border-l-orange-500'; }
+                    if(type==='salon') { icon='fa-spa'; color='text-pink-500'; bg='bg-pink-50'; border='border-l-pink-500'; }
+                    if(type==='hotel') { icon='fa-hotel'; color='text-teal-500'; bg='bg-teal-50'; border='border-l-teal-500'; }
+
                     if(isDropdown) {
                         alertsHTML += `
-                            <div class="p-3 border-b border-slate-100 hover:bg-slate-50 transition cursor-pointer">
-                                <div class="flex items-center gap-2 mb-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span><h4 class="font-semibold text-slate-800 text-[13px]">${eventName}</h4></div>
-                                <p class="text-xs text-slate-500 pl-4">${dayTxt}</p>
+                            <div class="p-3 border-b border-slate-50 hover:bg-slate-50 transition cursor-pointer flex gap-3 items-start">
+                                <div class="w-8 h-8 rounded-full ${bg} ${color} flex items-center justify-center shrink-0 mt-0.5"><i class="fas ${icon} text-xs"></i></div>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800 text-[13px] leading-tight">${eventName}</h4>
+                                    <p class="text-xs text-slate-500 mt-1"><i class="far fa-clock mr-1"></i>${dayTxt}</p>
+                                </div>
                             </div>
                         `;
                     } else {
-                        let btnHTML = type !== 'onboard' ? `<button onclick="openModal('hrmFilterModal')" class="mt-2 text-[10px] font-semibold bg-blue-50 text-blue-600 px-3 py-1.5 rounded hover:bg-blue-600 hover:text-white transition">Dùng Tool Lọc HRM</button>` : '';
-                        alertsHTML += `<div class="saas-card p-4 flex items-start gap-4 mb-4 border-l-4 border-l-blue-500"><div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0">${diffDays}d</div><div><h4 class="font-semibold text-slate-800 text-sm">${eventName}</h4><p class="text-xs text-slate-500 mt-0.5">${dayTxt}</p>${btnHTML}</div></div>`;
+                        let btnHTML = type !== 'onboard' ? `<button onclick="openModal('hrmFilterModal')" class="mt-2 text-[10px] font-semibold bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded hover:bg-slate-50 transition shadow-sm">Dùng Tool Lọc HRM</button>` : '';
+                        alertsHTML += `
+                            <div class="saas-card p-4 flex items-start gap-4 mb-4 border-l-4 ${border} hover:shadow-md transition">
+                                <div class="w-10 h-10 rounded-lg ${bg} ${color} flex items-center justify-center font-bold text-lg shrink-0"><i class="fas ${icon}"></i></div>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800 text-sm">${eventName}</h4>
+                                    <p class="text-xs font-medium text-slate-500 mt-0.5"><i class="far fa-clock mr-1"></i>${dayTxt}</p>
+                                    ${btnHTML}
+                                </div>
+                            </div>
+                        `;
                     }
                 }
             };
@@ -759,7 +783,7 @@
             checkUpcoming(monthData.fnb, "Khóa FNB", "fnb");
             checkUpcoming(monthData.salon, "Khóa Salon", "salon");
             checkUpcoming(monthData.hotel, "Khóa Hotel", "hotel");
-            if(monthData.onboards) monthData.onboards.forEach((d, i) => checkUpcoming(d, `Onboard Tuần ${i+1}`, "onboard"));
+            if(monthData.onboards) monthData.onboards.forEach((d, i) => checkUpcoming(d, `Lớp Onboard Tuần ${i+1}`, "onboard"));
 
             if(alertsHTML === '') {
                 if(isDropdown) return `<div class="p-4 text-center text-xs text-slate-400">Không có thông báo mới</div>`;
@@ -767,21 +791,6 @@
             }
 
             return alertsHTML;
-        }
-
-        // --- ĐA NGÔN NGỮ (i18n) ---
-        function setLang(lang) {
-            AppState.lang = lang;
-            if(lang === 'en') {
-                document.getElementById('lang-en').className = "cursor-pointer px-2 py-1 rounded bg-white text-blue-600 shadow-sm transition";
-                document.getElementById('lang-vi').className = "cursor-pointer px-2 py-1 rounded hover:text-slate-800 transition";
-            } else {
-                document.getElementById('lang-vi').className = "cursor-pointer px-2 py-1 rounded bg-white text-blue-600 shadow-sm transition";
-                document.getElementById('lang-en').className = "cursor-pointer px-2 py-1 rounded hover:text-slate-800 transition";
-            }
-            document.querySelectorAll('.lang-text').forEach(el => {
-                if(el.getAttribute(`data-${lang}`)) el.innerText = el.getAttribute(`data-${lang}`);
-            });
         }
 
         // --- UI LAYOUT FUNCTIONS ---
@@ -793,6 +802,7 @@
             }
         }
 
+        // --- HÀM DASHBOARD ĐÃ FIX RENDER CHART KỊP DOM ---
         function switchTab(tabId) {
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             event.currentTarget.classList.add('active');
@@ -806,28 +816,28 @@
 
                 container.innerHTML = `
                     <div class="mb-6 flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-slate-800 lang-text" data-vi="Bảng điều khiển" data-en="Dashboard">Bảng điều khiển</h2>
-                        <button onclick="fetchAPIAndRender(event)" class="btn-outline flex items-center gap-2"><i class="fas fa-sync-alt"></i> <span class="lang-text" data-vi="Tải lại Data" data-en="Reload Data">Tải lại Data</span></button>
+                        <h2 class="text-xl font-bold text-slate-800">Bảng điều khiển L&D</h2>
+                        <button onclick="fetchAPIAndRender(event)" class="btn-outline flex items-center gap-2"><i class="fas fa-sync-alt"></i> Tải lại Data</button>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                         <div class="saas-card p-5 relative overflow-hidden">
-                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2 lang-text" data-vi="TỔNG KHÓA HỌC" data-en="TOTAL COURSES">TỔNG KHÓA HỌC</p>
+                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">TỔNG KHÓA HỌC</p>
                             <h3 class="text-3xl font-bold text-slate-800">${data.length}</h3>
                             <div class="absolute top-5 right-5 w-8 h-8 rounded bg-blue-50 text-blue-600 flex items-center justify-center"><i class="fas fa-layer-group text-sm"></i></div>
                         </div>
                         <div class="saas-card p-5 relative overflow-hidden">
-                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2 lang-text" data-vi="TỔNG HỌC VIÊN" data-en="TOTAL TRAINEES">TỔNG HỌC VIÊN</p>
+                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">TỔNG HỌC VIÊN</p>
                             <h3 class="text-3xl font-bold text-slate-800">${sumTotal}</h3>
                             <div class="absolute top-5 right-5 w-8 h-8 rounded bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fas fa-users text-sm"></i></div>
                         </div>
                         <div class="saas-card p-5 relative overflow-hidden">
-                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2 lang-text" data-vi="TỶ LỆ PASS" data-en="PASS RATE">TỶ LỆ PASS</p>
+                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">TỶ LỆ PASS</p>
                             <h3 class="text-3xl font-bold text-slate-800">${passRate}%</h3>
                             <div class="absolute top-5 right-5 w-8 h-8 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="fas fa-check-double text-sm"></i></div>
                         </div>
                         <div class="saas-card p-5 relative overflow-hidden bg-slate-900 text-white border-transparent">
-                            <p class="text-[10px] font-semibold text-blue-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><i class="fas fa-robot"></i> <span class="lang-text" data-vi="AI NHẬN ĐỊNH" data-en="AI INSIGHT">AI NHẬN ĐỊNH</span></p>
+                            <p class="text-[10px] font-semibold text-blue-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><i class="fas fa-robot"></i> AI NHẬN ĐỊNH</p>
                             <p class="text-[11px] font-medium text-slate-300 leading-relaxed mt-2">${passRate >= 80 ? 'Hệ thống vận hành khỏe mạnh. Tỷ lệ tiếp thu tốt.' : 'Tỷ lệ Fail khá cao. Cần xem lại đề cương.'}</p>
                         </div>
                     </div>
@@ -835,46 +845,47 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div class="lg:col-span-2">
                             <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-sm font-bold text-slate-800 lang-text" data-vi="Biểu đồ Phân tích" data-en="Analytics Chart">Biểu đồ Phân tích</h3>
+                                <h3 class="text-sm font-bold text-slate-800">Biểu đồ Phân tích</h3>
                             </div>
                             
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                                <div class="saas-card p-5 h-64 flex flex-col"><p class="text-[10px] font-bold text-slate-400 uppercase mb-2 lang-text" data-vi="Trạng thái khóa" data-en="Course Status">Trạng thái khóa</p><div class="flex-grow relative"><canvas id="statusChart"></canvas></div></div>
-                                <div class="saas-card p-5 h-64 flex flex-col"><p class="text-[10px] font-bold text-slate-400 uppercase mb-2 lang-text" data-vi="Hiệu suất Đạt/Fail" data-en="Performance">Hiệu suất Đạt/Fail</p><div class="flex-grow relative"><canvas id="performanceChart"></canvas></div></div>
-                                <div class="saas-card p-5 h-64 flex flex-col"><p class="text-[10px] font-bold text-slate-400 uppercase mb-2 lang-text" data-vi="Tồn Kho Quà Tặng" data-en="Merchandise">Tồn Kho Quà Tặng</p><div class="flex-grow relative"><canvas id="merchChart"></canvas></div></div>
+                                <div class="saas-card p-5 h-64 flex flex-col"><p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Trạng thái khóa</p><div class="flex-grow relative w-full h-full"><canvas id="statusChart"></canvas></div></div>
+                                <div class="saas-card p-5 h-64 flex flex-col"><p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Hiệu suất Đạt/Fail</p><div class="flex-grow relative w-full h-full"><canvas id="performanceChart"></canvas></div></div>
+                                <div class="saas-card p-5 h-64 flex flex-col"><p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Tồn Kho Quà Tặng</p><div class="flex-grow relative w-full h-full"><canvas id="merchChart"></canvas></div></div>
                             </div>
 
-                            <h3 class="text-sm font-bold text-slate-800 mb-4 lang-text" data-vi="Hoạt động gần đây" data-en="Recent Activities">Hoạt động gần đây</h3>
+                            <h3 class="text-sm font-bold text-slate-800 mb-4">Hoạt động gần đây</h3>
                             <div class="saas-card overflow-hidden">
                                 <table class="w-full text-left">
-                                    <thead><tr><th class="lang-text" data-vi="Nhóm" data-en="Group">Nhóm</th><th class="lang-text" data-vi="Mã Khóa" data-en="Course Code">Mã Khóa</th><th class="text-center lang-text" data-vi="Tổng HV" data-en="Total">Tổng HV</th><th class="text-center lang-text" data-vi="Đạt" data-en="Pass">Đạt</th><th class="text-center lang-text" data-vi="Trạng thái" data-en="Status">Trạng thái</th></tr></thead>
-                                    <tbody>
+                                    <thead><tr><th>Nhóm</th><th>Mã Khóa</th><th class="text-center">Tổng HV</th><th class="text-center">Đạt</th><th class="text-center">Trạng thái</th></tr></thead>
+                                    <tbody id="dashboard-table-body">
                                         ${data.slice(-5).reverse().map(d => `
                                             <tr>
                                                 <td class="font-semibold">${d.groupName}</td>
                                                 <td class="font-semibold text-blue-600">${d.courseId}</td>
                                                 <td class="text-center">${d.totalTrainees}</td>
                                                 <td class="text-center text-emerald-600 font-semibold">${d.passedTrainees}</td>
-                                                <td class="text-center"><span class="status-pill bg-slate-100 text-slate-600 border border-slate-200">${d.status}</span></td>
+                                                <td class="text-center"><span class="px-2 py-1 text-[10px] rounded bg-slate-100 text-slate-600 border border-slate-200">${d.status}</span></td>
                                             </tr>
-                                        `).join('') || `<tr><td colspan="5" class="text-center py-6 text-slate-400 text-sm lang-text" data-vi="Chưa có dữ liệu" data-en="No Data">Chưa có dữ liệu</td></tr>`}
+                                        `).join('') || `<tr><td colspan="5" class="text-center py-6 text-slate-400 text-sm">Chưa có dữ liệu</td></tr>`}
                                     </tbody>
                                 </table>
                             </div>
                         </div>
 
                         <div>
-                            <h3 class="text-sm font-bold text-slate-800 mb-4 lang-text" data-vi="Lịch trình sắp tới" data-en="Upcoming Schedule">Lịch trình sắp tới</h3>
+                            <h3 class="text-sm font-bold text-slate-800 mb-4">Lịch trình sắp tới</h3>
                             ${alerts}
                         </div>
                     </div>
                 `;
-                setTimeout(() => renderCharts(data), 100);
+                // Tăng delay xíu để đảm bảo DOM vẽ xong Canvas mới gọi Chart.js
+                setTimeout(() => { if(document.getElementById('statusChart')) renderCharts(globalMasterDB); }, 150);
             } 
             else if (tabId === 'khoa-hoc') {
                 container.innerHTML = `
                     <div class="mb-6">
-                        <h2 class="text-xl font-bold text-slate-800 lang-text" data-vi="Tất cả Khóa học" data-en="All Courses">Tất cả Khóa học</h2>
+                        <h2 class="text-xl font-bold text-slate-800">Tất cả Khóa học</h2>
                         <p class="text-sm text-slate-500">Truy cập kịch bản giảng dạy và form Đóng khóa API.</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -976,8 +987,27 @@
                     </div>
                 `;
             }
-            // Gọi hàm setLang lại để apply ngôn ngữ cho tab mới vừa render
-            setLang(AppState.lang);
+        }
+
+        function getFilteredAndSortedData() {
+            let displayData = [...globalMasterDB];
+            if (AppState.filters.month !== 'all') displayData = displayData.filter(d => d.month == AppState.filters.month);
+            if(AppState.filters.search !== "") {
+                displayData = displayData.filter(d => 
+                    (d.courseId && d.courseId.toLowerCase().includes(AppState.filters.search)) || 
+                    (d.groupName && d.groupName.toLowerCase().includes(AppState.filters.search))
+                );
+            }
+            if(AppState.sort.col !== "") {
+                displayData.sort((a, b) => {
+                    let valA = (a[AppState.sort.col] || '').toString().toLowerCase();
+                    let valB = (b[AppState.sort.col] || '').toString().toLowerCase();
+                    if(valA < valB) return AppState.sort.asc ? -1 : 1;
+                    if(valA > valB) return AppState.sort.asc ? 1 : -1;
+                    return 0;
+                });
+            }
+            return displayData;
         }
 
         // HÀM XÓA DATABASE CÓ MẬT KHẨU
@@ -985,12 +1015,10 @@
             const pwd = prompt("CẢNH BÁO: Thao tác này sẽ xóa toàn bộ dữ liệu báo cáo trên Database (Sheets).\nVui lòng nhập mật khẩu xác nhận (6 số):");
             if(pwd !== "014023") { alert("Mật khẩu không chính xác. Hủy thao tác."); return; }
 
-            // Xóa cục bộ
             localStorage.removeItem('kv_master_db');
             globalMasterDB =[];
             renderReportContent();
 
-            // Xóa API
             if(GOOGLE_API_URL) {
                 fetch(GOOGLE_API_URL, {
                     method: 'POST',
@@ -1022,9 +1050,10 @@
             renderTable(displayData);
         }
 
-        // VẼ BIỂU ĐỒ (BAO GỒM CẢ CHART QUÀ TẶNG)
+        // VẼ BIỂU ĐỒ (BAO GỒM CẢ CHART QUÀ TẶNG) ĐÃ FIX AN TOÀN
         function renderCharts(chartData) {
             if(!document.getElementById('statusChart')) return; 
+            
             let sumPass = 0, sumFail = 0;
             const statusCounts = { 'Hoàn thành': 0, 'Đang diễn ra': 0, 'Dời lịch': 0, 'Hủy': 0 };
 
@@ -1118,13 +1147,13 @@
                         <td class="text-center bg-slate-50 text-emerald-600 font-bold">${item.passedTrainees || '-'}</td>
                         <td class="text-center bg-slate-50 text-rose-500 font-bold">${item.failedTrainees || '-'}</td>
                         <td class="text-center flex justify-center gap-3 text-[11px] font-semibold">${linkDS} ${linkQ}</td>
-                        <td class="text-center"><span class="status-pill ${sColor}">${item.status}</span></td>
+                        <td class="text-center"><span class="px-2 py-1 text-[10px] rounded ${sColor}">${item.status}</span></td>
                     </tr>
                 `;
             });
         }
 
-        // TOOL 1: LỌC HRM (SỬA LẠI LOGIC M-1 VÀ M-2)
+        // TOOL 1: LỌC HRM
         function processHRMFilter() {
             const raw = document.getElementById('hrmRawData').value; const tMonth = parseInt(document.getElementById('hrmTargetMonth').value);
             if (!raw.trim()) return alert('Vui lòng dán dữ liệu HRM vào!');
@@ -1155,7 +1184,7 @@
             });
         }
 
-        // TOOL 2: TRA CỨU EMAIL (LƯU TRẠNG THÁI CHECKBOX KHI TÌM KIẾM CÁC TỪ KHÓA)
+        // TOOL 2: TRA CỨU EMAIL (LƯU TRẠNG THÁI CHECKBOX CHUẨN)
         let globalSelectedEmails = new Set();
         
         function renderEmailTable() {
@@ -1182,12 +1211,12 @@
             navigator.clipboard.writeText(Array.from(globalSelectedEmails).join(', ')).then(() => alert('Đã copy danh sách Email!'));
         }
 
-        // TOOL 3: REGEX LỌC EMAIL (CHUẨN HÓA CẮT CHUỖI DÍNH NHAU)
+        // TOOL 3: REGEX LỌC EMAIL (ĐÃ FIX TÁCH TÊN MIỀN BỊ DÍNH CHÙM)
         function processModuleEmails() {
             let input = document.getElementById('mod-input').value;
             if (!input.trim()) return;
             
-            // Xử lý chuỗi dính liền: Thêm khoảng trắng vào giữa các đuôi phổ biến và ký tự tiếp theo
+            // Xử lý chuỗi dính liền: Tìm các đuôi .com .vn .net và tự chèn dấu cách phía sau nếu nó liền với chữ cái.
             input = input.replace(/(\.com|\.vn|\.net|\.org)(?=[a-zA-Z0-9])/gi, '$1 ');
             
             // Tìm tất cả các email chuẩn bằng Regex
@@ -1202,7 +1231,7 @@
             navigator.clipboard.writeText(out).then(() => { const old = btn.innerText; btn.innerText = 'Đã Copy'; setTimeout(() => btn.innerText = old, 2000); });
         }
 
-        // TOOL 4: ĐIỂM DANH AI (GIỮ NGUYÊN)
+        // TOOL 4: ĐIỂM DANH AI
         let attData = { original: [], result:[] };
         function removeAccents(str) { return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim(); }
         function loadRoster() { const raw = document.getElementById('input-roster').value.trim(); attData.original = raw ? raw.split('\n').map(x => x.trim()).filter(x => x !== '') :[]; document.getElementById('count-original').innerText = attData.original.length; }
@@ -1212,7 +1241,7 @@
         function backToInput() { document.getElementById('att-view-result').classList.replace('flex', 'hidden'); document.getElementById('att-view-input').classList.remove('hidden'); }
         function resetAllAttendance() { document.getElementById('input-roster').value = ''; document.getElementById('input-meet').value = ''; loadRoster(); backToInput(); }
 
-        // TOOL 5: QUẢN LÝ QUÀ TẶNG (ĐỒNG BỘ API)
+        // TOOL 5: QUẢN LÝ QUÀ TẶNG
         function loadGiftData() { return JSON.parse(localStorage.getItem('kv_gift_db')) || globalGiftsDB || defaultGifts; }
         function renderGiftTable() {
             const data = loadGiftData(); const tbody = document.getElementById('giftTableBody'); tbody.innerHTML = '';
