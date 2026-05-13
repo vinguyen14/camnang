@@ -3,192 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPCB Script & Flow | Trainer Hub</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <title>SP Cơ bản | Trainer OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* 5D & Fluid UI Core Variables (Đồng bộ từ Dashboard) */
         html { scroll-behavior: smooth; }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f4f7f9; 
-            color: #0f172a; 
-            background-image: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.04), transparent 25%), radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.04), transparent 25%);
-        }
-        
-        /* Glassmorphism & 5D Hover Effects */
-        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); }
-        .hover-5d { transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.15); }
-        .hover-5d:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 20px 30px -10px rgba(0,0,0,0.08), 0 10px 15px -5px rgba(0,0,0,0.03); border-color: #e2e8f0; }
-        
-        /* Custom Scrollbar */
-        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-        /* Component Specifics */
-        .sidebar-item { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .sidebar-item.active { background: linear-gradient(to right, #2563eb, #4f46e5); color: white; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); transform: scale(1.02); }
-        .sidebar-item.active i { color: white !important; }
+        .saas-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
         
-        .copy-btn { transition: all 0.2s ease; }
-        .copy-btn:hover { background-color: #2563eb; color: white; border-color: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
-        .copy-btn.copied { background-color: #10b981; color: white; border-color: #10b981; pointer-events: none; }
+        .sidebar-item { padding: 12px 20px; font-size: 13px; font-weight: 500; color: #475569; border-left: 3px solid transparent; transition: all 0.2s; cursor: pointer; display: flex; items-center; gap: 12px; }
+        .sidebar-item:hover { background-color: #f1f5f9; color: #1e293b; }
+        .sidebar-item.active { background-color: #eff6ff; border-left-color: #2563eb; color: #2563eb; font-weight: 600; }
+        .sidebar-item i { width: 20px; text-align: center; }
 
-        pre { white-space: pre-wrap; word-wrap: break-word; font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.6; margin: 0; }
-        
-        .step-content { display: none; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; }
-        .step-content.active { display: block; opacity: 1; transform: translateY(0); animation: fadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards; }
-        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+        .step-content { display: none; opacity: 0; transform: translateY(10px); transition: all 0.3s; }
+        .step-content.active { display: block; opacity: 1; transform: translateY(0); }
 
-        /* Form Inputs (SaaS Style) */
-        .form-label { display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.05em; }
-        .form-input { width: 100%; padding: 12px 16px; background-color: #f8fafc; border: 1px solid transparent; border-radius: 12px; font-size: 13px; font-weight: 600; color: #334155; outline: none; transition: all 0.2s; box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.02); }
-        .form-input:focus { background-color: #ffffff; border-color: #bfdbfe; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        .form-label { display: block; font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 6px; text-transform: uppercase; }
+        .saas-input { width: 100%; padding: 10px 14px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; color: #1e293b; outline: none; transition: all 0.2s; }
+        .saas-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+        .text-area-code { font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.6; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; width: 100%; resize: none; outline: none; color: #334155; }
         
-        /* Custom Checkbox */
+        .btn-outline { background: white; color: #475569; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; transition: all 0.2s; cursor: pointer; }
+        .btn-outline:hover { background: #f1f5f9; color: #0f172a; }
+        .btn-primary { background: #2563eb; color: white; border: 1px solid #1d4ed8; padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; transition: all 0.2s; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;}
+        .btn-primary:hover { background: #1d4ed8; }
+
+        .copy-btn { position: absolute; top: 12px; right: 12px; }
         .checkbox-container input:checked + div { background-color: #2563eb; border-color: #2563eb; }
         .checkbox-container input:checked + div i { opacity: 1; transform: scale(1); }
+
+        .modal { display: none; opacity: 0; transition: opacity 0.2s; z-index: 9999; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px); }
+        .modal.active { display: flex; opacity: 1; }
+        .modal-content { transform: scale(0.98) translateY(10px); opacity: 0; transition: all 0.3s; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; }
+        .modal.active .modal-content { transform: scale(1) translateY(0); opacity: 1; }
     </style>
 </head>
-<body class="antialiased custom-scrollbar">
+<body class="antialiased">
 
-    <!-- HEADER NAVIGATION (Đồng bộ) -->
-    <nav class="glass-panel border-b border-slate-200/60 sticky top-0 z-50 shadow-sm">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <a href="index.html" class="w-8 h-8 bg-slate-50 hover:bg-slate-100 rounded-full flex items-center justify-center text-slate-500 transition-colors border border-slate-200">
-                    <i class="fas fa-chevron-left text-xs"></i>
-                </a>
-                <span class="text-lg font-black tracking-tight text-slate-800 border-l-2 border-slate-200 pl-3">Sản phẩm Cơ bản (Retail)</span>
-            </div>
-            <div class="hidden md:flex items-center space-x-2">
-                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 px-3 py-1.5 rounded-lg">Script & Flow</span>
-            </div>
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-50 shrink-0">
+        <div class="flex items-center gap-4">
+            <a href="index.html" class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition"><i class="fas fa-arrow-left"></i></a>
+            <div class="h-6 w-px bg-slate-200"></div>
+            <h1 class="text-lg font-bold tracking-tight text-slate-800">SP Cơ bản (Retail)</h1>
         </div>
-    </nav>
+        <span class="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase rounded border border-blue-100">Core Product</span>
+    </header>
 
-    <!-- Floating Blur Orbs -->
-    <div class="fixed top-0 right-10 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-[80px] opacity-20 animate-pulse pointer-events-none z-[-1]"></div>
-
-    <main class="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row gap-8 items-start relative z-10">
-
-        <!-- SIDEBAR 5D FLOAT -->
-        <aside class="w-full md:w-72 flex-shrink-0 glass-panel rounded-[24px] p-4 sticky top-24 shadow-sm">
-            <div class="p-2 mb-4 border-b border-slate-100 pb-6">
-                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-[10px] font-bold uppercase tracking-widest mb-2">
-                    Core Product
-                </div>
-                <h1 class="text-2xl font-black text-slate-800 tracking-tight">Timeline <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">Giảng dạy</span></h1>
+    <main class="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row gap-8 items-start">
+        <!-- SIDEBAR -->
+        <aside class="w-full md:w-64 flex-shrink-0 saas-card py-2 sticky top-24">
+            <div class="px-5 py-3 border-b border-slate-100 mb-2">
+                <h3 class="text-xs font-bold text-slate-800 uppercase">Tiến trình Giảng dạy</h3>
             </div>
-
-            <nav class="space-y-1.5 overflow-y-auto custom-scrollbar max-h-[60vh] pr-2">
-                <button onclick="showStep('weekend')" id="btn-weekend" class="sidebar-item active w-full flex items-center px-4 py-3.5 rounded-xl text-[13px] font-bold text-slate-600 hover:bg-slate-50">
-                    <i class="fas fa-calendar-alt w-5 text-slate-400"></i> T7 - Chủ Nhật
-                </button>
-                <button onclick="showStep('monday')" id="btn-monday" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-xl text-[13px] font-bold text-slate-600 hover:bg-slate-50">
-                    <i class="fas fa-paper-plane w-5 text-slate-400"></i> Thứ 2 (Gửi Lịch)
-                </button>
-                <button onclick="showStep('tuesday')" id="btn-tuesday" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-xl text-[13px] font-bold text-slate-600 hover:bg-slate-50">
-                    <i class="fas fa-book-open w-5 text-slate-400"></i> Thứ 3 (Buổi 1)
-                </button>
-                <button onclick="showStep('wednesday')" id="btn-wednesday" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-xl text-[13px] font-bold text-slate-600 hover:bg-slate-50">
-                    <i class="fas fa-comments w-5 text-slate-400"></i> Thứ 4 (Buổi 2)
-                </button>
-                <button onclick="showStep('thursday')" id="btn-thursday" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-xl text-[13px] font-bold text-slate-600 hover:bg-slate-50">
-                    <i class="fas fa-mobile-alt w-5 text-slate-400"></i> Thứ 5 (Buổi 3)
-                </button>
-                <button onclick="showStep('friday')" id="btn-friday" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-xl text-[13px] font-bold text-rose-500 hover:bg-rose-50">
-                    <i class="fas fa-award w-5 text-rose-400"></i> Thứ 6 (TEST)
-                </button>
-                
-                <div class="h-px bg-slate-100 my-4"></div>
-                
-                <button onclick="showStep('online-resources')" id="btn-online-resources" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-xl text-[13px] font-bold text-purple-600 hover:bg-purple-50">
-                    <i class="fas fa-link w-5 text-purple-400"></i> Links & Tài nguyên
-                </button>
-                <button onclick="showStep('tools')" id="btn-tools" class="sidebar-item w-full flex items-center px-4 py-3.5 rounded-xl text-[13px] font-bold text-emerald-600 hover:bg-emerald-50">
-                    <i class="fas fa-gamepad w-5 text-emerald-400"></i> Checklist & Game
-                </button>
-                
-                <div class="mt-4 pt-4 border-t border-slate-100">
-                    <button onclick="showStep('finalize')" id="btn-finalize" class="w-full flex items-center justify-center px-4 py-4 rounded-xl text-white bg-slate-900 hover:bg-slate-800 transition-all font-black text-sm shadow-[0_10px_20px_-10px_rgba(0,0,0,0.4)] transform hover:-translate-y-0.5">
-                        <i class="fas fa-check-double mr-2"></i> ĐÓNG KHÓA
-                    </button>
-                </div>
-            </nav>
+            <div class="space-y-1">
+                <div onclick="showStep('weekend')" id="btn-weekend" class="sidebar-item active"><i class="fas fa-calendar-alt"></i> 1. T7 - CN (Zalo)</div>
+                <div onclick="showStep('monday')" id="btn-monday" class="sidebar-item"><i class="fas fa-paper-plane"></i> 2. Thứ 2 (Nhắc lịch)</div>
+                <div onclick="showStep('tuesday')" id="btn-tuesday" class="sidebar-item"><i class="fas fa-book-open"></i> 3. Thứ 3 (Buổi 1)</div>
+                <div onclick="showStep('wednesday')" id="btn-wednesday" class="sidebar-item"><i class="fas fa-comments"></i> 4. Thứ 4 (Buổi 2)</div>
+                <div onclick="showStep('thursday')" id="btn-thursday" class="sidebar-item"><i class="fas fa-mobile-alt"></i> 5. Thứ 5 (Buổi 3)</div>
+                <div onclick="showStep('friday')" id="btn-friday" class="sidebar-item text-rose-600 hover:bg-rose-50"><i class="fas fa-award"></i> 6. Thứ 6 (Test)</div>
+                <div class="h-px bg-slate-100 my-2 mx-4"></div>
+                <div onclick="showStep('tools')" id="btn-tools" class="sidebar-item text-emerald-600 hover:bg-emerald-50"><i class="fas fa-tasks"></i> Công cụ hỗ trợ</div>
+                <div class="px-4 mt-4 mb-2"><button onclick="showStep('finalize')" id="btn-finalize" class="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition">ĐÓNG KHÓA (API)</button></div>
+            </div>
         </aside>
 
-        <!-- MAIN CONTENT AREA -->
-        <div class="flex-1 w-full pb-20">
+        <!-- CONTENT -->
+        <div class="flex-grow min-h-[600px] pb-20">
             
-            <!-- CHỦ NHẬT -->
-            <div id="weekend" class="step-content active space-y-6">
-                <div class="mb-8">
-                    <h2 class="text-3xl font-black text-slate-900 tracking-tight">Chào mừng Group Zalo</h2>
-                    <p class="text-sm text-slate-500 font-medium mt-2"><i class="fas fa-clock mr-1"></i> Timeline: 10:00 Sáng Chủ Nhật (Gửi 9 tin nhắn tuần tự)</p>
+            <!-- STEP 1: CHỦ NHẬT -->
+            <section id="weekend" class="step-content active saas-card p-8 border-t-4 border-blue-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Chào mừng Group Zalo</h2>
+                    <p class="text-sm text-slate-500 mt-1">Timeline: 10:00 Sáng Chủ Nhật (Gửi 7 tin nhắn tuần tự)</p>
                 </div>
-
-                <div class="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-blue-200 before:to-transparent pl-10 md:pl-0">
-                    
-                    <!-- Script Cards loop -->
-                    <div class="glass-panel hover-5d p-6 rounded-[24px] relative md:ml-12 mb-6 border-l-4 border-l-blue-500">
-                        <span class="absolute -left-12 md:-left-16 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border-4 border-blue-100 text-blue-600 text-xs flex items-center justify-center rounded-full font-black shadow-sm z-10">1</span>
-                        <button onclick="copyScript(this, 'm1')" class="copy-btn absolute top-4 right-4 text-[10px] font-bold bg-slate-50 text-slate-500 px-3 py-1.5 rounded-lg border border-slate-200"><i class="fas fa-copy mr-1"></i> Copy</button>
-                        <pre id="m1" class="text-slate-700 bg-slate-50/50 p-4 rounded-xl pr-20 font-medium border border-slate-100/50">Chào mừng các bạn tới Group Zalo Đào tạo KiotViet</pre>
+                <div class="space-y-4">
+                    <div class="relative bg-white border border-slate-200 rounded-xl">
+                        <textarea id="s1-1" readonly class="text-area-code h-16 border-none">Chào mừng các bạn tới Group Zalo Đào tạo KiotViet</textarea>
+                        <button onclick="copyContent('s1-1', this)" class="btn-outline copy-btn">Copy</button>
                     </div>
-
-                    <div class="glass-panel hover-5d p-6 rounded-[24px] relative md:ml-12 mb-6 border-l-4 border-l-blue-500">
-                        <span class="absolute -left-12 md:-left-16 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border-4 border-blue-100 text-blue-600 text-xs flex items-center justify-center rounded-full font-black shadow-sm z-10">2</span>
-                        <button onclick="copyScript(this, 'm2')" class="copy-btn absolute top-4 right-4 text-[10px] font-bold bg-slate-50 text-slate-500 px-3 py-1.5 rounded-lg border border-slate-200"><i class="fas fa-copy mr-1"></i> Copy</button>
-                        <pre id="m2" class="text-slate-700 bg-slate-50/50 p-4 rounded-xl pr-20 font-medium border border-slate-100/50">Xin chào các bạn 😉
-Mình là Nhật Vi - Chuyên viên đào tạo, tuần này mình và bạn @Nguyễn Phương sẽ đồng hành cùng các bạn tham gia khóa đào tạo tại KiotViet.</pre>
+                    <div class="relative bg-white border border-slate-200 rounded-xl">
+                        <textarea id="s1-2" readonly class="text-area-code h-28 border-none">Xin chào các bạn 😉
+Mình là Nhật Vi - Chuyên viên đào tạo, tuần này mình và bạn Nguyễn Phương sẽ đồng hành cùng các bạn tham gia khóa đào tạo tại KiotViet.</textarea>
+                        <button onclick="copyContent('s1-2', this)" class="btn-outline copy-btn">Copy</button>
                     </div>
-                    
-                    <div class="glass-panel hover-5d p-6 rounded-[24px] relative md:ml-12 mb-6 border-l-4 border-l-blue-500">
-                        <span class="absolute -left-12 md:-left-16 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border-4 border-blue-100 text-blue-600 text-xs flex items-center justify-center rounded-full font-black shadow-sm z-10">3</span>
-                        <button onclick="copyScript(this, 'm3')" class="copy-btn absolute top-4 right-4 text-[10px] font-bold bg-slate-50 text-slate-500 px-3 py-1.5 rounded-lg border border-slate-200"><i class="fas fa-copy mr-1"></i> Copy</button>
-                        <pre id="m3" class="text-slate-700 bg-slate-50/50 p-4 rounded-xl pr-20 font-medium border border-slate-100/50">Như đã thông tin trong Kế hoạch đào tạo đính kèm email, sáng mai thứ 2 các bạn sẽ làm thủ tục gia nhập và làm quen tại từng team dưới sự hỗ trợ của team Tuyển dụng.</pre>
+                    <div class="relative bg-white border border-slate-200 rounded-xl">
+                        <textarea id="s1-3" readonly class="text-area-code h-28 border-none">Như đã thông tin trong Kế hoạch đào tạo đính kèm email, sáng mai thứ 2 các bạn sẽ làm thủ tục gia nhập và làm quen tại từng team dưới sự hỗ trợ của team Tuyển dụng.</textarea>
+                        <button onclick="copyContent('s1-3', this)" class="btn-outline copy-btn">Copy</button>
                     </div>
-
-                    <div class="glass-panel hover-5d p-6 rounded-[24px] relative md:ml-12 mb-6 border-l-4 border-l-blue-500">
-                        <span class="absolute -left-12 md:-left-16 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border-4 border-blue-100 text-blue-600 text-xs flex items-center justify-center rounded-full font-black shadow-sm z-10">4</span>
-                        <button onclick="copyScript(this, 'm4')" class="copy-btn absolute top-4 right-4 text-[10px] font-bold bg-slate-50 text-slate-500 px-3 py-1.5 rounded-lg border border-slate-200"><i class="fas fa-copy mr-1"></i> Copy</button>
-                        <pre id="m4" class="text-slate-700 bg-slate-50/50 p-4 rounded-xl pr-20 font-medium border border-slate-100/50">Chiều mai từ 14:00, chúng ta sẽ bắt đầu chương trình Đào tạo hội nhập, hình thức Đào tạo online trên Zoom (mình sẽ gửi lại link sau ạ)</pre>
+                    <div class="relative bg-white border border-slate-200 rounded-xl">
+                        <textarea id="s1-4" readonly class="text-area-code h-24 border-none">Chiều mai từ 14:00, chúng ta sẽ bắt đầu chương trình Đào tạo hội nhập, hình thức Đào tạo online trên Zoom (mình sẽ gửi lại link sau ạ)</textarea>
+                        <button onclick="copyContent('s1-4', this)" class="btn-outline copy-btn">Copy</button>
                     </div>
-
-                    <div class="glass-panel hover-5d p-6 rounded-[24px] relative md:ml-12 mb-6 border-l-4 border-l-indigo-500 bg-indigo-50/30">
-                        <span class="absolute -left-12 md:-left-16 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border-4 border-indigo-100 text-indigo-600 text-xs flex items-center justify-center rounded-full font-black shadow-sm z-10">5</span>
-                        <button onclick="copyScript(this, 'm6')" class="copy-btn absolute top-4 right-4 text-[10px] font-bold bg-slate-50 text-slate-500 px-3 py-1.5 rounded-lg border border-slate-200"><i class="fas fa-copy mr-1"></i> Copy</button>
-                        <pre id="m6" class="text-indigo-800 font-bold bg-white/60 p-4 rounded-xl pr-20 border border-indigo-100">Link dùng để đăng ký trải nghiệm phần mềm KiotViet dành cho nhân viên mới tham gia đào tạo:
-https://www.kiotviet.vn/?refcode=3670</pre>
+                    <div class="relative bg-blue-50 border border-blue-200 rounded-xl">
+                        <textarea id="s1-5" readonly class="text-area-code h-24 bg-transparent border-none text-blue-800 font-semibold">Link dùng để đăng ký trải nghiệm phần mềm KiotViet dành cho nhân viên mới tham gia đào tạo:
+https://www.kiotviet.vn/?refcode=3670</textarea>
+                        <button onclick="copyContent('s1-5', this)" class="btn-outline copy-btn bg-white">Copy</button>
                     </div>
-
-                    <div class="glass-panel hover-5d p-6 rounded-[24px] relative md:ml-12 mb-6 border-l-4 border-l-slate-300">
-                        <span class="absolute -left-12 md:-left-16 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border-4 border-slate-100 text-slate-500 text-xs flex items-center justify-center rounded-full font-black shadow-sm z-10">6</span>
-                        <button onclick="copyScript(this, 'm7')" class="copy-btn absolute top-4 right-4 text-[10px] font-bold bg-slate-50 text-slate-500 px-3 py-1.5 rounded-lg border border-slate-200"><i class="fas fa-copy mr-1"></i> Copy</button>
-                        <pre id="m7" class="text-slate-600 bg-slate-50/50 p-4 rounded-xl pr-20 font-medium border border-slate-100/50 text-[12px]">KiotViet là phần mềm ai cũng có thể tạo tài khoản dùng thử free 7 ngày, mọi người đặc biệt lưu ý chỉ đăng ký dùng thử bằng link này để hệ thống nhận diện chúng ta đang tham gia Đào tạo, không phải là khách hàng cần team Telesales liên hệ tư vấn nha.</pre>
+                    <div class="relative bg-white border border-slate-200 rounded-xl">
+                        <textarea id="s1-6" readonly class="text-area-code h-32 border-none text-[12px]">KiotViet là phần mềm ai cũng có thể tạo tài khoản dùng thử free 7 ngày, mọi người đặc biệt lưu ý chỉ đăng ký dùng thử bằng link này để hệ thống nhận diện chúng ta đang tham gia Đào tạo, không phải là khách hàng cần team Telesales liên hệ tư vấn nha.</textarea>
+                        <button onclick="copyContent('s1-6', this)" class="btn-outline copy-btn">Copy</button>
                     </div>
-
-                    <div class="glass-panel hover-5d p-6 rounded-[24px] relative md:ml-12 mb-6 border-l-4 border-l-orange-400 bg-orange-50/30">
-                        <span class="absolute -left-12 md:-left-16 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border-4 border-orange-100 text-orange-500 text-xs flex items-center justify-center rounded-full font-black shadow-sm z-10">7</span>
-                        <button onclick="copyScript(this, 'm8')" class="copy-btn absolute top-4 right-4 text-[10px] font-bold bg-slate-50 text-slate-500 px-3 py-1.5 rounded-lg border border-slate-200"><i class="fas fa-copy mr-1"></i> Copy</button>
-                        <pre id="m8" class="text-orange-800 bg-white/60 p-4 rounded-xl pr-20 font-medium italic border border-orange-100">Để chuẩn bị tốt nhất cho tuần đào tạo nhân sự mới, các bạn nếu có thể thì cố gắng chuẩn bị thêm tai nghe có dây ạ</pre>
+                    <div class="relative bg-amber-50 border border-amber-200 rounded-xl">
+                        <textarea id="s1-7" readonly class="text-area-code h-20 bg-transparent border-none text-amber-800 italic">Để chuẩn bị tốt nhất cho tuần đào tạo nhân sự mới, các bạn nếu có thể thì cố gắng chuẩn bị thêm tai nghe có dây ạ.</textarea>
+                        <button onclick="copyContent('s1-7', this)" class="btn-outline copy-btn bg-white">Copy</button>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- THỨ 2 -->
-            <div id="monday" class="step-content space-y-6">
-                <div class="mb-8">
-                    <h2 class="text-3xl font-black text-slate-900 tracking-tight">Chiều Thứ 2: Nhắc lịch</h2>
-                    <p class="text-sm text-slate-500 font-medium mt-2"><i class="fas fa-clock mr-1"></i> Timeline: Cuối ngày T2</p>
+            <!-- STEP 2: THỨ 2 -->
+            <section id="monday" class="step-content saas-card p-8 border-t-4 border-blue-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Chiều Thứ 2: Nhắc lịch học</h2>
                 </div>
-                <div class="glass-panel hover-5d p-6 rounded-[24px] relative border-l-4 border-l-blue-500">
-                    <button onclick="copyScript(this, 'mon-script')" class="copy-btn absolute top-6 right-6 text-[10px] font-bold bg-slate-50 text-slate-500 px-3 py-1.5 rounded-lg border border-slate-200"><i class="fas fa-copy mr-1"></i> Copy All</button>
-                    <pre id="mon-script" class="text-slate-700 bg-slate-50/50 p-5 rounded-xl font-medium border border-slate-100/50">Chào mọi người @All ,
+                <div class="relative bg-white border border-slate-200 rounded-xl">
+                    <textarea id="s2-1" readonly class="text-area-code h-80 border-none">Chào mọi người @All ,
 Từ sáng mai, Vi sẽ đồng hành cùng mọi người trong chương trình Đào tạo sản phẩm cơ bản, diễn ra trong 3 buổi: Thứ 3, Thứ 4, Thứ 5.
 Thời gian: 8:30 – 10:30am
 
@@ -201,455 +138,293 @@ Các bạn cần lưu ý chuẩn bị:
 - Webcam
 
 Link tham gia đào tạo online trên Google Meet
-Buổi 1: https://meet.google.com/sxr-hnuk-fob?authuser=0</pre>
+Buổi 1: https://meet.google.com/sxr-hnuk-fob?authuser=0</textarea>
+                    <button onclick="copyContent('s2-1', this)" class="btn-outline copy-btn">Copy Tất Cả</button>
                 </div>
-            </div>
+            </section>
 
-            <!-- THỨ 3 (BUỔI 1) -->
-            <div id="tuesday" class="step-content space-y-6">
-                <div class="mb-8">
-                    <h2 class="text-3xl font-black text-slate-900 tracking-tight">Thứ 3: Buổi 1</h2>
-                    <p class="text-sm text-slate-500 font-medium mt-2">Tổng quan hệ thống & 6 Bước Demo</p>
+            <!-- STEP 3: THỨ 3 (BUỔI 1) -->
+            <section id="tuesday" class="step-content saas-card p-8 border-t-4 border-blue-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Thứ 3: Buổi 1</h2>
                 </div>
-
-                <div class="glass-panel hover-5d p-6 rounded-[24px] relative border-l-4 border-l-blue-600 shadow-sm">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3"><i class="fas fa-paper-plane text-blue-500 mr-1"></i> Gửi 10:30 (Sau khi kết thúc dạy)</p>
-                    <button onclick="copyTwo(this, 't3-1','t3-2')" class="copy-btn absolute top-6 right-6 text-[10px] font-bold bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg border border-blue-100"><i class="fas fa-copy mr-1"></i> Copy Full</button>
-                    
-                    <div class="bg-slate-50/50 p-5 rounded-xl border border-slate-100/50 pr-24">
-                        <pre id="t3-1" class="font-black text-blue-800 uppercase mb-2 text-[14px]">NỘI DUNG ĐÀO TẠO SẢN PHẨM - TỔNG QUAN KHÓA HỌC + 6 BƯỚC DEMO CƠ BẢN
+                <div class="space-y-6">
+                    <div class="relative bg-slate-50 border border-slate-200 rounded-xl p-4">
+                        <p class="text-xs font-bold text-slate-500 uppercase mb-2">Gửi 10:30 (Sau dạy)</p>
+                        <textarea id="s3-1" readonly class="text-area-code h-40 border-none bg-white">NỘI DUNG ĐÀO TẠO SẢN PHẨM - TỔNG QUAN KHÓA HỌC + 6 BƯỚC DEMO CƠ BẢN
 Nội dung học Buổi 1: Đào tạo Sản phẩm Cơ bản 01
----------------------------------</pre>
-                        <pre id="t3-2" class="text-slate-600 font-medium">Lưu ý:
+---------------------------------
+Lưu ý:
 - Dành 2 phút xem trước hướng dẫn trên LMS: https://kiotvietlnd.github.io/training/hdsd-lms-sales#dangnhap
-
 - Học lần lượt theo 2 bước:
 + Bước 1: Học và ôn trên Thư viên E-Learning (Github)
 + Bước 2: Làm bài quiz nhỏ + quiz tổng hợp trên LMS
+Hoàn thành khóa học trước 12h trưa nay nhé!</textarea>
+                        <button onclick="copyContent('s3-1', this)" class="btn-outline copy-btn mt-6">Copy</button>
+                    </div>
 
-Hoàn thành khóa học trước 12h trưa nay nhé!</pre>
+                    <div class="relative bg-slate-50 border border-slate-200 rounded-xl p-4">
+                        <p class="text-xs font-bold text-slate-500 uppercase mb-2">Gửi 13:30 (Kết quả & BT)</p>
+                        <textarea id="s3-2" readonly class="text-area-code h-28 border-none bg-white">Vi gửi kết quả học sáng nay của mọi người nha... (Kết quả in đậm kiểm tra lại)
+Vi gửi nhiệm vụ B1: Mọi người vào LMS - Buổi 1 -> Tab tài liệu tải file Word B1... hoàn thành bài tập và up lên nhóm trước 16:00 nhé.</textarea>
+                        <button onclick="copyContent('s3-2', this)" class="btn-outline copy-btn mt-6">Copy</button>
                     </div>
                 </div>
-                
-                <div class="glass-panel hover-5d p-6 rounded-[24px] relative border-l-4 border-l-indigo-500">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3"><i class="fas fa-file-alt text-indigo-500 mr-1"></i> Gửi 13:30 (Kết quả & Bài tập)</p>
-                    <button onclick="copyScript(this, 't3-hw')" class="copy-btn absolute top-6 right-6 text-[10px] font-bold bg-slate-50 text-slate-500 px-3 py-1.5 rounded-lg border border-slate-200"><i class="fas fa-copy mr-1"></i> Copy</button>
-                    <pre id="t3-hw" class="text-slate-700 bg-slate-50/50 p-5 rounded-xl font-medium border border-slate-100/50 pr-24">Vi gửi kết quả học sáng nay của mọi người nha... (Kết quả in đậm kiểm tra lại)
-Vi gửi nhiệm vụ B1: Mọi người vào LMS - Buổi 1 -> Tab tài liệu tải file Word B1... hoàn thành bài tập và up lên nhóm trước 16:00 nhé.</pre>
-                </div>
-            </div>
+            </section>
 
-            <!-- THỨ 4 (BUỔI 2) -->
-            <div id="wednesday" class="step-content space-y-6">
-                <div class="mb-8">
-                    <h2 class="text-3xl font-black text-slate-900 tracking-tight">Thứ 4: Buổi 2</h2>
-                    <p class="text-sm text-slate-500 font-medium mt-2">Tính năng chuyên sâu & Câu hỏi thường gặp</p>
+            <!-- STEP 4: THỨ 4 (BUỔI 2) -->
+            <section id="wednesday" class="step-content saas-card p-8 border-t-4 border-blue-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Thứ 4: Buổi 2</h2>
                 </div>
-
-                <div class="glass-panel hover-5d p-6 rounded-[24px] relative border-l-4 border-l-blue-600 shadow-sm">
-                    <button onclick="copyTwo(this, 'w1','w1-body')" class="copy-btn absolute top-6 right-6 text-[10px] font-bold bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg border border-blue-100"><i class="fas fa-copy mr-1"></i> Copy Full</button>
-                    <div class="bg-slate-50/50 p-5 rounded-xl border border-slate-100/50 pr-24">
-                        <pre id="w1" class="font-black text-blue-800 uppercase mb-2 text-[14px]">NỘI DUNG ĐÀO TẠO SẢN PHẨM - NHỮNG CÂU HỎI THƯỜNG GẶP
+                <div class="space-y-6">
+                    <div class="relative bg-slate-50 border border-slate-200 rounded-xl p-4">
+                        <textarea id="s4-1" readonly class="text-area-code h-28 border-none bg-white">NỘI DUNG ĐÀO TẠO SẢN PHẨM - NHỮNG CÂU HỎI THƯỜNG GẶP
 Nội dung học Buổi 2: Đào tạo Sản phẩm Cơ bản 02
----------------------------------</pre>
-                        <pre id="w1-body" class="text-slate-600 font-medium">Lưu ý: Dành 2 phút xem hướng dẫn LMS... Hoàn thành khóa học trước 12h trưa nay nhé!</pre>
+---------------------------------
+Lưu ý: Dành 2 phút xem hướng dẫn LMS... Hoàn thành khóa học trước 12h trưa nay nhé!</textarea>
+                        <button onclick="copyContent('s4-1', this)" class="btn-outline copy-btn">Copy</button>
                     </div>
-                </div>
 
-                <div class="glass-panel hover-5d p-6 rounded-[24px] relative border-l-4 border-l-emerald-500 bg-emerald-50/30">
-                    <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-3"><i class="fas fa-lightbulb mr-1"></i> Note Nhóm Khách Hàng</p>
-                    <button onclick="copyScript(this, 'w-note')" class="copy-btn absolute top-6 right-6 text-[10px] font-bold bg-white text-emerald-600 px-3 py-1.5 rounded-lg border border-emerald-100"><i class="fas fa-copy mr-1"></i> Copy Note</button>
-                    <pre id="w-note" class="text-emerald-800 bg-white/60 p-5 rounded-xl font-medium border border-emerald-100 pr-24">Có 1 vài bạn đang hiểu chưa đúng phần tạo Nhóm khách hàng, Vi diễn giải lại 1 chút phần này nha:
+                    <div class="relative bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                        <p class="text-xs font-bold text-emerald-700 uppercase mb-2">Note: Nhóm Khách Hàng</p>
+                        <textarea id="s4-2" readonly class="text-area-code h-44 bg-white border-emerald-100 text-emerald-800">Có 1 vài bạn đang hiểu chưa đúng phần tạo Nhóm khách hàng, Vi diễn giải lại 1 chút phần này nha:
 1. Thêm theo điều kiện: Khách đủ điều kiện được thêm tự động, nhưng không tự động loại ra nếu sau này hết đủ điều kiện.
 2. Cập nhật lại theo điều kiện: Phần mềm liên tục cập nhật danh sách (đủ thì thêm, không đủ thì loại).
-3. Không cập nhật lại: Danh sách thành viên được giữ nguyên bất kể thay đổi điều kiện sau này.</pre>
+3. Không cập nhật lại: Danh sách thành viên được giữ nguyên bất kể thay đổi điều kiện sau này.</textarea>
+                        <button onclick="copyContent('s4-2', this)" class="btn-outline copy-btn mt-6">Copy Note</button>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- THỨ 5 (BUỔI 3) -->
-            <div id="thursday" class="step-content space-y-6">
-                <div class="mb-8">
-                    <h2 class="text-3xl font-black text-slate-900 tracking-tight">Thứ 5: Buổi 3</h2>
-                    <p class="text-sm text-slate-500 font-medium mt-2">Mobile App & Dặn dò Ôn thi</p>
+            <!-- STEP 5: THỨ 5 (BUỔI 3) -->
+            <section id="thursday" class="step-content saas-card p-8 border-t-4 border-blue-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Thứ 5: Buổi 3</h2>
                 </div>
+                <div class="space-y-6">
+                    <div class="relative bg-slate-50 border border-slate-200 rounded-xl p-4">
+                        <textarea id="s5-1" readonly class="text-area-code h-20 border-none bg-white">NỘI DUNG ĐÀO TẠO SẢN PHẨM - LUỒNG CƠ BẢN 06 BƯỚC (MOBILE APP) + PHẦN CỨNG
+Nội dung học Buổi 3: Đào tạo Sản phẩm Cơ bản 03</textarea>
+                        <button onclick="copyContent('s5-1', this)" class="btn-outline copy-btn">Copy</button>
+                    </div>
 
-                <div class="glass-panel hover-5d p-6 rounded-[24px] relative border-l-4 border-l-blue-600 shadow-sm">
-                    <button onclick="copyScript(this, 'h-lms')" class="copy-btn absolute top-6 right-6 text-[10px] font-bold bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg border border-blue-100"><i class="fas fa-copy mr-1"></i> Copy Full</button>
-                    <pre id="h-lms" class="font-black text-blue-800 uppercase text-[14px] bg-slate-50/50 p-5 rounded-xl border border-slate-100/50 pr-24">NỘI DUNG ĐÀO TẠO SẢN PHẨM - LUỒNG CƠ BẢN 06 BƯỚC (MOBILE APP) + PHẦN CỨNG
-Nội dung học Buổi 3: Đào tạo Sản phẩm Cơ bản 03
----------------------------------</pre>
-                </div>
-
-                <div class="glass-panel hover-5d p-6 rounded-[24px] relative border-l-4 border-l-rose-500 bg-rose-50/30">
-                    <p class="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-3"><i class="fas fa-exclamation-triangle mr-1"></i> Tài liệu ôn thi quan trọng</p>
-                    <button onclick="copyScript(this, 'h-test')" class="copy-btn absolute top-6 right-6 text-[10px] font-bold bg-white text-rose-600 px-3 py-1.5 rounded-lg border border-rose-100"><i class="fas fa-copy mr-1"></i> Copy Note</button>
-                    <pre id="h-test" class="text-rose-800 bg-white/60 p-5 rounded-xl font-bold border border-rose-100 pr-24">📌 [QUAN TRỌNG] TÀI LIỆU & HƯỚNG DẪN ÔN TẬP SẢN PHẨM CƠ BẢN
+                    <div class="relative bg-rose-50 border border-rose-200 rounded-xl p-4">
+                        <p class="text-xs font-bold text-rose-700 uppercase mb-2">Quan trọng: Dặn dò Ôn Thi</p>
+                        <textarea id="s5-2" readonly class="text-area-code h-36 bg-white border-rose-100 text-rose-800">📌 [QUAN TRỌNG] TÀI LIỆU & HƯỚNG DẪN ÔN TẬP SẢN PHẨM CƠ BẢN
 Hình thức: Online 30p - 30 câu (80% Pass). Được mở phần mềm thao tác.
 1. Ôn lý thuyết trên Github (B1-B2-B3).
 2. Ôn Quiz trên LMS.
-3. Xem Record khóa 26KV06: https://drive.google.com/drive/folders/15ghXFGcR67ErIxB_SPIaSrHt3QiNhfJh</pre>
+3. Xem Record khóa: https://drive.google.com/drive/folders/15ghXFGcR67ErIxB_SPIaSrHt3QiNhfJh</textarea>
+                        <button onclick="copyContent('s5-2', this)" class="btn-outline copy-btn mt-6">Copy Note</button>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- THỨ 6 (TEST) -->
-            <div id="friday" class="step-content space-y-6">
-                <div class="mb-8">
-                    <h2 class="text-3xl font-black text-rose-600 tracking-tight">Thứ 6: Ngày TEST</h2>
-                    <p class="text-sm text-slate-500 font-medium mt-2">Tổng kết điểm số & Đóng khóa</p>
+            <!-- STEP 6: THỨ 6 (TEST) -->
+            <section id="friday" class="step-content saas-card p-8 border-t-4 border-rose-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Thứ 6: Ngày TEST</h2>
                 </div>
+                <div class="space-y-6">
+                    <div class="relative bg-amber-50 border border-amber-200 rounded-xl p-4">
+                        <textarea id="s6-1" readonly class="text-area-code h-20 border-none bg-white text-amber-800">Yếu tố phong thủy chọn món ăn đi thi may mắn: https://www.bachhoaxanh.com/kinh-nghiem-hay/di-thi-thi-dung-an-nhung-mon-nay-keo-bi-tu-de-1175082</textarea>
+                        <button onclick="copyContent('s6-1', this)" class="btn-outline copy-btn">Copy</button>
+                    </div>
 
-                <div class="glass-panel hover-5d p-6 rounded-[24px] relative border-l-4 border-l-orange-400">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3"><i class="fas fa-laugh-squint text-orange-500 mr-1"></i> Gửi trước giờ thi (Fun)</p>
-                    <button onclick="copyScript(this, 'f-feng')" class="copy-btn absolute top-6 right-6 text-[10px] font-bold bg-slate-50 text-slate-500 px-3 py-1.5 rounded-lg border border-slate-200"><i class="fas fa-copy mr-1"></i> Copy</button>
-                    <pre id="f-feng" class="text-slate-600 bg-slate-50/50 p-5 rounded-xl font-medium border border-slate-100/50 pr-24">Yếu tố phong thủy chọn món ăn đi thi may mắn: https://www.bachhoaxanh.com/kinh-nghiem-hay/di-thi-thi-dung-an-nhung-mon-nay-keo-bi-tu-de-1175082</pre>
-                </div>
-
-                <div class="glass-panel hover-5d p-6 rounded-[24px] relative border-l-4 border-l-emerald-500 bg-emerald-50/30">
-                    <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-3"><i class="fas fa-flag-checkered mr-1"></i> Sau khi có điểm PASS</p>
-                    <button onclick="copyScript(this, 'f-end')" class="copy-btn absolute top-6 right-6 text-[10px] font-bold bg-white text-emerald-600 px-3 py-1.5 rounded-lg border border-emerald-100"><i class="fas fa-copy mr-1"></i> Copy All</button>
-                    <pre id="f-end" class="text-emerald-800 bg-white/60 p-5 rounded-xl font-medium border border-emerald-100 pr-24">Sau khi PASS bài kiểm tra, chương trình Đào tạo Cơ bản kết thúc!
+                    <div class="relative bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                        <p class="text-xs font-bold text-emerald-700 uppercase mb-2">Gửi khi có điểm PASS</p>
+                        <textarea id="s6-2" readonly class="text-area-code h-36 bg-white border-emerald-100 text-emerald-800">Sau khi PASS bài kiểm tra, chương trình Đào tạo Cơ bản kết thúc!
 - Khối Non-Sale: Điền khảo sát và OUT NHÓM.
 - Khối Sale: Ở lại chờ thông tin khóa COC-CRM.
 - Link Group chat "Xóm Đào": https://chat.google.com/room/AAAAEOKr7G8?cls=4
-- Link khảo sát: https://docs.google.com/forms/d/1_LhtIYlk-nMqcdZLIpn_wFitwj6K6-LeVOF1b9-TY9k/preview</pre>
+- Link khảo sát: https://docs.google.com/forms/d/1_LhtIYlk-nMqcdZLIpn_wFitwj6K6-LeVOF1b9-TY9k/preview</textarea>
+                        <button onclick="copyContent('s6-2', this)" class="btn-outline copy-btn mt-6">Copy</button>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- LINKS & TÀI NGUYÊN -->
-            <div id="online-resources" class="step-content space-y-6">
-                <div class="mb-8">
-                    <h2 class="text-3xl font-black text-purple-600 tracking-tight">Links & Tài nguyên</h2>
-                    <p class="text-sm text-slate-500 font-medium mt-2">Dùng truy cập nhanh trong lúc Giảng dạy Online</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Link Item Template -->
-                    <div class="glass-panel hover-5d p-5 rounded-[24px] border-l-4 border-l-purple-500 relative group">
-                        <p class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-1.5">Slides dạy B1</p>
-                        <pre id="res1" class="text-slate-500 text-[11px] truncate w-full mb-3">https://kiotvietlnd.github.io/slides/san-pham-retail</pre>
-                        <div class="flex gap-2">
-                            <button onclick="copyScript(this, 'res1')" class="text-[10px] bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg font-bold hover:bg-purple-600 hover:text-white transition shadow-sm"><i class="fas fa-copy mr-1"></i> Copy</button>
-                            <a href="https://kiotvietlnd.github.io/slides/san-pham-retail" target="_blank" class="text-[10px] bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg font-bold hover:bg-purple-100 transition shadow-sm"><i class="fas fa-external-link-alt mr-1"></i> Mở Link</a>
+            <!-- TOOLS -->
+            <section id="tools" class="step-content space-y-6">
+                <div class="saas-card p-6 border-t-4 border-purple-500">
+                    <h3 class="text-sm font-bold text-slate-800 uppercase mb-4">Tài nguyên Giảng dạy</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <span class="text-sm font-semibold">Slide Dạy B1</span>
+                            <a href="https://kiotvietlnd.github.io/slides/san-pham-retail" target="_blank" class="text-xs text-blue-600 hover:underline">Mở link</a>
                         </div>
-                    </div>
-
-                    <div class="glass-panel hover-5d p-5 rounded-[24px] border-l-4 border-l-purple-500 relative group">
-                        <p class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-1.5">HDSD LMS cho NV</p>
-                        <pre id="res2" class="text-slate-500 text-[11px] truncate w-full mb-3">https://kiotvietlnd.github.io/training/hdsd-lms-sales#dangnhap</pre>
-                        <div class="flex gap-2">
-                            <button onclick="copyScript(this, 'res2')" class="text-[10px] bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg font-bold hover:bg-purple-600 hover:text-white transition shadow-sm"><i class="fas fa-copy mr-1"></i> Copy</button>
-                            <a href="https://kiotvietlnd.github.io/training/hdsd-lms-sales#dangnhap" target="_blank" class="text-[10px] bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg font-bold hover:bg-purple-100 transition shadow-sm"><i class="fas fa-external-link-alt mr-1"></i> Mở Link</a>
-                        </div>
-                    </div>
-
-                    <div class="glass-panel hover-5d p-5 rounded-[24px] border-l-4 border-l-purple-500 relative group">
-                        <p class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-1.5">Playlist KH Review</p>
-                        <pre id="res4" class="text-slate-500 text-[11px] truncate w-full mb-3">https://www.youtube.com/playlist?list=PLjB-7CLwd9mFRlvz4U4FW8HJfMLpBgaMa</pre>
-                        <div class="flex gap-2">
-                            <button onclick="copyScript(this, 'res4')" class="text-[10px] bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg font-bold hover:bg-purple-600 hover:text-white transition shadow-sm"><i class="fas fa-copy mr-1"></i> Copy</button>
-                            <a href="https://www.youtube.com/playlist?list=PLjB-7CLwd9mFRlvz4U4FW8HJfMLpBgaMa" target="_blank" class="text-[10px] bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg font-bold hover:bg-purple-100 transition shadow-sm"><i class="fas fa-external-link-alt mr-1"></i> Mở Link</a>
-                        </div>
-                    </div>
-
-                    <div class="glass-panel hover-5d p-5 rounded-[24px] border-l-4 border-l-blue-500 relative group bg-blue-50/30">
-                        <p class="text-[11px] font-black text-blue-700 uppercase tracking-widest mb-1.5">Tạo gian hàng Dùng thử</p>
-                        <pre id="res6" class="text-blue-500 text-[11px] truncate w-full mb-3">https://www.kiotviet.vn/?refcode=3670</pre>
-                        <div class="flex gap-2">
-                            <button onclick="copyScript(this, 'res6')" class="text-[10px] bg-white border border-blue-200 text-blue-600 px-3 py-1.5 rounded-lg font-bold hover:bg-blue-600 hover:text-white transition shadow-sm"><i class="fas fa-copy mr-1"></i> Copy Link</button>
-                            <a href="https://www.kiotviet.vn/?refcode=3670" target="_blank" class="text-[10px] bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm"><i class="fas fa-external-link-alt mr-1"></i> Đăng ký ngay</a>
+                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <span class="text-sm font-semibold">Gamification SPCB</span>
+                            <a href="https://vinguyen14.github.io/camnang/gamification" target="_blank" class="text-xs text-blue-600 hover:underline">Chơi Game</a>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- CHECKLIST & GAME -->
-            <div id="tools" class="step-content space-y-8">
-                <div class="mb-8">
-                    <h2 class="text-3xl font-black text-emerald-600 tracking-tight">Công cụ hỗ trợ</h2>
-                    <p class="text-sm text-slate-500 font-medium mt-2">Đảm bảo luồng công việc diễn ra trôi chảy</p>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- 5D Checklist -->
-                    <div class="glass-panel p-8 rounded-[32px] shadow-[0_20px_40px_-15px_rgba(16,185,129,0.15)] border border-emerald-100/50">
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center"><i class="fas fa-tasks text-emerald-500 mr-2 text-lg"></i> Tiến độ chuẩn bị</h3>
-                        
-                        <div class="space-y-3" id="checklist">
-                            <label class="checkbox-container flex items-center p-4 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-2xl cursor-pointer transition relative group">
-                                <input type="checkbox" onchange="checkTask(0)" class="absolute opacity-0 cursor-pointer w-0 h-0">
-                                <div class="w-6 h-6 rounded-lg border-2 border-slate-300 flex items-center justify-center mr-4 transition-all duration-300 bg-white">
-                                    <i class="fas fa-check text-white text-[10px] opacity-0 transform scale-50 transition-all duration-300"></i>
-                                </div>
-                                <span class="text-sm font-medium text-slate-700 group-hover:text-emerald-700 transition">Gửi mail thư mời đào tạo</span>
-                            </label>
-                            
-                            <label class="checkbox-container flex items-center p-4 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-2xl cursor-pointer transition relative group">
-                                <input type="checkbox" onchange="checkTask(1)" class="absolute opacity-0 cursor-pointer w-0 h-0">
-                                <div class="w-6 h-6 rounded-lg border-2 border-slate-300 flex items-center justify-center mr-4 transition-all duration-300 bg-white">
-                                    <i class="fas fa-check text-white text-[10px] opacity-0 transform scale-50 transition-all duration-300"></i>
-                                </div>
-                                <span class="text-sm font-medium text-slate-700 group-hover:text-emerald-700 transition">Tạo group Zalo Khóa & Add HV</span>
-                            </label>
-
-                            <label class="checkbox-container flex items-center p-4 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-2xl cursor-pointer transition relative group">
-                                <input type="checkbox" onchange="checkTask(2)" class="absolute opacity-0 cursor-pointer w-0 h-0">
-                                <div class="w-6 h-6 rounded-lg border-2 border-slate-300 flex items-center justify-center mr-4 transition-all duration-300 bg-white">
-                                    <i class="fas fa-check text-white text-[10px] opacity-0 transform scale-50 transition-all duration-300"></i>
-                                </div>
-                                <span class="text-sm font-medium text-slate-700 group-hover:text-emerald-700 transition">Thông báo lịch thi & đóng form</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Game 5D Card -->
-                    <div class="glass-panel p-8 rounded-[32px] hover-5d flex flex-col items-center justify-center text-center bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100">
-                        <div class="w-20 h-20 bg-white rounded-[24px] flex items-center justify-center mb-6 shadow-lg shadow-indigo-200/50">
-                            <i class="fas fa-gamepad text-4xl text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-indigo-600"></i>
-                        </div>
-                        <h3 class="text-xl font-black text-slate-800 mb-2">Gamification SPCB</h3>
-                        <p class="text-[13px] text-slate-500 mb-8 font-medium max-w-xs">Bốc thăm ngẫu nhiên các tình huống thực tế cho Học viên Demo trên phần mềm.</p>
-                        <a href="https://vinguyen14.github.io/camnang/gamification" target="_blank" class="px-8 py-3.5 rounded-2xl font-black text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition shadow-[0_10px_20px_-10px_rgba(59,130,246,0.6)] transform hover:-translate-y-0.5 text-sm uppercase tracking-wider">
-                            <i class="fas fa-play mr-2"></i> Mở Game Ngay
-                        </a>
+                
+                <div class="saas-card p-6 border-t-4 border-emerald-500">
+                    <h3 class="text-sm font-bold text-slate-800 uppercase mb-4">Checklist Vận hành</h3>
+                    <div class="space-y-3" id="checklist">
+                        <label class="flex items-center p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg cursor-pointer checkbox-container">
+                            <input type="checkbox" onchange="checkTask(0)" class="absolute opacity-0 w-0 h-0">
+                            <div class="w-5 h-5 rounded border-2 border-slate-300 flex items-center justify-center mr-3 bg-white transition-colors"><i class="fas fa-check text-white text-[10px] opacity-0 transition-opacity"></i></div>
+                            <span class="text-sm font-medium text-slate-700">Gửi mail thư mời đào tạo</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg cursor-pointer checkbox-container">
+                            <input type="checkbox" onchange="checkTask(1)" class="absolute opacity-0 w-0 h-0">
+                            <div class="w-5 h-5 rounded border-2 border-slate-300 flex items-center justify-center mr-3 bg-white transition-colors"><i class="fas fa-check text-white text-[10px] opacity-0 transition-opacity"></i></div>
+                            <span class="text-sm font-medium text-slate-700">Tạo group Zalo Khóa & Add HV</span>
+                        </label>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- FORM ĐÓNG KHÓA (UPDATE MỚI NHẤT ĐỂ ĐỒNG BỘ DATA DASHBOARD TRANG CHỦ) -->
-            <div id="finalize" class="step-content">
-                <div class="glass-panel rounded-[32px] overflow-hidden border border-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)]">
-                    
-                    <div class="px-10 py-8 bg-slate-900 text-white relative overflow-hidden">
-                        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-                        <h2 class="text-3xl font-black tracking-tight relative z-10">Đóng khóa Học</h2>
-                        <p class="text-slate-400 mt-2 text-sm font-medium relative z-10"><i class="fas fa-satellite-dish text-blue-400 animate-pulse mr-2"></i> Dữ liệu sẽ được mã hóa và bắn trực tiếp về <b class="text-white">Master Hub</b>.</p>
+            <!-- STEP 7: ĐÓNG KHÓA API -->
+            <section id="finalize" class="step-content">
+                <div class="saas-card overflow-hidden">
+                    <div class="px-8 py-6 bg-slate-800 text-white">
+                        <h2 class="text-xl font-bold">Nộp Báo cáo Khóa SPCB</h2>
+                        <p class="text-xs text-slate-400 mt-1">Dữ liệu sẽ được tự động đồng bộ lên Google Sheets qua API.</p>
                     </div>
                     
-                    <div class="p-10 space-y-8 bg-white/50">
-                        <!-- Box 1: Info -->
-                        <div class="bg-blue-50/30 p-6 rounded-2xl border border-blue-50 space-y-5">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div>
-                                    <label class="form-label">Mã Khóa (Identify ID)</label>
-                                    <input type="text" id="courseId" placeholder="VD: SPCB-01-HCM" class="form-input text-blue-600 uppercase">
-                                </div>
-                                <div>
-                                    <label class="form-label">Trạng thái</label>
-                                    <select id="status" onchange="toggleReason()" class="form-input cursor-pointer">
-                                        <option value="Hoàn thành">Hoàn thành</option>
-                                        <option value="Đang diễn ra">Đang diễn ra</option>
-                                        <option value="Dời lịch">Dời lịch</option>
-                                        <option value="Hủy">Hủy</option>
-                                    </select>
-                                </div>
+                    <div class="p-8 space-y-6 bg-white">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="form-label">Mã Khóa <span class="text-rose-500">*</span></label><input type="text" id="courseId" class="saas-input uppercase font-bold text-blue-600" placeholder="VD: SPCB-01-HCM"></div>
+                            <div>
+                                <label class="form-label">Trạng thái</label>
+                                <select id="status" class="saas-input"><option value="Hoàn thành">Hoàn thành</option><option value="Đang diễn ra">Đang diễn ra</option><option value="Hủy">Hủy</option></select>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div><label class="form-label">Ngày bắt đầu</label><input type="date" id="start" class="form-input cursor-pointer"></div>
-                                <div><label class="form-label">Ngày kết thúc</label><input type="date" id="finish" class="form-input cursor-pointer"></div>
-                            </div>
-                            <div id="reasonBox" class="hidden">
-                                <label class="form-label text-rose-500">Lý do dời/hủy</label>
-                                <input type="text" id="reason" placeholder="Ghi chú lý do..." class="form-input border-rose-100 bg-rose-50/30 focus:border-rose-300 focus:ring-rose-100">
-                            </div>
+                            <div><label class="form-label">Ngày Bắt đầu <span class="text-rose-500">*</span></label><input type="date" id="start" class="saas-input"></div>
+                            <div><label class="form-label">Ngày Kết thúc <span class="text-rose-500">*</span></label><input type="date" id="finish" class="saas-input"></div>
                         </div>
 
-                        <!-- Box 2: DATA YÊU CẦU ĐỂ KHÔNG HỎNG CHART TRANG CHỦ -->
-                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                            <p class="text-[11px] font-black text-slate-700 uppercase tracking-widest mb-4 flex items-center"><i class="fas fa-chart-pie mr-2 text-indigo-500"></i> Hiệu suất Học viên</p>
+                        <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-3">Hiệu suất Học viên</p>
                             <div class="grid grid-cols-3 gap-4">
-                                <div>
-                                    <label class="form-label text-slate-500">Tổng HV</label>
-                                    <input type="number" id="totalTrainees" placeholder="0" class="form-input text-center text-lg">
-                                </div>
-                                <div>
-                                    <label class="form-label text-emerald-600">Pass</label>
-                                    <input type="number" id="passedTrainees" placeholder="0" class="form-input text-center text-lg border-emerald-100 focus:border-emerald-300 focus:ring-emerald-100">
-                                </div>
-                                <div>
-                                    <label class="form-label text-rose-500">Fail</label>
-                                    <input type="number" id="failedTrainees" placeholder="0" class="form-input text-center text-lg border-rose-100 focus:border-rose-300 focus:ring-rose-100">
-                                </div>
+                                <div><label class="form-label">Tổng HV</label><input type="number" id="totalTrainees" class="saas-input text-center font-bold"></div>
+                                <div><label class="form-label text-emerald-600">Đạt (Pass)</label><input type="number" id="passedTrainees" class="saas-input text-center font-bold"></div>
+                                <div><label class="form-label text-rose-500">Fail</label><input type="number" id="failedTrainees" class="saas-input text-center font-bold"></div>
                             </div>
                         </div>
 
-                        <!-- Box 3: Links -->
                         <div class="space-y-4">
-                            <div class="relative group">
-                                <i class="fas fa-file-excel absolute left-4 top-[14px] text-emerald-600 z-10"></i>
-                                <input type="url" id="listLink" placeholder="Link Spreadsheet Danh sách..." class="form-input pl-10">
-                            </div>
-                            <div class="relative group">
-                                <i class="fas fa-poll absolute left-4 top-[14px] text-purple-500 z-10"></i>
-                                <input type="url" id="quizLink" placeholder="Link kết quả Test / Quiz..." class="form-input pl-10">
-                            </div>
-                            <div class="relative group">
-                                <i class="fab fa-google-drive absolute left-4 top-[14px] text-blue-500 z-10"></i>
-                                <input type="url" id="recordLink" placeholder="Link Drive Record Video..." class="form-input pl-10">
-                            </div>
+                            <div><label class="form-label">Link DS (Google Sheet)</label><input type="url" id="listLink" class="saas-input" placeholder="https://..."></div>
+                            <div><label class="form-label">Link Kết quả (LMS)</label><input type="url" id="quizLink" class="saas-input" placeholder="https://..."></div>
                         </div>
 
-                        <button onclick="submitFinal()" class="w-full bg-gradient-to-r from-slate-800 to-slate-900 text-white font-black py-5 rounded-2xl shadow-[0_15px_30px_-10px_rgba(15,23,42,0.5)] hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 transform hover:-translate-y-1 uppercase tracking-[0.2em] text-xs">
-                            <i class="fas fa-cloud-upload-alt mr-2 text-sm"></i> Xác nhận Đẩy Dữ liệu
+                        <button id="btnSubmit" onclick="submitFinal(event, 'SPCB')" class="btn-primary w-full py-4 text-sm mt-4">
+                            <i class="fas fa-cloud-upload-alt"></i> Xác nhận Đẩy Dữ liệu
                         </button>
                     </div>
                 </div>
-            </div>
-
+            </section>
         </div>
     </main>
 
-    <!-- SUCCESS MODAL (5D Style) -->
-    <div id="successModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-[32px] p-10 max-w-sm w-full text-center shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] border border-white transform scale-95 transition-transform duration-300" id="successContent">
-            
-            <div class="relative w-24 h-24 mx-auto mb-6">
-                <div class="absolute inset-0 bg-emerald-100 rounded-full animate-ping opacity-50"></div>
-                <div class="relative w-full h-full bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center border border-emerald-100 shadow-inner text-4xl">
-                    <i class="fas fa-check"></i>
-                </div>
-            </div>
-            
-            <h3 class="text-2xl font-black text-slate-800 mb-2 tracking-tight">Sync Success!</h3>
-            <p class="text-xs text-slate-500 font-medium mb-8 leading-relaxed px-4">Dữ liệu khóa học đã được đóng gói và bắn thẳng vào Master DB thành công.</p>
-            
-            <div class="flex flex-col gap-3">
-                <!-- SỬA LỖI 404 TẠI ĐÂY -->
-                <a href="index.html" class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-4 rounded-xl shadow-[0_10px_20px_-10px_rgba(16,185,129,0.6)] hover:from-emerald-600 hover:to-teal-600 transition transform hover:-translate-y-0.5">
-                    Về Dashboard Master
-                </a>
-                <button onclick="closeSuccess()" class="text-slate-400 font-black text-[10px] uppercase tracking-widest hover:text-slate-600 transition py-2">
-                    Tiếp tục ở lại đây
-                </button>
+    <!-- SUCCESS MODAL -->
+    <div id="successModal" class="modal fixed inset-0 items-center justify-center p-4">
+        <div class="modal-content bg-white p-8 max-w-sm w-full text-center">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fas fa-check"></i></div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Sync Success!</h3>
+            <p class="text-sm text-slate-500 mb-6">Dữ liệu khóa học SPCB đã được đồng bộ lên Google Sheets thành công.</p>
+            <div class="flex gap-3">
+                <button onclick="closeSuccess()" class="btn-outline flex-1">Ở lại trang</button>
+                <a href="index.html" class="btn-primary flex-1 text-center">Về Dashboard</a>
             </div>
         </div>
     </div>
 
     <script>
-        // Tab Navigation
         function showStep(id) {
-            document.querySelectorAll('.step-content').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            
-            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll('.step-content').forEach(el => { el.classList.remove('active'); setTimeout(() => el.style.display = 'none', 300); });
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
             document.getElementById('btn-' + id).classList.add('active');
-            
+            setTimeout(() => { const target = document.getElementById(id); target.style.display = 'block'; void target.offsetWidth; target.classList.add('active'); }, 310);
             window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
-        // Copy Logic with UI Feedback (5D SaaS UX)
-        function copyScript(btnElement, id) {
-            const t = document.getElementById(id).innerText;
-            navigator.clipboard.writeText(t).then(() => {
-                const originalHTML = btnElement.innerHTML;
-                btnElement.classList.add('copied');
-                btnElement.innerHTML = '<i class="fas fa-check mr-1"></i> Copied!';
-                setTimeout(() => {
-                    btnElement.classList.remove('copied');
-                    btnElement.innerHTML = originalHTML;
-                }, 2000);
+        function copyContent(elementId, btnElement) {
+            const copyText = document.getElementById(elementId);
+            copyText.select(); navigator.clipboard.writeText(copyText.value).then(() => {
+                const originalHTML = btnElement.innerHTML; btnElement.innerHTML = 'Đã Copy!'; btn.classList.add('bg-slate-800', 'text-white');
+                setTimeout(() => { btnElement.innerHTML = originalHTML; btnElement.classList.remove('bg-slate-800', 'text-white'); }, 2000);
             });
         }
 
-        function copyTwo(btnElement, id1, id2) {
-            const t = document.getElementById(id1).innerText + "\n" + document.getElementById(id2).innerText;
-            navigator.clipboard.writeText(t).then(() => {
-                const originalHTML = btnElement.innerHTML;
-                btnElement.classList.add('copied');
-                btnElement.innerHTML = '<i class="fas fa-check-double mr-1"></i> Copied Full!';
-                setTimeout(() => {
-                    btnElement.classList.remove('copied');
-                    btnElement.innerHTML = originalHTML;
-                }, 2000);
-            });
-        }
-
-        function toggleReason() {
-            const s = document.getElementById('status').value;
-            document.getElementById('reasonBox').classList.toggle('hidden', !['Hủy','Dời lịch'].includes(s));
-        }
-
-        // Checklist Logic mapped to localStorage
         function checkTask(i) {
             let data = JSON.parse(localStorage.getItem('trainer_checklists')) || { SPCB: { completed: false, steps: {} } };
-            data.SPCB.steps[i] = !data.SPCB.steps[i];
-            const allChecked = Object.values(data.SPCB.steps).filter(v => v).length >= 3; 
-            data.SPCB.completed = allChecked;
-            localStorage.setItem('trainer_checklists', JSON.stringify(data));
+            data.SPCB.steps[i] = !data.SPCB.steps[i]; localStorage.setItem('trainer_checklists', JSON.stringify(data));
         }
 
-        // Restore Checklist state on load
         window.addEventListener('DOMContentLoaded', () => {
             let data = JSON.parse(localStorage.getItem('trainer_checklists'));
             if(data && data.SPCB && data.SPCB.steps) {
                 const checkboxes = document.querySelectorAll('#checklist input[type="checkbox"]');
-                checkboxes.forEach((cb, idx) => {
-                    if(data.SPCB.steps[idx]) cb.checked = true;
-                });
+                checkboxes.forEach((cb, idx) => { if(data.SPCB.steps[idx]) cb.checked = true; });
             }
         });
 
-        // SUBMIT TO TRAINER HUB (STRICT DATA STRUCTURE)
-        function submitFinal() {
+        // --- HÀM API CHUẨN HÓA (ĐỒNG BỘ 2 CHIỀU) ---
+        function submitFinal(event, groupName) {
+            if(event) event.preventDefault();
+
+            const GOOGLE_API_URL = localStorage.getItem('kv_api_url');
+            if(!GOOGLE_API_URL) { alert('CHƯA CÀI ĐẶT LINK API! Vui lòng quay lại Hub -> Cài đặt hệ thống để dán Link API Google Sheets vào.'); return; }
+
+            const cId = document.getElementById('courseId').value.trim().toUpperCase();
             const startStr = document.getElementById('start').value;
             const finishStr = document.getElementById('finish').value;
-            const cId = document.getElementById('courseId').value.toUpperCase();
 
-            if(!cId || !startStr || !finishStr) {
-                alert('Vui lòng nhập đầy đủ Mã Khóa, Ngày Bắt Đầu và Ngày Kết Thúc!');
-                return;
-            }
+            if(!cId || !startStr || !finishStr) { alert('Vui lòng điền đủ: Mã Khóa, Bắt Đầu và Kết Thúc!'); return; }
 
-            // Tự động tính THÁNG dựa trên ngày bắt đầu (Để tránh sai lệch Data trên Trang chủ)
             const dateObj = new Date(startStr);
             const calcMonth = dateObj.getMonth() + 1;
 
-            const newEntry = {
+            const payload = {
                 timestamp: new Date().getTime(),
-                groupName: 'SPCB', // Fix cứng là SPCB vì đây là trang của SPCB
+                groupName: groupName, 
                 courseId: cId,
-                month: calcMonth, 
+                month: calcMonth,
                 status: document.getElementById('status').value,
                 startDate: startStr,
                 finishDate: finishStr,
-                
-                // Các trường bắt buộc cho biểu đồ hiệu suất trang chủ
                 totalTrainees: document.getElementById('totalTrainees').value || "0",
                 passedTrainees: document.getElementById('passedTrainees').value || "0",
                 failedTrainees: document.getElementById('failedTrainees').value || "0",
-
                 listLink: document.getElementById('listLink').value || '',
-                quizLink: document.getElementById('quizLink').value || '',
-                recordLink: document.getElementById('recordLink').value || ''
+                quizLink: document.getElementById('quizLink').value || ''
             };
 
-            let db = JSON.parse(localStorage.getItem('kv_master_db')) || [];
-            db.push(newEntry);
+            const btn = document.getElementById('btnSubmit');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang đồng bộ...';
+            btn.classList.add('opacity-70', 'pointer-events-none');
+
+            // 1. Lưu Ngay vào LocalStorage
+            let db = [];
+            try { const storedDb = localStorage.getItem('kv_master_db'); if(storedDb) db = JSON.parse(storedDb); } catch (e) { db = []; }
+            const existIdx = db.findIndex(item => item.courseId === payload.courseId);
+            if(existIdx >= 0) db[existIdx] = {...db[existIdx], ...payload}; else db.push(payload);
             localStorage.setItem('kv_master_db', JSON.stringify(db));
-            
-            // Show Modal with Animation
-            const modal = document.getElementById('successModal');
-            const content = document.getElementById('successContent');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.add('opacity-100');
-                content.classList.remove('scale-95');
-                content.classList.add('scale-100');
-            }, 10);
+
+            // 2. Bắn lên Google Sheets API
+            fetch(GOOGLE_API_URL, {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            }).then(() => {
+                btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Xác nhận Đẩy Dữ liệu';
+                btn.classList.remove('opacity-70', 'pointer-events-none');
+                
+                const modal = document.getElementById('successModal');
+                const content = document.getElementById('successContent');
+                modal.classList.add('active');
+            }).catch(error => {
+                alert("Lưu cục bộ thành công nhưng lỗi đẩy lên Server: " + error);
+                btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Xác nhận Đẩy Dữ liệu';
+                btn.classList.remove('opacity-70', 'pointer-events-none');
+            });
         }
 
         function closeSuccess() {
-            const modal = document.getElementById('successModal');
-            const content = document.getElementById('successContent');
-            modal.classList.remove('opacity-100');
-            content.classList.remove('scale-100');
-            content.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); }, 300);
-            
-            // Xóa form
+            document.getElementById('successModal').classList.remove('active');
             document.getElementById('courseId').value = '';
-            document.getElementById('totalTrainees').value = '';
-            document.getElementById('passedTrainees').value = '';
-            document.getElementById('failedTrainees').value = '';
+            document.getElementById('totalTrainees').value = ''; document.getElementById('passedTrainees').value = ''; document.getElementById('failedTrainees').value = '';
         }
     </script>
 </body>
