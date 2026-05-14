@@ -14,18 +14,19 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
+        /* === ENTERPRISE SAAS DESIGN SYSTEM === */
         html { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow: hidden; }
         
         .sidebar-saas { background-color: #ffffff; border-right: 1px solid #e2e8f0; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .nav-group-title { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; padding: 0 24px; margin-top: 24px; margin-bottom: 8px; }
+        .nav-group-title { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; padding: 0 24px; margin-top: 20px; margin-bottom: 8px; }
         .nav-item { display: flex; align-items: center; gap: 12px; padding: 8px 24px; font-size: 13px; font-weight: 500; color: #475569; cursor: pointer; transition: all 0.2s; border-right: 3px solid transparent; }
         .nav-item:hover { background-color: #f8fafc; color: #1e293b; }
         .nav-item.active { background-color: #eff6ff; color: #2563eb; font-weight: 600; border-right-color: #2563eb; }
         .nav-item.active i { color: #2563eb; }
         .nav-item i { width: 16px; text-align: center; color: #94a3b8; font-size: 14px; }
         
-        .content-area { height: calc(100vh - 60px); overflow-y: auto; overflow-x: hidden; padding: 24px 32px; }
+        .content-area { height: calc(100vh - 60px); overflow-y: auto; overflow-x: hidden; padding: 20px 28px; }
         .saas-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
         
         .saas-input { width: 100%; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; transition: all 0.2s; }
@@ -36,20 +37,27 @@
         .btn-danger { background: #ef4444; color: white; border: 1px solid #dc2626; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; }
 
         table { width: 100%; border-collapse: collapse; }
-        table th { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; text-align: left; }
-        table td { font-size: 13px; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; }
+        table th { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 10px 14px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; text-align: left; }
+        table td { font-size: 12px; padding: 10px 14px; border-bottom: 1px solid #f1f5f9; }
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 
+        /* WIDGETS GHI CHÚ CHATBOT */
         .widget-panel { position: fixed; bottom: 80px; right: 30px; width: 340px; height: 450px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; z-index: 1000; transform: translateY(10px); opacity: 0; pointer-events: none; transition: all 0.2s; display: flex; flex-direction: column; overflow: hidden; }
         .widget-panel.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
         .floating-tool { bottom: 20px; right: 30px; z-index: 100; }
 
-        /* UI QUÀ TẶNG MỚI */
-        .progress-bar-container { width: 100%; background-color: #f1f5f9; border-radius: 9999px; height: 16px; position: relative; overflow: hidden; margin-top: 4px;}
+        /* MERCH PROGRESS BAR */
+        .progress-bar-container { background-color: #f1f5f9; border-radius: 9999px; height: 20px; position: relative; overflow: hidden; }
         .progress-bar-fill { height: 100%; border-radius: 9999px; transition: width 1s ease-in-out; }
+        .text-shadow-sm { text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
+
+        /* CUSTOM TOOLTIP SAAS */
+        .tooltip-box { display: none; position: absolute; top: 110%; left: 0; background: #1e293b; color: white; padding: 12px; border-radius: 8px; font-size: 11px; z-index: 50; width: max-content; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); white-space: pre-line; line-height: 1.6;}
+        .group:hover .tooltip-box { display: block; animation: fadeUp 0.2s ease forwards; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -108,10 +116,9 @@
                 <div class="flex items-center gap-5">
                     <div id="db-status-indicator" class="flex items-center gap-1.5 text-[11px] font-medium text-slate-500"><i class="fas fa-circle text-[8px] text-slate-300"></i> Connecting...</div>
                     
-                    <!-- CHUÔNG THÔNG BÁO -->
+                    <!-- CHUÔNG THÔNG BÁO THÔNG MINH -->
                     <div class="relative">
                         <i id="bellIcon" onclick="toggleNoti(event)" class="far fa-bell text-slate-500 hover:text-slate-800 cursor-pointer text-lg relative">
-                            <!-- Chấm đỏ báo Unread sẽ quản lý bằng JS -->
                             <span id="unreadDot" class="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 rounded-full border border-white"></span>
                         </i>
                         <div id="notiDropdown" class="hidden absolute right-0 top-8 w-[340px] bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden transform transition-all">
@@ -119,7 +126,7 @@
                                 <span class="font-bold text-slate-800 text-sm">Thông báo hệ thống</span>
                                 <span onclick="markAllRead(event)" class="text-[10px] text-blue-600 font-semibold cursor-pointer hover:underline">Đánh dấu đã đọc</span>
                             </div>
-                            <div class="max-h-[400px] overflow-y-auto custom-scrollbar p-0" id="notiContent"></div>
+                            <div class="max-h-[350px] overflow-y-auto custom-scrollbar p-0" id="notiContent"></div>
                         </div>
                     </div>
                 </div>
@@ -177,7 +184,7 @@
             { id: 'HOTEL', label: 'Industry', title: 'Ngành Hotel', desc: 'Kịch bản Khóa Hotel', link: 'industry.html', icon: 'fa-hotel', color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' }
         ];
 
-        // --- FETCH API VÀ RENDER ---
+        // --- FETCH API ---
         async function fetchDatabase() {
             try {
                 if(!GOOGLE_API_URL) throw new Error("Local");
@@ -200,21 +207,16 @@
             }
         }
 
-        // --- XỬ LÝ CHUÔNG THÔNG BÁO ---
-        // Click ra ngoài tự đóng dropdown
+        // --- CHUÔNG THÔNG BÁO ---
         window.addEventListener('click', function(e) {
-            const bell = document.getElementById('notiDropdown');
-            const bellIcon = document.getElementById('bellIcon');
-            if (bell && !bell.classList.contains('hidden')) {
-                if (!bell.contains(e.target) && !bellIcon.contains(e.target)) {
-                    bell.classList.add('hidden');
-                }
+            const bell = document.getElementById('notiDropdown'); const bellIcon = document.getElementById('bellIcon');
+            if (bell && !bell.classList.contains('hidden') && !bell.contains(e.target) && !bellIcon.contains(e.target)) {
+                bell.classList.add('hidden');
             }
         });
 
         function markAllRead(e) {
-            e.stopPropagation();
-            localStorage.setItem('noti_read_time', new Date().getTime());
+            e.stopPropagation(); localStorage.setItem('noti_read_time', new Date().getTime());
             document.getElementById('unreadDot').classList.add('hidden');
             document.querySelectorAll('.noti-unread-dot').forEach(el => el.classList.add('hidden'));
         }
@@ -223,13 +225,11 @@
         function generateSmartAlerts(isDropdown = false) {
             const today = new Date(); const calData = getDynamicCalendar(); let alertsHTML = '';
             const mKey = `${today.getFullYear()}-${today.getMonth() + 1}`;
-            
-            const lastReadTime = localStorage.getItem('noti_read_time') || 0;
-            let hasUnread = false;
+            const lastReadTime = localStorage.getItem('noti_read_time') || 0; let hasUnread = false;
 
             if (!calData[mKey]) {
                 if(isDropdown) return `<div class="p-6 text-sm text-slate-500 text-center"><i class="fas fa-calendar-times text-3xl text-slate-200 mb-2 block"></i>Chưa cài lịch tháng này</div>`;
-                return `<div class="saas-card p-4 flex items-start gap-4 mb-4"><div class="w-10 h-10 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center font-bold text-lg shrink-0"><i class="fas fa-calendar-times"></i></div><div><h4 class="font-semibold text-slate-800 text-sm">Chưa cài đặt lịch</h4><p class="text-xs font-medium text-slate-500 mt-0.5">Vào Thiết lập để cấu hình lịch</p></div></div>`;
+                return `<div class="saas-card p-4 flex items-start gap-4 mb-3 border-l-4 border-l-slate-300"><div class="w-10 h-10 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center font-bold text-lg shrink-0"><i class="fas fa-calendar-times"></i></div><div><h4 class="font-semibold text-slate-800 text-sm">Chưa cài đặt lịch</h4><p class="text-xs font-medium text-slate-500 mt-0.5">Vào Thiết lập để cấu hình</p></div></div>`;
             }
 
             const checkUpcoming = (dateStr, eventName, type) => {
@@ -243,42 +243,21 @@
                     if(type==='salon') { icon='fa-spa'; color='text-pink-500'; bg='bg-pink-50'; border='border-l-pink-500'; }
                     if(type==='hotel') { icon='fa-hotel'; color='text-teal-500'; bg='bg-teal-50'; border='border-l-teal-500'; }
 
-                    const isUnread = (new Date().getTime() - lastReadTime) > 0; // Giả lập luôn báo mới nếu chưa ấn Mark Read
-                    if(isUnread) hasUnread = true;
+                    const isUnread = (new Date().getTime() - lastReadTime) > 0; if(isUnread) hasUnread = true;
 
                     if(isDropdown) {
-                        alertsHTML += `
-                            <div class="p-4 border-b border-slate-50 hover:bg-slate-50 transition cursor-pointer flex gap-3 items-start relative">
-                                <div class="w-10 h-10 rounded-full ${bg} ${color} flex items-center justify-center shrink-0 mt-0.5"><i class="fas ${icon}"></i></div>
-                                <div>
-                                    <h4 class="font-semibold text-slate-800 text-sm leading-tight">${eventName}</h4>
-                                    <p class="text-xs text-slate-500 mt-1"><i class="far fa-clock mr-1"></i>${dayTxt}</p>
-                                </div>
-                                <span class="noti-unread-dot w-2 h-2 rounded-full bg-blue-500 absolute top-4 right-4 ${isUnread ? '' : 'hidden'}"></span>
-                            </div>
-                        `;
+                        alertsHTML += `<div class="p-4 border-b border-slate-50 hover:bg-slate-50 transition cursor-pointer flex gap-3 items-start relative"><div class="w-10 h-10 rounded-full ${bg} ${color} flex items-center justify-center shrink-0 mt-0.5"><i class="fas ${icon}"></i></div><div><h4 class="font-semibold text-slate-800 text-sm leading-tight">${eventName}</h4><p class="text-xs text-slate-500 mt-1"><i class="far fa-clock mr-1"></i>${dayTxt}</p></div><span class="noti-unread-dot w-2 h-2 rounded-full bg-blue-500 absolute top-4 right-4 ${isUnread ? '' : 'hidden'}"></span></div>`;
                     } else {
                         let btnHTML = type !== 'onboard' ? `<a href="tools.html" class="inline-block mt-2 text-[10px] font-semibold bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded hover:bg-slate-50 transition shadow-sm">Dùng Tool Lọc HRM</a>` : '';
-                        alertsHTML += `
-                            <div class="saas-card p-4 flex items-start gap-4 mb-4 border-l-4 ${border} hover:shadow-md transition">
-                                <div class="w-10 h-10 rounded-lg ${bg} ${color} flex items-center justify-center font-bold text-lg shrink-0"><i class="fas ${icon}"></i></div>
-                                <div>
-                                    <h4 class="font-semibold text-slate-800 text-sm">${eventName}</h4>
-                                    <p class="text-xs font-medium text-slate-500 mt-0.5"><i class="far fa-clock mr-1"></i>${dayTxt}</p>
-                                    ${btnHTML}
-                                </div>
-                            </div>
-                        `;
+                        alertsHTML += `<div class="saas-card p-4 flex items-start gap-4 mb-3 border-l-4 ${border} hover:shadow-md transition"><div class="w-10 h-10 rounded-lg ${bg} ${color} flex items-center justify-center font-bold text-lg shrink-0"><i class="fas ${icon}"></i></div><div><h4 class="font-semibold text-slate-800 text-sm">${eventName}</h4><p class="text-xs font-medium text-slate-500 mt-0.5"><i class="far fa-clock mr-1"></i>${dayTxt}</p>${btnHTML}</div></div>`;
                     }
                 }
             };
-            
             const monthData = calData[mKey];
             checkUpcoming(monthData.kv1, "Khóa KV1", "kv1"); checkUpcoming(monthData.tax, "Khóa HĐĐT - Thuế", "tax");
             checkUpcoming(monthData.fnb, "Khóa FNB", "fnb"); checkUpcoming(monthData.salon, "Khóa Salon", "salon"); checkUpcoming(monthData.hotel, "Khóa Hotel", "hotel");
             if(monthData.onboards) monthData.onboards.forEach((d, i) => checkUpcoming(d, `Lớp Onboard Tuần ${i+1}`, "onboard"));
 
-            // Điều khiển chấm đỏ ở chuông
             const unreadDot = document.getElementById('unreadDot');
             if(unreadDot) { if(hasUnread && alertsHTML !== '') unreadDot.classList.remove('hidden'); else unreadDot.classList.add('hidden'); }
 
@@ -289,16 +268,9 @@
             return alertsHTML;
         }
 
-        function toggleNoti(e) {
-            if(e) e.stopPropagation();
-            const drop = document.getElementById('notiDropdown');
-            drop.classList.toggle('hidden');
-            if(!drop.classList.contains('hidden')) {
-                document.getElementById('notiContent').innerHTML = generateSmartAlerts(true);
-            }
-        }
+        function toggleNoti(e) { if(e) e.stopPropagation(); const drop = document.getElementById('notiDropdown'); drop.classList.toggle('hidden'); if(!drop.classList.contains('hidden')) { document.getElementById('notiContent').innerHTML = generateSmartAlerts(true); } }
 
-        // --- DASHBOARD SEARCH ĐỒNG BỘ 2 TAB ---
+        // --- DASHBOARD SEARCH ---
         function handleTopSearch(val) {
             const query = val.toLowerCase();
             const dashTable = document.getElementById('dashboard-table-body');
@@ -313,7 +285,7 @@
             if(masterSearch) { masterSearch.value = val; handleSearch(val); }
         }
 
-        // --- RENDER CÁC TAB CHÍNH ---
+        // --- RENDER DASHBOARD CHÍNH ---
         function switchTab(tabId) {
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             const clickedElement = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
@@ -323,11 +295,25 @@
             
             if (tabId === 'tong-quan') {
                 const data = globalMasterDB; let sumTotal = 0, sumPass = 0;
-                data.forEach(i => { sumTotal += parseInt(i.totalTrainees)||0; sumPass += parseInt(i.passedTrainees)||0; });
+                
+                // TẠO TOOLTIP CHI TIẾT
+                let breakCourse = {}, breakTrainee = {}, breakPass = {};
+                data.forEach(d => {
+                    let g = d.groupName || 'Khác';
+                    breakCourse[g] = (breakCourse[g] || 0) + 1;
+                    breakTrainee[g] = (breakTrainee[g] || 0) + (parseInt(d.totalTrainees) || 0);
+                    breakPass[g] = (breakPass[g] || 0) + (parseInt(d.passedTrainees) || 0);
+                    sumTotal += parseInt(d.totalTrainees)||0; sumPass += parseInt(d.passedTrainees)||0;
+                });
+                
+                const ttCourse = Object.keys(breakCourse).map(k => `${k}: ${breakCourse[k]} Lớp`).join('\n') || 'Chưa có DL';
+                const ttTrainee = Object.keys(breakTrainee).map(k => `${k}: ${breakTrainee[k]} HV`).join('\n') || 'Chưa có DL';
+                const ttPass = Object.keys(breakTrainee).map(k => { let p = breakTrainee[k] > 0 ? Math.round((breakPass[k]/breakTrainee[k])*100) : 0; return `${k}: ${p}%`; }).join('\n') || 'Chưa có DL';
+                
                 const passRate = sumTotal > 0 ? Math.round((sumPass/sumTotal)*100) : 0;
                 const alerts = generateSmartAlerts(false);
 
-                // HISTORY (LỊCH SỬ THAO TÁC)
+                // HISTORY THAO TÁC
                 const renderHistory = () => {
                     if(!data || data.length === 0) return `<div class="text-center py-6 text-slate-400 text-sm">Chưa có lịch sử hoạt động</div>`;
                     return `<div class="relative"><div class="absolute left-[15px] top-4 bottom-4 w-px bg-slate-200 z-0"></div>` + 
@@ -338,7 +324,7 @@
                         <div class="flex gap-4 items-start relative mb-4">
                             <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 z-10 border-2 border-white"><i class="fas fa-check text-xs"></i></div>
                             <div class="pb-1 flex-grow">
-                                <p class="text-[13px] text-slate-800">Admin đã đóng khóa <span class="font-bold text-blue-600">${d.courseId}</span> (${d.groupName})</p>
+                                <p class="text-[13px] text-slate-800">Đã cập nhật hệ thống báo cáo khóa <span class="font-bold text-blue-600">${d.courseId}</span> (${d.groupName})</p>
                                 <p class="text-[11px] text-slate-500 mt-1"><i class="far fa-clock mr-1"></i>${timeStr} • Tổng: ${d.totalTrainees} HV • ${d.status}</p>
                             </div>
                         </div>`;
@@ -346,91 +332,75 @@
                 };
 
                 container.innerHTML = `
-                    <div class="mb-6 flex justify-between items-center">
-                        <div>
-                            <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Bảng điều khiển</h2>
-                            <p class="text-sm text-slate-500 mt-1">Chào mừng trở lại — tổng quan hệ thống Agentic L&D</p>
-                        </div>
-                        <button onclick="fetchAPIAndRender(event)" class="btn-outline flex items-center gap-2 bg-white"><i class="fas fa-sync-alt"></i> Tải lại Data</button>
+                    <div class="mb-4 flex justify-between items-center">
+                        <div><h2 class="text-xl font-bold text-slate-800 tracking-tight">Bảng điều khiển</h2></div>
+                        <button onclick="fetchAPIAndRender(event)" class="btn-outline flex items-center gap-2 bg-white text-[11px] py-1.5"><i class="fas fa-sync-alt"></i> Tải lại Data</button>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                        <div class="saas-card p-5 relative overflow-hidden group">
-                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">TỔNG KHÓA HỌC</p>
-                            <h3 class="text-4xl font-black text-slate-800">${data.length}</h3>
-                            <div class="absolute top-5 right-5 w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition"><i class="fas fa-layer-group text-lg"></i></div>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="saas-card p-4 relative overflow-hidden group">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tổng Khóa Học</p>
+                            <h3 class="text-3xl font-black text-slate-800">${data.length}</h3>
+                            <div class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition"><i class="fas fa-layer-group text-sm"></i></div>
+                            <div class="tooltip-box"><div class="font-bold border-b border-slate-600 pb-1 mb-1 opacity-70 uppercase text-[9px]">Chi tiết Nhóm</div>${ttCourse}</div>
                         </div>
-                        <div class="saas-card p-5 relative overflow-hidden group">
-                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">TỔNG HỌC VIÊN</p>
-                            <h3 class="text-4xl font-black text-slate-800">${sumTotal}</h3>
-                            <div class="absolute top-5 right-5 w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition"><i class="fas fa-users text-lg"></i></div>
+                        <div class="saas-card p-4 relative overflow-hidden group">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tổng Học Viên</p>
+                            <h3 class="text-3xl font-black text-slate-800">${sumTotal}</h3>
+                            <div class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition"><i class="fas fa-users text-sm"></i></div>
+                            <div class="tooltip-box"><div class="font-bold border-b border-slate-600 pb-1 mb-1 opacity-70 uppercase text-[9px]">Chi tiết Nhóm</div>${ttTrainee}</div>
                         </div>
-                        <div class="saas-card p-5 relative overflow-hidden group">
-                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">TỶ LỆ PASS</p>
-                            <h3 class="text-4xl font-black text-slate-800">${passRate}%</h3>
-                            <div class="absolute top-5 right-5 w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition"><i class="fas fa-check-double text-lg"></i></div>
+                        <div class="saas-card p-4 relative overflow-hidden group">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tỷ Lệ Pass</p>
+                            <h3 class="text-3xl font-black text-slate-800">${passRate}%</h3>
+                            <div class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition"><i class="fas fa-check-double text-sm"></i></div>
+                            <div class="tooltip-box"><div class="font-bold border-b border-slate-600 pb-1 mb-1 opacity-70 uppercase text-[9px]">Chi tiết Nhóm</div>${ttPass}</div>
                         </div>
-                        <div class="saas-card p-5 relative overflow-hidden bg-slate-900 text-white border-transparent">
-                            <p class="text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><i class="fas fa-robot"></i> AI NHẬN ĐỊNH</p>
-                            <p class="text-[11px] font-medium text-slate-300 leading-relaxed mt-2">${passRate >= 80 ? 'Hệ thống vận hành khỏe mạnh. Tỷ lệ tiếp thu tốt.' : 'Tỷ lệ Fail khá cao. Cần xem lại đề cương.'}</p>
+                        <div class="saas-card p-4 relative overflow-hidden bg-slate-900 text-white border-transparent">
+                            <p class="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><i class="fas fa-robot"></i> AI NHẬN ĐỊNH</p>
+                            <p class="text-xs font-medium text-slate-300 leading-relaxed mt-1">${passRate >= 80 ? 'Hệ thống vận hành khỏe mạnh. Tỷ lệ tiếp thu tốt.' : 'Tỷ lệ Fail khá cao. Cần xem lại đề cương.'}</p>
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-sm font-bold text-slate-800">Biểu đồ Phân tích</h3>
-                            </div>
+                            <h3 class="text-sm font-bold text-slate-800 mb-3">Biểu đồ Phân tích</h3>
                             
-                            <!-- BỘ 3 BIỂU ĐỒ SAAS VỚI BỘ LỌC BÊN TRONG -->
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                                <div class="saas-card p-5 h-72 flex flex-col relative">
-                                    <div class="flex justify-between items-start mb-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <div class="saas-card p-4 h-64 flex flex-col relative">
+                                    <div class="flex justify-between items-start mb-3">
                                         <p class="text-[10px] font-bold text-slate-400 uppercase">Trạng thái khóa</p>
-                                        <select id="filterStatus" onchange="updateStatusChart()" class="text-[10px] border border-slate-200 rounded px-1.5 py-0.5 text-slate-500 outline-none bg-slate-50 cursor-pointer"><option value="all">Tất cả</option><option value="current">Tháng này</option></select>
+                                        <select id="filterStatus" onchange="updateStatusChart()" class="text-[9px] border border-slate-200 rounded px-1.5 py-0.5 text-slate-500 outline-none bg-slate-50 cursor-pointer"><option value="all">Tất cả</option><option value="current">Tháng này</option></select>
                                     </div>
-                                    <div class="flex-grow relative w-full h-full pb-2"><canvas id="statusChart"></canvas></div>
+                                    <div class="flex-grow relative w-full h-full pb-1"><canvas id="statusChart"></canvas></div>
                                 </div>
-                                <div class="saas-card p-5 h-72 flex flex-col relative">
-                                    <div class="flex justify-between items-start mb-4">
+                                <div class="saas-card p-4 h-64 flex flex-col relative">
+                                    <div class="flex justify-between items-start mb-3">
                                         <p class="text-[10px] font-bold text-slate-400 uppercase">Hiệu suất Đạt/Fail</p>
-                                        <select id="filterPerf" onchange="updatePerfChart()" class="text-[10px] border border-slate-200 rounded px-1.5 py-0.5 text-slate-500 outline-none bg-slate-50 cursor-pointer"><option value="all">Tất cả</option><option value="current">Tháng này</option></select>
+                                        <select id="filterPerf" onchange="updatePerfChart()" class="text-[9px] border border-slate-200 rounded px-1.5 py-0.5 text-slate-500 outline-none bg-slate-50 cursor-pointer"><option value="all">Tất cả</option><option value="current">Tháng này</option></select>
                                     </div>
-                                    <div class="flex-grow relative w-full h-full pb-2"><canvas id="performanceChart"></canvas></div>
+                                    <div class="flex-grow relative w-full h-full pb-1"><canvas id="performanceChart"></canvas></div>
                                 </div>
-                                <div class="saas-card p-5 h-72 flex flex-col relative">
-                                    <div class="flex justify-between items-start mb-4">
+                                <div class="saas-card p-4 h-64 flex flex-col relative">
+                                    <div class="flex justify-between items-start mb-3">
                                         <p class="text-[10px] font-bold text-slate-400 uppercase">Tồn Kho Quà Tặng</p>
-                                        <select id="filterMerch" onchange="renderMerchHTML()" class="text-[10px] border border-slate-200 rounded px-1.5 py-0.5 text-slate-500 outline-none bg-slate-50 cursor-pointer"><option value="all">Tất cả</option><option value="low">Sắp hết</option></select>
+                                        <select id="filterMerch" onchange="renderMerchHTML()" class="text-[9px] border border-slate-200 rounded px-1.5 py-0.5 text-slate-500 outline-none bg-slate-50 cursor-pointer"><option value="all">Tất cả</option><option value="low">Sắp hết</option></select>
                                     </div>
-                                    <!-- HIỂN THỊ QUÀ TẶNG DẠNG THANH NGANG MỚI -->
-                                    <div id="merchContainer" class="flex-grow overflow-y-auto custom-scrollbar flex flex-col gap-4 pr-2 pb-2"></div>
+                                    <div id="merchContainer" class="flex-grow overflow-y-auto custom-scrollbar flex flex-col justify-start gap-3 pr-2"></div>
                                 </div>
                             </div>
 
-                            <h3 class="text-sm font-bold text-slate-800 mb-4">Hoạt động gần đây</h3>
-                            <div class="saas-card p-6">
-                                ${renderHistory()}
-                            </div>
+                            <h3 class="text-sm font-bold text-slate-800 mb-3">Lịch sử hoạt động</h3>
+                            <div class="saas-card p-5">${renderHistory()}</div>
                         </div>
-
-                        <div>
-                            <h3 class="text-sm font-bold text-slate-800 mb-4">Lịch trình sắp tới</h3>
-                            ${alerts}
-                        </div>
+                        <div><h3 class="text-sm font-bold text-slate-800 mb-3">Lịch trình sắp tới</h3>${alerts}</div>
                     </div>
                 `;
-                // Timeout để đảm bảo DOM render xong canvas mới gọi Chart.js
-                setTimeout(() => { 
-                    updateStatusChart(); updatePerfChart(); renderMerchHTML(); 
-                }, 150);
+                setTimeout(() => { updateStatusChart(); updatePerfChart(); renderMerchHTML(); }, 150);
             } 
             else if (tabId === 'khoa-hoc') {
                 container.innerHTML = `
-                    <div class="mb-6">
-                        <h2 class="text-2xl font-bold text-slate-800">Tất cả Khóa học</h2>
-                        <p class="text-sm text-slate-500 mt-1">Truy cập kịch bản giảng dạy và form Đóng khóa API.</p>
-                    </div>
+                    <div class="mb-6"><h2 class="text-2xl font-bold text-slate-800">Tất cả Khóa học</h2><p class="text-sm text-slate-500 mt-1">Truy cập kịch bản giảng dạy và form Đóng khóa API.</p></div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         ${courseConfig.map(c => `
                             <a href="${c.link}" class="saas-card p-6 block hover:border-${c.border.split('-')[2]} group transition relative overflow-hidden">
@@ -497,7 +467,7 @@
             }
         }
 
-        // --- DASHBOARD CHARTS & HTML BUILDERS (BIỂU ĐỒ SAAS MỚI) ---
+        // --- DASHBOARD CHARTS & HTML BUILDERS (ĐÃ NÂNG CẤP) ---
         Chart.defaults.font.family = 'Inter'; Chart.defaults.color = '#94a3b8';
 
         function updateStatusChart() {
@@ -523,14 +493,16 @@
             });
         }
 
-        // BIỂU ĐỒ HIỆU SUẤT THEO NHÓM (STACKED BAR) CỰC THÔNG MINH
+        // BIỂU ĐỒ HIỆU SUẤT THEO NHÓM (STACKED BAR)
         function updatePerfChart() {
             const filter = document.getElementById('filterPerf').value;
             const currentMonth = new Date().getMonth() + 1;
             let data = globalMasterDB;
             if(filter === 'current') data = data.filter(d => parseInt(d.month) === currentMonth);
 
-            // Group by course groupName
+            const order = ['SPCB', 'KV1', 'TAX', 'FNB', 'SALON', 'HOTEL'];
+            const colorMap = { 'SPCB': '#3b82f6', 'KV1': '#1e3a8a', 'TAX': '#64748b', 'FNB': '#f97316', 'SALON': '#a855f7', 'HOTEL': '#10b981' };
+            
             const groups = {};
             data.forEach(i => {
                 const name = i.groupName || 'Khác';
@@ -542,6 +514,7 @@
             const labels = Object.keys(groups);
             const passData = labels.map(l => groups[l].pass);
             const failData = labels.map(l => groups[l].fail);
+            const bgPass = labels.map(l => colorMap[l] || '#10b981'); // Fallback xanh lá
 
             const ctx = document.getElementById('performanceChart'); if(!ctx) return;
             if(perfChartInstance) perfChartInstance.destroy();
@@ -550,15 +523,15 @@
                 data: { 
                     labels: labels, 
                     datasets: [
-                        { label: 'Đạt', data: passData, backgroundColor:'#10b981', borderRadius: {topLeft: 2, topRight: 2}, barThickness: 20 },
-                        { label: 'Trượt', data: failData, backgroundColor:'#f43f5e', borderRadius: {bottomLeft: 2, bottomRight: 2}, barThickness: 20 }
+                        { label: 'Đạt', data: passData, backgroundColor: bgPass, borderRadius: {topLeft: 2, topRight: 2}, barThickness: 24 },
+                        { label: 'Fail', data: failData, backgroundColor:'#ef4444', borderRadius: {bottomLeft: 2, bottomRight: 2}, barThickness: 24 }
                     ] 
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
-                    plugins: { legend: { display: true, position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: {size: 10} } } }, 
+                    plugins: { legend: { display: false } }, 
                     scales: { 
-                        y: { stacked: true, beginAtZero: true, border: {display: false}, grid: {color: '#f1f5f9', borderDash:[4,4]} }, 
+                        y: { stacked: true, beginAtZero: true, border: {display: false}, grid: {color: '#f1f5f9', borderDash:[4,4]}, ticks: {font: {size: 10}} }, 
                         x: { stacked: true, border: {display: false}, grid: {display: false}, ticks: {font: {size: 9}} } 
                     }, 
                     layout: { padding: { bottom: 10 } } 
@@ -566,7 +539,7 @@
             });
         }
 
-        // CUSTOM HTML CHO KHO QUÀ (UI Thanh ngang siêu đẹp)
+        // TỒN KHO QUÀ TẶNG (TIẾN TRÌNH NGANG)
         function getIconForGift(name) {
             const n = name.toLowerCase();
             if(n.includes('túi')) return 'fa-shopping-bag text-orange-500';
@@ -580,65 +553,60 @@
         function renderMerchHTML() {
             const container = document.getElementById('merchContainer'); if(!container) return;
             const filter = document.getElementById('filterMerch').value;
-            const gifts = JSON.parse(localStorage.getItem('kv_gift_db')) || globalGiftsDB || [];
+            const gifts = JSON.parse(localStorage.getItem('kv_gift_db')) || [];
             
             let html = '';
             gifts.forEach(g => {
                 let ton = parseInt(g.in) - parseInt(g.out);
                 let percent = g.in > 0 ? Math.round((ton / g.in) * 100) : 0;
                 
-                if(filter === 'low' && percent > 20) return; // Lọc dưới 20%
-                if(g.in === 0) return; // Bỏ qua đồ chưa nhập kho
+                if(filter === 'low' && percent > 20) return; 
+                if(g.in === 0) return; 
 
                 let barColor = percent > 50 ? 'bg-blue-500' : (percent > 20 ? 'bg-amber-500' : 'bg-rose-500');
                 let iconClass = getIconForGift(g.name);
 
                 html += `
-                    <div class="flex items-center gap-3 w-full group">
-                        <div class="w-[85px] shrink-0 flex items-center gap-2 text-[11px] font-semibold text-slate-700">
-                            <div class="w-6 h-6 rounded bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-white transition"><i class="fas ${iconClass}"></i></div>
-                            <span class="truncate" title="${g.name}">${g.name}</span>
+                    <div class="flex items-center gap-3 w-full group relative cursor-pointer">
+                        <div class="w-[75px] shrink-0 flex items-center gap-2 text-[10px] font-semibold text-slate-700">
+                            <div class="w-5 h-5 rounded bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-white transition"><i class="fas ${iconClass}"></i></div>
+                            <span class="truncate">${g.name}</span>
                         </div>
                         <div class="progress-bar-container border border-slate-200">
                             <div class="progress-bar-fill ${barColor}" style="width: ${Math.max(5, percent)}%"></div>
+                            <div class="absolute inset-0 flex items-center justify-end pr-2 text-[9px] font-bold text-white text-shadow-sm pointer-events-none">${ton}</div>
                         </div>
-                        <div class="w-16 shrink-0 text-right text-[10px] font-bold text-slate-500 group-hover:text-slate-800 transition">Tồn: ${ton}</div>
+                        
+                        <!-- Tooltip thông số nhập/xuất -->
+                        <div class="tooltip-box whitespace-nowrap !text-[10px]"><span class="text-slate-400">Nhập:</span> ${g.in} | <span class="text-slate-400">Xuất:</span> ${g.out}</div>
                     </div>
                 `;
             });
 
-            container.innerHTML = html || `<div class="h-full flex items-center justify-center text-xs text-slate-400">Không có dữ liệu tồn kho.</div>`;
+            container.innerHTML = html || `<div class="h-full flex items-center justify-center text-xs text-slate-400">Không có dữ liệu.</div>`;
         }
 
-        // --- CÁC HÀM MASTER DATA ---
+        // --- CÁC HÀM MASTER DATA API ---
         function getFilteredAndSortedData() {
             let displayData = [...globalMasterDB];
             if (AppState.filters.month !== 'all') displayData = displayData.filter(d => d.month == AppState.filters.month);
             if(AppState.filters.search !== "") {
-                displayData = displayData.filter(d => 
-                    (d.courseId && d.courseId.toLowerCase().includes(AppState.filters.search)) || 
-                    (d.groupName && d.groupName.toLowerCase().includes(AppState.filters.search))
-                );
+                displayData = displayData.filter(d => (d.courseId && d.courseId.toLowerCase().includes(AppState.filters.search)) || (d.groupName && d.groupName.toLowerCase().includes(AppState.filters.search)));
             }
             if(AppState.sort.col !== "") {
                 displayData.sort((a, b) => {
-                    let valA = (a[AppState.sort.col] || '').toString().toLowerCase();
-                    let valB = (b[AppState.sort.col] || '').toString().toLowerCase();
-                    if(valA < valB) return AppState.sort.asc ? -1 : 1;
-                    if(valA > valB) return AppState.sort.asc ? 1 : -1;
-                    return 0;
+                    let valA = (a[AppState.sort.col] || '').toString().toLowerCase(); let valB = (b[AppState.sort.col] || '').toString().toLowerCase();
+                    if(valA < valB) return AppState.sort.asc ? -1 : 1; if(valA > valB) return AppState.sort.asc ? 1 : -1; return 0;
                 });
             }
             return displayData;
         }
 
         function clearMasterData() {
-            const pwd = prompt("CẢNH BÁO: Thao tác này sẽ xóa toàn bộ dữ liệu báo cáo trên Database (Sheets).\nVui lòng nhập mật khẩu xác nhận (6 số):");
-            if(pwd !== "014023") { alert("Mật khẩu không chính xác. Hủy thao tác."); return; }
+            const pwd = prompt("CẢNH BÁO: Xóa toàn bộ dữ liệu báo cáo trên Database.\nNhập mật khẩu xác nhận (6 số):");
+            if(pwd !== "014023") { alert("Sai mật khẩu."); return; }
             localStorage.removeItem('kv_master_db'); globalMasterDB =[]; renderReportContent();
-            if(GOOGLE_API_URL) {
-                fetch(GOOGLE_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "clear_data", pwd: pwd }) }).then(r => r.json()).then(res => alert(res.message)).catch(e => console.log(e));
-            } else { alert("Đã xóa dữ liệu hiển thị (Local)."); }
+            if(GOOGLE_API_URL) fetch(GOOGLE_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "clear_data", pwd: pwd }) }).then(r => r.json()).then(res => alert(res.message));
         }
 
         function handleSearch(val) { AppState.filters.search = val.toLowerCase(); AppState.pagination.page = 1; renderReportContent(); }
@@ -714,44 +682,23 @@
         function handleChatEnter(e) { if(e.key === 'Enter') sendChatMessage(); }
         
         function sendChatMessage() {
-            const input = document.getElementById('chatInput'); 
-            const text = input.value.trim().toLowerCase(); 
-            if(!text) return;
+            const input = document.getElementById('chatInput'); const text = input.value.trim().toLowerCase(); if(!text) return;
             const history = document.getElementById('chatHistory');
             history.innerHTML += `<div class="bg-blue-600 text-white p-3 rounded-lg text-[13px] self-end max-w-[85%] shadow-sm">${input.value}</div>`;
             input.value = ''; history.scrollTop = history.scrollHeight;
 
             let reply = "Tôi có thể giúp bạn truy vấn dữ liệu từ Hệ thống L&D. Bạn hãy thử hỏi: 'Có bao nhiêu khóa?', 'Tỷ lệ pass là bao nhiêu?' hoặc 'Lịch dạy tháng này?'";
-            
-            if(text.includes("bao nhiêu khóa") || text.includes("mấy khóa") || text.includes("tổng số khóa")) {
-                reply = `Hệ thống ghi nhận tổng cộng **${globalMasterDB.length}** khóa học đã được vận hành.`;
-            } else if(text.includes("tỷ lệ pass") || text.includes("hiệu suất") || text.includes("bao nhiêu pass")) {
-                let sT = 0, sP = 0; globalMasterDB.forEach(i => { sT+=parseInt(i.totalTrainees)||0; sP+=parseInt(i.passedTrainees)||0; });
-                reply = sT > 0 ? `Tỷ lệ học viên vượt qua bài kiểm tra hiện tại là **${Math.round((sP/sT)*100)}%** (${sP}/${sT} HV).` : `Chưa có đủ dữ liệu học viên để tính toán.`;
-            } else if(text.includes("lịch") || text.includes("ngày mai") || text.includes("khi nào")) {
-                const cal = JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {};
-                const currentMonth = new Date().getMonth() + 1;
-                const currentYear = new Date().getFullYear();
-                const mData = cal[`${currentYear}-${currentMonth}`];
-                if(mData) {
-                    reply = `Tháng ${currentMonth}/${currentYear} có các lịch đã cài đặt: Khóa KV1 vào ngày ${mData.kv1||'Chưa setup'}, Khóa HĐĐT-Thuế vào ngày ${mData.tax||'Chưa setup'}.`;
-                } else {
-                    reply = `Tháng này bạn chưa setup Lịch trong phần Thiết lập Hệ thống.`;
-                }
-            } else if(text.includes("chào") || text.includes("hello")) {
-                reply = "Chào bạn! Tôi có thể lấy data thống kê, đọc master data và lịch trình giúp bạn ngay lập tức.";
-            }
+            if(text.includes("bao nhiêu khóa") || text.includes("mấy khóa") || text.includes("tổng số khóa")) reply = `Hệ thống ghi nhận tổng cộng **${globalMasterDB.length}** khóa học đã được vận hành.`;
+            else if(text.includes("tỷ lệ pass") || text.includes("hiệu suất") || text.includes("bao nhiêu pass")) { let sT = 0, sP = 0; globalMasterDB.forEach(i => { sT+=parseInt(i.totalTrainees)||0; sP+=parseInt(i.passedTrainees)||0; }); reply = sT > 0 ? `Tỷ lệ học viên vượt qua bài kiểm tra hiện tại là **${Math.round((sP/sT)*100)}%** (${sP}/${sT} HV).` : `Chưa có đủ dữ liệu học viên để tính toán.`; }
+            else if(text.includes("lịch") || text.includes("ngày mai") || text.includes("khi nào")) { const cal = JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {}; const cMonth = new Date().getMonth() + 1; const cYear = new Date().getFullYear(); const mData = cal[`${cYear}-${cMonth}`]; if(mData) reply = `Tháng ${cMonth}/${cYear} có các lịch đã cài đặt: Khóa KV1 vào ngày ${mData.kv1||'Chưa setup'}, Khóa HĐĐT-Thuế vào ngày ${mData.tax||'Chưa setup'}.`; else reply = `Tháng này bạn chưa setup Lịch trong phần Thiết lập Hệ thống.`; }
+            else if(text.includes("chào") || text.includes("hello")) reply = "Chào bạn! Tôi có thể lấy data thống kê, đọc Master Data và Lịch trình khóa học giúp bạn ngay lập tức.";
 
-            setTimeout(() => {
-                history.innerHTML += `<div class="bg-white border border-slate-200 p-3 rounded-lg shadow-sm text-[13px] text-slate-700 max-w-[85%] flex gap-2 items-start"><i class="fas fa-robot text-blue-500 mt-0.5"></i><div class="leading-relaxed">${reply}</div></div>`;
-                history.scrollTop = history.scrollHeight;
-            }, 800);
+            setTimeout(() => { history.innerHTML += `<div class="bg-white border border-slate-200 p-3 rounded-lg shadow-sm text-[13px] text-slate-700 max-w-[85%] flex gap-2 items-start"><i class="fas fa-robot text-blue-500 mt-0.5"></i><div class="leading-relaxed">${reply}</div></div>`; history.scrollTop = history.scrollHeight; }, 600);
         }
 
         // --- XUẤT CSV ---
         function exportCSV() {
-            const data = getFilteredAndSortedData();
-            if(!data.length) return alert('Không có dữ liệu!');
+            const data = getFilteredAndSortedData(); if(!data.length) return alert('Không có dữ liệu!');
             let csv = "\uFEFFSTT,Nhóm Khóa,Mã Khóa,Tháng,Bắt Đầu,Tổng HV,Đạt,Fail,Trạng Thái\n";
             data.forEach((i, idx) => { csv += `${idx+1},${i.groupName},${i.courseId},${i.month},${i.startDate},${i.totalTrainees||0},${i.passedTrainees||0},${i.failedTrainees||0},${i.status}\n`; });
             const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); 
@@ -760,11 +707,7 @@
 
         window.onload = async () => {
             const prof = JSON.parse(localStorage.getItem('kv_trainer_profile'));
-            if(prof) {
-                document.getElementById('display-prof-name').innerText = prof.name;
-                document.getElementById('display-prof-title').innerText = prof.title;
-                document.getElementById('display-prof-ava').innerText = prof.name.charAt(0).toUpperCase();
-            }
+            if(prof) { document.getElementById('display-prof-name').innerText = prof.name; document.getElementById('display-prof-title').innerText = prof.title; document.getElementById('display-prof-ava').innerText = prof.name.charAt(0).toUpperCase(); }
             await fetchDatabase(); switchTab('tong-quan');
         };
     </script>
