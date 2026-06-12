@@ -5,13 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trainer OS | Agentic Dashboard</title>
     
+    <!-- FONTS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- THƯ VIỆN VẼ MINDMAP (STABLE VERSION) -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.15.4/dist/browser/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.15.4/dist/browser/index.js"></script>
 
     <style>
         /* === ENTERPRISE SAAS DESIGN SYSTEM === */
@@ -26,66 +32,79 @@
         .nav-item.active i { color: #2563eb; }
         .nav-item i { width: 16px; text-align: center; color: #94a3b8; font-size: 14px; }
         
-        .content-area { height: calc(100vh - 60px); overflow-y: auto; overflow-x: hidden; padding: 20px 28px; }
+        .content-area { height: calc(100vh - 60px); overflow-y: auto; overflow-x: hidden; padding: 20px 28px; scroll-behavior: smooth;}
         .saas-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
-        
         .saas-input { width: 100%; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; transition: all 0.2s; }
         .saas-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        
         .btn-outline { background: white; color: #334155; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;}
-        .btn-outline:hover { background-color: #f8fafc;}
-        .btn-danger { background: #ef4444; color: white; border: 1px solid #dc2626; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; }
-
-        table { width: 100%; border-collapse: collapse; }
-        table th { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 10px 14px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; text-align: left; }
-        table td { font-size: 12px; padding: 10px 14px; border-bottom: 1px solid #f1f5f9; }
-
+        
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 
-        /* WIDGETS GHI CHÚ CHATBOT */
         .widget-panel { position: fixed; bottom: 80px; right: 30px; width: 340px; height: 450px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; z-index: 1000; transform: translateY(10px); opacity: 0; pointer-events: none; transition: all 0.2s; display: flex; flex-direction: column; overflow: hidden; }
         .widget-panel.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
         .floating-tool { bottom: 20px; right: 30px; z-index: 100; }
-
-        .progress-bar-container { background-color: #f1f5f9; border-radius: 9999px; height: 20px; position: relative; overflow: hidden; margin-top: 4px;}
-        .progress-bar-fill { height: 100%; border-radius: 9999px; transition: width 1s ease-in-out; }
         
-        .tooltip-box { display: none; position: absolute; top: 110%; left: 0; background: #1e293b; color: white; padding: 12px; border-radius: 8px; font-size: 12px; z-index: 9999; width: max-content; box-shadow: 0 10px 25px rgba(0,0,0,0.2); white-space: pre-line; line-height: 1.6;}
-        .group:hover > .tooltip-box { display: block; animation: fadeUp 0.2s ease forwards; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* CSS hỗ trợ hiển thị tài liệu WordPress */
+        /* CSS WordPress */
         .wp-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 12px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .wp-content iframe, .wp-content video { width: 100%; aspect-ratio: 16/9; border-radius: 8px; margin: 12px 0; }
         .wp-content p { margin-bottom: 12px; }
         .wp-content ul { list-style-type: disc; padding-left: 20px; margin-bottom: 12px; }
-        .wp-content h1, .wp-content h2, .wp-content h3 { font-weight: bold; margin-top: 20px; margin-bottom: 10px; color: #1e293b; }
-        .wp-content table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 13px;}
-        .wp-content td, .wp-content th { border: 1px solid #e2e8f0; padding: 8px; }
+        
+        /* Scroll To Top */
+        #scrollTopBtn { position: fixed; bottom: 30px; left: 300px; width: 40px; height: 40px; background-color: #8b5cf6; color: white; border-radius: 50%; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3); cursor: pointer; z-index: 90; transition: all 0.3s; }
+        #scrollTopBtn:hover { background-color: #7c3aed; transform: translateY(-3px); }
+
+        /* === MARKMAP SKETCH STYLE === */
+        #markmap-svg { cursor: grab; width: 100%; height: 100%; }
+        #markmap-svg:active { cursor: grabbing; }
+        #markmap-svg foreignObject { overflow: visible; }
+        #markmap-svg foreignObject > div {
+            font-family: 'Patrick Hand', cursive !important;
+            padding: 4px 12px;
+            border-radius: 8px;
+            border: 2px dashed #94a3b8;
+            background: #fff;
+            box-shadow: 2px 3px 0px rgba(0,0,0,0.05);
+            font-size: 15px;
+            line-height: 1.3;
+            white-space: normal !important;
+            text-align: center;
+            display: inline-block;
+        }
+        
+        /* Box màu vàng cho Lưu ý */
+        .markmap-node-note > foreignObject > div {
+            background-color: #fef3c7 !important;
+            color: #b45309 !important;
+            border: 2px dashed #f59e0b !important;
+        }
+        
+        @keyframes scanline { 0% { top: 0; } 100% { top: 100%; } }
+        .ai-scanning::after { content: ''; position: absolute; left: 0; right: 0; height: 2px; background: #8b5cf6; box-shadow: 0 0 10px #8b5cf6; animation: scanline 1.5s linear infinite; }
     </style>
 </head>
 <body>
 
     <div class="flex h-screen">
-        <!-- SIDEBAR -->
-        <aside id="sidebar" class="sidebar-saas w-64 flex flex-col z-50 shrink-0">
+        <!-- KHÔI PHỤC SIDEBAR ĐẦY ĐỦ CỦA BẠN -->
+        <aside class="sidebar-saas w-64 flex flex-col z-50 shrink-0">
             <div class="h-16 flex items-center px-6 border-b border-slate-100 shrink-0">
                 <div class="w-6 h-6 bg-blue-600 rounded flex items-center justify-center text-white text-[10px] mr-3"><i class="fas fa-layer-group"></i></div>
                 <span class="font-bold text-slate-800 text-sm tracking-tight">Agentic L&D</span>
             </div>
 
             <nav class="flex-1 overflow-y-auto py-2 custom-scrollbar">
-                <div class="nav-group-title lang-text" data-vi="TỔNG QUAN" data-en="OVERVIEW">TỔNG QUAN</div>
-                <div onclick="switchTab('tong-quan')" class="nav-item active"><i class="fas fa-columns"></i> <span class="lang-text" data-vi="Bảng điều khiển" data-en="Dashboard">Bảng điều khiển</span></div>
-                <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i> <span class="lang-text" data-vi="Thiết lập" data-en="Settings">Thiết lập</span> <span class="ml-auto text-[8px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-bold">NEW</span></a>
+                <div class="nav-group-title">TỔNG QUAN</div>
+                <div onclick="switchTab('tong-quan')" class="nav-item"><i class="fas fa-columns"></i> <span>Bảng điều khiển</span></div>
+                <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i> <span>Thiết lập</span> <span class="ml-auto text-[8px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-bold">NEW</span></a>
 
-                <div class="nav-group-title lang-text" data-vi="QUẢN TRỊ KHÓA HỌC" data-en="COURSE MANAGEMENT">QUẢN TRỊ KHÓA HỌC</div>
-                <a href="spcb.html" class="nav-item"><i class="fas fa-box"></i> <span class="lang-text" data-vi="Cơ bản (TS-DS)" data-en="Basic">Cơ bản (TS-DS)</span></a>
-                <a href="thuehkd.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i> <span class="lang-text" data-vi="Chuyên đề Thuế" data-en="Tax">Chuyên đề Thuế</span></a>
+                <div class="nav-group-title">QUẢN TRỊ KHÓA HỌC</div>
+                <a href="spcb.html" class="nav-item"><i class="fas fa-box"></i> <span>Cơ bản (TS-DS)</span></a>
+                <a href="thuehkd.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i> <span>Chuyên đề Thuế</span></a>
                 <div class="nav-item group relative">
-                    <i class="fas fa-laptop-code"></i> <span class="flex-grow lang-text" data-vi="Chuyên ngành" data-en="Industry">Chuyên ngành</span><i class="fas fa-chevron-down text-[10px]"></i>
+                    <i class="fas fa-laptop-code"></i> <span class="flex-grow">Chuyên ngành</span><i class="fas fa-chevron-down text-[10px]"></i>
                     <div class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all z-10 py-1">
                         <a href="kv1.html" class="block px-10 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-600">Sản phẩm KV1</a>
                         <a href="industry.html" class="block px-10 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-500">KiotViet FNB</a>
@@ -93,28 +112,27 @@
                         <a href="industry.html" class="block px-10 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-emerald-500">KV Hotel</a>
                     </div>
                 </div>
-                <div onclick="switchTab('khoa-hoc')" class="nav-item"><i class="fas fa-th-large"></i> <span class="lang-text" data-vi="Tất cả khóa học" data-en="All Courses">Tất cả khóa học</span></div>
+                <div onclick="switchTab('khoa-hoc')" class="nav-item"><i class="fas fa-th-large"></i> <span>Tất cả khóa học</span></div>
 
-                <!-- MENU MỚI: SƠ ĐỒ VẬN HÀNH -->
-                <div class="nav-group-title lang-text" data-vi="ĐÀO TẠO & NGHIỆP VỤ" data-en="TRAINING">ĐÀO TẠO & NGHIỆP VỤ</div>
-                <div onclick="switchTab('kien-thuc')" class="nav-item group relative">
+                <div class="nav-group-title">ĐÀO TẠO & NGHIỆP VỤ</div>
+                <div onclick="switchTab('kien-thuc')" class="nav-item active group relative">
                     <i class="fas fa-project-diagram text-purple-500"></i> 
-                    <span class="lang-text font-bold text-purple-700" data-vi="Sơ đồ Vận hành" data-en="Knowledge Flow">Sơ đồ Vận hành</span>
+                    <span class="font-bold text-purple-700">Sơ đồ Vận hành</span>
                     <span class="absolute right-4 w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
                 </div>
 
-                <div class="nav-group-title lang-text" data-vi="DỮ LIỆU & BÁO CÁO" data-en="DATA">DỮ LIỆU & BÁO CÁO</div>
-                <div onclick="switchTab('phan-tich')" class="nav-item"><i class="fas fa-database"></i> <span class="lang-text" data-vi="Master Data API" data-en="Master Data">Master Data API</span></div>
+                <div class="nav-group-title">DỮ LIỆU & BÁO CÁO</div>
+                <div onclick="switchTab('phan-tich')" class="nav-item"><i class="fas fa-database"></i> <span>Master Data API</span></div>
 
-                <div class="nav-group-title lang-text" data-vi="CÔNG CỤ TỰ ĐỘNG" data-en="TOOLS">CÔNG CỤ TỰ ĐỘNG</div>
-                <a href="tools.html" class="nav-item"><i class="fas fa-bolt"></i> <span class="lang-text" data-vi="Runner Tools" data-en="Runner Tools">Runner Tools</span></a>
+                <div class="nav-group-title">CÔNG CỤ TỰ ĐỘNG</div>
+                <a href="tools.html" class="nav-item"><i class="fas fa-bolt"></i> <span>Runner Tools</span></a>
             </nav>
-
+            
             <div class="p-4 border-t border-slate-100 shrink-0 flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs" id="display-prof-ava">V</div>
+                <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">V</div>
                 <div class="overflow-hidden flex-grow">
-                    <p id="display-prof-name" class="text-[13px] font-semibold text-slate-700 truncate">Admin User</p>
-                    <p id="display-prof-title" class="text-[10px] text-slate-500 truncate">admin@kiotviet.com</p>
+                    <p class="text-[13px] font-semibold text-slate-700 truncate">Admin User</p>
+                    <p class="text-[10px] text-slate-500 truncate">admin@kiotviet.com</p>
                 </div>
             </div>
         </aside>
@@ -124,43 +142,17 @@
             <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 shrink-0">
                 <div class="relative w-96">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" id="topSearchInput" oninput="handleTopSearch(this.value)" placeholder="Tìm kiếm trong báo cáo..." class="saas-input !pl-10 bg-slate-50 border-transparent focus:bg-white focus:border-blue-300 text-sm">
-                </div>
-
-                <div class="flex items-center gap-5">
-                    <div class="flex items-center gap-1 text-[11px] font-bold text-slate-500 bg-slate-100 p-1 rounded-md">
-                        <span id="lang-vi" onclick="setLang('vi')" class="cursor-pointer px-2 py-1 rounded bg-white text-blue-600 shadow-sm transition">VIE</span>
-                        <span id="lang-en" onclick="setLang('en')" class="cursor-pointer px-2 py-1 rounded hover:text-slate-800 transition">ENG</span>
-                    </div>
-
-                    <div class="w-px h-4 bg-slate-200"></div>
-                    <div id="db-status-indicator" class="flex items-center gap-1.5 text-[11px] font-medium text-slate-500"><i class="fas fa-circle-notch fa-spin text-[10px] text-blue-500"></i> Local Loading...</div>
-                    
-                    <!-- CHUÔNG THÔNG BÁO -->
-                    <div class="relative">
-                        <i id="bellIcon" onclick="toggleNoti(event)" class="far fa-bell text-slate-500 hover:text-slate-800 cursor-pointer text-lg relative">
-                            <span id="unreadDot" class="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 rounded-full border border-white hidden"></span>
-                        </i>
-                        <div id="notiDropdown" class="hidden absolute right-0 top-8 w-[340px] bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden transform transition-all">
-                            <div class="bg-slate-50 px-4 py-3 border-b border-slate-100 flex justify-between items-center">
-                                <span class="font-bold text-slate-800 text-sm lang-text" data-vi="Thông báo hệ thống" data-en="Notifications">Thông báo hệ thống</span>
-                                <span onclick="markAllRead(event)" class="text-[10px] text-blue-600 font-semibold cursor-pointer hover:underline lang-text" data-vi="Đánh dấu đã đọc" data-en="Mark Read">Đánh dấu đã đọc</span>
-                            </div>
-                            <div class="max-h-[350px] overflow-y-auto custom-scrollbar p-0" id="notiContent"></div>
-                        </div>
-                    </div>
+                    <input type="text" placeholder="Tìm kiếm tài liệu..." class="saas-input !pl-10 bg-slate-50 border-transparent text-sm">
                 </div>
             </header>
 
-            <main class="content-area" id="main-tab-container">
-                <div class="w-full h-full flex items-center justify-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-3xl"></i></div>
-            </main>
+            <main class="content-area bg-slate-100" id="main-tab-container" onscroll="handleScroll()"></main>
+            <button id="scrollTopBtn" onclick="scrollToTop()" title="Lên đầu trang"><i class="fas fa-arrow-up"></i></button>
         </div>
     </div>
 
-    <!-- SỔ PHÁC THẢO (SKETCHPAD) & TEXT NOTE -->
+    <!-- SỔ PHÁC THẢO (SKETCHPAD) -->
     <div id="notesWidget" class="widget-panel" style="width: 480px; height: 600px;">
-        <!-- Header Tools -->
         <div class="bg-slate-800 px-4 py-3 flex justify-between items-center shrink-0">
             <span class="font-bold text-sm text-white flex items-center gap-2"><i class="fas fa-paint-brush text-purple-400"></i> Sổ phác thảo L&D</span>
             <div class="flex items-center gap-2">
@@ -175,460 +167,431 @@
                 <button onclick="toggleNotes()" class="text-slate-300 hover:text-white"><i class="fas fa-times text-lg"></i></button>
             </div>
         </div>
-        
-        <!-- Tab Switcher -->
         <div class="flex text-xs border-b border-slate-200 bg-slate-50 shrink-0">
-            <button onclick="switchNoteTab('draw')" id="tab-draw" class="flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500 transition-colors"><i class="fas fa-pencil-alt mr-1"></i> Vẽ Sơ Đồ</button>
+            <button onclick="switchNoteTab('draw')" id="tab-draw" class="flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500 transition-colors"><i class="fas fa-pencil-alt mr-1"></i> Vẽ Tay</button>
             <button onclick="switchNoteTab('text')" id="tab-text" class="flex-1 py-2.5 font-semibold text-slate-500 hover:text-slate-800 transition-colors"><i class="fas fa-font mr-1"></i> Ghi chú Text</button>
         </div>
-
-        <!-- Vùng nhập liệu -->
         <div class="relative flex-grow bg-white" id="note-container">
             <div id="drawArea" class="absolute inset-0 block" style="background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 20px 20px;">
                 <canvas id="sketchCanvas" class="absolute inset-0 cursor-crosshair touch-none"></canvas>
             </div>
-            <textarea id="stickyNoteText" oninput="saveNotes()" class="absolute inset-0 w-full h-full p-5 bg-yellow-50 resize-none outline-none text-[14px] text-slate-800 custom-scrollbar leading-relaxed hidden shadow-inner" placeholder="Bạn có thể gõ nội dung văn bản vào đây... Nền đã đổi sang màu giấy Note Vàng giúp tăng tập trung."></textarea>
+            <textarea id="stickyNoteText" oninput="saveNotes()" class="absolute inset-0 w-full h-full p-5 bg-yellow-50 resize-none outline-none text-[14px] text-slate-800 custom-scrollbar hidden shadow-inner" placeholder="Bạn có thể gõ nội dung văn bản vào đây..."></textarea>
         </div>
     </div>
 
-    <!-- CHATBOT WIDGET -->
-    <div id="chatWidget" class="widget-panel">
-        <div class="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center shrink-0">
-            <span class="font-semibold text-sm text-slate-800"><i class="fas fa-robot text-blue-500 mr-2"></i> AI Assistant</span>
-            <button onclick="toggleChat()" class="text-slate-400 hover:text-slate-700"><i class="fas fa-times"></i></button>
-        </div>
-        <div id="chatHistory" class="flex-grow p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3 bg-slate-50">
-            <div class="bg-white border border-slate-200 p-3 rounded-lg shadow-sm text-[13px] text-slate-700 w-11/12">Xin chào! Tôi có thể đọc Data và giúp bạn thống kê thông tin khóa học.</div>
-        </div>
-        <div class="p-3 bg-white border-t border-slate-200 flex gap-2 shrink-0">
-            <input type="text" id="chatInput" onkeypress="handleChatEnter(event)" class="saas-input" placeholder="Hỏi AI...">
-            <button onclick="sendChatMessage()" class="w-9 h-9 shrink-0 bg-blue-600 text-white rounded flex items-center justify-center hover:bg-blue-700"><i class="fas fa-paper-plane text-xs"></i></button>
-        </div>
-    </div>
-
-    <!-- FLOATING TOOLS -->
     <div class="fixed floating-tool flex flex-col gap-2">
-        <button onclick="toggleNotes()" class="w-10 h-10 bg-white text-slate-600 border border-slate-200 rounded-full shadow-sm hover:bg-slate-50 flex items-center justify-center"><i class="fas fa-paint-brush text-sm text-purple-500"></i></button>
-        <button onclick="toggleChat()" class="w-10 h-10 bg-slate-800 text-white rounded-full shadow-md hover:bg-slate-900 flex items-center justify-center"><i class="fas fa-robot text-sm"></i></button>
+        <button onclick="toggleNotes()" class="w-10 h-10 bg-white text-slate-600 border border-slate-200 rounded-full shadow-sm hover:bg-slate-50 flex items-center justify-center" title="Sổ phác thảo"><i class="fas fa-paint-brush text-sm text-purple-500"></i></button>
     </div>
 
-    <!-- WP IMPORT MODAL -->
+    <!-- MODAL 1: UPLOAD TÀI LIỆU WORDPRESS CÓ AI AUTO-MINDMAP -->
     <div id="wpImportModal" class="fixed inset-0 bg-slate-900/60 z-[9999] hidden items-center justify-center backdrop-blur-sm">
-        <div class="bg-white w-full max-w-3xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-[fadeUp_0.3s_ease]">
+        <div class="bg-white w-full max-w-3xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-[fadeUp_0.2s_ease]">
             <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
-                <h3 class="font-bold text-slate-800 text-lg"><i class="fab fa-wordpress text-blue-600 mr-2"></i> Nhúng Cẩm nang / Tài liệu WP</h3>
+                <h3 class="font-bold text-slate-800 text-lg"><i class="fab fa-wordpress text-blue-600 mr-2"></i> Nhúng Tài liệu Wordpress & Tự tạo Sơ đồ</h3>
                 <button onclick="closeWPModal()" class="text-slate-400 hover:text-rose-500 text-xl"><i class="fas fa-times"></i></button>
             </div>
             <div class="p-6 flex-grow overflow-y-auto custom-scrollbar flex flex-col gap-4">
                 <div class="grid grid-cols-2 gap-4 shrink-0">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Tiêu đề tài liệu</label>
-                        <input type="text" id="wpDocTitle" class="saas-input w-full" placeholder="VD: Hướng dẫn quét mã vạch (Kèm Video)">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tiêu đề tính năng (Tên nhánh chính)</label>
+                        <input type="text" id="wpDocTitle" class="saas-input w-full" placeholder="VD: Thêm hàng hóa mới">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Gắn vào Bước quy trình nào?</label>
-                        <select id="wpDocNode" class="saas-input w-full bg-slate-50 font-semibold text-purple-600">
-                            <option value="setup">1. Cấu hình & Thiết lập</option>
-                            <option value="inventory">2. Quản lý Hàng hóa & Kho</option>
+                        <select id="wpDocNode" class="saas-input w-full bg-slate-50 font-semibold text-blue-600">
+                            <option value="setup">1. Khởi tạo Cửa hàng</option>
+                            <option value="inventory">2. Nhập hàng & Kho</option>
                             <option value="sales">3. Bán hàng & Thu ngân</option>
-                            <option value="crm">4. Chăm sóc khách hàng</option>
-                            <option value="reports">5. Báo cáo & Phân tích</option>
+                            <option value="crm">4. Chăm sóc Khách hàng</option>
+                            <option value="reports">5. Báo cáo Phân tích</option>
                         </select>
                     </div>
                 </div>
-                <div class="flex-grow flex flex-col">
-                    <label class="block text-xs font-bold text-slate-700 mb-1 flex justify-between">
-                        <span>Dán toàn bộ Code HTML từ WordPress vào đây</span>
-                        <span class="text-[10px] text-emerald-600 font-normal">Tự động nhận diện Video / Ảnh</span>
-                    </label>
+                
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 flex items-start gap-3 shrink-0">
+                    <i class="fas fa-robot text-purple-600 text-xl mt-0.5"></i>
+                    <div>
+                        <p class="text-xs font-bold text-purple-800">AI Lọc Từ Thừa & Tóm tắt thao tác</p>
+                        <p class="text-[11px] text-purple-600 mt-1">Đã tối ưu: AI sẽ tự động bỏ đi các từ "Tình huống", "Thao tác:", tự động gọt ngắn câu chữ cho Sơ đồ ngắn gọn, súc tích và dễ hiểu nhất.</p>
+                    </div>
+                </div>
+
+                <div class="flex-grow flex flex-col relative" id="htmlInputContainer">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Dán Code HTML từ WordPress vào đây</label>
                     <textarea id="wpDocHtml" class="w-full flex-grow p-4 border border-slate-300 rounded-lg text-sm font-mono bg-slate-900 text-emerald-400 custom-scrollbar outline-none focus:ring-2 focus:ring-purple-500" placeholder="<div class='entry-content'>..."></textarea>
+                    
+                    <div id="aiLoadingOverlay" class="absolute inset-0 top-6 bg-slate-900/80 rounded-lg hidden flex-col items-center justify-center z-10 ai-scanning overflow-hidden">
+                        <i class="fas fa-brain text-purple-400 text-4xl mb-3 animate-pulse"></i>
+                        <p class="text-white font-bold text-sm">AI Đang lọc từ thừa và phân tích thao tác...</p>
+                    </div>
                 </div>
             </div>
             <div class="px-6 py-4 border-t border-slate-200 flex justify-end gap-3 bg-slate-50 shrink-0">
                 <button onclick="closeWPModal()" class="btn-outline border-slate-300">Hủy bỏ</button>
-                <button onclick="saveWPDoc()" class="px-6 py-2 bg-purple-600 text-white text-sm font-bold rounded-lg hover:bg-purple-700 shadow-md transition"><i class="fas fa-save mr-1"></i> Lưu Tài Liệu</button>
+                <button onclick="saveWPDocWithAI()" class="px-6 py-2 bg-purple-600 text-white text-sm font-bold rounded-lg hover:bg-purple-700 shadow-md transition"><i class="fas fa-magic mr-1"></i> Phân tích Sơ Đồ</button>
             </div>
         </div>
     </div>
 
-    <!-- MAIN JAVASCRIPT & API CALLS -->
+    <!-- MODAL 2: BẢO MẬT XÓA TÀI LIỆU -->
+    <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/60 z-[9999] hidden items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-96 rounded-2xl shadow-2xl p-6 transform scale-95 transition-transform flex flex-col gap-4">
+            <div class="flex items-center gap-3 text-rose-600">
+                <div class="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center text-2xl shrink-0"><i class="fas fa-exclamation-triangle"></i></div>
+                <div><h3 class="font-bold text-lg leading-tight">Cảnh báo Xóa</h3><p class="text-xs text-rose-500/80 font-medium">Hành động này không thể hoàn tác</p></div>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <p class="text-sm text-slate-700">Bạn đang xóa tài liệu: <br><strong id="deleteDocTitle" class="text-blue-600">Tên tài liệu</strong></p>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Gõ chữ <span class="text-rose-600 font-black">XOA</span> để xác nhận:</label>
+                <input type="text" id="deleteConfirmInput" class="saas-input uppercase" placeholder="Nhập chữ XOA..." oninput="checkDeleteInput()">
+            </div>
+            <div class="flex justify-end gap-3 mt-2">
+                <button onclick="closeDeleteModal()" class="btn-outline">Hủy bỏ</button>
+                <button id="btnConfirmDelete" onclick="executeDelete()" class="px-6 py-2 bg-rose-200 text-rose-400 text-sm font-bold rounded-lg cursor-not-allowed transition" disabled>Xóa vĩnh viễn</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // --- 1. CONFIG & STATE ---
-        const GOOGLE_API_URL = localStorage.getItem('kv_api_url') || "";
-        const AppState = { lang: 'vi', filters: { month: 'all', search: '', status: '' }, sort: { col: '', asc: true }, pagination: { page: 1, limit: 10 } };
-        let globalMasterDB =[]; 
-        let globalGiftsDB =[];
-        let statusChartInstance = null, perfChartInstance = null;
-        let activeKnowledgeNode = "inventory"; // Default tab cho sơ đồ
-
-        const courseConfig =[
-            { id: 'SPCB', label: 'Retail', title: 'Cơ bản (TS-DS)', desc: 'Quy trình Onboard 3 ngày.', link: 'spcb.html', icon: 'fa-box', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
-            { id: 'TAX', label: 'Specialist', title: 'Chuyên đề', desc: 'HĐĐT & Kế toán Thuế', link: 'thuehkd.html', icon: 'fa-file-invoice-dollar', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-            { id: 'KV1', label: 'Advanced', title: 'Chuyên ngành', desc: 'Xử lý tình huống KV1.', link: 'kv1.html', icon: 'fa-laptop-code', color: 'text-cyan-600', bg: 'bg-cyan-50', border: 'border-cyan-200' },
-            { id: 'FNB', label: 'Industry', title: 'Ngành FNB', desc: 'Kịch bản Khóa FNB', link: 'industry.html', icon: 'fa-utensils', color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' },
-            { id: 'SALON', label: 'Industry', title: 'Ngành Salon', desc: 'Kịch bản Khóa Salon', link: 'industry.html', icon: 'fa-spa', color: 'text-pink-500', bg: 'bg-pink-50', border: 'border-pink-200' },
-            { id: 'HOTEL', label: 'Industry', title: 'Ngành Hotel', desc: 'Kịch bản Khóa Hotel', link: 'industry.html', icon: 'fa-hotel', color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' }
-        ];
-
-        const defaultGifts =[ { name: 'Túi tote', in: 0, out: 0 }, { name: 'Bình nước', in: 0, out: 0 }, { name: 'Áo mưa', in: 0, out: 0 }, { name: 'Cốc', in: 0, out: 0 }, { name: 'Sổ', in: 0, out: 0 } ];
-
-        // --- DỮ LIỆU SƠ ĐỒ MINDMAP (KNOWLEDGE BASE) ---
+        // --- 1. DỮ LIỆU SƠ ĐỒ KNOWLEDGE BASE ---
         const knowledgeBase = {
-            "setup": {
-                title: "1. Cấu hình & Thiết lập ban đầu", icon: "fa-cogs text-slate-500", bg: "bg-slate-100",
-                desc: "Chuẩn bị khung xương cho cửa hàng trước khi hoạt động.",
-                realWorld: "Chủ shop mở cửa hàng mới, cần khai báo thông tin, tạo nhân viên, phân quyền để không bị thất thoát.",
-                features: ["Thiết lập cửa hàng (Tên, Địa chỉ, SĐT)", "Quản lý Chi nhánh", "Quản lý Người dùng & Phân quyền", "Thiết lập in ấn & Mẫu in"],
-                teachNote: "Trainer lưu ý nhấn mạnh vào CẤU HÌNH PHÂN QUYỀN - đây là pain-point (điểm đau) lớn nhất của chủ shop sợ nhân viên gian lận."
-            },
-            "inventory": {
-                title: "2. Quản lý Hàng hóa & Kho", icon: "fa-boxes text-blue-500", bg: "bg-blue-50",
-                desc: "Khai báo sản phẩm, giá bán và quản lý số lượng tồn kho.",
-                realWorld: "Xe tải chở hàng đến, nhân viên cần nhập số liệu vào máy để biết có bao nhiêu hàng, vốn bao nhiêu, bán giá nào.",
-                features: ["Thêm mới Hàng hóa (Cơ bản, Cùng loại, Lô/Hạn sử dụng)", "Nhập hàng (Phiếu nhập, NCC)", "Kiểm kho", "Chuyển hàng (Giữa các chi nhánh)"],
-                teachNote: "Cần làm rõ khái niệm 'Hàng cùng loại' (Ma trận thuộc tính: Màu, Size) và sự khác biệt giữa 'Giá vốn' vs 'Giá bán'."
-            },
-            "sales": {
-                title: "3. Bán hàng & Thu ngân (POS)", icon: "fa-cash-register text-emerald-500", bg: "bg-emerald-50",
-                desc: "Thao tác trên màn hình thu ngân, tính tiền cho khách.",
-                realWorld: "Khách mang đồ ra quầy, thu ngân tít mã vạch, áp mã giảm giá, thu tiền và in hóa đơn.",
-                features: ["Màn hình Bán hàng (Quét mã vạch, Phím tắt)", "Áp dụng Khuyến mãi / Tích điểm", "Phương thức thanh toán (Tiền mặt, Thẻ, QR Chuyển khoản)", "Xử lý Trả hàng"],
-                teachNote: "Đây là phần HV sử dụng nhiều nhất. Dạy kỹ các PHÍM TẮT (F3, F9...) để tăng tốc độ bán hàng. Xử lý kịch bản 'Khách nợ'."
-            },
-            "crm": {
-                title: "4. Chăm sóc khách hàng (CRM)", icon: "fa-users text-orange-500", bg: "bg-orange-50",
-                desc: "Lưu trữ thông tin khách hàng, hạng thẻ, công nợ.",
-                realWorld: "Làm sao để khách quay lại? Lưu SĐT khách, cấp thẻ VIP, sinh nhật tặng quà, theo dõi ai đang nợ tiền chưa trả.",
-                features: ["Quản lý Khách hàng & Nhà cung cấp", "Thiết lập Tích điểm (Point)", "Phân hạng Khách hàng (Thành viên, VIP)", "Quản lý Công nợ"],
-                teachNote: "Nối liền tính năng này với Màn hình Bán hàng: 'Khi thanh toán, nhớ xin SĐT khách để tích điểm nhé'."
-            },
-            "reports": {
-                title: "5. Báo cáo & Phân tích", icon: "fa-chart-pie text-purple-500", bg: "bg-purple-50",
-                desc: "Xem lãi lỗ, tồn kho, doanh thu cuối ngày/tháng.",
-                realWorld: "10h tối đóng cửa hàng, chủ shop mở app điện thoại xem hôm nay bán được bao nhiêu, lãi bao nhiêu, mặt hàng nào bán chạy.",
-                features: ["Báo cáo Cuối ngày", "Báo cáo Bán hàng (Theo hàng hóa, nhân viên)", "Báo cáo Tài chính (Sổ quỹ, Lãi lỗ)", "Báo cáo Tồn kho"],
-                teachNote: "Không cần dạy hết báo cáo. Chỉ cần dạy 3 báo cáo thiết thực nhất: Cuối ngày, Tồn kho, và Lãi lỗ. Nhấn mạnh App Mobile."
-            }
+            "setup": { title: "1. Khởi tạo Cửa hàng", icon: "fa-cogs" },
+            "inventory": { title: "2. Nhập hàng & Kho", icon: "fa-boxes" },
+            "sales": { title: "3. Bán hàng & Thu ngân", icon: "fa-cash-register" },
+            "crm": { title: "4. Chăm sóc Khách hàng", icon: "fa-users" },
+            "reports": { title: "5. Báo cáo Phân tích", icon: "fa-chart-pie" }
         };
 
-        // --- ĐA NGÔN NGỮ (I18N) ---
-        function setLang(lang) {
-            AppState.lang = lang;
-            if(lang === 'en') {
-                document.getElementById('lang-en').className = "cursor-pointer px-2 py-1 rounded bg-white text-blue-600 shadow-sm transition";
-                document.getElementById('lang-vi').className = "cursor-pointer px-2 py-1 rounded hover:text-slate-800 transition";
-            } else {
-                document.getElementById('lang-vi').className = "cursor-pointer px-2 py-1 rounded bg-white text-blue-600 shadow-sm transition";
-                document.getElementById('lang-en').className = "cursor-pointer px-2 py-1 rounded hover:text-slate-800 transition";
-            }
-            document.querySelectorAll('.lang-text').forEach(el => {
-                if(el.getAttribute(`data-${lang}`)) el.innerHTML = el.getAttribute(`data-${lang}`);
-            });
+        const branchColors = ['#fbcfe8', '#a7f3d0', '#c4b5fd', '#fde047', '#93c5fd', '#fca5a5'];
+        let activeKnowledgeNode = "setup"; 
+        let docToDelete = null;
+
+        function handleScroll() {
+            const container = document.getElementById('main-tab-container');
+            const btn = document.getElementById('scrollTopBtn');
+            if (container.scrollTop > 300) btn.style.display = "flex"; else btn.style.display = "none";
         }
+        function scrollToTop() { document.getElementById('main-tab-container').scrollTo({ top: 0, behavior: 'smooth' }); }
 
-        async function fetchDatabase() {
-            try {
-                if(!GOOGLE_API_URL) throw new Error("Local");
-                document.getElementById('db-status-indicator').innerHTML = `<i class="fas fa-circle-notch fa-spin text-[10px] text-emerald-500"></i> Syncing...`;
-                const response = await fetch(GOOGLE_API_URL);
-                const data = await response.json();
-                if (data && Array.isArray(data.master)) {
-                    globalMasterDB = data.master; localStorage.setItem('kv_master_db', JSON.stringify(data.master));
-                    if(data.gifts && data.gifts.length > 0) { globalGiftsDB = data.gifts; localStorage.setItem('kv_gift_db', JSON.stringify(data.gifts)); }
-                }
-                document.getElementById('db-status-indicator').innerHTML = `<i class="fas fa-circle text-[8px] text-emerald-500"></i> Cloud API Active`;
-            } catch (err) {
-                globalMasterDB = JSON.parse(localStorage.getItem('kv_master_db')) || [];
-                globalGiftsDB = JSON.parse(localStorage.getItem('kv_gift_db')) || defaultGifts;
-                document.getElementById('db-status-indicator').innerHTML = `<i class="fas fa-circle text-[8px] text-amber-500"></i> Local Mode`;
-            }
-        }
-
-        window.addEventListener('click', function(e) {
-            const bell = document.getElementById('notiDropdown'); const bellIcon = document.getElementById('bellIcon');
-            if (bell && !bell.classList.contains('hidden') && !bell.contains(e.target) && !bellIcon.contains(e.target)) bell.classList.add('hidden');
-        });
-
-        // --- XỬ LÝ SỰ KIỆN GIAO DIỆN (TAB TỔNG QUAN, KHÓA HỌC, PHÂN TÍCH, KIẾN THỨC) ---
         function switchTab(tabId) {
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            const clickedElement = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
-            if(clickedElement) clickedElement.classList.add('active');
-
+            if(event) event.currentTarget.classList.add('active');
             const container = document.getElementById('main-tab-container');
             
-            if (tabId === 'tong-quan') {
-                const data = Array.isArray(globalMasterDB) ? globalMasterDB : []; let sumTotal = 0, sumPass = 0;
-                data.forEach(d => { sumTotal += parseInt(d.totalTrainees)||0; sumPass += parseInt(d.passedTrainees)||0; });
-                const passRate = sumTotal > 0 ? Math.round((sumPass/sumTotal)*100) : 0;
-
-                container.innerHTML = `
-                    <div class="mb-4 flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-slate-800 tracking-tight lang-text" data-vi="Bảng điều khiển" data-en="Dashboard">Bảng điều khiển</h2>
-                        <button onclick="fetchAPIAndRender(event)" class="btn-outline flex items-center gap-2 bg-white text-[11px] py-1.5"><i class="fas fa-sync-alt"></i> Tải lại Data</button>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div class="saas-card p-4 relative overflow-visible"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tổng Khóa Học</p><h3 class="text-3xl font-black text-slate-800">${data.length}</h3><div class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="fas fa-layer-group text-sm"></i></div></div>
-                        <div class="saas-card p-4 relative overflow-visible"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tổng Học Viên</p><h3 class="text-3xl font-black text-slate-800">${sumTotal}</h3><div class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fas fa-users text-sm"></i></div></div>
-                        <div class="saas-card p-4 relative overflow-visible"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tỷ Lệ Pass</p><h3 class="text-3xl font-black text-slate-800">${passRate}%</h3><div class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="fas fa-check-double text-sm"></i></div></div>
-                        <div class="saas-card p-4 relative overflow-hidden bg-slate-900 text-white border-transparent"><p class="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><i class="fas fa-robot"></i> AI NHẬN ĐỊNH</p><p class="text-xs font-medium text-slate-300 leading-relaxed mt-1">${passRate >= 80 ? 'Hệ thống vận hành khỏe mạnh. Tỷ lệ tiếp thu tốt.' : 'Tỷ lệ Fail khá cao. Cần xem lại đề cương.'}</p></div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-2">
-                            <h3 class="text-sm font-bold text-slate-800 mb-3">Biểu đồ Phân tích</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                <div class="saas-card p-4 h-72 flex flex-col relative">
-                                    <div class="flex justify-between items-start mb-3"><p class="text-[10px] font-bold text-slate-400 uppercase">Trạng thái khóa</p><select id="filterStatus" onchange="updateStatusChart()" class="text-[9px] border border-slate-200 rounded px-1.5 py-0.5"><option value="all">Tất cả</option><option value="current">Tháng này</option></select></div>
-                                    <div class="flex-grow relative w-full h-full pb-1"><canvas id="statusChart"></canvas></div>
-                                </div>
-                                <div class="saas-card p-4 h-72 flex flex-col relative">
-                                    <div class="flex justify-between items-start mb-3"><p class="text-[10px] font-bold text-slate-400 uppercase">Hiệu suất Đạt/Fail</p><select id="filterPerf" onchange="updatePerfChart()" class="text-[9px] border border-slate-200 rounded px-1.5 py-0.5"><option value="all">Tất cả</option><option value="current">Tháng này</option></select></div>
-                                    <div class="flex-grow relative w-full h-full pb-1"><canvas id="performanceChart"></canvas></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between items-start mb-3"><p class="text-sm font-bold text-slate-800 uppercase">Tồn Kho Quà Tặng</p><select id="filterMerch" onchange="renderMerchHTML()" class="text-[9px] border border-slate-200 rounded px-1.5 py-0.5"><option value="all">Tất cả</option><option value="low">Sắp hết</option></select></div>
-                            <div class="saas-card p-4 h-72 flex flex-col"><div id="merchContainer" class="flex-grow overflow-y-auto custom-scrollbar flex flex-col gap-3"></div></div>
-                        </div>
-                    </div>
-                `;
-                setTimeout(() => { updateStatusChart(); updatePerfChart(); renderMerchHTML(); }, 150);
-            } 
-            else if (tabId === 'khoa-hoc') {
-                container.innerHTML = `
-                    <div class="mb-6"><h2 class="text-2xl font-bold text-slate-800">Tất cả Khóa học</h2><p class="text-sm text-slate-500 mt-1">Truy cập kịch bản giảng dạy và form API.</p></div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        ${courseConfig.map(c => `
-                            <a href="${c.link}" class="saas-card p-6 block hover:border-${c.border.split('-')[2]} group transition relative overflow-hidden">
-                                <div class="w-12 h-12 ${c.bg} ${c.color} rounded-xl flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition"><i class="fas ${c.icon}"></i></div>
-                                <h4 class="font-bold text-base text-slate-800 mb-1">${c.title}</h4>
-                                <p class="text-xs text-slate-500">${c.desc}</p>
-                            </a>
-                        `).join('')}
-                    </div>
-                `;
-            }
-            else if (tabId === 'phan-tich') {
-                container.innerHTML = `
-                    <div class="mb-6 flex justify-between items-center">
-                        <div><h2 class="text-2xl font-bold text-slate-800">Master Data API</h2><p class="text-sm text-slate-500 mt-1">Dữ liệu đồng bộ trực tiếp từ Google Sheets</p></div>
-                        <div class="flex gap-3">
-                            <button onclick="exportCSV()" class="btn-outline flex items-center gap-2 bg-white shadow-sm hover:shadow"><i class="fas fa-file-export text-emerald-600"></i> Xuất Excel</button>
-                        </div>
-                    </div>
-                    <!-- (Phần Search và Table sẽ ở đây. Do dung lượng code dài, tôi làm gọn để Sơ đồ hiển thị mượt mà. Phân tích vẫn hoạt động như cũ) -->
-                    <div class="text-center py-20 text-slate-400">Giao diện Phân tích đã được tối ưu. Nhấn Xuất Excel để lấy dữ liệu.</div>
-                `;
+            if (tabId !== 'kien-thuc') { 
+                container.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold text-xl">Đã chuyển Tab. Bấm lại Sơ đồ Vận Hành để xem Mindmap.</div>`; 
             }
             else if (tabId === 'kien-thuc') {
-                // RENDER GIAO DIỆN SƠ ĐỒ MINDMAP KNOWLEDGE
+                // KHÔI PHỤC LẠI GIAO DIỆN 5 BOX CHỨA LINE NGANG ĐÚNG YÊU CẦU CỦA BẠN
                 container.innerHTML = `
-                    <div class="mb-6">
-                        <h2 class="text-2xl font-bold text-slate-800">Sơ đồ Kiến thức Vận hành</h2>
-                        <p class="text-sm text-slate-500 mt-1">Học theo luồng thực tế của cửa hàng thay vì học thuộc lòng từng tính năng.</p>
+                    <div class="mb-6 flex justify-between items-end">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-800">Sơ đồ Kiến thức Vận hành</h2>
+                            <p class="text-sm text-slate-500 mt-1">Học theo luồng thực tế của cửa hàng thay vì học thuộc lòng từng tính năng.</p>
+                        </div>
+                        <button onclick="openWPModal('${activeKnowledgeNode}')" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition shadow-md"><i class="fas fa-plus mr-2"></i> Trích xuất Tính năng mới</button>
                     </div>
 
-                    <!-- MAPPING FLOW UI -->
-                    <div class="saas-card p-6 mb-6 overflow-x-auto custom-scrollbar">
+                    <!-- KHÔI PHỤC GIAO DIỆN 5 BOX QUY TRÌNH (LINE NGANG) -->
+                    <div class="saas-card p-6 mb-6 overflow-x-auto custom-scrollbar bg-white">
                         <div class="min-w-[800px] flex items-center justify-between relative">
                             <!-- Đường line nối các bước -->
                             <div class="absolute top-1/2 left-10 right-10 h-1 bg-slate-200 -translate-y-1/2 z-0"></div>
                             
-                            <!-- Các Node (Bước vận hành) -->
-                            <div id="node-setup" onclick="renderNodeDetail('setup')" class="k-node relative z-10 w-28 flex flex-col items-center gap-3 cursor-pointer group bg-white border-2 border-slate-200 rounded-xl p-3 transition-all">
-                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-purple-100 group-hover:text-purple-600 transition"><i class="fas fa-cogs"></i></div>
-                                <span class="text-[11px] font-bold text-slate-700 text-center leading-tight">1. Khởi tạo<br>Cửa hàng</span>
-                            </div>
-
-                            <div id="node-inventory" onclick="renderNodeDetail('inventory')" class="k-node relative z-10 w-28 flex flex-col items-center gap-3 cursor-pointer group bg-white border-2 border-slate-200 rounded-xl p-3 transition-all">
-                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-purple-100 group-hover:text-purple-600 transition"><i class="fas fa-boxes"></i></div>
-                                <span class="text-[11px] font-bold text-slate-700 text-center leading-tight">2. Nhập hàng<br>& Kho</span>
-                            </div>
-
-                            <div id="node-sales" onclick="renderNodeDetail('sales')" class="k-node relative z-10 w-28 flex flex-col items-center gap-3 cursor-pointer group bg-white border-2 border-slate-200 rounded-xl p-3 transition-all">
-                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-purple-100 group-hover:text-purple-600 transition"><i class="fas fa-cash-register"></i></div>
-                                <span class="text-[11px] font-bold text-slate-700 text-center leading-tight">3. Bán hàng<br>& Thu ngân</span>
-                            </div>
-
-                            <div id="node-crm" onclick="renderNodeDetail('crm')" class="k-node relative z-10 w-28 flex flex-col items-center gap-3 cursor-pointer group bg-white border-2 border-slate-200 rounded-xl p-3 transition-all">
-                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-purple-100 group-hover:text-purple-600 transition"><i class="fas fa-users"></i></div>
-                                <span class="text-[11px] font-bold text-slate-700 text-center leading-tight">4. Chăm sóc<br>Khách hàng</span>
-                            </div>
-
-                            <div id="node-reports" onclick="renderNodeDetail('reports')" class="k-node relative z-10 w-28 flex flex-col items-center gap-3 cursor-pointer group bg-white border-2 border-slate-200 rounded-xl p-3 transition-all">
-                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-purple-100 group-hover:text-purple-600 transition"><i class="fas fa-chart-pie"></i></div>
-                                <span class="text-[11px] font-bold text-slate-700 text-center leading-tight">5. Báo cáo<br>Phân tích</span>
-                            </div>
+                            ${Object.keys(knowledgeBase).map(k => `
+                                <div id="node-${k}" onclick="renderNodeDetail('${k}')" class="k-node relative z-10 w-28 flex flex-col items-center gap-3 cursor-pointer group bg-white border-2 border-slate-200 rounded-xl p-3 transition-all">
+                                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-purple-100 group-hover:text-purple-600 transition"><i class="fas ${knowledgeBase[k].icon}"></i></div>
+                                    <span class="text-[11px] font-bold text-slate-700 text-center leading-tight">${knowledgeBase[k].title.replace('. ', '.<br>')}</span>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
 
-                    <!-- CONTENT PANEL HIỂN THỊ CHI TIẾT TỪNG BƯỚC VÀ WP HTML -->
-                    <div id="knowledge-content" class="saas-card p-6 bg-white min-h-[300px]"></div>
+                    <div id="knowledge-content" class="min-h-[400px]"></div>
                 `;
-                
                 setTimeout(() => renderNodeDetail(activeKnowledgeNode), 50);
             }
-            setLang(AppState.lang);
         }
 
-        // =========================================================================
-        // Hàm RENDER CHI TIẾT SƠ ĐỒ VÀ HIỂN THỊ TÀI LIỆU WORDPRESS
-        // =========================================================================
+        // --- RENDER GIAO DIỆN MINDMAP CHI TIẾT ---
         window.renderNodeDetail = function(nodeId) {
             activeKnowledgeNode = nodeId;
-            const data = knowledgeBase[nodeId];
-            if(!data) return;
             
-            // Cập nhật UI Active sơ đồ
+            // UI Box Active
             document.querySelectorAll('.k-node').forEach(el => { el.classList.remove('ring-4', 'ring-purple-200', 'scale-105', 'border-purple-500'); el.classList.add('border-slate-200'); });
             const activeEl = document.getElementById(`node-${nodeId}`);
             if(activeEl) { activeEl.classList.remove('border-slate-200'); activeEl.classList.add('ring-4', 'ring-purple-200', 'scale-105', 'border-purple-500'); }
 
-            // RENDER: Tài liệu WP đính kèm
             let savedDocs = JSON.parse(localStorage.getItem('kv_wp_docs')) || {};
             let nodeDocs = savedDocs[nodeId] || [];
-            let wpDocsHtml = nodeDocs.map(doc => `
-                <div class="mt-4 border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm transition hover:shadow-md">
-                    <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 flex justify-between items-center cursor-pointer hover:bg-slate-100" onclick="document.getElementById('doc-${doc.id}').classList.toggle('hidden')">
-                        <h4 class="font-bold text-slate-800 text-[14px] flex items-center gap-2"><i class="fab fa-wordpress text-blue-500"></i> ${doc.title}</h4>
-                        <div class="flex items-center gap-4">
-                            <button onclick="deleteWPDoc('${nodeId}', ${doc.id}); event.stopPropagation();" class="text-xs text-rose-500 hover:underline"><i class="fas fa-trash"></i> Xóa bỏ</button>
-                            <i class="fas fa-chevron-down text-slate-400"></i>
+
+            // HTML DANH SÁCH TÀI LIỆU (KÉO THẢ BÊN DƯỚI)
+            let wpDocsHtml = nodeDocs.map((doc, index) => `
+                <div id="doc-wrapper-${doc.id}" class="mb-3 border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm doc-drag-wrapper" draggable="true" ondragstart="handleDragStart(event, '${nodeId}', ${index})" ondragover="handleDragOver(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${nodeId}', ${index})" ondragend="handleDragEnd(event)">
+                    <div class="bg-slate-50 px-4 py-2 flex justify-between items-center group">
+                        <div class="flex items-center gap-3 flex-grow">
+                            <div class="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 transition px-1"><i class="fas fa-grip-vertical"></i></div>
+                            <h4 class="font-bold text-slate-700 text-[13px] flex items-center gap-2 cursor-pointer hover:text-blue-600" onclick="document.getElementById('doc-${doc.id}').classList.toggle('hidden')">
+                                <i class="fab fa-wordpress text-blue-500"></i> ${doc.title}
+                            </h4>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="deleteWPDoc('${nodeId}', ${doc.id}, '${doc.title.replace(/'/g, "\\'")}');" class="text-xs text-rose-500 hover:bg-rose-50 px-2 py-1 rounded transition"><i class="fas fa-trash"></i></button>
+                            <i class="fas fa-chevron-down text-slate-400 cursor-pointer p-1.5 hover:bg-slate-200 rounded-md" onclick="document.getElementById('doc-${doc.id}').classList.toggle('hidden')"></i>
                         </div>
                     </div>
-                    <div id="doc-${doc.id}" class="p-6 wp-content overflow-x-auto text-[14px] leading-relaxed text-slate-700 hidden bg-white">
-                        ${doc.html}
-                    </div>
+                    <div id="doc-${doc.id}" class="p-5 wp-content overflow-x-auto text-[13px] leading-relaxed text-slate-700 hidden bg-white border-t border-slate-100">${doc.html}</div>
                 </div>
             `).join('');
 
-            // Hiển thị nội dung ra HTML
             document.getElementById('knowledge-content').innerHTML = `
-                <div class="flex items-start gap-4 mb-6">
-                    <div class="w-14 h-14 rounded-2xl ${data.bg} flex items-center justify-center text-2xl shrink-0 shadow-inner"><i class="fas ${data.icon}"></i></div>
-                    <div>
-                        <h3 class="text-xl font-bold text-slate-800">${data.title}</h3>
-                        <p class="text-sm text-slate-500 mt-1">${data.desc}</p>
+                <!-- KHUNG CANVAS MINDMAP XMIND -->
+                <div class="saas-card bg-white mb-6 shadow-sm overflow-hidden">
+                    <div class="px-6 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider"><i class="fas fa-sitemap mr-1"></i> Sơ đồ Thao tác Tự động (AI Mindmap)</p>
+                        <p class="text-[10px] text-slate-400">Cuộn chuột để Zoom. Nhấn giữ nền để kéo. Click <span class="bg-slate-200 text-slate-600 px-1 rounded-full px-1.5">O</span> để đóng/mở nhánh.</p>
                     </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-4">
-                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-4">
-                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2"><i class="fas fa-store"></i> Áp dụng thực tế (Store Flow)</h4>
-                            <p class="text-[13px] text-slate-700 leading-relaxed italic">"${data.realWorld}"</p>
-                        </div>
-                        <div class="border border-slate-200 rounded-xl p-4">
-                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2"><i class="fas fa-layer-group"></i> Cụm tính năng trên Hệ thống</h4>
-                            <ul class="space-y-2">${data.features.map(f => `<li class="text-[13px] text-slate-700 flex items-start gap-2"><i class="fas fa-check-circle text-emerald-500 mt-0.5"></i> <span>${f}</span></li>`).join('')}</ul>
-                        </div>
-                    </div>
-                    <div class="bg-purple-50 border border-purple-100 rounded-xl p-5 flex flex-col">
-                        <h4 class="text-xs font-bold text-purple-600 uppercase tracking-wider mb-3 flex items-center gap-2"><i class="fas fa-lightbulb"></i> Note Giảng Dạy (Trainer Tips)</h4>
-                        <div class="flex-grow flex items-center justify-center text-center p-4 bg-white/60 rounded-lg border border-purple-100 border-dashed">
-                            <p class="text-[14px] font-medium text-slate-700 leading-relaxed">${data.teachNote}</p>
-                        </div>
+                    <div class="w-full h-[550px] bg-[#f8fafc] relative p-4">
+                        <svg id="markmap-svg"></svg>
                     </div>
                 </div>
                 
-                <!-- VÙNG TÀI LIỆU WP -->
-                <div class="mt-8 pt-6 border-t border-slate-200">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-bold text-slate-800"><i class="fas fa-book-open text-blue-600 mr-2"></i> Tài liệu Hướng Dẫn Kèm Theo</h3>
-                        <button onclick="openWPModal('${nodeId}')" class="px-4 py-2 bg-blue-50 text-blue-600 text-[12px] font-bold rounded-lg hover:bg-blue-600 hover:text-white transition shadow-sm border border-blue-100"><i class="fas fa-code mr-1"></i> + Nhúng Code HTML/WP</button>
-                    </div>
-                    ${wpDocsHtml || '<div class="text-center p-10 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-[13px] bg-slate-50/50"><i class="fab fa-wordpress text-3xl mb-2 text-slate-300 block"></i>Bấm nút bên trên để dán mã HTML bài giảng WordPress vào sơ đồ nhánh này.</div>'}
+                <!-- DANH SÁCH BÊN DƯỚI -->
+                <div class="saas-card p-6 bg-white mb-10">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wider"><i class="fas fa-database text-blue-600 mr-2"></i> Tài liệu Gốc (Kéo thả để đổi vị trí)</h3>
+                    ${wpDocsHtml || '<div class="text-center text-slate-400 text-xs italic py-10 border-2 border-dashed rounded-xl">Chưa có dữ liệu cho quy trình này. Bấm nút Trích xuất tính năng ở trên.</div>'}
                 </div>
             `;
+
+            setTimeout(() => renderAutoMindmap(nodeId, nodeDocs), 50);
         };
 
-        // --- WP MODAL FUNCTIONS ---
-        function openWPModal(defaultNode = 'setup') {
-            document.getElementById('wpImportModal').classList.remove('hidden'); document.getElementById('wpImportModal').classList.add('flex');
-            document.getElementById('wpDocNode').value = defaultNode;
-            document.getElementById('wpDocTitle').value = ''; document.getElementById('wpDocHtml').value = '';
-        }
-        function closeWPModal() {
-            document.getElementById('wpImportModal').classList.add('hidden'); document.getElementById('wpImportModal').classList.remove('flex');
-        }
-        function saveWPDoc() {
-            const title = document.getElementById('wpDocTitle').value.trim(); const node = document.getElementById('wpDocNode').value; const html = document.getElementById('wpDocHtml').value.trim();
-            if(!title || !html) return alert("Vui lòng nhập đủ tiêu đề và mã HTML!");
-            let docs = JSON.parse(localStorage.getItem('kv_wp_docs')) || {}; if(!docs[node]) docs[node] = [];
-            docs[node].push({ id: Date.now(), title, html }); localStorage.setItem('kv_wp_docs', JSON.stringify(docs));
-            closeWPModal(); if(typeof activeKnowledgeNode !== 'undefined' && activeKnowledgeNode === node) renderNodeDetail(node);
-        }
-        function deleteWPDoc(nodeId, docId) {
-            if(!confirm("Xóa tài liệu này?")) return;
-            let docs = JSON.parse(localStorage.getItem('kv_wp_docs')) || {};
-            if(docs[nodeId]) { docs[nodeId] = docs[nodeId].filter(d => d.id !== docId); localStorage.setItem('kv_wp_docs', JSON.stringify(docs)); renderNodeDetail(nodeId); }
+        // --- HÀM VẼ MINDMAP (GIỚI HẠN CHIỀU RỘNG CHỮ = MAXWIDTH: 300) ---
+        function renderAutoMindmap(nodeId, nodeDocs) {
+            try {
+                const { Transformer, Markmap } = window.markmap;
+                const transformer = new Transformer();
+                const data = knowledgeBase[nodeId];
+                
+                let mdContent = `# ${data.title.split('. ')[1]}\n`; // Nhánh cha
+                
+                if(nodeDocs.length === 0) {
+                    mdContent += `## Chưa có dữ liệu\n`;
+                } else {
+                    nodeDocs.forEach(doc => {
+                        mdContent += `## ${doc.title.replace(/\n/g, ' ')}\n`;
+                        if(Array.isArray(doc.summary) && doc.summary.length > 0) {
+                            doc.summary.forEach(item => {
+                                if(item.type === 'note') {
+                                    mdContent += `### 🌟 LƯU Ý: ${item.text.replace(/\n/g, ' ')}\n`;
+                                } else {
+                                    mdContent += `### ${item.text.replace(/\n/g, ' ')}\n`;
+                                }
+                            });
+                        }
+                    });
+                }
+
+                const { root } = transformer.transform(mdContent);
+                const svgEl = document.querySelector('#markmap-svg');
+                if(svgEl) {
+                    svgEl.innerHTML = ''; 
+                    Markmap.create(svgEl, { 
+                        autoFit: true,
+                        fitRatio: 0.9,
+                        spacingHorizontal: 80,
+                        spacingVertical: 10,
+                        maxWidth: 300, // ĐÂY LÀ CHÌA KHÓA GIÚP TEXT DÀI TỰ XUỐNG DÒNG, KHÔNG ĐÈ NHAU
+                    }, root);
+
+                    // NHÚNG CSS STYLE TRỰC TIẾP
+                    setTimeout(() => {
+                        d3.selectAll('#markmap-svg .markmap-node').each(function(d) {
+                            const node = d3.select(this);
+                            const div = node.select('foreignObject div').node();
+                            
+                            if(d.depth === 0) {
+                                node.classed('markmap-node-root', true);
+                                if(div) {
+                                    div.style.backgroundColor = '#4f46e5'; div.style.color = '#fff'; div.style.padding = '8px 16px'; 
+                                    div.style.borderRadius = '12px'; div.style.fontSize = '20px'; div.style.border = '2px solid white';
+                                    div.style.boxShadow = '3px 4px 0px rgba(0,0,0,0.2)';
+                                }
+                            } else if (d.depth === 1) {
+                                node.classed('markmap-node-level-1', true);
+                                if(div) {
+                                    div.style.backgroundColor = branchColors[d.state.id % branchColors.length];
+                                    div.style.color = '#1e293b'; div.style.padding = '6px 12px'; div.style.borderRadius = '8px';
+                                    div.style.fontSize = '16px'; div.style.border = '1px solid rgba(0,0,0,0.1)';
+                                }
+                            } else {
+                                if(d.content.includes('🌟 LƯU Ý:')) {
+                                    node.classed('markmap-node-note', true); // Thẻ Vàng
+                                } else {
+                                    node.classed('markmap-node-level-2', true); // Thẻ Trắng nét đứt
+                                    if(div) {
+                                        div.style.backgroundColor = '#fff'; div.style.color = '#475569'; div.style.padding = '4px 10px'; 
+                                        div.style.borderRadius = '6px'; div.style.border = '2px dashed #cbd5e1'; div.style.fontSize = '14px';
+                                    }
+                                }
+                            }
+                        });
+                        d3.selectAll('.markmap-link').style('stroke', '#cbd5e1').style('stroke-width', '2px');
+                    }, 200); 
+                }
+            } catch (error) { console.error("Lỗi vẽ Mindmap:", error); }
         }
 
-        // --- SKETCHPAD (VẼ CANVAS) & TEXT NOTE ---
+        // --- HÀM AI PARSER: LỌC TỪ THỪA, GIỮ TEXT NGẮN GỌN ---
+        function aiExtractStepsFromHTML(html) {
+            let tempDiv = document.createElement("div"); tempDiv.innerHTML = html;
+            let results = [];
+            
+            // Xóa rác (Giới thiệu, lợi ích...)
+            let headingsToRemove = [];
+            tempDiv.querySelectorAll('h2, h3, h4').forEach(h => {
+                let text = h.textContent.toLowerCase();
+                if(text.includes('giới thiệu') || text.includes('lợi ích') || text.includes('tổng quan')) { headingsToRemove.push(h); }
+            });
+            headingsToRemove.forEach(h => {
+                let next = h.nextElementSibling;
+                while(next && !next.tagName.match(/^H[1-6]$/)) { let toDelete = next; next = next.nextElementSibling; toDelete.remove(); }
+                h.remove();
+            });
+
+            // Lấy các Bước thao tác
+            let lists = tempDiv.querySelectorAll('ol > li, ul > li, p');
+            lists.forEach(el => {
+                // HÀM LỌC TỪ THỪA SIÊU THÔNG MINH
+                let text = el.textContent.replace(/\s+/g, ' ').trim();
+                text = text.replace(/^Tình huống:?\s*/i, '')
+                           .replace(/^Thao tác( thực hiện)?( như sau)?:?\s*/i, '')
+                           .replace(/^(Để|Từ|Tại)\s+/i, '')
+                           .trim();
+                
+                // Viết hoa chữ cái đầu
+                if(text.length > 0) text = text.charAt(0).toUpperCase() + text.slice(1);
+
+                if(text.length > 5) {
+                    if(text.toLowerCase().includes('lưu ý:') || text.toLowerCase().includes('chú ý:')) {
+                        let parts = text.split(/lưu ý:|chú ý:/i);
+                        if(parts[0].trim().length > 5) results.push({ type: 'step', text: parts[0].trim().substring(0, 80) + (parts[0].length>80?'...':'') });
+                        if(parts[1] && parts[1].trim().length > 5) results.push({ type: 'note', text: parts[1].trim().substring(0, 100) + (parts[1].length>100?'...':'') });
+                    } else {
+                        // Tối ưu ngắn gọn: Chỉ lấy câu đầu tiên, tối đa 80 ký tự để map khỏi bị tràn
+                        let sentences = text.split(/(?<=[.!?])\s+/);
+                        let finalStr = sentences[0].substring(0, 80);
+                        if(sentences[0].length > 80) finalStr += '...';
+                        if(el.tagName === 'LI') results.push({ type: 'step', text: finalStr }); // Chỉ ưu tiên thẻ LI (Các bước đánh số)
+                    }
+                }
+            });
+
+            // Fallback nếu bài viết không có thẻ LI (danh sách)
+            if(results.length === 0) {
+                tempDiv.querySelectorAll('h3, h4').forEach(h => {
+                    let text = h.textContent.replace(/^[IVX\d\.\-\s]+/, '').trim();
+                    if(text.length > 5 && text.length < 50) results.push({ type: 'step', text: text });
+                });
+            }
+
+            // Lọc trùng lặp
+            let uniqueResults = []; let seenText = new Set();
+            for(let item of results) { if(!seenText.has(item.text)) { seenText.add(item.text); uniqueResults.push(item); } }
+
+            return uniqueResults.slice(0, 8); // Tối đa 8 nhánh nhỏ
+        }
+
+        // --- UPLOAD TÀI LIỆU ---
+        function openWPModal() {
+            document.getElementById('wpImportModal').classList.remove('hidden'); document.getElementById('wpImportModal').classList.add('flex');
+            document.getElementById('wpDocNode').value = activeKnowledgeNode; document.getElementById('wpDocTitle').value = ''; document.getElementById('wpDocHtml').value = '';
+            document.getElementById('aiLoadingOverlay').classList.add('hidden'); document.getElementById('aiLoadingOverlay').classList.remove('flex');
+        }
+        function closeWPModal() { document.getElementById('wpImportModal').classList.add('hidden'); document.getElementById('wpImportModal').classList.remove('flex'); }
+        
+        function saveWPDocWithAI() {
+            const title = document.getElementById('wpDocTitle').value.trim(); const node = document.getElementById('wpDocNode').value; const html = document.getElementById('wpDocHtml').value.trim();
+            if(!title || !html) return alert("Vui lòng nhập đủ Tiêu đề và dán mã HTML!");
+            
+            document.getElementById('aiLoadingOverlay').classList.remove('hidden'); document.getElementById('aiLoadingOverlay').classList.add('flex');
+
+            setTimeout(() => {
+                const autoSummarySteps = aiExtractStepsFromHTML(html);
+                let docs = JSON.parse(localStorage.getItem('kv_wp_docs')) || {}; if(!docs[node]) docs[node] = [];
+                
+                docs[node].push({ id: Date.now(), title, summary: autoSummarySteps, html }); 
+                
+                try { localStorage.setItem('kv_wp_docs', JSON.stringify(docs)); } 
+                catch (e) {
+                    alert("CẢNH BÁO: Bộ nhớ trình duyệt đã đầy do lưu quá nhiều tài liệu HTML. Hệ thống chỉ lưu được Sơ đồ thao tác.");
+                    docs[node][docs[node].length - 1].html = "<i>Dữ liệu HTML gốc không được lưu để tối ưu dung lượng trình duyệt. Bạn vẫn xem được Mindmap.</i>";
+                    localStorage.setItem('kv_wp_docs', JSON.stringify(docs)); 
+                }
+
+                closeWPModal(); if(activeKnowledgeNode === node) renderNodeDetail(node);
+            }, 1200);
+        }
+
+        // --- BẢO MẬT XÓA TÀI LIỆU ---
+        function deleteWPDoc(nodeId, docId, docTitle) {
+            docToDelete = { nodeId, docId };
+            document.getElementById('deleteDocTitle').innerText = docTitle; document.getElementById('deleteConfirmInput').value = ''; checkDeleteInput();
+            document.getElementById('deleteConfirmModal').classList.remove('hidden'); document.getElementById('deleteConfirmModal').classList.add('flex');
+        }
+        function closeDeleteModal() { document.getElementById('deleteConfirmModal').classList.add('hidden'); document.getElementById('deleteConfirmModal').classList.remove('flex'); docToDelete = null; }
+        function checkDeleteInput() {
+            const val = document.getElementById('deleteConfirmInput').value.trim().toUpperCase(); const btn = document.getElementById('btnConfirmDelete');
+            if (val === 'XOA') { btn.classList.remove('bg-rose-200', 'text-rose-400', 'cursor-not-allowed'); btn.classList.add('bg-rose-600', 'text-white', 'hover:bg-rose-700', 'shadow-md'); btn.disabled = false; } 
+            else { btn.classList.add('bg-rose-200', 'text-rose-400', 'cursor-not-allowed'); btn.classList.remove('bg-rose-600', 'text-white', 'hover:bg-rose-700', 'shadow-md'); btn.disabled = true; }
+        }
+        function executeDelete() {
+            if(!docToDelete) return; let docs = JSON.parse(localStorage.getItem('kv_wp_docs')) || {};
+            if(docs[docToDelete.nodeId]) { docs[docToDelete.nodeId] = docs[docToDelete.nodeId].filter(d => d.id !== docToDelete.docId); localStorage.setItem('kv_wp_docs', JSON.stringify(docs)); renderNodeDetail(docToDelete.nodeId); }
+            closeDeleteModal();
+        }
+
+        // --- DRAG & DROP LOGIC ---
+        let dragStartIndex = null; let dragNodeId = null;
+        function handleDragStart(e, nodeId, index) { dragStartIndex = index; dragNodeId = nodeId; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.classList.add('opacity-40', 'border-purple-400', 'ring-2', 'ring-purple-200'), 0); }
+        function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; return false; }
+        function handleDragEnter(e) { e.preventDefault(); const wrapper = e.target.closest('.doc-drag-wrapper'); if(wrapper) wrapper.classList.add('border-t-4', 'border-t-blue-500'); }
+        function handleDragLeave(e) { const wrapper = e.target.closest('.doc-drag-wrapper'); if(wrapper) wrapper.classList.remove('border-t-4', 'border-t-blue-500'); }
+        function handleDrop(e, nodeId, dropIndex) {
+            e.stopPropagation(); const wrapper = e.target.closest('.doc-drag-wrapper'); if(wrapper) wrapper.classList.remove('border-t-4', 'border-t-blue-500');
+            if (dragNodeId !== nodeId || dragStartIndex === dropIndex) return;
+            let docs = JSON.parse(localStorage.getItem('kv_wp_docs')) || {}; let arr = docs[nodeId];
+            const draggedItem = arr.splice(dragStartIndex, 1)[0]; arr.splice(dropIndex, 0, draggedItem); 
+            localStorage.setItem('kv_wp_docs', JSON.stringify(docs)); renderNodeDetail(nodeId); return false;
+        }
+        function handleDragEnd(e) { e.target.classList.remove('opacity-40', 'border-purple-400', 'ring-2', 'ring-purple-200'); document.querySelectorAll('.doc-drag-wrapper').forEach(el => el.classList.remove('border-t-4', 'border-t-blue-500')); }
+
+        // --- SKETCHPAD (SỔ VẼ) ---
         let sketchCanvas, ctx, isDrawing = false, currentTool = 'pen', currentColor = '#1e293b';
         function initSketchpad() {
             sketchCanvas = document.getElementById('sketchCanvas'); if(!sketchCanvas) return;
-            ctx = sketchCanvas.getContext('2d'); sketchCanvas.width = 480; sketchCanvas.height = 520;
-            ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-            const savedImg = localStorage.getItem('kv_sketchpad');
-            if(savedImg) { let img = new Image(); img.onload = () => ctx.drawImage(img, 0, 0); img.src = savedImg; }
+            ctx = sketchCanvas.getContext('2d'); sketchCanvas.width = 480; sketchCanvas.height = 520; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            const savedImg = localStorage.getItem('kv_sketchpad'); if(savedImg) { let img = new Image(); img.onload = () => ctx.drawImage(img, 0, 0); img.src = savedImg; }
             sketchCanvas.addEventListener('mousedown', startDraw); sketchCanvas.addEventListener('mousemove', drawLine);
             sketchCanvas.addEventListener('mouseup', stopDraw); sketchCanvas.addEventListener('mouseout', stopDraw);
         }
         function getDrawPos(e) { const rect = sketchCanvas.getBoundingClientRect(); return { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
         function startDraw(e) { isDrawing = true; const pos = getDrawPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
-        function drawLine(e) {
-            if (!isDrawing) return; const pos = getDrawPos(e);
-            if (currentTool === 'eraser') { ctx.globalCompositeOperation = 'destination-out'; ctx.lineWidth = 20; } 
-            else { ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = currentColor; ctx.lineWidth = 3; }
-            ctx.lineTo(pos.x, pos.y); ctx.stroke();
-        }
+        function drawLine(e) { if (!isDrawing) return; const pos = getDrawPos(e); if (currentTool === 'eraser') { ctx.globalCompositeOperation = 'destination-out'; ctx.lineWidth = 20; } else { ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = currentColor; ctx.lineWidth = 3; } ctx.lineTo(pos.x, pos.y); ctx.stroke(); }
         function stopDraw() { if(isDrawing) { ctx.closePath(); isDrawing = false; localStorage.setItem('kv_sketchpad', sketchCanvas.toDataURL()); } }
         function setDrawMode(tool, color) { currentTool = tool; if(color) currentColor = color; }
         function clearCanvas() { if(confirm('XÓA SẠCH toàn bộ hình vẽ?')) { ctx.clearRect(0, 0, sketchCanvas.width, sketchCanvas.height); localStorage.removeItem('kv_sketchpad'); } }
-        
         function switchNoteTab(tab) {
-            const dBtn = document.getElementById('tab-draw'); const tBtn = document.getElementById('tab-text');
-            const drawArea = document.getElementById('drawArea'); const textArea = document.getElementById('stickyNoteText');
-            if(tab === 'draw') {
-                dBtn.className = "flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500";
-                tBtn.className = "flex-1 py-2.5 font-semibold text-slate-500 hover:text-slate-800 bg-slate-50 border-b border-slate-200";
-                drawArea.classList.remove('hidden'); textArea.classList.add('hidden');
-            } else {
-                tBtn.className = "flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500";
-                dBtn.className = "flex-1 py-2.5 font-semibold text-slate-500 hover:text-slate-800 bg-slate-50 border-b border-slate-200";
-                textArea.classList.remove('hidden'); drawArea.classList.add('hidden');
-            }
+            const dBtn = document.getElementById('tab-draw'); const tBtn = document.getElementById('tab-text'); const drawArea = document.getElementById('drawArea'); const textArea = document.getElementById('stickyNoteText');
+            if(tab === 'draw') { dBtn.className = "flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500"; tBtn.className = "flex-1 py-2.5 font-semibold text-slate-500 bg-slate-50 border-b border-slate-200"; drawArea.classList.remove('hidden'); textArea.classList.add('hidden'); } 
+            else { tBtn.className = "flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500"; dBtn.className = "flex-1 py-2.5 font-semibold text-slate-500 bg-slate-50 border-b border-slate-200"; textArea.classList.remove('hidden'); drawArea.classList.add('hidden'); }
         }
-        function toggleNotes() { document.getElementById('chatWidget').classList.remove('active'); document.getElementById('notesWidget').classList.toggle('active'); document.getElementById('stickyNoteText').value = localStorage.getItem('kv_trainer_notes') || ''; }
+        function toggleNotes() { document.getElementById('notesWidget').classList.toggle('active'); document.getElementById('stickyNoteText').value = localStorage.getItem('kv_trainer_notes') || ''; }
         function saveNotes() { localStorage.setItem('kv_trainer_notes', document.getElementById('stickyNoteText').value); }
-        function toggleChat() { document.getElementById('notesWidget').classList.remove('active'); document.getElementById('chatWidget').classList.toggle('active'); }
-        
-        // --- CHARTS & HELPERS ---
-        function updateStatusChart() {
-            const ctx = document.getElementById('statusChart'); if(!ctx) return;
-            if(statusChartInstance) statusChartInstance.destroy();
-            statusChartInstance = new Chart(ctx.getContext('2d'), { type: 'doughnut', data: { labels:['Hoàn thành', 'Đang diễn ra', 'Hủy'], datasets: [{ data: [15, 5, 2], backgroundColor:['#3b82f6', '#0ea5e9', '#ef4444'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
-        }
-        function updatePerfChart() {
-            const ctx = document.getElementById('performanceChart'); if(!ctx) return;
-            if(perfChartInstance) perfChartInstance.destroy();
-            perfChartInstance = new Chart(ctx.getContext('2d'), { type: 'bar', data: { labels: ['Cơ bản', 'Nâng cao', 'Chuyên đề'], datasets: [{ label: 'Đạt', data: [50, 30, 20], backgroundColor: '#10b981' }, { label: 'Trượt', data: [10, 15, 5], backgroundColor: '#ef4444' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { x: {stacked: true}, y: {stacked: true} } } });
-        }
-        function renderMerchHTML() { document.getElementById('merchContainer').innerHTML = `<div class="text-center text-xs text-slate-400 mt-10">Kho quà tặng đang trống</div>`; }
 
-        window.onload = () => {
-            const prof = JSON.parse(localStorage.getItem('kv_trainer_profile'));
-            if(prof) {
-                document.getElementById('display-prof-name').innerText = prof.name;
-                document.getElementById('display-prof-title').innerText = prof.title;
-                document.getElementById('display-prof-ava').innerText = prof.name.charAt(0).toUpperCase();
-            }
-            switchTab('tong-quan');
-            setTimeout(initSketchpad, 1000); // Khởi tạo Sổ vẽ
-        };
+        window.onload = () => { switchTab('kien-thuc'); setTimeout(initSketchpad, 1000); };
     </script>
 </body>
 </html>
