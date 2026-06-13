@@ -312,10 +312,10 @@ Trân trọng,</textarea>
             if(existIdx >= 0) db[existIdx] = {...db[existIdx], ...payload}; else db.push(payload);
             localStorage.setItem('kv_master_db', JSON.stringify(db));
 
-            // 2. Bắn lên Google Sheets API
+            // 2. Bắn lên Google Sheets API (Đã fix lỗi CORS giống file Thuế)
             fetch(GOOGLE_API_URL, {
-                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-            }).then(() => {
+                method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload)
+            }).then(r => r.json()).then(() => {
                 btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Xác nhận Đẩy Dữ liệu';
                 btn.classList.remove('opacity-70', 'pointer-events-none');
                 document.getElementById('successModal').classList.add('active');
