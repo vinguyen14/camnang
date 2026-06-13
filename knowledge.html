@@ -69,7 +69,6 @@
             </div>
             <nav class="flex-1 overflow-y-auto py-2 custom-scrollbar">
                 <div class="nav-group-title">TỔNG QUAN</div>
-                <!-- LINK VỀ TRANG CHỦ -->
                 <a href="index.html" class="nav-item"><i class="fas fa-columns"></i> <span>Bảng điều khiển</span></a>
                 <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i> <span>Thiết lập</span></a>
 
@@ -164,7 +163,7 @@
                     <i class="fas fa-robot text-purple-600 text-xl mt-0.5"></i>
                     <div>
                         <p class="text-xs font-bold text-purple-800">Bot thông minh cào dữ liệu URL</p>
-                        <p class="text-[11px] text-purple-600 mt-1">Dán Link vào. Google App Scripts sẽ tự lấy HTML, AI sẽ tự gọt sạch chữ thừa, chỉ trích xuất Lệnh Thao tác để vẽ Sơ đồ XMind.</p>
+                        <p class="text-[11px] text-purple-600 mt-1">Dán Link vào. Hệ thống sẽ tự chạy vào Web lấy HTML, AI sẽ tự gọt sạch chữ thừa để vẽ Sơ đồ XMind.</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -181,7 +180,7 @@
                     </div>
                 </div>
                 <div class="relative" id="htmlInputContainer">
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Dán Link bài viết</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Dán Link bài viết (Từ web Hướng dẫn)</label>
                     <input type="url" id="wpDocUrl" class="saas-input w-full !text-blue-600" placeholder="https://www.kiotviet.vn/huong-dan...">
                     <div id="aiLoadingOverlay" class="absolute inset-0 bg-slate-900/80 rounded-lg hidden flex-col items-center justify-center z-10"><i class="fas fa-circle-notch fa-spin text-purple-400 text-4xl mb-3"></i><p class="text-white font-bold text-sm">Bot đang cào dữ liệu từ URL...</p></div>
                 </div>
@@ -207,9 +206,11 @@
 
     <script>
         // ==========================================
-        // DÁN LINK API GOOGLE APP SCRIPT CỦA BẠN VÀO ĐÂY
+        // HÀM LẤY API ĐỘNG TỪ BỘ NHỚ LƯU TRỮ (DO FILE SETTINGS CẤP)
         // ==========================================
-        const GAS_API_URL = "DÁN_LINK_WEB_APP_CỦA_BẠN_VÀO_ĐÂY"; 
+        function getApiUrl() {
+            return localStorage.getItem('kv_api_url') || "";
+        }
 
         localforage.config({ name: 'TrainerOS_Database', storeName: 'ld_knowledge_base' });
 
@@ -225,13 +226,15 @@
         let activeKnowledgeNode = "setup"; 
         let currentTargetDocId = null;
 
-        // --- HÀM 1: KÉO DỮ LIỆU TỪ GOOGLE SHEETS XUỐNG BROWSER ---
+        // --- HÀM 1: ĐỒNG BỘ GOOGLE SHEETS ---
         async function syncFromGoogleSheets() {
-            if(GAS_API_URL === "DÁN_LINK_WEB_APP_CỦA_BẠN_VÀO_ĐÂY") return alert("Bạn chưa cập nhật link API Google Apps Script vào source code!");
+            const apiUrl = getApiUrl();
+            if(!apiUrl) return alert("Vui lòng vào tab THIẾT LẬP để điền Link API Google Apps Script trước khi đồng bộ!");
+            
             const icon = document.getElementById('syncIcon'); icon.classList.add('fa-spin');
             
             try {
-                let response = await fetch(GAS_API_URL); let json = await response.json();
+                let response = await fetch(apiUrl); let json = await response.json();
                 if(json.knowledge) {
                     let newDocs = {};
                     json.knowledge.forEach(row => {
@@ -284,9 +287,10 @@
             let totalDocs = 0; Object.values(savedDocs).forEach(arr => totalDocs += arr.length); document.getElementById('docCount').innerText = totalDocs;
 
             let wpDocsHtml = nodeDocs.map((doc, index) => `
-                <div id="doc-wrapper-${doc.id}" class="mb-3 border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                <div id="doc-wrapper-${doc.id}" class="mb-3 border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm doc-drag-wrapper" draggable="true" ondragstart="handleDragStart(event, '${nodeId}', ${index})" ondragover="handleDragOver(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${nodeId}', ${index})" ondragend="handleDragEnd(event)">
                     <div class="bg-slate-50 px-4 py-2 flex justify-between items-center group">
                         <div class="flex items-center gap-3 flex-grow">
+                            <div class="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 transition px-1"><i class="fas fa-grip-vertical"></i></div>
                             <button onclick="openSummaryModal(${doc.id})" class="px-2 py-1 text-[10px] bg-amber-100 text-amber-600 font-bold rounded hover:bg-amber-200 transition shrink-0"><i class="fas fa-bolt"></i> Tóm tắt</button>
                             <h4 class="font-bold text-slate-700 text-[13px] flex items-center gap-2 cursor-pointer hover:text-blue-600" onclick="document.getElementById('doc-${doc.id}').classList.toggle('hidden')">
                                 <i class="fab fa-wordpress text-blue-500"></i> ${doc.title}
@@ -310,8 +314,8 @@
                     <div class="w-full h-[550px] bg-[#f8fafc] relative p-4"><svg id="markmap-svg"></svg></div>
                 </div>
                 <div class="saas-card p-6 bg-white mb-10">
-                    <h3 class="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wider"><i class="fas fa-database text-blue-600 mr-2"></i> Tài liệu Gốc</h3>
-                    ${wpDocsHtml || '<div class="text-center text-slate-400 text-xs italic py-10 border-2 border-dashed rounded-xl">Chưa có dữ liệu cho quy trình này. Bấm nút Nhập bằng URL. Hoặc bấm Nút Đồng bộ Google Sheet.</div>'}
+                    <h3 class="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wider"><i class="fas fa-database text-blue-600 mr-2"></i> Tài liệu Gốc (Đồng bộ từ Google Sheets)</h3>
+                    ${wpDocsHtml || '<div class="text-center text-slate-400 text-xs italic py-10 border-2 border-dashed rounded-xl">Chưa có dữ liệu cho quy trình này. Bấm nút Nhập bằng URL ở trên.</div>'}
                 </div>
             `;
             setTimeout(() => renderAutoMindmap(nodeId, nodeDocs), 50);
@@ -349,61 +353,57 @@
             } catch (error) {}
         }
 
-        // --- HÀM AI PARSER SỬA LẠI: NÉN CÂU NGẮN GỌN HƠN ---
+        // --- HÀM AI PARSER ---
         function aiExtractStepsFromHTML(html) {
             let tempDiv = document.createElement("div"); tempDiv.innerHTML = html; let results = [];
             tempDiv.querySelectorAll('h2, h3, h4').forEach(h => { let t = h.textContent.toLowerCase(); if(t.includes('giới thiệu') || t.includes('lợi ích') || t.includes('tổng quan')) { let next = h.nextElementSibling; while(next && !next.tagName.match(/^H[1-6]$/)) { let toDelete = next; next = next.nextElementSibling; toDelete.remove(); } h.remove(); } });
-            
             tempDiv.querySelectorAll('ol > li, ul > li, p > strong').forEach(el => {
                 let text = el.textContent.replace(/\s+/g, ' ').trim();
-                
-                // LỌC TỪ RƯỜM RÀ: Giữ nguyên ý, cắt bỏ cụm từ vô nghĩa
-                text = text.replace(/^(Tình huống|Thao tác( thực hiện)?( như sau)?|Mục đích|Để( làm việc này)?|Từ( màn hình)?|Tại|Sau đó|Tiếp theo|Bạn cần( phải)?|Hệ thống sẽ( yêu cầu)?|Vui lòng):?\s*/i, '')
-                           .replace(/^(Bấm|Nhấn) (vào )?(nút|mục|tab|biểu tượng)\s+/i, 'Chọn ')
-                           .trim();
-                
+                text = text.replace(/^(Tình huống|Thao tác( thực hiện)?( như sau)?|Mục đích|Để|Từ|Tại|Sau đó|Tiếp theo|Bạn cần( phải)?|Hệ thống sẽ|Vui lòng):?\s*/i, '').replace(/^(Bấm|Nhấn) (vào )?(nút|mục|tab)\s+/i, 'Chọn ').trim();
                 if(text.length > 0) text = text.charAt(0).toUpperCase() + text.slice(1);
-                
                 if(text.length > 5) {
                     if(text.toLowerCase().includes('lưu ý:') || text.toLowerCase().includes('chú ý:')) {
                         let parts = text.split(/lưu ý:|chú ý:/i);
                         if(parts[0].trim().length > 5) results.push({ type: 'step', text: parts[0].trim() });
                         if(parts[1] && parts[1].trim().length > 5) results.push({ type: 'note', text: parts[1].trim() });
                     } else {
-                        // Lấy duy nhất 1 câu đầu tiên đến dấu chấm kết thúc
-                        let firstSentence = text.split(/[.;]|\.(?=\s)/)[0].trim();
-                        if(el.tagName === 'LI' || el.tagName === 'STRONG') results.push({ type: 'step', text: firstSentence });
+                        let firstClause = text.split(/[.;]|\.(?=\s)/)[0].trim();
+                        if(el.tagName === 'LI' || el.tagName === 'STRONG') results.push({ type: 'step', text: firstClause });
                     }
                 }
             });
-            
             let uniqueResults = []; let seenText = new Set();
             for(let item of results) { if(!seenText.has(item.text)) { seenText.add(item.text); uniqueResults.push(item); } }
             return uniqueResults.slice(0, 10);
         }
 
-        // --- HÀM 2: ĐẨY DỮ LIỆU URL LÊN GOOGLE SHEETS BẰNG POST ---
+        // --- HÀM 2: ĐẨY LÊN GOOGLE SHEETS ---
         function openWPModal() { document.getElementById('wpImportModal').classList.remove('hidden'); document.getElementById('wpImportModal').classList.add('flex'); document.getElementById('aiLoadingOverlay').classList.add('hidden'); }
         function closeWPModal() { document.getElementById('wpImportModal').classList.add('hidden'); document.getElementById('wpImportModal').classList.remove('flex'); }
         
         async function saveDocViaAPI() {
-            if(GAS_API_URL === "DÁN_LINK_WEB_APP_CỦA_BẠN_VÀO_ĐÂY") return alert("Cần gắn Link API Google Sheets vào Code!");
+            const apiUrl = getApiUrl();
+            if(!apiUrl) return alert("Vui lòng vào tab THIẾT LẬP để dán Link API Google Sheets của bạn trước!");
+            
             const title = document.getElementById('wpDocTitle').value.trim(); const node = document.getElementById('wpDocNode').value; const url = document.getElementById('wpDocUrl').value.trim();
             if(!title || !url) return alert("Vui lòng nhập Tên bài và Link URL WordPress!");
             
             document.getElementById('aiLoadingOverlay').classList.remove('hidden'); document.getElementById('aiLoadingOverlay').classList.add('flex');
 
             try {
-                let response = await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify({ action: "add_knowledge", node: node, title: title, url: url }) });
+                let response = await fetch(apiUrl, { method: 'POST', body: JSON.stringify({ action: "add_knowledge", node: node, title: title, url: url }) });
                 let result = await response.json();
                 if(result.status === "success") { closeWPModal(); await syncFromGoogleSheets(); }
-            } catch (err) { alert("Lỗi đẩy lên Sheet!"); }
+            } catch (err) { alert("Lỗi đẩy lên Sheet!"); document.getElementById('aiLoadingOverlay').classList.add('hidden'); }
         }
 
         async function deleteDocViaAPI(docId) {
+            const apiUrl = getApiUrl();
+            if(!apiUrl) return alert("Vui lòng vào tab THIẾT LẬP để dán Link API Google Sheets của bạn trước!");
+
             if(!confirm("Bạn có chắc chắn muốn xóa bài học này khỏi Google Sheets?")) return;
             try {
-                let response = await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify({ action: "delete_knowledge", id: docId }) });
+                let response = await fetch(apiUrl, { method: 'POST', body: JSON.stringify({ action: "delete_knowledge", id: docId }) });
                 let result = await response.json();
                 if(result.status === "success") { await syncFromGoogleSheets(); }
             } catch (err) { alert("Lỗi khi xóa!"); }
@@ -427,9 +427,16 @@
         function closeSummaryModal() { document.getElementById('summaryModal').classList.add('hidden'); document.querySelector('#summaryModal > div').classList.add('scale-95'); }
         function scrollToDoc() { closeSummaryModal(); if(currentTargetDocId) { const targetEl = document.getElementById(`doc-wrapper-${currentTargetDocId}`); const contentEl = document.getElementById(`doc-${currentTargetDocId}`); if(targetEl) { contentEl.classList.remove('hidden'); targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); targetEl.classList.add('ring-4', 'ring-purple-300'); setTimeout(() => targetEl.classList.remove('ring-4', 'ring-purple-300'), 1500); } } }
 
-        // ==========================================
-        // WHITEBOARD (FABRIC.JS) KẾT HỢP NOTEPAD
-        // ==========================================
+        // --- DRAG & DROP LOGIC ---
+        let dragStartIndex = null; let dragNodeId = null;
+        function handleDragStart(e, nodeId, index) { dragStartIndex = index; dragNodeId = nodeId; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.classList.add('opacity-40', 'border-purple-400', 'ring-2', 'ring-purple-200'), 0); }
+        function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; return false; }
+        function handleDragEnter(e) { e.preventDefault(); const wrapper = e.target.closest('.doc-drag-wrapper'); if(wrapper) wrapper.classList.add('border-t-4', 'border-t-blue-500'); }
+        function handleDragLeave(e) { const wrapper = e.target.closest('.doc-drag-wrapper'); if(wrapper) wrapper.classList.remove('border-t-4', 'border-t-blue-500'); }
+        async function handleDrop(e, nodeId, dropIndex) { e.stopPropagation(); const wrapper = e.target.closest('.doc-drag-wrapper'); if(wrapper) wrapper.classList.remove('border-t-4', 'border-t-blue-500'); if (dragNodeId !== nodeId || dragStartIndex === dropIndex) return; let docs = await localforage.getItem('kv_wp_docs') || {}; let arr = docs[nodeId]; const draggedItem = arr.splice(dragStartIndex, 1)[0]; arr.splice(dropIndex, 0, draggedItem); await localforage.setItem('kv_wp_docs', docs); renderNodeDetail(nodeId); return false; }
+        function handleDragEnd(e) { e.target.classList.remove('opacity-40', 'border-purple-400', 'ring-2', 'ring-purple-200'); document.querySelectorAll('.doc-drag-wrapper').forEach(el => el.classList.remove('border-t-4', 'border-t-blue-500')); }
+
+        // --- WHITEBOARD (SỔ VẼ) ---
         let fCanvas = null;
 
         function switchNoteTab(tab) {
