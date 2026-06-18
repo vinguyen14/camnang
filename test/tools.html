@@ -934,6 +934,28 @@
                 }, 2000); 
             });
         }
+        // Thêm tính năng Clear & Đóng gói Data
+        function clearHrmData() {
+            if(confirm("Bạn có chắc chắn muốn xóa toàn bộ dữ liệu đang thao tác không?")) {
+                document.getElementById('hrmRawData').value = '';
+                document.getElementById('hrmOut1').value = '';
+                document.getElementById('hrmOut2').value = '';
+                document.getElementById('hrm-count-1').innerText = '0';
+                document.getElementById('hrm-count-2').innerText = '0';
+                hrmDataCache = { m2: { raw: '', kv1: '', tax: '' }, m3: { raw: '', fnb: '' } };
+            }
+        }
+
+        function saveAndPackData(courseCode, outId) {
+            const data = document.getElementById(outId).value.trim();
+            if(!data || data === 'Không có dữ liệu') {
+                alert("Không có dữ liệu hợp lệ để đóng gói!"); return;
+            }
+            if(confirm(`Bạn có muốn ĐÓNG GÓI danh sách này và chuyển nó vào bộ nhớ tạm của khóa ${courseCode} không? \n(Khi sang trang ${courseCode}, danh sách sẽ được tự động lấy ra để chấm điểm).`)) {
+                localStorage.setItem(`kv_roster_${courseCode}`, data);
+                alert(`✅ Đã đóng gói thành công!\n\nHãy nhấn OK, sau đó nhấp vào menu "Sản phẩm KV1" ở Sidebar bên trái để tiếp tục quy trình.`);
+            }
+        }
 
         // TOOL 2: TRA CỨU EMAIL (LƯU TRẠNG THÁI CHECKBOX)
         let globalSelectedEmails = new Set();
