@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sơ đồ Vận hành | Trainer OS</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@600;700;800&family=Patrick+Hand&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.15.4/dist/browser/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.15.4/dist/browser/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow: hidden; }
+        .sidebar-saas { background-color: #ffffff; border-right: 1px solid #e2e8f0; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .nav-group-title { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; padding: 0 24px; margin-top: 20px; margin-bottom: 8px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 8px 24px; font-size: 13px; font-weight: 500; color: #475569; cursor: pointer; transition: all 0.2s; border-right: 3px solid transparent; }
+        .nav-item:hover { background-color: #f8fafc; color: #1e293b; }
+        .nav-item.active { background-color: #eff6ff; color: #2563eb; font-weight: 600; border-right-color: #2563eb; }
+        .nav-item i { width: 16px; text-align: center; font-size: 14px; }
+        .content-area { height: calc(100vh - 60px); overflow-y: auto; overflow-x: hidden; padding: 20px 28px; }
+        .saas-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .saas-input { width: 100%; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; }
+        .saas-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .btn-outline { background: white; color: #334155; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .wp-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 12px 0; }
+        .wp-content iframe, .wp-content video { width: 100%; aspect-ratio: 16/9; border-radius: 8px; margin: 12px 0; }
+        
+        /* STYLE MINDMAP TỰ ĐỘNG XMIND */
+        #markmap-svg { cursor: grab; width: 100%; height: 100%; font-family: 'Nunito', sans-serif !important; }
+        #markmap-svg:active { cursor: grabbing; }
+        .markmap-node-root > foreignObject > div { background-color: #3b82f6 !important; color: white !important; padding: 8px 20px !important; border-radius: 12px !important; font-size: 18px !important; font-weight: 800 !important; border: 2px solid white !important; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3) !important; }
+        .markmap-node-level-1 > foreignObject > div { padding: 6px 16px !important; border-radius: 8px !important; font-size: 15px !important; font-weight: 700 !important; color: #1e293b !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important; border: 1px solid rgba(0,0,0,0.1) !important; }
+        .markmap-node-level-2 > foreignObject > div { padding: 4px 12px !important; border-radius: 6px !important; font-size: 14px !important; font-weight: 600 !important; color: #475569 !important; background-color: #ffffff !important; border: 1px solid #cbd5e1 !important; }
+        .markmap-node-note > foreignObject > div { background-color: #fef3c7 !important; color: #b45309 !important; border: 1px dashed #f59e0b !important; font-size: 13px !important; padding: 6px 12px !important; border-radius: 8px !important; font-weight: 700 !important; }
+
+        @keyframes scanline { 0% { top: 0; } 100% { top: 100%; } }
+        .ai-scanning::after { content: ''; position: absolute; left: 0; right: 0; height: 2px; background: #8b5cf6; box-shadow: 0 0 10px #8b5cf6; animation: scanline 1.5s linear infinite; }
+
+        /* WIDGET BẢNG VẼ GLOBAL */
+        .widget-panel { position: fixed; bottom: 80px; right: 30px; width: 450px; height: 600px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 35px -5px rgba(0,0,0,0.2); border: 1px solid #e2e8f0; z-index: 1000; transform: translateY(10px); opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; overflow: hidden; }
+        .widget-panel.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
+        .widget-panel.fullscreen-widget { width: 100vw !important; height: 100vh !important; bottom: 0 !important; right: 0 !important; border-radius: 0 !important; }
+        .floating-tool { bottom: 20px; right: 30px; z-index: 100; }
+        .wb-tool-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #475569; transition: all 0.2s; font-size: 14px; background: #f8fafc; border: 1px solid #e2e8f0; }
+        .wb-tool-btn:hover { background-color: #e2e8f0; color: #2563eb; }
+        .wb-tool-btn.active { background-color: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+        input[type="color"] { -webkit-appearance: none; border: none; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; padding: 0; }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: 1px solid #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="flex h-screen">
+        <aside class="sidebar-saas w-64 flex flex-col z-50 shrink-0">
+            <div class="h-16 flex items-center px-6 border-b border-slate-100 shrink-0">
+                <div class="w-6 h-6 bg-blue-600 rounded flex items-center justify-center text-white text-[10px] mr-3"><i class="fas fa-layer-group"></i></div>
+                <span class="font-bold text-slate-800 text-sm tracking-tight">Agentic L&D</span>
+            </div>
+            <nav class="flex-1 overflow-y-auto py-2 custom-scrollbar">
+                <div class="nav-group-title">TỔNG QUAN</div>
+                <a href="index.html" class="nav-item"><i class="fas fa-columns"></i> <span>Bảng điều khiển</span></a>
+                <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i> <span>Thiết lập</span></a>
+
+                <div class="nav-group-title">QUẢN TRỊ KHÓA HỌC</div>
+                <a href="spcb.html" class="nav-item"><i class="fas fa-box"></i> <span>Cơ bản (TS-DS)</span></a>
+                <a href="thuehkd.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i> <span>Chuyên đề Thuế</span></a>
+                <div class="nav-item"><i class="fas fa-laptop-code"></i> <span>Chuyên ngành</span></div>
+                <div class="nav-item"><i class="fas fa-th-large"></i> <span>Tất cả khóa học</span></div>
+
+                <div class="nav-group-title">ĐÀO TẠO & NGHIỆP VỤ</div>
+                <a href="knowledge.html" class="nav-item active group relative">
+                    <i class="fas fa-project-diagram text-purple-500"></i> 
+                    <span class="font-bold text-purple-700">Sơ đồ Vận hành</span>
+                    <span class="absolute right-4 w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                </a>
+
+                <div class="nav-group-title">DỮ LIỆU & BÁO CÁO</div>
+                <div class="nav-item"><i class="fas fa-database"></i> <span>Master Data API</span></div>
+                <a href="tools.html" class="nav-item"><i class="fas fa-bolt"></i> <span>Runner Tools</span></a>
+            </nav>
+        </aside>
+
+        <div class="flex-1 flex flex-col overflow-hidden relative">
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 shrink-0">
+                <div class="relative w-96">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" placeholder="Tìm kiếm tài liệu..." class="saas-input !pl-10 bg-slate-50 border-transparent text-sm">
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="syncFromGoogleSheets()" class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded text-[11px] font-bold shadow-sm border border-blue-100 hover:bg-blue-600 hover:text-white transition flex items-center gap-1.5">
+                        <i id="syncIcon" class="fas fa-sync-alt"></i> Đồng bộ với Google Sheets
+                    </button>
+                    <span class="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded text-[11px] font-bold shadow-inner border border-emerald-200 flex items-center gap-1.5"><i class="fas fa-server"></i> <span id="docCount">0</span> Bài học</span>
+                </div>
+            </header>
+
+            <main class="content-area bg-slate-100" id="main-tab-container"></main>
+        </div>
+    </div>
+
+    <!-- WIDGET BẢNG VẼ GLOBAL -->
+    <div id="notesWidget" class="widget-panel">
+        <div class="bg-slate-800 px-4 py-3 flex justify-between items-center shrink-0">
+            <span class="font-bold text-sm text-white flex items-center gap-2"><i class="fas fa-object-group text-purple-400"></i> Bảng Phác Thảo Ghi chú</span>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleFullscreen()" class="text-slate-400 hover:text-white" title="Phóng to toàn màn hình"><i class="far fa-window-maximize"></i></button>
+                <button onclick="toggleNotes()" class="text-slate-400 hover:text-rose-500" title="Đóng"><i class="fas fa-times text-lg"></i></button>
+            </div>
+        </div>
+        <div class="flex text-xs border-b border-slate-200 bg-slate-50 shrink-0">
+            <button onclick="switchNoteTab('draw')" id="tab-draw" class="flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500 transition-colors"><i class="fas fa-pencil-alt mr-1"></i> Bảng vẽ Hình khối</button>
+            <button onclick="switchNoteTab('text')" id="tab-text" class="flex-1 py-2.5 font-semibold text-slate-500 hover:text-slate-800 transition-colors"><i class="fas fa-font mr-1"></i> Sổ Ghi chú Text</button>
+        </div>
+        <div id="drawToolbar" class="bg-white border-b border-slate-200 px-4 py-3 flex flex-wrap gap-4 items-center shrink-0">
+            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg">
+                <button class="wb-tool-btn active" onclick="setWbMode('select')" title="Chọn"><i class="fas fa-mouse-pointer"></i></button>
+                <button class="wb-tool-btn" onclick="setWbMode('draw')" title="Bút vẽ"><i class="fas fa-pen"></i></button>
+                <div class="w-px h-5 bg-slate-300 mx-1"></div>
+                <button class="wb-tool-btn" onclick="addShape('rect')" title="Ô vuông rỗng"><i class="far fa-square"></i></button>
+                <button class="wb-tool-btn" onclick="addShape('circle')" title="Hình tròn"><i class="far fa-circle"></i></button>
+                <button class="wb-tool-btn" onclick="addPureText()" title="Viết Text trong suốt"><i class="fas fa-font"></i></button>
+                <button class="wb-tool-btn bg-amber-100 text-amber-600 border-amber-200 hover:bg-amber-200" onclick="addStickyNote()" title="Ghi chú Vàng"><i class="fas fa-sticky-note"></i></button>
+            </div>
+            <div class="flex items-center gap-3 bg-slate-100 p-1.5 rounded-lg">
+                <div class="flex items-center gap-1.5" title="Màu Nền"><i class="fas fa-fill-drip text-slate-400 text-xs"></i><input type="color" id="shapeBgColor" value="#fef08a" onchange="applyWbColor('bg', this.value)"></div>
+                <div class="w-px h-5 bg-slate-300"></div>
+                <div class="flex items-center gap-1.5" title="Màu Chữ/Viền"><i class="fas fa-palette text-slate-400 text-xs"></i><input type="color" id="textColor" value="#1e293b" onchange="applyWbColor('text', this.value)"></div>
+                <div class="w-px h-5 bg-slate-300"></div>
+                <button class="wb-tool-btn text-rose-500 hover:text-rose-600 border-none bg-transparent" onclick="deleteSelected()" title="Xóa"><i class="fas fa-trash-alt"></i></button>
+            </div>
+            <div class="flex items-center gap-2 ml-auto"><button onclick="newDrawing()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 shadow-sm"><i class="fas fa-plus"></i> Clear</button></div>
+        </div>
+        <div class="relative flex-grow bg-white" id="note-container">
+            <div id="drawArea" class="absolute inset-0 block" style="background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 20px 20px;"><canvas id="fabricCanvas"></canvas></div>
+            <textarea id="stickyNoteText" oninput="saveTextNotes()" class="absolute inset-0 w-full h-full p-5 bg-yellow-50 resize-none outline-none text-[15px] font-medium text-slate-800 custom-scrollbar hidden shadow-inner leading-relaxed" placeholder="Gõ ghi chú..."></textarea>
+        </div>
+    </div>
+
+    <div class="fixed floating-tool flex flex-col gap-2">
+        <button onclick="toggleNotes()" class="w-12 h-12 bg-white text-purple-600 border-2 border-slate-200 rounded-full shadow-lg hover:bg-slate-50 flex items-center justify-center transition-all" title="Bảng Phác Thảo"><i class="fas fa-paint-brush text-lg"></i></button>
+    </div>
+
+    <!-- MODAL IMPORT BẰNG LINK -->
+    <div id="wpImportModal" class="fixed inset-0 bg-slate-900/60 z-[9999] hidden items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-[fadeUp_0.2s_ease]">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-slate-800 text-lg"><i class="fas fa-link text-blue-600 mr-2"></i> Nhập dữ liệu từ Link URL</h3>
+                <button onclick="closeWPModal()" class="text-slate-400 hover:text-rose-500 text-xl"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 flex flex-col gap-4">
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 flex items-start gap-3">
+                    <i class="fas fa-robot text-purple-600 text-xl mt-0.5"></i>
+                    <div>
+                        <p class="text-xs font-bold text-purple-800">Bot thông minh cào dữ liệu URL</p>
+                        <p class="text-[11px] text-purple-600 mt-1">Dán Link vào. Hệ thống sẽ tự chạy vào Web lấy HTML, AI sẽ tự gọt sạch chữ thừa để vẽ Sơ đồ XMind.</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-bold text-slate-700 mb-1">Tên tính năng</label><input type="text" id="wpDocTitle" class="saas-input w-full" placeholder="VD: Hướng dẫn Đăng nhập"></div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Nhóm Quy trình</label>
+                        <select id="wpDocNode" class="saas-input w-full bg-slate-50 font-semibold text-blue-600">
+                            <option value="setup">1. Khởi tạo Cửa hàng</option>
+                            <option value="inventory">2. Nhập hàng & Kho</option>
+                            <option value="sales">3. Bán hàng & Thu ngân</option>
+                            <option value="crm">4. Chăm sóc Khách hàng</option>
+                            <option value="reports">5. Báo cáo Phân tích</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="relative" id="htmlInputContainer">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Dán Link bài viết (Từ web Hướng dẫn)</label>
+                    <input type="url" id="wpDocUrl" class="saas-input w-full !text-blue-600" placeholder="https://www.kiotviet.vn/huong-dan...">
+                    <div id="aiLoadingOverlay" class="absolute inset-0 bg-slate-900/80 rounded-lg hidden flex-col items-center justify-center z-10"><i class="fas fa-circle-notch fa-spin text-purple-400 text-4xl mb-3"></i><p class="text-white font-bold text-sm">Bot đang cào dữ liệu từ URL...</p></div>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-200 flex justify-end gap-3 bg-slate-50">
+                <button onclick="closeWPModal()" class="btn-outline border-slate-300">Hủy bỏ</button>
+                <button onclick="saveDocViaAPI()" class="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 shadow-md transition"><i class="fas fa-cloud-upload-alt mr-1"></i> Gửi lên Google Sheet & Cập nhật</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL HIỂN THỊ TÓM TẮT -->
+    <div id="summaryModal" class="fixed inset-0 bg-slate-900/40 z-[9999] hidden items-center justify-center backdrop-blur-sm" onclick="closeSummaryModal()">
+        <div class="bg-white w-[500px] rounded-2xl shadow-2xl flex flex-col transform scale-95 transition-transform overflow-hidden" onclick="event.stopPropagation()">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                <h3 id="sumModalTitle" class="font-bold text-slate-800 text-lg flex items-center gap-2"><i class="fas fa-bolt text-amber-500"></i> <span id="sumModalTitleText">Tiêu đề</span></h3>
+                <button onclick="closeSummaryModal()" class="text-slate-400 hover:text-rose-500"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 bg-white"><p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">AI TÓM TẮT CÁC BƯỚC THỰC HIỆN</p><div id="sumModalContent" class="space-y-3"></div></div>
+            <div class="p-6 pt-2"><button onclick="scrollToDoc()" class="w-full py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition shadow-md"><i class="fas fa-book-open mr-1"></i> Xem Chi tiết Tài liệu Gốc</button></div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // HÀM LẤY API ĐỘNG TỪ BỘ NHỚ LƯU TRỮ (DO FILE SETTINGS CẤP)
+        // ==========================================
+        function getApiUrl() {
+            return localStorage.getItem('kv_api_url') || "";
+        }
+
+        localforage.config({ name: 'TrainerOS_Database', storeName: 'ld_knowledge_base' });
+
+        const knowledgeBase = {
+            "setup": { title: "1. Khởi tạo Cửa hàng", icon: "fa-cogs" },
+            "inventory": { title: "2. Nhập hàng & Kho", icon: "fa-boxes" },
+            "sales": { title: "3. Bán hàng & Thu ngân", icon: "fa-cash-register" },
+            "crm": { title: "4. Chăm sóc Khách hàng", icon: "fa-users" },
+            "reports": { title: "5. Báo cáo Phân tích", icon: "fa-chart-pie" }
+        };
+
+        const branchColors = ['#fbcfe8', '#a7f3d0', '#c4b5fd', '#fde047', '#93c5fd', '#fca5a5'];
+        let activeKnowledgeNode = "setup"; 
+        let currentTargetDocId = null;
+
+        // --- HÀM 1: ĐỒNG BỘ GOOGLE SHEETS ---
+        async function syncFromGoogleSheets() {
+            const apiUrl = getApiUrl();
+            if(!apiUrl) return alert("Vui lòng vào tab THIẾT LẬP để điền Link API Google Apps Script trước khi đồng bộ!");
+            
+            const icon = document.getElementById('syncIcon'); icon.classList.add('fa-spin');
+            
+            try {
+                let response = await fetch(apiUrl); let json = await response.json();
+                if(json.knowledge) {
+                    let newDocs = {};
+                    json.knowledge.forEach(row => {
+                        if(!newDocs[row.node]) newDocs[row.node] = [];
+                        let summary = aiExtractStepsFromHTML(row.html || "");
+                        newDocs[row.node].push({ id: row.id, title: row.title, url: row.url, html: row.html || "<p>Chưa có dữ liệu HTML, bot đang xử lý...</p>", summary: summary });
+                    });
+                    await localforage.setItem('kv_wp_docs', newDocs);
+                    alert("Đồng bộ dữ liệu từ Google Sheets thành công!"); renderNodeDetail(activeKnowledgeNode);
+                }
+            } catch (err) { alert("Lỗi khi kết nối đến Google Sheets!"); }
+            icon.classList.remove('fa-spin');
+        }
+
+        function renderUI() {
+            const container = document.getElementById('main-tab-container');
+            container.innerHTML = `
+                <div class="mb-6 flex justify-between items-end">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Sơ đồ Kiến thức Vận hành</h2>
+                        <p class="text-sm text-slate-500 mt-1">Dữ liệu đồng bộ Realtime 2 chiều với Google Sheets.</p>
+                    </div>
+                    <button onclick="openWPModal()" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition shadow-md"><i class="fas fa-plus mr-2"></i> Nhập Bài viết bằng Link URL</button>
+                </div>
+                <div class="saas-card p-6 mb-6 overflow-x-auto custom-scrollbar bg-white">
+                    <div class="min-w-[800px] flex items-center justify-between relative">
+                        <div class="absolute top-1/2 left-10 right-10 h-1 bg-slate-200 -translate-y-1/2 z-0"></div>
+                        ${Object.keys(knowledgeBase).map(k => `
+                            <div id="node-${k}" onclick="renderNodeDetail('${k}')" class="k-node relative z-10 w-28 flex flex-col items-center gap-3 cursor-pointer group bg-white border-2 border-slate-200 rounded-xl p-3 transition-all">
+                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-purple-100 group-hover:text-purple-600 transition"><i class="fas ${knowledgeBase[k].icon}"></i></div>
+                                <span class="text-[11px] font-bold text-slate-700 text-center leading-tight">${knowledgeBase[k].title.replace('. ', '.<br>')}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div id="knowledge-content" class="min-h-[400px]"></div>
+            `;
+            setTimeout(() => renderNodeDetail(activeKnowledgeNode), 50);
+        }
+
+        window.renderNodeDetail = async function(nodeId) {
+            activeKnowledgeNode = nodeId;
+            document.querySelectorAll('.k-node').forEach(el => { el.classList.remove('ring-4', 'ring-purple-200', 'scale-105', 'border-purple-500'); el.classList.add('border-slate-200'); });
+            const activeEl = document.getElementById(`node-${nodeId}`);
+            if(activeEl) { activeEl.classList.remove('border-slate-200'); activeEl.classList.add('ring-4', 'ring-purple-200', 'scale-105', 'border-purple-500'); }
+
+            let savedDocs = await localforage.getItem('kv_wp_docs') || {};
+            let nodeDocs = savedDocs[nodeId] || [];
+            
+            let totalDocs = 0; Object.values(savedDocs).forEach(arr => totalDocs += arr.length); document.getElementById('docCount').innerText = totalDocs;
+
+            let wpDocsHtml = nodeDocs.map((doc, index) => `
+                <div id="doc-wrapper-${doc.id}" class="mb-3 border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm doc-drag-wrapper" draggable="true" ondragstart="handleDragStart(event, '${nodeId}', ${index})" ondragover="handleDragOver(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${nodeId}', ${index})" ondragend="handleDragEnd(event)">
+                    <div class="bg-slate-50 px-4 py-2 flex justify-between items-center group">
+                        <div class="flex items-center gap-3 flex-grow">
+                            <div class="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 transition px-1"><i class="fas fa-grip-vertical"></i></div>
+                            <button onclick="openSummaryModal(${doc.id})" class="px-2 py-1 text-[10px] bg-amber-100 text-amber-600 font-bold rounded hover:bg-amber-200 transition shrink-0"><i class="fas fa-bolt"></i> Tóm tắt</button>
+                            <h4 class="font-bold text-slate-700 text-[13px] flex items-center gap-2 cursor-pointer hover:text-blue-600" onclick="document.getElementById('doc-${doc.id}').classList.toggle('hidden')">
+                                <i class="fab fa-wordpress text-blue-500"></i> ${doc.title}
+                            </h4>
+                            ${doc.url ? `<a href="${doc.url}" target="_blank" class="text-[10px] text-slate-400 hover:text-blue-500"><i class="fas fa-external-link-alt"></i></a>` : ''}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="deleteDocViaAPI(${doc.id})" class="text-xs text-rose-500 hover:bg-rose-50 px-2 py-1 rounded transition"><i class="fas fa-trash"></i></button>
+                            <i class="fas fa-chevron-down text-slate-400 cursor-pointer p-1.5 hover:bg-slate-200 rounded-md" onclick="document.getElementById('doc-${doc.id}').classList.toggle('hidden')"></i>
+                        </div>
+                    </div>
+                    <div id="doc-${doc.id}" class="p-5 wp-content overflow-x-auto text-[13px] leading-relaxed text-slate-700 hidden bg-white border-t border-slate-100">${doc.html}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('knowledge-content').innerHTML = `
+                <div class="saas-card bg-white mb-6 shadow-sm overflow-hidden border-b-4 border-b-purple-500">
+                    <div class="px-6 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider"><i class="fas fa-sitemap mr-1"></i> Sơ đồ Thao tác Tự động (AI Mindmap)</p>
+                    </div>
+                    <div class="w-full h-[550px] bg-[#f8fafc] relative p-4"><svg id="markmap-svg"></svg></div>
+                </div>
+                <div class="saas-card p-6 bg-white mb-10">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wider"><i class="fas fa-database text-blue-600 mr-2"></i> Tài liệu Gốc (Đồng bộ từ Google Sheets)</h3>
+                    ${wpDocsHtml || '<div class="text-center text-slate-400 text-xs italic py-10 border-2 border-dashed rounded-xl">Chưa có dữ liệu cho quy trình này. Bấm nút Nhập bằng URL ở trên.</div>'}
+                </div>
+            `;
+            setTimeout(() => renderAutoMindmap(nodeId, nodeDocs), 50);
+        };
+
+        function renderAutoMindmap(nodeId, nodeDocs) {
+            try {
+                const { Transformer, Markmap } = window.markmap; const transformer = new Transformer(); const data = knowledgeBase[nodeId];
+                let mdContent = `# ${data.title.split('. ')[1]}\n`;
+                if(nodeDocs.length === 0) { mdContent += `## (Trống)\n`; } 
+                else {
+                    nodeDocs.forEach(doc => {
+                        mdContent += `## ${doc.title.replace(/\n/g, ' ')}\n`;
+                        if(Array.isArray(doc.summary) && doc.summary.length > 0) {
+                            doc.summary.forEach(item => {
+                                if(item.type === 'note') mdContent += `### 🌟 LƯU Ý: ${item.text.replace(/\n/g, ' ')}\n`;
+                                else mdContent += `### ${item.text.replace(/\n/g, ' ')}\n`;
+                            });
+                        }
+                    });
+                }
+                const { root } = transformer.transform(mdContent); const svgEl = document.querySelector('#markmap-svg');
+                if(svgEl) {
+                    svgEl.innerHTML = ''; Markmap.create(svgEl, { autoFit: true, fitRatio: 0.9, spacingHorizontal: 80, spacingVertical: 10, maxWidth: 250 }, root);
+                    setTimeout(() => {
+                        d3.selectAll('#markmap-svg .markmap-node').each(function(d) {
+                            const node = d3.select(this); const div = node.select('foreignObject div').node();
+                            if(d.depth === 0) { node.classed('markmap-node-root', true); } 
+                            else if (d.depth === 1) { node.classed('markmap-node-level-1', true); if(div) div.style.backgroundColor = branchColors[d.state.id % branchColors.length]; } 
+                            else { if(d.content.includes('🌟 LƯU Ý:')) node.classed('markmap-node-note', true); else node.classed('markmap-node-level-2', true); }
+                        });
+                        d3.selectAll('.markmap-link').style('stroke', '#cbd5e1').style('stroke-width', '2px');
+                    }, 200); 
+                }
+            } catch (error) {}
+        }
+
+        // --- HÀM AI PARSER ---
+        function aiExtractStepsFromHTML(html) {
+            let tempDiv = document.createElement("div"); tempDiv.innerHTML = html; let results = [];
+            tempDiv.querySelectorAll('h2, h3, h4').forEach(h => { let t = h.textContent.toLowerCase(); if(t.includes('giới thiệu') || t.includes('lợi ích') || t.includes('tổng quan')) { let next = h.nextElementSibling; while(next && !next.tagName.match(/^H[1-6]$/)) { let toDelete = next; next = next.nextElementSibling; toDelete.remove(); } h.remove(); } });
+            tempDiv.querySelectorAll('ol > li, ul > li, p > strong').forEach(el => {
+                let text = el.textContent.replace(/\s+/g, ' ').trim();
+                text = text.replace(/^(Tình huống|Thao tác( thực hiện)?( như sau)?|Mục đích|Để|Từ|Tại|Sau đó|Tiếp theo|Bạn cần( phải)?|Hệ thống sẽ|Vui lòng):?\s*/i, '').replace(/^(Bấm|Nhấn) (vào )?(nút|mục|tab)\s+/i, 'Chọn ').trim();
+                if(text.length > 0) text = text.charAt(0).toUpperCase() + text.slice(1);
+                if(text.length > 5) {
+                    if(text.toLowerCase().includes('lưu ý:') || text.toLowerCase().includes('chú ý:')) {
+                        let parts = text.split(/lưu ý:|chú ý:/i);
+                        if(parts[0].trim().length > 5) results.push({ type: 'step', text: parts[0].trim() });
+                        if(parts[1] && parts[1].trim().length > 5) results.push({ type: 'note', text: parts[1].trim() });
+                    } else {
+                        let firstClause = text.split(/[.;]|\.(?=\s)/)[0].trim();
+                        if(el.tagName === 'LI' || el.tagName === 'STRONG') results.push({ type: 'step', text: firstClause });
+                    }
+                }
+            });
+            let uniqueResults = []; let seenText = new Set();
+            for(let item of results) { if(!seenText.has(item.text)) { seenText.add(item.text); uniqueResults.push(item); } }
+            return uniqueResults.slice(0, 10);
+        }
+
+        // --- HÀM 2: ĐẨY LÊN GOOGLE SHEETS ---
+        function openWPModal() { document.getElementById('wpImportModal').classList.remove('hidden'); document.getElementById('wpImportModal').classList.add('flex'); document.getElementById('aiLoadingOverlay').classList.add('hidden'); }
+        function closeWPModal() { document.getElementById('wpImportModal').classList.add('hidden'); document.getElementById('wpImportModal').classList.remove('flex'); }
+        
+        async function saveDocViaAPI() {
+            const apiUrl = getApiUrl();
+            if(!apiUrl) return alert("Vui lòng vào tab THIẾT LẬP để dán Link API Google Sheets của bạn trước!");
+            
+            const title = document.getElementById('wpDocTitle').value.trim(); const node = document.getElementById('wpDocNode').value; const url = document.getElementById('wpDocUrl').value.trim();
+            if(!title || !url) return alert("Vui lòng nhập Tên bài và Link URL WordPress!");
+            
+            document.getElementById('aiLoadingOverlay').classList.remove('hidden'); document.getElementById('aiLoadingOverlay').classList.add('flex');
+
+            try {
+                let response = await fetch(apiUrl, { method: 'POST', body: JSON.stringify({ action: "add_knowledge", node: node, title: title, url: url }) });
+                let result = await response.json();
+                if(result.status === "success") { closeWPModal(); await syncFromGoogleSheets(); }
+            } catch (err) { alert("Lỗi đẩy lên Sheet!"); document.getElementById('aiLoadingOverlay').classList.add('hidden'); }
+        }
+
+        async function deleteDocViaAPI(docId) {
+            const apiUrl = getApiUrl();
+            if(!apiUrl) return alert("Vui lòng vào tab THIẾT LẬP để dán Link API Google Sheets của bạn trước!");
+
+            if(!confirm("Bạn có chắc chắn muốn xóa bài học này khỏi Google Sheets?")) return;
+            try {
+                let response = await fetch(apiUrl, { method: 'POST', body: JSON.stringify({ action: "delete_knowledge", id: docId }) });
+                let result = await response.json();
+                if(result.status === "success") { await syncFromGoogleSheets(); }
+            } catch (err) { alert("Lỗi khi xóa!"); }
+        }
+
+        function openSummaryModal(docId) {
+            localforage.getItem('kv_wp_docs').then(savedDocs => {
+                let docs = savedDocs[activeKnowledgeNode] || []; let doc = docs.find(d => d.id === docId);
+                if(doc) {
+                    currentTargetDocId = doc.id; document.getElementById('sumModalTitleText').innerText = doc.title;
+                    let stepsHtml = '';
+                    if(Array.isArray(doc.summary) && doc.summary.length > 0) {
+                        stepsHtml = doc.summary.map((step, idx) => `<div class="flex items-start gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100"><div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">${idx + 1}</div><span class="text-sm text-slate-700 font-medium leading-relaxed">${step.text}</span></div>`).join('');
+                    } else { stepsHtml = `<div class="text-sm text-slate-500 italic p-3">Tài liệu không có cấu trúc chuẩn. Bot không phân tích được.</div>`; }
+                    document.getElementById('sumModalContent').innerHTML = stepsHtml;
+                    document.getElementById('summaryModal').classList.remove('hidden'); document.getElementById('summaryModal').classList.add('flex');
+                    document.querySelector('#summaryModal > div').classList.remove('scale-95'); document.querySelector('#summaryModal > div').classList.add('scale-100');
+                }
+            });
+        }
+        function closeSummaryModal() { document.getElementById('summaryModal').classList.add('hidden'); document.querySelector('#summaryModal > div').classList.add('scale-95'); }
+        function scrollToDoc() { closeSummaryModal(); if(currentTargetDocId) { const targetEl = document.getElementById(`doc-wrapper-${currentTargetDocId}`); const contentEl = document.getElementById(`doc-${currentTargetDocId}`); if(targetEl) { contentEl.classList.remove('hidden'); targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); targetEl.classList.add('ring-4', 'ring-purple-300'); setTimeout(() => targetEl.classList.remove('ring-4', 'ring-purple-300'), 1500); } } }
+
+        // --- DRAG & DROP LOGIC ---
+        let dragStartIndex = null; let dragNodeId = null;
+        function handleDragStart(e, nodeId, index) { dragStartIndex = index; dragNodeId = nodeId; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.classList.add('opacity-40', 'border-purple-400', 'ring-2', 'ring-purple-200'), 0); }
+        function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; return false; }
+        function handleDragEnter(e) { e.preventDefault(); const wrapper = e.target.closest('.doc-drag-wrapper'); if(wrapper) wrapper.classList.add('border-t-4', 'border-t-blue-500'); }
+        function handleDragLeave(e) { const wrapper = e.target.closest('.doc-drag-wrapper'); if(wrapper) wrapper.classList.remove('border-t-4', 'border-t-blue-500'); }
+        async function handleDrop(e, nodeId, dropIndex) { e.stopPropagation(); const wrapper = e.target.closest('.doc-drag-wrapper'); if(wrapper) wrapper.classList.remove('border-t-4', 'border-t-blue-500'); if (dragNodeId !== nodeId || dragStartIndex === dropIndex) return; let docs = await localforage.getItem('kv_wp_docs') || {}; let arr = docs[nodeId]; const draggedItem = arr.splice(dragStartIndex, 1)[0]; arr.splice(dropIndex, 0, draggedItem); await localforage.setItem('kv_wp_docs', docs); renderNodeDetail(nodeId); return false; }
+        function handleDragEnd(e) { e.target.classList.remove('opacity-40', 'border-purple-400', 'ring-2', 'ring-purple-200'); document.querySelectorAll('.doc-drag-wrapper').forEach(el => el.classList.remove('border-t-4', 'border-t-blue-500')); }
+
+        // --- WHITEBOARD (SỔ VẼ) ---
+        let fCanvas = null;
+
+        function switchNoteTab(tab) {
+            const dBtn = document.getElementById('tab-draw'); const tBtn = document.getElementById('tab-text');
+            const drawArea = document.getElementById('drawArea'); const drawToolbar = document.getElementById('drawToolbar');
+            const textArea = document.getElementById('stickyNoteText');
+            
+            if(tab === 'draw') { 
+                dBtn.className = "flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500"; 
+                tBtn.className = "flex-1 py-2.5 font-semibold text-slate-500 bg-slate-50 border-b border-slate-200"; 
+                drawArea.classList.remove('hidden'); drawToolbar.classList.remove('hidden'); textArea.classList.add('hidden'); 
+            } else { 
+                tBtn.className = "flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500"; 
+                dBtn.className = "flex-1 py-2.5 font-semibold text-slate-500 bg-slate-50 border-b border-slate-200"; 
+                textArea.classList.remove('hidden'); drawArea.classList.add('hidden'); drawToolbar.classList.add('hidden');
+                document.getElementById('stickyNoteText').focus();
+            }
+        }
+
+        function saveTextNotes() { localStorage.setItem('kv_global_notepad', document.getElementById('stickyNoteText').value); }
+
+        async function initFabric() {
+            if(fCanvas) return;
+            const canvasEl = document.getElementById('fabricCanvas'); const wrapper = document.getElementById('drawArea');
+            canvasEl.width = wrapper.clientWidth; canvasEl.height = wrapper.clientHeight;
+            
+            fCanvas = new fabric.Canvas('fabricCanvas', { isDrawingMode: false });
+            fCanvas.on('selection:created', updateColorPickers); fCanvas.on('selection:updated', updateColorPickers);
+            fCanvas.on('object:modified', saveDrawingToLocal); fCanvas.on('path:created', saveDrawingToLocal);
+            
+            let savedData = await localforage.getItem('kv_global_whiteboard');
+            if(savedData) fCanvas.loadFromJSON(savedData, fCanvas.renderAll.bind(fCanvas));
+        }
+
+        async function saveDrawingToLocal() { await localforage.setItem('kv_global_whiteboard', JSON.stringify(fCanvas.toJSON())); }
+
+        function updateColorPickers(e) {
+            let obj = e.selected[0]; if(!obj) return;
+            if(obj.type === 'textbox') { document.getElementById('shapeBgColor').value = obj.backgroundColor || '#ffffff'; document.getElementById('textColor').value = obj.fill || '#000000'; } 
+            else if (obj.type === 'rect' || obj.type === 'circle') { document.getElementById('shapeBgColor').value = obj.fill; document.getElementById('textColor').value = obj.stroke; } 
+            else if (obj.type === 'i-text') { document.getElementById('textColor').value = obj.fill; }
+            else if (obj.type === 'path') { document.getElementById('shapeBgColor').value = obj.stroke; }
+        }
+
+        function setWbMode(mode) {
+            document.querySelectorAll('.wb-tool-btn').forEach(b => b.classList.remove('active')); event.currentTarget.classList.add('active');
+            if(mode === 'draw') { fCanvas.isDrawingMode = true; fCanvas.freeDrawingBrush.color = document.getElementById('shapeBgColor').value; fCanvas.freeDrawingBrush.width = 4; } 
+            else { fCanvas.isDrawingMode = false; }
+        }
+
+        function addShape(type) {
+            let bgColor = document.getElementById('shapeBgColor').value; let strokeColor = document.getElementById('textColor').value; let shape;
+            if(type === 'rect') shape = new fabric.Rect({ left: 100, top: 100, fill: bgColor, stroke: strokeColor, strokeWidth: 2, width: 100, height: 80, rx: 5, ry: 5 });
+            else if(type === 'circle') shape = new fabric.Circle({ left: 150, top: 100, fill: bgColor, stroke: strokeColor, strokeWidth: 2, radius: 40 });
+            fCanvas.add(shape); fCanvas.setActiveObject(shape); fCanvas.isDrawingMode = false; saveDrawingToLocal();
+        }
+
+        function addStickyNote() {
+            let bgColor = document.getElementById('shapeBgColor').value; let txColor = document.getElementById('textColor').value;
+            let text = new fabric.Textbox('Gõ nội dung...', { left: 100, top: 100, width: 200, fontSize: 16, fontFamily: 'Nunito', fill: txColor, backgroundColor: bgColor, padding: 12, borderColor: '#3b82f6', cornerColor: '#3b82f6' });
+            fCanvas.add(text); fCanvas.setActiveObject(text); fCanvas.isDrawingMode = false; saveDrawingToLocal();
+        }
+
+        function addPureText() {
+            let txColor = document.getElementById('textColor').value;
+            let text = new fabric.IText('Chữ không nền', { left: 150, top: 150, fontFamily: 'Nunito', fill: txColor, fontSize: 20 });
+            fCanvas.add(text); fCanvas.setActiveObject(text); fCanvas.isDrawingMode = false; saveDrawingToLocal();
+        }
+
+        function applyWbColor(type, hex) {
+            if(fCanvas.isDrawingMode && type === 'bg') fCanvas.freeDrawingBrush.color = hex;
+            const activeObj = fCanvas.getActiveObject(); if(!activeObj) return;
+            if(type === 'bg') { if(activeObj.type === 'textbox') activeObj.set('backgroundColor', hex); else if (activeObj.type === 'path') activeObj.set('stroke', hex); else activeObj.set('fill', hex); } 
+            else if (type === 'text') { if(activeObj.type === 'textbox' || activeObj.type === 'i-text') activeObj.set('fill', hex); else activeObj.set('stroke', hex); }
+            fCanvas.renderAll(); saveDrawingToLocal();
+        }
+
+        function deleteSelected() { const activeObjs = fCanvas.getActiveObjects(); if (activeObjs.length) { fCanvas.discardActiveObject(); activeObjs.forEach(function(object) { fCanvas.remove(object); }); saveDrawingToLocal(); } }
+        function newDrawing() { if(confirm("Xóa SẠCH toàn bộ bảng vẽ này?")) { fCanvas.clear(); localforage.removeItem('kv_global_whiteboard'); } }
+
+        function toggleFullscreen() {
+            const widget = document.getElementById('notesWidget'); widget.classList.toggle('fullscreen-widget');
+            setTimeout(() => { if(fCanvas) { const wrapper = document.getElementById('drawArea'); fCanvas.setWidth(wrapper.clientWidth); fCanvas.setHeight(wrapper.clientHeight); fCanvas.renderAll(); } }, 350); 
+        }
+
+        function toggleNotes() { 
+            const widget = document.getElementById('notesWidget'); widget.classList.toggle('active');
+            if(widget.classList.contains('active')) {
+                document.getElementById('stickyNoteText').value = localStorage.getItem('kv_global_notepad') || '';
+                setTimeout(initFabric, 300);
+            }
+        }
+
+        window.onload = () => { 
+            const prof = JSON.parse(localStorage.getItem('kv_trainer_profile'));
+            if(prof) {
+                document.getElementById('display-prof-name').innerText = prof.name;
+                document.getElementById('display-prof-title').innerText = prof.title;
+                document.getElementById('display-prof-ava').innerText = prof.name.charAt(0).toUpperCase();
+            }
+            renderUI(); 
+        };
+    </script>
+</body>
+</html>
