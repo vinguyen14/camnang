@@ -5,19 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trainer OS | Agentic Dashboard</title>
     
-    <!-- FONTS -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- THƯ VIỆN VẼ MINDMAP (STABLE VERSION) -->
-    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-    <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.15.4/dist/browser/index.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.15.4/dist/browser/index.js"></script>
+    <!-- Các thư viện cần thiết cho Chart và Sổ vẽ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
 
     <style>
         /* === ENTERPRISE SAAS DESIGN SYSTEM === */
@@ -32,79 +28,70 @@
         .nav-item.active i { color: #2563eb; }
         .nav-item i { width: 16px; text-align: center; color: #94a3b8; font-size: 14px; }
         
-        .content-area { height: calc(100vh - 60px); overflow-y: auto; overflow-x: hidden; padding: 20px 28px; scroll-behavior: smooth;}
+        .content-area { height: calc(100vh - 60px); overflow-y: auto; overflow-x: hidden; padding: 20px 28px; }
         .saas-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
+        
         .saas-input { width: 100%; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; transition: all 0.2s; }
         .saas-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        .btn-outline { background: white; color: #334155; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;}
         
+        .btn-outline { background: white; color: #334155; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;}
+        .btn-outline:hover { background-color: #f8fafc;}
+        .btn-danger { background: #ef4444; color: white; border: 1px solid #dc2626; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; }
+
+        table { width: 100%; border-collapse: collapse; }
+        table th { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 10px 14px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; text-align: left; }
+        table td { font-size: 12px; padding: 10px 14px; border-bottom: 1px solid #f1f5f9; }
+
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 
-        .widget-panel { position: fixed; bottom: 80px; right: 30px; width: 340px; height: 450px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; z-index: 1000; transform: translateY(10px); opacity: 0; pointer-events: none; transition: all 0.2s; display: flex; flex-direction: column; overflow: hidden; }
+        /* WIDGETS GHI CHÚ CHATBOT (Kết hợp bản mới) */
+        .widget-panel { position: fixed; bottom: 80px; right: 30px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 35px -5px rgba(0,0,0,0.2); border: 1px solid #e2e8f0; z-index: 1000; transform: translateY(10px); opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; overflow: hidden; }
         .widget-panel.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
+        
+        #notesWidget { width: 450px; height: 600px; }
+        #chatWidget { width: 340px; height: 450px; }
+        .widget-panel.fullscreen-widget { width: 100vw !important; height: 100vh !important; bottom: 0 !important; right: 0 !important; border-radius: 0 !important; }
+
         .floating-tool { bottom: 20px; right: 30px; z-index: 100; }
         
-        /* CSS WordPress */
-        .wp-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 12px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .wp-content iframe, .wp-content video { width: 100%; aspect-ratio: 16/9; border-radius: 8px; margin: 12px 0; }
-        .wp-content p { margin-bottom: 12px; }
-        .wp-content ul { list-style-type: disc; padding-left: 20px; margin-bottom: 12px; }
-        
-        /* Scroll To Top */
-        #scrollTopBtn { position: fixed; bottom: 30px; left: 300px; width: 40px; height: 40px; background-color: #8b5cf6; color: white; border-radius: 50%; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3); cursor: pointer; z-index: 90; transition: all 0.3s; }
-        #scrollTopBtn:hover { background-color: #7c3aed; transform: translateY(-3px); }
+        /* Whiteboard Tools */
+        .wb-tool-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #475569; transition: all 0.2s; font-size: 14px; background: #f8fafc; border: 1px solid #e2e8f0; cursor: pointer; }
+        .wb-tool-btn:hover { background-color: #e2e8f0; color: #2563eb; }
+        .wb-tool-btn.active { background-color: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+        input[type="color"] { -webkit-appearance: none; border: none; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; padding: 0; }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: 1px solid #cbd5e1; border-radius: 4px; }
 
-        /* === MARKMAP SKETCH STYLE === */
-        #markmap-svg { cursor: grab; width: 100%; height: 100%; }
-        #markmap-svg:active { cursor: grabbing; }
-        #markmap-svg foreignObject { overflow: visible; }
-        #markmap-svg foreignObject > div {
-            font-family: 'Patrick Hand', cursive !important;
-            padding: 4px 12px;
-            border-radius: 8px;
-            border: 2px dashed #94a3b8;
-            background: #fff;
-            box-shadow: 2px 3px 0px rgba(0,0,0,0.05);
-            font-size: 15px;
-            line-height: 1.3;
-            white-space: normal !important;
-            text-align: center;
-            display: inline-block;
-        }
-        
-        /* Box màu vàng cho Lưu ý */
-        .markmap-node-note > foreignObject > div {
-            background-color: #fef3c7 !important;
-            color: #b45309 !important;
-            border: 2px dashed #f59e0b !important;
-        }
-        
-        @keyframes scanline { 0% { top: 0; } 100% { top: 100%; } }
-        .ai-scanning::after { content: ''; position: absolute; left: 0; right: 0; height: 2px; background: #8b5cf6; box-shadow: 0 0 10px #8b5cf6; animation: scanline 1.5s linear infinite; }
+        /* Progress Bar & Tooltips */
+        .progress-bar-container { background-color: #f1f5f9; border-radius: 9999px; height: 20px; position: relative; overflow: hidden; margin-top: 4px;}
+        .progress-bar-fill { height: 100%; border-radius: 9999px; transition: width 1s ease-in-out; }
+        .tooltip-box { display: none; position: absolute; top: 110%; left: 0; background: #1e293b; color: white; padding: 12px; border-radius: 8px; font-size: 12px; z-index: 9999; width: max-content; box-shadow: 0 10px 25px rgba(0,0,0,0.2); white-space: pre-line; line-height: 1.6;}
+        .group:hover > .tooltip-box { display: block; animation: fadeUp 0.2s ease forwards; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
     <div class="flex h-screen">
-        <!-- KHÔI PHỤC SIDEBAR ĐẦY ĐỦ CỦA BẠN -->
-        <aside class="sidebar-saas w-64 flex flex-col z-50 shrink-0">
+        <!-- SIDEBAR (Giữ nguyên cấu trúc Dashboard đầy đủ) -->
+        <aside id="sidebar" class="sidebar-saas w-64 flex flex-col z-50 shrink-0">
             <div class="h-16 flex items-center px-6 border-b border-slate-100 shrink-0">
                 <div class="w-6 h-6 bg-blue-600 rounded flex items-center justify-center text-white text-[10px] mr-3"><i class="fas fa-layer-group"></i></div>
                 <span class="font-bold text-slate-800 text-sm tracking-tight">Agentic L&D</span>
             </div>
 
             <nav class="flex-1 overflow-y-auto py-2 custom-scrollbar">
-                <div class="nav-group-title">TỔNG QUAN</div>
-                <div onclick="switchTab('tong-quan')" class="nav-item"><i class="fas fa-columns"></i> <span>Bảng điều khiển</span></div>
-                <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i> <span>Thiết lập</span> <span class="ml-auto text-[8px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-bold">NEW</span></a>
+                <div class="nav-group-title lang-text" data-vi="TỔNG QUAN" data-en="OVERVIEW">TỔNG QUAN</div>
+                <a href="index.html" class="nav-item"><i class="fas fa-columns"></i> <span class="lang-text" data-vi="Bảng điều khiển" data-en="Dashboard">Bảng điều khiển</span></a>
+                <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i> <span class="lang-text" data-vi="Thiết lập" data-en="Settings">Thiết lập</span> <span class="ml-auto text-[8px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-bold">NEW</span></a>
 
-                <div class="nav-group-title">QUẢN TRỊ KHÓA HỌC</div>
-                <a href="spcb.html" class="nav-item"><i class="fas fa-box"></i> <span>Cơ bản (TS-DS)</span></a>
-                <a href="thuehkd.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i> <span>Chuyên đề Thuế</span></a>
+                <div class="nav-group-title lang-text" data-vi="QUẢN TRỊ KHÓA HỌC" data-en="COURSE MANAGEMENT">QUẢN TRỊ KHÓA HỌC</div>
+                <a href="spcb.html" class="nav-item"><i class="fas fa-box"></i> <span class="lang-text" data-vi="Cơ bản (TS-DS)" data-en="Basic">Cơ bản (TS-DS)</span></a>
+                <a href="thuehkd.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i> <span class="lang-text" data-vi="Chuyên đề Thuế" data-en="Tax">Chuyên đề Thuế</span></a>
                 <div class="nav-item group relative">
-                    <i class="fas fa-laptop-code"></i> <span class="flex-grow">Chuyên ngành</span><i class="fas fa-chevron-down text-[10px]"></i>
+                    <i class="fas fa-laptop-code"></i> <span class="flex-grow lang-text" data-vi="Chuyên ngành" data-en="Industry">Chuyên ngành</span><i class="fas fa-chevron-down text-[10px]"></i>
                     <div class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all z-10 py-1">
                         <a href="kv1.html" class="block px-10 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-600">Sản phẩm KV1</a>
                         <a href="industry.html" class="block px-10 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-500">KiotViet FNB</a>
@@ -112,27 +99,27 @@
                         <a href="industry.html" class="block px-10 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-emerald-500">KV Hotel</a>
                     </div>
                 </div>
-                <div onclick="switchTab('khoa-hoc')" class="nav-item"><i class="fas fa-th-large"></i> <span>Tất cả khóa học</span></div>
+                <a href="index.html" class="nav-item"><i class="fas fa-th-large"></i> <span class="lang-text" data-vi="Tất cả khóa học" data-en="All Courses">Tất cả khóa học</span></a>
 
                 <div class="nav-group-title">ĐÀO TẠO & NGHIỆP VỤ</div>
-                <div onclick="switchTab('kien-thuc')" class="nav-item active group relative">
+                <a href="knowledge.html" class="nav-item active group relative">
                     <i class="fas fa-project-diagram text-purple-500"></i> 
                     <span class="font-bold text-purple-700">Sơ đồ Vận hành</span>
                     <span class="absolute right-4 w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                </div>
+                </a>
 
-                <div class="nav-group-title">DỮ LIỆU & BÁO CÁO</div>
-                <div onclick="switchTab('phan-tich')" class="nav-item"><i class="fas fa-database"></i> <span>Master Data API</span></div>
+                <div class="nav-group-title lang-text" data-vi="DỮ LIỆU & BÁO CÁO" data-en="DATA">DỮ LIỆU & BÁO CÁO</div>
+                <a href="index.html" class="nav-item"><i class="fas fa-database"></i> <span class="lang-text" data-vi="Master Data API" data-en="Master Data">Master Data API</span></a>
 
-                <div class="nav-group-title">CÔNG CỤ TỰ ĐỘNG</div>
-                <a href="tools.html" class="nav-item"><i class="fas fa-bolt"></i> <span>Runner Tools</span></a>
+                <div class="nav-group-title lang-text" data-vi="CÔNG CỤ TỰ ĐỘNG" data-en="TOOLS">CÔNG CỤ TỰ ĐỘNG</div>
+                <a href="tools.html" class="nav-item"><i class="fas fa-bolt"></i> <span class="lang-text" data-vi="Runner Tools" data-en="Runner Tools">Runner Tools</span></a>
             </nav>
-            
+
             <div class="p-4 border-t border-slate-100 shrink-0 flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">V</div>
+                <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs" id="display-prof-ava">V</div>
                 <div class="overflow-hidden flex-grow">
-                    <p class="text-[13px] font-semibold text-slate-700 truncate">Admin User</p>
-                    <p class="text-[10px] text-slate-500 truncate">admin@kiotviet.com</p>
+                    <p id="display-prof-name" class="text-[13px] font-semibold text-slate-700 truncate">Admin User</p>
+                    <p id="display-prof-title" class="text-[10px] text-slate-500 truncate">admin@kiotviet.com</p>
                 </div>
             </div>
         </aside>
@@ -142,456 +129,796 @@
             <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 shrink-0">
                 <div class="relative w-96">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" placeholder="Tìm kiếm tài liệu..." class="saas-input !pl-10 bg-slate-50 border-transparent text-sm">
+                    <input type="text" id="topSearchInput" oninput="handleTopSearch(this.value)" placeholder="Tìm kiếm trong báo cáo..." class="saas-input !pl-10 bg-slate-50 border-transparent focus:bg-white focus:border-blue-300 text-sm">
+                </div>
+
+                <div class="flex items-center gap-5">
+                    <div class="flex items-center gap-1 text-[11px] font-bold text-slate-500 bg-slate-100 p-1 rounded-md">
+                        <span id="lang-vi" onclick="setLang('vi')" class="cursor-pointer px-2 py-1 rounded bg-white text-blue-600 shadow-sm transition">VIE</span>
+                        <span id="lang-en" onclick="setLang('en')" class="cursor-pointer px-2 py-1 rounded hover:text-slate-800 transition">ENG</span>
+                    </div>
+
+                    <div class="w-px h-4 bg-slate-200"></div>
+
+                    <div id="db-status-indicator" class="flex items-center gap-1.5 text-[11px] font-medium text-slate-500"><i class="fas fa-circle-notch fa-spin text-[10px] text-blue-500"></i> Local Loading...</div>
+                    
+                    <!-- CHUÔNG THÔNG BÁO -->
+                    <div class="relative">
+                        <i id="bellIcon" onclick="toggleNoti(event)" class="far fa-bell text-slate-500 hover:text-slate-800 cursor-pointer text-lg relative">
+                            <span id="unreadDot" class="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 rounded-full border border-white hidden"></span>
+                        </i>
+                        <div id="notiDropdown" class="hidden absolute right-0 top-8 w-[340px] bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden transform transition-all">
+                            <div class="bg-slate-50 px-4 py-3 border-b border-slate-100 flex justify-between items-center">
+                                <span class="font-bold text-slate-800 text-sm lang-text" data-vi="Thông báo hệ thống" data-en="Notifications">Thông báo hệ thống</span>
+                                <span onclick="markAllRead(event)" class="text-[10px] text-blue-600 font-semibold cursor-pointer hover:underline lang-text" data-vi="Đánh dấu đã đọc" data-en="Mark Read">Đánh dấu đã đọc</span>
+                            </div>
+                            <div class="max-h-[350px] overflow-y-auto custom-scrollbar p-0" id="notiContent"></div>
+                        </div>
+                    </div>
                 </div>
             </header>
 
-            <main class="content-area bg-slate-100" id="main-tab-container" onscroll="handleScroll()"></main>
-            <button id="scrollTopBtn" onclick="scrollToTop()" title="Lên đầu trang"><i class="fas fa-arrow-up"></i></button>
+            <main class="content-area bg-slate-100/50" id="main-tab-container">
+                <div class="w-full h-full flex items-center justify-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-3xl"></i></div>
+            </main>
         </div>
     </div>
 
-    <!-- SỔ PHÁC THẢO (SKETCHPAD) -->
-    <div id="notesWidget" class="widget-panel" style="width: 480px; height: 600px;">
+    <!-- WIDGET SỔ VẼ WHITEBOARD (BẢN TỐI ƯU TỪ FILE MỚI) -->
+    <div id="notesWidget" class="widget-panel">
         <div class="bg-slate-800 px-4 py-3 flex justify-between items-center shrink-0">
-            <span class="font-bold text-sm text-white flex items-center gap-2"><i class="fas fa-paint-brush text-purple-400"></i> Sổ phác thảo L&D</span>
-            <div class="flex items-center gap-2">
-                <button onclick="setDrawMode('pen', '#1e293b')" class="w-5 h-5 rounded-full bg-slate-800 border-2 border-white hover:scale-110 transition shadow-sm"></button>
-                <button onclick="setDrawMode('pen', '#ef4444')" class="w-5 h-5 rounded-full bg-red-500 border-2 border-white hover:scale-110 transition shadow-sm"></button>
-                <button onclick="setDrawMode('pen', '#3b82f6')" class="w-5 h-5 rounded-full bg-blue-500 border-2 border-white hover:scale-110 transition shadow-sm"></button>
-                <button onclick="setDrawMode('pen', '#10b981')" class="w-5 h-5 rounded-full bg-emerald-500 border-2 border-white hover:scale-110 transition shadow-sm"></button>
-                <div class="w-px h-4 bg-slate-600 mx-1"></div>
-                <button onclick="setDrawMode('eraser')" class="text-slate-300 hover:text-white" title="Cục tẩy"><i class="fas fa-eraser"></i></button>
-                <button onclick="clearCanvas()" class="text-slate-300 hover:text-rose-400 ml-1" title="Xóa toàn bộ"><i class="fas fa-trash"></i></button>
-                <div class="w-px h-4 bg-slate-600 mx-1"></div>
-                <button onclick="toggleNotes()" class="text-slate-300 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+            <span class="font-bold text-sm text-white flex items-center gap-2"><i class="fas fa-object-group text-purple-400"></i> Bảng Phác Thảo Ghi chú</span>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleFullscreen()" class="text-slate-400 hover:text-white" title="Phóng to toàn màn hình"><i class="far fa-window-maximize"></i></button>
+                <button onclick="toggleNotes()" class="text-slate-400 hover:text-rose-500" title="Đóng"><i class="fas fa-times text-lg"></i></button>
             </div>
         </div>
+        
         <div class="flex text-xs border-b border-slate-200 bg-slate-50 shrink-0">
-            <button onclick="switchNoteTab('draw')" id="tab-draw" class="flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500 transition-colors"><i class="fas fa-pencil-alt mr-1"></i> Vẽ Tay</button>
-            <button onclick="switchNoteTab('text')" id="tab-text" class="flex-1 py-2.5 font-semibold text-slate-500 hover:text-slate-800 transition-colors"><i class="fas fa-font mr-1"></i> Ghi chú Text</button>
+            <button onclick="switchNoteTab('draw')" id="tab-draw" class="flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500 transition-colors"><i class="fas fa-pencil-alt mr-1"></i> Bảng vẽ Hình khối</button>
+            <button onclick="switchNoteTab('text')" id="tab-text" class="flex-1 py-2.5 font-semibold text-slate-500 hover:text-slate-800 transition-colors"><i class="fas fa-font mr-1"></i> Sổ Ghi chú Text</button>
         </div>
+        
+        <div id="drawToolbar" class="bg-white border-b border-slate-200 px-4 py-3 flex flex-wrap gap-4 items-center shrink-0">
+            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg">
+                <button class="wb-tool-btn active" onclick="setWbMode('select')" title="Chọn"><i class="fas fa-mouse-pointer"></i></button>
+                <button class="wb-tool-btn" onclick="setWbMode('draw')" title="Bút vẽ"><i class="fas fa-pen"></i></button>
+                <div class="w-px h-5 bg-slate-300 mx-1"></div>
+                <button class="wb-tool-btn" onclick="addShape('rect')" title="Ô vuông"><i class="far fa-square"></i></button>
+                <button class="wb-tool-btn" onclick="addShape('circle')" title="Hình tròn"><i class="far fa-circle"></i></button>
+                <button class="wb-tool-btn" onclick="addPureText()" title="Viết Text trong suốt"><i class="fas fa-font"></i></button>
+                <button class="wb-tool-btn bg-amber-100 text-amber-600 border-amber-200 hover:bg-amber-200" onclick="addStickyNote()" title="Ghi chú Vàng"><i class="fas fa-sticky-note"></i></button>
+            </div>
+            <div class="flex items-center gap-3 bg-slate-100 p-1.5 rounded-lg">
+                <div class="flex items-center gap-1.5" title="Màu Nền"><i class="fas fa-fill-drip text-slate-400 text-xs"></i><input type="color" id="shapeBgColor" value="#fef08a" onchange="applyWbColor('bg', this.value)"></div>
+                <div class="w-px h-5 bg-slate-300"></div>
+                <div class="flex items-center gap-1.5" title="Màu Chữ/Viền"><i class="fas fa-palette text-slate-400 text-xs"></i><input type="color" id="textColor" value="#1e293b" onchange="applyWbColor('text', this.value)"></div>
+                <div class="w-px h-5 bg-slate-300"></div>
+                <button class="wb-tool-btn text-rose-500 hover:text-rose-600 border-none bg-transparent" onclick="deleteSelected()" title="Xóa"><i class="fas fa-trash-alt"></i></button>
+            </div>
+            <div class="flex items-center gap-2 ml-auto">
+                <button onclick="newDrawing()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 shadow-sm"><i class="fas fa-plus"></i> Clear</button>
+            </div>
+        </div>
+
         <div class="relative flex-grow bg-white" id="note-container">
             <div id="drawArea" class="absolute inset-0 block" style="background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 20px 20px;">
-                <canvas id="sketchCanvas" class="absolute inset-0 cursor-crosshair touch-none"></canvas>
+                <canvas id="fabricCanvas"></canvas>
             </div>
-            <textarea id="stickyNoteText" oninput="saveNotes()" class="absolute inset-0 w-full h-full p-5 bg-yellow-50 resize-none outline-none text-[14px] text-slate-800 custom-scrollbar hidden shadow-inner" placeholder="Bạn có thể gõ nội dung văn bản vào đây..."></textarea>
+            <textarea id="stickyNoteText" oninput="saveTextNotes()" class="absolute inset-0 w-full h-full p-5 bg-yellow-50 resize-none outline-none text-[15px] font-medium text-slate-800 custom-scrollbar hidden shadow-inner leading-relaxed" placeholder="Bắt đầu gõ ghi chú của bạn vào đây..."></textarea>
         </div>
     </div>
 
-    <div class="fixed floating-tool flex flex-col gap-2">
-        <button onclick="toggleNotes()" class="w-10 h-10 bg-white text-slate-600 border border-slate-200 rounded-full shadow-sm hover:bg-slate-50 flex items-center justify-center" title="Sổ phác thảo"><i class="fas fa-paint-brush text-sm text-purple-500"></i></button>
-    </div>
-
-    <!-- MODAL 1: UPLOAD TÀI LIỆU WORDPRESS CÓ AI AUTO-MINDMAP -->
-    <div id="wpImportModal" class="fixed inset-0 bg-slate-900/60 z-[9999] hidden items-center justify-center backdrop-blur-sm">
-        <div class="bg-white w-full max-w-3xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-[fadeUp_0.2s_ease]">
-            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
-                <h3 class="font-bold text-slate-800 text-lg"><i class="fab fa-wordpress text-blue-600 mr-2"></i> Nhúng Tài liệu Wordpress & Tự tạo Sơ đồ</h3>
-                <button onclick="closeWPModal()" class="text-slate-400 hover:text-rose-500 text-xl"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="p-6 flex-grow overflow-y-auto custom-scrollbar flex flex-col gap-4">
-                <div class="grid grid-cols-2 gap-4 shrink-0">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Tiêu đề tính năng (Tên nhánh chính)</label>
-                        <input type="text" id="wpDocTitle" class="saas-input w-full" placeholder="VD: Thêm hàng hóa mới">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Gắn vào Bước quy trình nào?</label>
-                        <select id="wpDocNode" class="saas-input w-full bg-slate-50 font-semibold text-blue-600">
-                            <option value="setup">1. Khởi tạo Cửa hàng</option>
-                            <option value="inventory">2. Nhập hàng & Kho</option>
-                            <option value="sales">3. Bán hàng & Thu ngân</option>
-                            <option value="crm">4. Chăm sóc Khách hàng</option>
-                            <option value="reports">5. Báo cáo Phân tích</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 flex items-start gap-3 shrink-0">
-                    <i class="fas fa-robot text-purple-600 text-xl mt-0.5"></i>
-                    <div>
-                        <p class="text-xs font-bold text-purple-800">AI Lọc Từ Thừa & Tóm tắt thao tác</p>
-                        <p class="text-[11px] text-purple-600 mt-1">Đã tối ưu: AI sẽ tự động bỏ đi các từ "Tình huống", "Thao tác:", tự động gọt ngắn câu chữ cho Sơ đồ ngắn gọn, súc tích và dễ hiểu nhất.</p>
-                    </div>
-                </div>
-
-                <div class="flex-grow flex flex-col relative" id="htmlInputContainer">
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Dán Code HTML từ WordPress vào đây</label>
-                    <textarea id="wpDocHtml" class="w-full flex-grow p-4 border border-slate-300 rounded-lg text-sm font-mono bg-slate-900 text-emerald-400 custom-scrollbar outline-none focus:ring-2 focus:ring-purple-500" placeholder="<div class='entry-content'>..."></textarea>
-                    
-                    <div id="aiLoadingOverlay" class="absolute inset-0 top-6 bg-slate-900/80 rounded-lg hidden flex-col items-center justify-center z-10 ai-scanning overflow-hidden">
-                        <i class="fas fa-brain text-purple-400 text-4xl mb-3 animate-pulse"></i>
-                        <p class="text-white font-bold text-sm">AI Đang lọc từ thừa và phân tích thao tác...</p>
-                    </div>
-                </div>
-            </div>
-            <div class="px-6 py-4 border-t border-slate-200 flex justify-end gap-3 bg-slate-50 shrink-0">
-                <button onclick="closeWPModal()" class="btn-outline border-slate-300">Hủy bỏ</button>
-                <button onclick="saveWPDocWithAI()" class="px-6 py-2 bg-purple-600 text-white text-sm font-bold rounded-lg hover:bg-purple-700 shadow-md transition"><i class="fas fa-magic mr-1"></i> Phân tích Sơ Đồ</button>
-            </div>
+    <!-- AI CHATBOT -->
+    <div id="chatWidget" class="widget-panel">
+        <div class="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center shrink-0">
+            <span class="font-semibold text-sm text-slate-800"><i class="fas fa-robot text-blue-500 mr-2"></i> AI Assistant</span>
+            <button onclick="toggleChat()" class="text-slate-400 hover:text-slate-700"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="chatHistory" class="flex-grow p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3 bg-slate-50">
+            <div class="bg-white border border-slate-200 p-3 rounded-lg shadow-sm text-[13px] text-slate-700 w-11/12">Xin chào! Tôi có thể đọc Data và giúp bạn thống kê thông tin khóa học.</div>
+        </div>
+        <div class="p-3 bg-white border-t border-slate-200 flex gap-2 shrink-0">
+            <input type="text" id="chatInput" onkeypress="handleChatEnter(event)" class="saas-input" placeholder="Hỏi AI...">
+            <button onclick="sendChatMessage()" class="w-9 h-9 shrink-0 bg-blue-600 text-white rounded flex items-center justify-center hover:bg-blue-700"><i class="fas fa-paper-plane text-xs"></i></button>
         </div>
     </div>
 
-    <!-- MODAL 2: BẢO MẬT XÓA TÀI LIỆU -->
-    <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/60 z-[9999] hidden items-center justify-center backdrop-blur-sm">
-        <div class="bg-white w-96 rounded-2xl shadow-2xl p-6 transform scale-95 transition-transform flex flex-col gap-4">
-            <div class="flex items-center gap-3 text-rose-600">
-                <div class="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center text-2xl shrink-0"><i class="fas fa-exclamation-triangle"></i></div>
-                <div><h3 class="font-bold text-lg leading-tight">Cảnh báo Xóa</h3><p class="text-xs text-rose-500/80 font-medium">Hành động này không thể hoàn tác</p></div>
-            </div>
-            <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                <p class="text-sm text-slate-700">Bạn đang xóa tài liệu: <br><strong id="deleteDocTitle" class="text-blue-600">Tên tài liệu</strong></p>
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Gõ chữ <span class="text-rose-600 font-black">XOA</span> để xác nhận:</label>
-                <input type="text" id="deleteConfirmInput" class="saas-input uppercase" placeholder="Nhập chữ XOA..." oninput="checkDeleteInput()">
-            </div>
-            <div class="flex justify-end gap-3 mt-2">
-                <button onclick="closeDeleteModal()" class="btn-outline">Hủy bỏ</button>
-                <button id="btnConfirmDelete" onclick="executeDelete()" class="px-6 py-2 bg-rose-200 text-rose-400 text-sm font-bold rounded-lg cursor-not-allowed transition" disabled>Xóa vĩnh viễn</button>
-            </div>
-        </div>
+    <!-- FLOATING BUTTONS GÓC DƯỚI BÊN PHẢI (Giao diện Icon cọ vẽ mới) -->
+    <div class="fixed floating-tool flex flex-col gap-3">
+        <button onclick="toggleNotes()" class="w-12 h-12 bg-white text-purple-600 border-2 border-slate-200 rounded-full shadow-lg hover:bg-slate-50 flex items-center justify-center transition-all" title="Bảng Phác Thảo">
+            <i class="fas fa-paint-brush text-lg"></i>
+        </button>
+        <button onclick="toggleChat()" class="w-12 h-12 bg-slate-800 text-white border-2 border-white rounded-full shadow-lg hover:bg-slate-900 hover:scale-110 flex items-center justify-center transition-all" title="Trợ lý AI">
+            <i class="fas fa-robot text-lg"></i>
+        </button>
     </div>
 
+    <!-- MAIN JAVASCRIPT & API CALLS -->
     <script>
-        // --- 1. DỮ LIỆU SƠ ĐỒ KNOWLEDGE BASE ---
-        const knowledgeBase = {
-            "setup": { title: "1. Khởi tạo Cửa hàng", icon: "fa-cogs" },
-            "inventory": { title: "2. Nhập hàng & Kho", icon: "fa-boxes" },
-            "sales": { title: "3. Bán hàng & Thu ngân", icon: "fa-cash-register" },
-            "crm": { title: "4. Chăm sóc Khách hàng", icon: "fa-users" },
-            "reports": { title: "5. Báo cáo Phân tích", icon: "fa-chart-pie" }
-        };
+        // --- 1. CONFIG & STATE ---
+        localforage.config({ name: 'TrainerOS_Database' });
+        const GOOGLE_API_URL = localStorage.getItem('kv_api_url') || "";
+        const AppState = { lang: 'vi', filters: { month: 'all', search: '', status: '' }, sort: { col: '', asc: true }, pagination: { page: 1, limit: 10 } };
+        let globalMasterDB =[]; 
+        let globalGiftsDB =[];
+        let statusChartInstance = null, perfChartInstance = null;
 
-        const branchColors = ['#fbcfe8', '#a7f3d0', '#c4b5fd', '#fde047', '#93c5fd', '#fca5a5'];
-        let activeKnowledgeNode = "setup"; 
-        let docToDelete = null;
+        const courseConfig =[
+            { id: 'SPCB', label: 'Retail', title: 'Cơ bản (TS-DS)', desc: 'Quy trình Onboard 3 ngày.', link: 'spcb.html', icon: 'fa-box', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
+            { id: 'TAX', label: 'Specialist', title: 'Chuyên đề', desc: 'HĐĐT & Kế toán Thuế', link: 'thuehkd.html', icon: 'fa-file-invoice-dollar', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+            { id: 'KV1', label: 'Advanced', title: 'Chuyên ngành', desc: 'Xử lý tình huống KV1.', link: 'kv1.html', icon: 'fa-laptop-code', color: 'text-cyan-600', bg: 'bg-cyan-50', border: 'border-cyan-200' },
+            { id: 'FNB', label: 'Industry', title: 'Ngành FNB', desc: 'Kịch bản Khóa FNB', link: 'industry.html', icon: 'fa-utensils', color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' },
+            { id: 'SALON', label: 'Industry', title: 'Ngành Salon', desc: 'Kịch bản Khóa Salon', link: 'industry.html', icon: 'fa-spa', color: 'text-pink-500', bg: 'bg-pink-50', border: 'border-pink-200' },
+            { id: 'HOTEL', label: 'Industry', title: 'Ngành Hotel', desc: 'Kịch bản Khóa Hotel', link: 'industry.html', icon: 'fa-hotel', color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' }
+        ];
 
-        function handleScroll() {
-            const container = document.getElementById('main-tab-container');
-            const btn = document.getElementById('scrollTopBtn');
-            if (container.scrollTop > 300) btn.style.display = "flex"; else btn.style.display = "none";
-        }
-        function scrollToTop() { document.getElementById('main-tab-container').scrollTo({ top: 0, behavior: 'smooth' }); }
+        const defaultGifts =[ { name: 'Túi tote', in: 0, out: 0 }, { name: 'Bình nước', in: 0, out: 0 }, { name: 'Áo mưa', in: 0, out: 0 }, { name: 'Cốc', in: 0, out: 0 }, { name: 'Sổ', in: 0, out: 0 } ];
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            if(event) event.currentTarget.classList.add('active');
-            const container = document.getElementById('main-tab-container');
-            
-            if (tabId !== 'kien-thuc') { 
-                container.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold text-xl">Đã chuyển Tab. Bấm lại Sơ đồ Vận Hành để xem Mindmap.</div>`; 
+        // --- ĐA NGÔN NGỮ (I18N) ---
+        function setLang(lang) {
+            AppState.lang = lang;
+            if(lang === 'en') {
+                document.getElementById('lang-en').className = "cursor-pointer px-2 py-1 rounded bg-white text-blue-600 shadow-sm transition";
+                document.getElementById('lang-vi').className = "cursor-pointer px-2 py-1 rounded hover:text-slate-800 transition";
+            } else {
+                document.getElementById('lang-vi').className = "cursor-pointer px-2 py-1 rounded bg-white text-blue-600 shadow-sm transition";
+                document.getElementById('lang-en').className = "cursor-pointer px-2 py-1 rounded hover:text-slate-800 transition";
             }
-            else if (tabId === 'kien-thuc') {
-                // KHÔI PHỤC LẠI GIAO DIỆN 5 BOX CHỨA LINE NGANG ĐÚNG YÊU CẦU CỦA BẠN
-                container.innerHTML = `
-                    <div class="mb-6 flex justify-between items-end">
-                        <div>
-                            <h2 class="text-2xl font-bold text-slate-800">Sơ đồ Kiến thức Vận hành</h2>
-                            <p class="text-sm text-slate-500 mt-1">Học theo luồng thực tế của cửa hàng thay vì học thuộc lòng từng tính năng.</p>
-                        </div>
-                        <button onclick="openWPModal('${activeKnowledgeNode}')" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition shadow-md"><i class="fas fa-plus mr-2"></i> Trích xuất Tính năng mới</button>
-                    </div>
-
-                    <!-- KHÔI PHỤC GIAO DIỆN 5 BOX QUY TRÌNH (LINE NGANG) -->
-                    <div class="saas-card p-6 mb-6 overflow-x-auto custom-scrollbar bg-white">
-                        <div class="min-w-[800px] flex items-center justify-between relative">
-                            <!-- Đường line nối các bước -->
-                            <div class="absolute top-1/2 left-10 right-10 h-1 bg-slate-200 -translate-y-1/2 z-0"></div>
-                            
-                            ${Object.keys(knowledgeBase).map(k => `
-                                <div id="node-${k}" onclick="renderNodeDetail('${k}')" class="k-node relative z-10 w-28 flex flex-col items-center gap-3 cursor-pointer group bg-white border-2 border-slate-200 rounded-xl p-3 transition-all">
-                                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-purple-100 group-hover:text-purple-600 transition"><i class="fas ${knowledgeBase[k].icon}"></i></div>
-                                    <span class="text-[11px] font-bold text-slate-700 text-center leading-tight">${knowledgeBase[k].title.replace('. ', '.<br>')}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-
-                    <div id="knowledge-content" class="min-h-[400px]"></div>
-                `;
-                setTimeout(() => renderNodeDetail(activeKnowledgeNode), 50);
-            }
+            document.querySelectorAll('.lang-text').forEach(el => {
+                if(el.getAttribute(`data-${lang}`)) el.innerHTML = el.getAttribute(`data-${lang}`);
+            });
         }
 
-        // --- RENDER GIAO DIỆN MINDMAP CHI TIẾT ---
-        window.renderNodeDetail = function(nodeId) {
-            activeKnowledgeNode = nodeId;
-            
-            // UI Box Active
-            document.querySelectorAll('.k-node').forEach(el => { el.classList.remove('ring-4', 'ring-purple-200', 'scale-105', 'border-purple-500'); el.classList.add('border-slate-200'); });
-            const activeEl = document.getElementById(`node-${nodeId}`);
-            if(activeEl) { activeEl.classList.remove('border-slate-200'); activeEl.classList.add('ring-4', 'ring-purple-200', 'scale-105', 'border-purple-500'); }
-
-            let savedDocs = JSON.parse(localStorage.getItem('kv_wp_docs')) || {};
-            let nodeDocs = savedDocs[nodeId] || [];
-
-            // HTML DANH SÁCH TÀI LIỆU (KÉO THẢ BÊN DƯỚI)
-            let wpDocsHtml = nodeDocs.map((doc, index) => `
-                <div id="doc-wrapper-${doc.id}" class="mb-3 border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm doc-drag-wrapper" draggable="true" ondragstart="handleDragStart(event, '${nodeId}', ${index})" ondragover="handleDragOver(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${nodeId}', ${index})" ondragend="handleDragEnd(event)">
-                    <div class="bg-slate-50 px-4 py-2 flex justify-between items-center group">
-                        <div class="flex items-center gap-3 flex-grow">
-                            <div class="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 transition px-1"><i class="fas fa-grip-vertical"></i></div>
-                            <h4 class="font-bold text-slate-700 text-[13px] flex items-center gap-2 cursor-pointer hover:text-blue-600" onclick="document.getElementById('doc-${doc.id}').classList.toggle('hidden')">
-                                <i class="fab fa-wordpress text-blue-500"></i> ${doc.title}
-                            </h4>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <button onclick="deleteWPDoc('${nodeId}', ${doc.id}, '${doc.title.replace(/'/g, "\\'")}');" class="text-xs text-rose-500 hover:bg-rose-50 px-2 py-1 rounded transition"><i class="fas fa-trash"></i></button>
-                            <i class="fas fa-chevron-down text-slate-400 cursor-pointer p-1.5 hover:bg-slate-200 rounded-md" onclick="document.getElementById('doc-${doc.id}').classList.toggle('hidden')"></i>
-                        </div>
-                    </div>
-                    <div id="doc-${doc.id}" class="p-5 wp-content overflow-x-auto text-[13px] leading-relaxed text-slate-700 hidden bg-white border-t border-slate-100">${doc.html}</div>
-                </div>
-            `).join('');
-
-            document.getElementById('knowledge-content').innerHTML = `
-                <!-- KHUNG CANVAS MINDMAP XMIND -->
-                <div class="saas-card bg-white mb-6 shadow-sm overflow-hidden">
-                    <div class="px-6 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider"><i class="fas fa-sitemap mr-1"></i> Sơ đồ Thao tác Tự động (AI Mindmap)</p>
-                        <p class="text-[10px] text-slate-400">Cuộn chuột để Zoom. Nhấn giữ nền để kéo. Click <span class="bg-slate-200 text-slate-600 px-1 rounded-full px-1.5">O</span> để đóng/mở nhánh.</p>
-                    </div>
-                    <div class="w-full h-[550px] bg-[#f8fafc] relative p-4">
-                        <svg id="markmap-svg"></svg>
-                    </div>
-                </div>
-                
-                <!-- DANH SÁCH BÊN DƯỚI -->
-                <div class="saas-card p-6 bg-white mb-10">
-                    <h3 class="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wider"><i class="fas fa-database text-blue-600 mr-2"></i> Tài liệu Gốc (Kéo thả để đổi vị trí)</h3>
-                    ${wpDocsHtml || '<div class="text-center text-slate-400 text-xs italic py-10 border-2 border-dashed rounded-xl">Chưa có dữ liệu cho quy trình này. Bấm nút Trích xuất tính năng ở trên.</div>'}
-                </div>
-            `;
-
-            setTimeout(() => renderAutoMindmap(nodeId, nodeDocs), 50);
-        };
-
-        // --- HÀM VẼ MINDMAP (GIỚI HẠN CHIỀU RỘNG CHỮ = MAXWIDTH: 300) ---
-        function renderAutoMindmap(nodeId, nodeDocs) {
+        // --- FETCH API CHÍNH ---
+        async function fetchDatabase() {
             try {
-                const { Transformer, Markmap } = window.markmap;
-                const transformer = new Transformer();
-                const data = knowledgeBase[nodeId];
-                
-                let mdContent = `# ${data.title.split('. ')[1]}\n`; // Nhánh cha
-                
-                if(nodeDocs.length === 0) {
-                    mdContent += `## Chưa có dữ liệu\n`;
-                } else {
-                    nodeDocs.forEach(doc => {
-                        mdContent += `## ${doc.title.replace(/\n/g, ' ')}\n`;
-                        if(Array.isArray(doc.summary) && doc.summary.length > 0) {
-                            doc.summary.forEach(item => {
-                                if(item.type === 'note') {
-                                    mdContent += `### 🌟 LƯU Ý: ${item.text.replace(/\n/g, ' ')}\n`;
-                                } else {
-                                    mdContent += `### ${item.text.replace(/\n/g, ' ')}\n`;
-                                }
-                            });
-                        }
-                    });
-                }
-
-                const { root } = transformer.transform(mdContent);
-                const svgEl = document.querySelector('#markmap-svg');
-                if(svgEl) {
-                    svgEl.innerHTML = ''; 
-                    Markmap.create(svgEl, { 
-                        autoFit: true,
-                        fitRatio: 0.9,
-                        spacingHorizontal: 80,
-                        spacingVertical: 10,
-                        maxWidth: 300, // ĐÂY LÀ CHÌA KHÓA GIÚP TEXT DÀI TỰ XUỐNG DÒNG, KHÔNG ĐÈ NHAU
-                    }, root);
-
-                    // NHÚNG CSS STYLE TRỰC TIẾP
-                    setTimeout(() => {
-                        d3.selectAll('#markmap-svg .markmap-node').each(function(d) {
-                            const node = d3.select(this);
-                            const div = node.select('foreignObject div').node();
-                            
-                            if(d.depth === 0) {
-                                node.classed('markmap-node-root', true);
-                                if(div) {
-                                    div.style.backgroundColor = '#4f46e5'; div.style.color = '#fff'; div.style.padding = '8px 16px'; 
-                                    div.style.borderRadius = '12px'; div.style.fontSize = '20px'; div.style.border = '2px solid white';
-                                    div.style.boxShadow = '3px 4px 0px rgba(0,0,0,0.2)';
-                                }
-                            } else if (d.depth === 1) {
-                                node.classed('markmap-node-level-1', true);
-                                if(div) {
-                                    div.style.backgroundColor = branchColors[d.state.id % branchColors.length];
-                                    div.style.color = '#1e293b'; div.style.padding = '6px 12px'; div.style.borderRadius = '8px';
-                                    div.style.fontSize = '16px'; div.style.border = '1px solid rgba(0,0,0,0.1)';
-                                }
-                            } else {
-                                if(d.content.includes('🌟 LƯU Ý:')) {
-                                    node.classed('markmap-node-note', true); // Thẻ Vàng
-                                } else {
-                                    node.classed('markmap-node-level-2', true); // Thẻ Trắng nét đứt
-                                    if(div) {
-                                        div.style.backgroundColor = '#fff'; div.style.color = '#475569'; div.style.padding = '4px 10px'; 
-                                        div.style.borderRadius = '6px'; div.style.border = '2px dashed #cbd5e1'; div.style.fontSize = '14px';
-                                    }
-                                }
-                            }
-                        });
-                        d3.selectAll('.markmap-link').style('stroke', '#cbd5e1').style('stroke-width', '2px');
-                    }, 200); 
-                }
-            } catch (error) { console.error("Lỗi vẽ Mindmap:", error); }
-        }
-
-        // --- HÀM AI PARSER: LỌC TỪ THỪA, GIỮ TEXT NGẮN GỌN ---
-        function aiExtractStepsFromHTML(html) {
-            let tempDiv = document.createElement("div"); tempDiv.innerHTML = html;
-            let results = [];
-            
-            // Xóa rác (Giới thiệu, lợi ích...)
-            let headingsToRemove = [];
-            tempDiv.querySelectorAll('h2, h3, h4').forEach(h => {
-                let text = h.textContent.toLowerCase();
-                if(text.includes('giới thiệu') || text.includes('lợi ích') || text.includes('tổng quan')) { headingsToRemove.push(h); }
-            });
-            headingsToRemove.forEach(h => {
-                let next = h.nextElementSibling;
-                while(next && !next.tagName.match(/^H[1-6]$/)) { let toDelete = next; next = next.nextElementSibling; toDelete.remove(); }
-                h.remove();
-            });
-
-            // Lấy các Bước thao tác
-            let lists = tempDiv.querySelectorAll('ol > li, ul > li, p');
-            lists.forEach(el => {
-                // HÀM LỌC TỪ THỪA SIÊU THÔNG MINH
-                let text = el.textContent.replace(/\s+/g, ' ').trim();
-                text = text.replace(/^Tình huống:?\s*/i, '')
-                           .replace(/^Thao tác( thực hiện)?( như sau)?:?\s*/i, '')
-                           .replace(/^(Để|Từ|Tại)\s+/i, '')
-                           .trim();
-                
-                // Viết hoa chữ cái đầu
-                if(text.length > 0) text = text.charAt(0).toUpperCase() + text.slice(1);
-
-                if(text.length > 5) {
-                    if(text.toLowerCase().includes('lưu ý:') || text.toLowerCase().includes('chú ý:')) {
-                        let parts = text.split(/lưu ý:|chú ý:/i);
-                        if(parts[0].trim().length > 5) results.push({ type: 'step', text: parts[0].trim().substring(0, 80) + (parts[0].length>80?'...':'') });
-                        if(parts[1] && parts[1].trim().length > 5) results.push({ type: 'note', text: parts[1].trim().substring(0, 100) + (parts[1].length>100?'...':'') });
-                    } else {
-                        // Tối ưu ngắn gọn: Chỉ lấy câu đầu tiên, tối đa 80 ký tự để map khỏi bị tràn
-                        let sentences = text.split(/(?<=[.!?])\s+/);
-                        let finalStr = sentences[0].substring(0, 80);
-                        if(sentences[0].length > 80) finalStr += '...';
-                        if(el.tagName === 'LI') results.push({ type: 'step', text: finalStr }); // Chỉ ưu tiên thẻ LI (Các bước đánh số)
+                if(!GOOGLE_API_URL) throw new Error("Local");
+                document.getElementById('db-status-indicator').innerHTML = `<i class="fas fa-circle-notch fa-spin text-[10px] text-emerald-500"></i> Syncing...`;
+                const response = await fetch(GOOGLE_API_URL);
+                const data = await response.json();
+                if (data && Array.isArray(data.master)) {
+                    globalMasterDB = data.master;
+                    localStorage.setItem('kv_master_db', JSON.stringify(data.master));
+                    if(data.gifts && data.gifts.length > 0) {
+                        globalGiftsDB = data.gifts;
+                        localStorage.setItem('kv_gift_db', JSON.stringify(data.gifts));
                     }
                 }
-            });
+                document.getElementById('db-status-indicator').innerHTML = `<i class="fas fa-circle text-[8px] text-emerald-500"></i> Cloud API Active`;
+            } catch (err) {
+                const localDB = JSON.parse(localStorage.getItem('kv_master_db'));
+                globalMasterDB = Array.isArray(localDB) ? localDB : [];
+                globalGiftsDB = JSON.parse(localStorage.getItem('kv_gift_db')) || defaultGifts;
+                document.getElementById('db-status-indicator').innerHTML = `<i class="fas fa-circle text-[8px] text-amber-500"></i> Local Mode`;
+            }
+        }
 
-            // Fallback nếu bài viết không có thẻ LI (danh sách)
-            if(results.length === 0) {
-                tempDiv.querySelectorAll('h3, h4').forEach(h => {
-                    let text = h.textContent.replace(/^[IVX\d\.\-\s]+/, '').trim();
-                    if(text.length > 5 && text.length < 50) results.push({ type: 'step', text: text });
-                });
+        // --- CHUÔNG THÔNG BÁO VÀ CLICK EVENT ---
+        window.addEventListener('click', function(e) {
+            const bell = document.getElementById('notiDropdown'); const bellIcon = document.getElementById('bellIcon');
+            if (bell && !bell.classList.contains('hidden') && !bell.contains(e.target) && !bellIcon.contains(e.target)) {
+                bell.classList.add('hidden');
+            }
+        });
+
+        function markAllRead(e) {
+            e.stopPropagation(); localStorage.setItem('noti_read_time', new Date().getTime());
+            const unreadDot = document.getElementById('unreadDot');
+            if(unreadDot) unreadDot.classList.add('hidden');
+            document.querySelectorAll('.noti-unread-dot').forEach(el => el.classList.add('hidden'));
+        }
+
+        function getDynamicCalendar() { return JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {}; }
+        
+        function generateSmartAlerts(isDropdown = false) {
+            const today = new Date(); const calData = getDynamicCalendar(); let alertsHTML = '';
+            const mKey = `${today.getFullYear()}-${today.getMonth() + 1}`;
+            const lastReadTime = localStorage.getItem('noti_read_time') || 0; let hasUnread = false;
+
+            if (!calData[mKey]) {
+                if(isDropdown) return `<div class="p-6 text-sm text-slate-500 text-center"><i class="fas fa-calendar-times text-3xl text-slate-200 mb-2 block"></i>Chưa cài lịch tháng này</div>`;
+                return `<div class="saas-card p-4 flex items-start gap-4 mb-3 border-l-4 border-l-slate-300"><div class="w-10 h-10 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center font-bold text-lg shrink-0"><i class="fas fa-calendar-times"></i></div><div><h4 class="font-semibold text-slate-800 text-sm">Chưa cài đặt lịch</h4><p class="text-xs font-medium text-slate-500 mt-0.5">Vào Thiết lập để cấu hình</p></div></div>`;
             }
 
-            // Lọc trùng lặp
-            let uniqueResults = []; let seenText = new Set();
-            for(let item of results) { if(!seenText.has(item.text)) { seenText.add(item.text); uniqueResults.push(item); } }
+            const checkUpcoming = (dateStr, eventName, type) => {
+                if(!dateStr) return; const evDate = new Date(dateStr); const diffDays = Math.ceil((evDate - today) / (1000 * 60 * 60 * 24));
+                if (diffDays >= 0 && diffDays <= 7) {
+                    let dayTxt = diffDays === 0 ? "Hôm nay" : `Còn ${diffDays} ngày`;
+                    let icon = 'fa-calendar-day'; let color = 'text-blue-500'; let bg = 'bg-blue-50'; let border = 'border-l-blue-500';
+                    if(type==='kv1') { icon='fa-laptop-code'; }
+                    if(type==='tax') { icon='fa-file-invoice-dollar'; color='text-emerald-500'; bg='bg-emerald-50'; border='border-l-emerald-500'; }
+                    if(type==='fnb') { icon='fa-utensils'; color='text-orange-500'; bg='bg-orange-50'; border='border-l-orange-500'; }
+                    if(type==='salon') { icon='fa-spa'; color='text-pink-500'; bg='bg-pink-50'; border='border-l-pink-500'; }
+                    if(type==='hotel') { icon='fa-hotel'; color='text-teal-500'; bg='bg-teal-50'; border='border-l-teal-500'; }
 
-            return uniqueResults.slice(0, 8); // Tối đa 8 nhánh nhỏ
-        }
+                    const isUnread = (new Date().getTime() - lastReadTime) > 0; if(isUnread) hasUnread = true;
 
-        // --- UPLOAD TÀI LIỆU ---
-        function openWPModal() {
-            document.getElementById('wpImportModal').classList.remove('hidden'); document.getElementById('wpImportModal').classList.add('flex');
-            document.getElementById('wpDocNode').value = activeKnowledgeNode; document.getElementById('wpDocTitle').value = ''; document.getElementById('wpDocHtml').value = '';
-            document.getElementById('aiLoadingOverlay').classList.add('hidden'); document.getElementById('aiLoadingOverlay').classList.remove('flex');
-        }
-        function closeWPModal() { document.getElementById('wpImportModal').classList.add('hidden'); document.getElementById('wpImportModal').classList.remove('flex'); }
-        
-        function saveWPDocWithAI() {
-            const title = document.getElementById('wpDocTitle').value.trim(); const node = document.getElementById('wpDocNode').value; const html = document.getElementById('wpDocHtml').value.trim();
-            if(!title || !html) return alert("Vui lòng nhập đủ Tiêu đề và dán mã HTML!");
+                    if(isDropdown) {
+                        alertsHTML += `<div class="p-4 border-b border-slate-50 hover:bg-slate-50 transition cursor-pointer flex gap-3 items-start relative"><div class="w-10 h-10 rounded-full ${bg} ${color} flex items-center justify-center shrink-0 mt-0.5"><i class="fas ${icon}"></i></div><div><h4 class="font-semibold text-slate-800 text-sm leading-tight">${eventName}</h4><p class="text-xs text-slate-500 mt-1"><i class="far fa-clock mr-1"></i>${dayTxt}</p></div><span class="noti-unread-dot w-2 h-2 rounded-full bg-blue-500 absolute top-4 right-4 ${isUnread ? '' : 'hidden'}"></span></div>`;
+                    } else {
+                        let btnHTML = type !== 'onboard' ? `<a href="tools.html" class="inline-block mt-2 text-[10px] font-semibold bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded hover:bg-slate-50 transition shadow-sm">Dùng Tool Lọc HRM</a>` : '';
+                        alertsHTML += `<div class="saas-card p-4 flex items-start gap-4 mb-3 border-l-4 ${border} hover:shadow-md transition"><div class="w-10 h-10 rounded-lg ${bg} ${color} flex items-center justify-center font-bold text-lg shrink-0"><i class="fas ${icon}"></i></div><div><h4 class="font-semibold text-slate-800 text-sm">${eventName}</h4><p class="text-xs font-medium text-slate-500 mt-0.5"><i class="far fa-clock mr-1"></i>${dayTxt}</p>${btnHTML}</div></div>`;
+                    }
+                }
+            };
             
-            document.getElementById('aiLoadingOverlay').classList.remove('hidden'); document.getElementById('aiLoadingOverlay').classList.add('flex');
+            const monthData = calData[mKey];
+            checkUpcoming(monthData.kv1, "Khóa KV1", "kv1"); checkUpcoming(monthData.tax, "Khóa HĐĐT - Thuế", "tax");
+            checkUpcoming(monthData.fnb, "Khóa FNB", "fnb"); checkUpcoming(monthData.salon, "Khóa Salon", "salon"); checkUpcoming(monthData.hotel, "Khóa Hotel", "hotel");
+            if(monthData.onboards) monthData.onboards.forEach((d, i) => checkUpcoming(d, `Lớp Onboard Tuần ${i+1}`, "onboard"));
+
+            const unreadDot = document.getElementById('unreadDot');
+            if(unreadDot) { if(hasUnread && alertsHTML !== '') unreadDot.classList.remove('hidden'); else unreadDot.classList.add('hidden'); }
+
+            if(alertsHTML === '') {
+                if(isDropdown) return `<div class="p-6 text-center text-xs text-slate-400">Không có thông báo mới</div>`;
+                return `<div class="saas-card p-4 flex items-center gap-3 mb-6"><i class="fas fa-check-circle text-emerald-500"></i><p class="text-sm font-medium text-slate-600">Trong 7 ngày tới không có sự kiện đào tạo nào.</p></div>`;
+            }
+            return alertsHTML;
+        }
+
+        function toggleNoti(e) { 
+            if(e) e.stopPropagation(); 
+            const drop = document.getElementById('notiDropdown'); 
+            drop.classList.toggle('hidden'); 
+            if(!drop.classList.contains('hidden')) { document.getElementById('notiContent').innerHTML = generateSmartAlerts(true); } 
+        }
+
+        // --- DASHBOARD SEARCH ---
+        function handleTopSearch(val) {
+            const query = val.toLowerCase();
+            const dashTable = document.getElementById('dashboard-table-body');
+            if (dashTable) {
+                const rows = dashTable.getElementsByTagName('tr');
+                Array.from(rows).forEach(row => {
+                    if(row.innerText.toLowerCase().includes(query)) row.style.display = '';
+                    else row.style.display = 'none';
+                });
+            }
+            const masterSearch = document.getElementById('searchInput');
+            if(masterSearch) { masterSearch.value = val; handleSearch(val); }
+        }
+
+        // --- RENDER GIAO DIỆN CHÍNH ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            const clickedElement = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
+            if(clickedElement) clickedElement.classList.add('active');
+
+            const container = document.getElementById('main-tab-container');
+            
+            if (tabId === 'tong-quan') {
+                const data = Array.isArray(globalMasterDB) ? globalMasterDB : []; 
+                let sumTotal = 0, sumPass = 0;
+                
+                // DATA CHO TOOLTIP
+                let breakCourse = {}, breakTrainee = {}, breakPass = {};
+                data.forEach(d => {
+                    let g = d.groupName || 'Khác';
+                    breakCourse[g] = (breakCourse[g] || 0) + 1;
+                    breakTrainee[g] = (breakTrainee[g] || 0) + (parseInt(d.totalTrainees) || 0);
+                    breakPass[g] = (breakPass[g] || 0) + (parseInt(d.passedTrainees) || 0);
+                    sumTotal += parseInt(d.totalTrainees)||0; sumPass += parseInt(d.passedTrainees)||0;
+                });
+                
+                const ttCourse = Object.keys(breakCourse).map(k => `• ${k}: ${breakCourse[k]} Lớp`).join('<br>') || 'Chưa có DL';
+                const ttTrainee = Object.keys(breakTrainee).map(k => `• ${k}: ${breakTrainee[k]} HV`).join('<br>') || 'Chưa có DL';
+                const ttPass = Object.keys(breakTrainee).map(k => { let p = breakTrainee[k] > 0 ? Math.round((breakPass[k]/breakTrainee[k])*100) : 0; return `• ${k}: ${p}%`; }).join('<br>') || 'Chưa có DL';
+                
+                const passRate = sumTotal > 0 ? Math.round((sumPass/sumTotal)*100) : 0;
+                const alerts = generateSmartAlerts(false);
+
+                // HISTORY 
+                const renderHistory = () => {
+                    if(!data || data.length === 0) return `<div class="text-center py-6 text-slate-400 text-sm">Chưa có lịch sử hoạt động</div>`;
+                    return `<div class="relative"><div class="absolute left-[15px] top-4 bottom-4 w-px bg-slate-200 z-0"></div>` + 
+                    data.slice().sort((a,b) => b.timestamp - a.timestamp).slice(0, 5).map(d => {
+                        const date = new Date(d.timestamp || Date.now());
+                        const timeStr = date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+                        return `
+                        <div class="flex gap-4 items-start relative mb-4">
+                            <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 z-10 border-2 border-white shadow-sm"><i class="fas fa-check text-xs"></i></div>
+                            <div class="pb-1 flex-grow">
+                                <p class="text-[13px] text-slate-800">Cập nhật hệ thống báo cáo khóa <span class="font-bold text-blue-600">${d.courseId}</span> (${d.groupName})</p>
+                                <p class="text-[11px] text-slate-500 mt-1"><i class="far fa-clock mr-1"></i>${timeStr} • Tổng: ${d.totalTrainees} HV • <span class="font-medium text-slate-700">${d.status}</span></p>
+                            </div>
+                        </div>`;
+                    }).join('') + `</div>`;
+                };
+
+                container.innerHTML = `
+                    <div class="mb-4 flex justify-between items-center">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800 tracking-tight lang-text" data-vi="Bảng điều khiển" data-en="Dashboard">Bảng điều khiển</h2>
+                        </div>
+                        <button onclick="fetchAPIAndRender(event)" class="btn-outline flex items-center gap-2 bg-white text-[11px] py-1.5"><i class="fas fa-sync-alt"></i> Tải lại Data</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="saas-card p-4 relative overflow-visible group cursor-pointer z-20">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tổng Khóa Học</p>
+                            <h3 class="text-3xl font-black text-slate-800">${data.length}</h3>
+                            <div class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition"><i class="fas fa-layer-group text-sm"></i></div>
+                            <div class="tooltip-box"><div class="font-bold border-b border-slate-600 pb-1 mb-1 opacity-70 uppercase text-[9px]">Chi tiết Phân bổ Lớp</div>${ttCourse}</div>
+                        </div>
+                        <div class="saas-card p-4 relative overflow-visible group cursor-pointer z-20">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tổng Học Viên</p>
+                            <h3 class="text-3xl font-black text-slate-800">${sumTotal}</h3>
+                            <div class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition"><i class="fas fa-users text-sm"></i></div>
+                            <div class="tooltip-box"><div class="font-bold border-b border-slate-600 pb-1 mb-1 opacity-70 uppercase text-[9px]">Chi tiết Học viên</div>${ttTrainee}</div>
+                        </div>
+                        <div class="saas-card p-4 relative overflow-visible group cursor-pointer z-20">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tỷ Lệ Pass</p>
+                            <h3 class="text-3xl font-black text-slate-800">${passRate}%</h3>
+                            <div class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition"><i class="fas fa-check-double text-sm"></i></div>
+                            <div class="tooltip-box"><div class="font-bold border-b border-slate-600 pb-1 mb-1 opacity-70 uppercase text-[9px]">Chi tiết Hiệu suất</div>${ttPass}</div>
+                        </div>
+                        <div class="saas-card p-4 relative overflow-hidden bg-slate-900 text-white border-transparent">
+                            <p class="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><i class="fas fa-robot"></i> AI NHẬN ĐỊNH</p>
+                            <p class="text-xs font-medium text-slate-300 leading-relaxed mt-1">${passRate >= 80 ? 'Hệ thống vận hành khỏe mạnh. Tỷ lệ tiếp thu tốt.' : 'Tỷ lệ Fail khá cao. Cần xem lại đề cương.'}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2">
+                            <h3 class="text-sm font-bold text-slate-800 mb-3">Biểu đồ Phân tích</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <div class="saas-card p-4 h-72 flex flex-col relative">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase">Trạng thái khóa<br><span class="text-[8px] font-medium text-slate-400 normal-case">(Cơ cấu số lượng lớp)</span></p>
+                                        <select id="filterStatus" onchange="updateStatusChart()" class="text-[9px] border border-slate-200 rounded px-1.5 py-0.5 text-slate-500 outline-none bg-slate-50 cursor-pointer"><option value="all">Tất cả</option><option value="current">Tháng này</option></select>
+                                    </div>
+                                    <div class="flex-grow relative w-full h-full pb-1"><canvas id="statusChart"></canvas></div>
+                                </div>
+                                <div class="saas-card p-4 h-72 flex flex-col relative">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase">Hiệu suất Đạt/Fail</p>
+                                        <select id="filterPerf" onchange="updatePerfChart()" class="text-[9px] border border-slate-200 rounded px-1.5 py-0.5 text-slate-500 outline-none bg-slate-50 cursor-pointer"><option value="all">Tất cả</option><option value="current">Tháng này</option></select>
+                                    </div>
+                                    <div class="flex-grow relative w-full h-full pb-1"><canvas id="performanceChart"></canvas></div>
+                                </div>
+                                <div class="saas-card p-4 h-72 flex flex-col relative">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase">Tồn Kho Quà Tặng</p>
+                                        <select id="filterMerch" onchange="renderMerchHTML()" class="text-[9px] border border-slate-200 rounded px-1.5 py-0.5 text-slate-500 outline-none bg-slate-50 cursor-pointer"><option value="all">Tất cả</option><option value="low">Sắp hết</option></select>
+                                    </div>
+                                    <div id="merchContainer" class="flex-grow overflow-y-auto custom-scrollbar flex flex-col justify-start gap-3 pr-2 pb-2"></div>
+                                </div>
+                            </div>
+
+                            <h3 class="text-sm font-bold text-slate-800 mb-3">Lịch sử hoạt động</h3>
+                            <div class="saas-card p-5">${renderHistory()}</div>
+                        </div>
+                        <div><h3 class="text-sm font-bold text-slate-800 mb-3">Lịch trình sắp tới</h3>${alerts}</div>
+                    </div>
+                `;
+                setTimeout(() => { updateStatusChart(); updatePerfChart(); renderMerchHTML(); }, 150);
+            } 
+            else if (tabId === 'khoa-hoc') {
+                container.innerHTML = `
+                    <div class="mb-6"><h2 class="text-2xl font-bold text-slate-800 lang-text" data-vi="Tất cả Khóa học" data-en="All Courses">Tất cả Khóa học</h2><p class="text-sm text-slate-500 mt-1">Truy cập kịch bản giảng dạy và form Đóng khóa API.</p></div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        ${courseConfig.map(c => `
+                            <a href="${c.link}" class="saas-card p-6 block hover:border-${c.border.split('-')[2]} group transition relative overflow-hidden">
+                                <div class="w-12 h-12 ${c.bg} ${c.color} rounded-xl flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition duration-300"><i class="fas ${c.icon}"></i></div>
+                                <span class="absolute top-6 right-6 text-[9px] font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded border border-slate-100">${c.label}</span>
+                                <h4 class="font-bold text-base text-slate-800 mb-1 group-hover:${c.color}">${c.title}</h4>
+                                <p class="text-xs text-slate-500">${c.desc}</p>
+                            </a>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            else if (tabId === 'phan-tich') {
+                container.innerHTML = `
+                    <div class="mb-6 flex justify-between items-center">
+                        <div><h2 class="text-2xl font-bold text-slate-800 lang-text" data-vi="Master Data API">Master Data API</h2><p class="text-sm text-slate-500 mt-1">Dữ liệu đồng bộ trực tiếp từ Google Sheets</p></div>
+                        <div class="flex gap-3">
+                            <button onclick="exportCSV()" class="btn-outline flex items-center gap-2 bg-white shadow-sm hover:shadow"><i class="fas fa-file-export text-emerald-600"></i> Xuất Excel</button>
+                            <button onclick="clearMasterData()" class="btn-danger flex items-center gap-2 shadow-sm hover:shadow-md transition"><i class="fas fa-trash-alt"></i> Xóa CSDL Gốc</button>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 mb-6">
+                        <div class="relative flex-grow saas-card px-3 py-1">
+                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Tìm mã khóa, tên nhóm..." class="w-full h-full pl-8 border-none bg-transparent outline-none text-sm font-medium">
+                        </div>
+                        <select id="monthFilter" onchange="renderReportContent()" class="saas-card px-4 py-2 text-sm font-semibold text-slate-600 outline-none cursor-pointer w-40">
+                            <option value="all">Tất cả tháng</option>
+                            ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => `<option value="${m}">Tháng ${m}</option>`).join('')}
+                        </select>
+                    </div>
+
+                    <div class="saas-card overflow-hidden flex flex-col">
+                        <div class="overflow-x-auto custom-scrollbar flex-grow">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr>
+                                        <th class="w-10 text-center">#</th>
+                                        <th class="sortable cursor-pointer hover:bg-slate-100" onclick="handleSort('groupName')">Nhóm <i class="fas fa-sort ml-1 text-slate-300"></i></th>
+                                        <th class="sortable cursor-pointer hover:bg-slate-100" onclick="handleSort('courseId')">Mã Khóa <i class="fas fa-sort ml-1 text-slate-300"></i></th>
+                                        <th class="text-center sortable cursor-pointer hover:bg-slate-100" onclick="handleSort('month')">Tháng <i class="fas fa-sort ml-1 text-slate-300"></i></th>
+                                        <th class="text-center">Bắt đầu</th>
+                                        <th class="text-center bg-slate-50">Tổng</th>
+                                        <th class="text-center bg-slate-50 text-emerald-600">Đạt</th>
+                                        <th class="text-center bg-slate-50 text-rose-500">Fail</th>
+                                        <th class="text-center">Data Links</th>
+                                        <th class="text-center">Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportBody" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                        <div class="bg-slate-50 border-t border-slate-200 px-6 py-4 flex justify-between items-center shrink-0">
+                            <p class="text-xs text-slate-500 font-semibold" id="pageInfo"></p>
+                            <div class="flex items-center gap-3">
+                                <div class="flex gap-1" id="pageButtons"></div>
+                                <select id="pageSizeFilter" onchange="handlePageSize(this.value)" class="saas-input py-1 px-2 text-xs w-auto"><option value="10">10 / trang</option><option value="20">20 / trang</option></select>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                setTimeout(() => renderReportContent(), 50);
+            }
+            setLang(AppState.lang);
+        }
+
+        // --- DASHBOARD CHARTS & HTML BUILDERS ---
+        Chart.defaults.font.family = 'Inter'; Chart.defaults.color = '#94a3b8';
+
+        function updateStatusChart() {
+            const filter = document.getElementById('filterStatus').value;
+            const currentMonth = new Date().getMonth() + 1;
+            let data = globalMasterDB;
+            if(filter === 'current') data = data.filter(d => parseInt(d.month) === currentMonth);
+
+            let sCounts = { 'Hoàn thành': 0, 'Đang diễn ra': 0, 'Hủy': 0 };
+            data.forEach(i => { 
+                const s = (i.status || "").trim().toLowerCase();
+                if(s.includes('hoàn thành')) sCounts['Hoàn thành']++;
+                else if(s.includes('đang')) sCounts['Đang diễn ra']++;
+                else if(s.includes('hủy')) sCounts['Hủy']++;
+            });
+
+            const ctx = document.getElementById('statusChart'); if(!ctx) return;
+            if(statusChartInstance) statusChartInstance.destroy();
+            statusChartInstance = new Chart(ctx.getContext('2d'), {
+                type: 'doughnut',
+                data: { labels:['Hoàn thành', 'Đang diễn ra', 'Hủy'], datasets: [{ data: [sCounts['Hoàn thành'], sCounts['Đang diễn ra'], sCounts['Hủy']], backgroundColor:['#3b82f6', '#0ea5e9', '#ef4444'], borderWidth: 0, hoverOffset: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: {size: 10, weight: '500'} } } }, layout: { padding: { bottom: 10 } } }
+            });
+        }
+
+        function updatePerfChart() {
+            const filter = document.getElementById('filterPerf').value;
+            const currentMonth = new Date().getMonth() + 1;
+            let data = globalMasterDB;
+            if(filter === 'current') data = data.filter(d => parseInt(d.month) === currentMonth);
+
+            const colorMap = { 'SPCB': '#60a5fa', 'KV1': '#1e3a8a', 'TAX': '#94a3b8', 'FNB': '#f97316', 'SALON': '#a855f7', 'HOTEL': '#10b981' };
+            const groups = {};
+            data.forEach(i => {
+                const name = i.groupName || 'Khác';
+                if(!groups[name]) groups[name] = { pass: 0, fail: 0 };
+                groups[name].pass += parseInt(i.passedTrainees) || 0;
+                groups[name].fail += parseInt(i.failedTrainees) || 0;
+            });
+
+            const labels = Object.keys(groups);
+            const passData = labels.map(l => groups[l].pass);
+            const failData = labels.map(l => groups[l].fail);
+            const bgPass = labels.map(l => colorMap[l] || '#10b981');
+
+            const ctx = document.getElementById('performanceChart'); if(!ctx) return;
+            if(perfChartInstance) perfChartInstance.destroy();
+            perfChartInstance = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: { 
+                    labels: labels, 
+                    datasets: [
+                        { label: 'Đạt', data: passData, backgroundColor: bgPass, borderRadius: {topLeft: 2, topRight: 2}, barThickness: 24 },
+                        { label: 'Trượt', data: failData, backgroundColor:'#ef4444', borderRadius: {bottomLeft: 2, bottomRight: 2}, barThickness: 24 }
+                    ] 
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: {size: 10} } } }, scales: { y: { stacked: true, beginAtZero: true, border: {display: false}, grid: {color: '#f1f5f9', borderDash:[4,4]}, ticks: {font: {size: 10}} }, x: { stacked: true, border: {display: false}, grid: {display: false}, ticks: {font: {size: 9}} } }, layout: { padding: { bottom: 10 } } }
+            });
+        }
+
+        function getIconForGift(name) {
+            const n = name.toLowerCase();
+            if(n.includes('túi')) return 'fa-shopping-bag text-orange-500';
+            if(n.includes('bình') || n.includes('cốc')) return 'fa-mug-hot text-blue-500';
+            if(n.includes('mưa') || n.includes('ô')) return 'fa-umbrella text-indigo-500';
+            if(n.includes('sổ')) return 'fa-book text-emerald-500';
+            if(n.includes('khoá')) return 'fa-key text-yellow-500';
+            return 'fa-gift text-purple-500';
+        }
+
+        function renderMerchHTML() {
+            const container = document.getElementById('merchContainer'); if(!container) return;
+            const filter = document.getElementById('filterMerch').value;
+            const gifts = JSON.parse(localStorage.getItem('kv_gift_db')) || globalGiftsDB || [];
+            
+            let html = '';
+            gifts.forEach(g => {
+                let ton = parseInt(g.in) - parseInt(g.out); if (isNaN(ton)) ton = 0;
+                let percent = g.in > 0 ? Math.round((ton / g.in) * 100) : 0;
+                
+                if(filter === 'low' && percent > 20) return;
+                if(parseInt(g.in) === 0 && parseInt(g.out) === 0) return;
+
+                let barColor = percent > 50 ? 'bg-blue-500' : (percent > 20 ? 'bg-amber-500' : 'bg-rose-500');
+                let iconClass = getIconForGift(g.name);
+
+                html += `
+                    <div class="flex items-center gap-3 w-full group relative cursor-pointer mb-1">
+                        <div class="w-[80px] shrink-0 flex items-center gap-2 text-[11px] font-semibold text-slate-700">
+                            <div class="w-6 h-6 rounded bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-white transition"><i class="fas ${iconClass}"></i></div>
+                            <span class="truncate">${g.name}</span>
+                        </div>
+                        <div class="flex-grow progress-bar-container border border-slate-200 relative">
+                            <div class="progress-bar-fill ${barColor}" style="width: ${Math.max(5, percent)}%"></div>
+                            <div class="absolute inset-0 flex items-center justify-end pr-2 text-[9px] font-bold text-slate-700 pointer-events-none">Tồn: ${ton}</div>
+                        </div>
+                        <div class="tooltip-box whitespace-nowrap !text-[10px] !top-auto !bottom-[110%] !left-auto !right-0"><span class="text-slate-400">Nhập:</span> ${g.in} | <span class="text-slate-400">Xuất:</span> ${g.out} | <span class="text-emerald-400">Tồn:</span> ${ton}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html || `<div class="h-full flex items-center justify-center text-xs text-slate-400">Không có dữ liệu tồn kho.</div>`;
+        }
+
+        // --- MASTER DATA API BẢNG ---
+        function getFilteredAndSortedData() {
+            let displayData = [...globalMasterDB];
+            if (AppState.filters.month !== 'all') displayData = displayData.filter(d => d.month == AppState.filters.month);
+            if(AppState.filters.search !== "") {
+                displayData = displayData.filter(d => (d.courseId && d.courseId.toLowerCase().includes(AppState.filters.search)) || (d.groupName && d.groupName.toLowerCase().includes(AppState.filters.search)));
+            }
+            if(AppState.sort.col !== "") {
+                displayData.sort((a, b) => {
+                    let valA = (a[AppState.sort.col] || '').toString().toLowerCase(); let valB = (b[AppState.sort.col] || '').toString().toLowerCase();
+                    if(valA < valB) return AppState.sort.asc ? -1 : 1; if(valA > valB) return AppState.sort.asc ? 1 : -1; return 0;
+                });
+            }
+            return displayData;
+        }
+
+        function clearMasterData() {
+            const pwd = prompt("CẢNH BÁO: Xóa toàn bộ dữ liệu báo cáo trên Database.\nVui lòng nhập mật khẩu (6 số):");
+            if(pwd !== "014023") { alert("Mật khẩu không chính xác."); return; }
+            localStorage.removeItem('kv_master_db'); globalMasterDB =[]; renderReportContent();
+            if(GOOGLE_API_URL) fetch(GOOGLE_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "clear_data", pwd: pwd }) }).then(r => r.json()).then(res => alert(res.message));
+        }
+
+        function handleSearch(val) { AppState.filters.search = val.toLowerCase(); AppState.pagination.page = 1; renderReportContent(); }
+        function handlePageSize(val) { AppState.pagination.limit = parseInt(val); AppState.pagination.page = 1; renderReportContent(); }
+        function goToPage(p) { AppState.pagination.page = p; renderReportContent(); }
+        function handleSort(colName) { if(AppState.sort.col === colName) AppState.sort.asc = !AppState.sort.asc; else { AppState.sort.col = colName; AppState.sort.asc = true; } renderReportContent(); }
+
+        async function fetchAPIAndRender(event) {
+            const btn = event.currentTarget; const originalIcon = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-sync-alt fa-spin"></i> Đang tải...`;
+            await fetchDatabase();
+            if(document.getElementById('statusChart')) { updateStatusChart(); updatePerfChart(); renderMerchHTML(); }
+            else { renderReportContent(); }
+            btn.innerHTML = originalIcon;
+        }
+
+        function renderReportContent() {
+            if(document.getElementById('monthFilter')) AppState.filters.month = document.getElementById('monthFilter').value;
+            const displayData = getFilteredAndSortedData();
+            const tbody = document.getElementById('reportBody'); if(!tbody) return;
+            tbody.innerHTML = '';
+            
+            const totalItems = displayData.length; const totalPages = Math.ceil(totalItems / AppState.pagination.limit) || 1;
+            if (AppState.pagination.page > totalPages) AppState.pagination.page = totalPages;
+            
+            const startIdx = (AppState.pagination.page - 1) * AppState.pagination.limit;
+            const endIdx = startIdx + AppState.pagination.limit;
+            const paginatedData = displayData.slice(startIdx, endIdx);
+
+            document.getElementById('pageInfo').innerText = `Dòng ${totalItems > 0 ? startIdx + 1 : 0} - ${Math.min(endIdx, totalItems)} của ${totalItems}`;
+            
+            let btnHTML = '';
+            for(let i=1; i<=totalPages; i++) {
+                if(i === AppState.pagination.page) btnHTML += `<button class="w-6 h-6 rounded bg-blue-600 text-white font-semibold text-[11px]">${i}</button>`;
+                else btnHTML += `<button onclick="goToPage(${i})" class="w-6 h-6 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 font-semibold text-[11px]">${i}</button>`;
+            }
+            document.getElementById('pageButtons').innerHTML = btnHTML;
+
+            if(paginatedData.length === 0) { tbody.innerHTML = `<tr><td colspan="10" class="text-center py-10 text-slate-400 text-sm">Không có dữ liệu</td></tr>`; return; }
+
+            paginatedData.forEach((item, displayIndex) => {
+                const linkDS = item.listLink ? `<a href="${item.listLink}" target="_blank" class="text-blue-500 hover:underline"><i class="fas fa-link"></i> DS</a>` : `-`;
+                const linkQ = item.quizLink ? `<a href="${item.quizLink}" target="_blank" class="text-indigo-500 hover:underline"><i class="fas fa-link"></i> Điểm</a>` : `-`;
+                
+                let sColor = 'bg-slate-100 text-slate-600';
+                const s = (item.status || "").toLowerCase();
+                if(s.includes('hoàn thành')) sColor = 'bg-emerald-50 text-emerald-600 border border-emerald-100';
+                if(s.includes('đang')) sColor = 'bg-blue-50 text-blue-600 border border-blue-100';
+                if(s.includes('hủy')) sColor = 'bg-rose-50 text-rose-600 border border-rose-100';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="text-center text-slate-400 text-[10px] font-bold">${startIdx + displayIndex + 1}</td>
+                        <td class="font-semibold text-slate-800">${item.groupName}</td>
+                        <td class="font-semibold text-blue-600">${item.courseId}</td>
+                        <td class="text-center text-slate-500 text-xs font-medium">T${item.month}</td>
+                        <td class="text-center text-slate-600 text-xs font-medium">${item.startDate ? new Date(item.startDate).toLocaleDateString('vi-VN') : '--'}</td>
+                        <td class="text-center bg-slate-50/50 font-bold text-slate-800">${item.totalTrainees || '-'}</td>
+                        <td class="text-center bg-slate-50/50 text-emerald-600 font-bold">${item.passedTrainees || '-'}</td>
+                        <td class="text-center bg-slate-50/50 text-rose-500 font-bold">${item.failedTrainees || '-'}</td>
+                        <td class="text-center flex justify-center gap-3 text-[11px] font-semibold">${linkDS} ${linkQ}</td>
+                        <td class="text-center"><span class="px-2 py-1 text-[10px] rounded font-bold ${sColor}">${item.status}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- XUẤT CSV ---
+        function exportCSV() {
+            const data = getFilteredAndSortedData();
+            if(!data.length) return alert('Không có dữ liệu!');
+            let csv = "\uFEFFSTT,Nhóm Khóa,Mã Khóa,Tháng,Bắt Đầu,Tổng HV,Đạt,Fail,Trạng Thái\n";
+            data.forEach((i, idx) => { csv += `${idx+1},${i.groupName},${i.courseId},${i.month},${i.startDate},${i.totalTrainees||0},${i.passedTrainees||0},${i.failedTrainees||0},${i.status}\n`; });
+            const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); 
+            link.setAttribute("download", `Master_Data_${new Date().toLocaleDateString('vi-VN')}.csv`); link.click();
+        }
+
+        // --- WHITEBOARD (FABRIC.JS) KẾT HỢP NOTEPAD TỪ BẢN MỚI ---
+        let fCanvas = null;
+
+        function switchNoteTab(tab) {
+            const dBtn = document.getElementById('tab-draw'); const tBtn = document.getElementById('tab-text');
+            const drawArea = document.getElementById('drawArea'); const drawToolbar = document.getElementById('drawToolbar');
+            const textArea = document.getElementById('stickyNoteText');
+            
+            if(tab === 'draw') { 
+                dBtn.className = "flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500 transition-colors"; 
+                tBtn.className = "flex-1 py-2.5 font-semibold text-slate-500 hover:text-slate-800 transition-colors bg-slate-50 border-b border-slate-200"; 
+                drawArea.classList.remove('hidden'); drawToolbar.classList.remove('hidden'); textArea.classList.add('hidden'); 
+            } else { 
+                tBtn.className = "flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500 transition-colors"; 
+                dBtn.className = "flex-1 py-2.5 font-semibold text-slate-500 hover:text-slate-800 transition-colors bg-slate-50 border-b border-slate-200"; 
+                textArea.classList.remove('hidden'); drawArea.classList.add('hidden'); drawToolbar.classList.add('hidden');
+                document.getElementById('stickyNoteText').focus();
+            }
+        }
+
+        function saveTextNotes() { localStorage.setItem('kv_global_notepad', document.getElementById('stickyNoteText').value); }
+
+        async function initFabric() {
+            if(fCanvas) return;
+            const canvasEl = document.getElementById('fabricCanvas'); const wrapper = document.getElementById('drawArea');
+            canvasEl.width = wrapper.clientWidth; canvasEl.height = wrapper.clientHeight;
+            
+            fCanvas = new fabric.Canvas('fabricCanvas', { isDrawingMode: false });
+            fCanvas.on('selection:created', updateColorPickers); fCanvas.on('selection:updated', updateColorPickers);
+            fCanvas.on('object:modified', saveDrawingToLocal); fCanvas.on('path:created', saveDrawingToLocal);
+            
+            let savedData = await localforage.getItem('kv_global_whiteboard');
+            if(savedData) fCanvas.loadFromJSON(savedData, fCanvas.renderAll.bind(fCanvas));
+        }
+
+        async function saveDrawingToLocal() { await localforage.setItem('kv_global_whiteboard', JSON.stringify(fCanvas.toJSON())); }
+
+        function updateColorPickers(e) {
+            let obj = e.selected[0]; if(!obj) return;
+            if(obj.type === 'textbox') { document.getElementById('shapeBgColor').value = obj.backgroundColor || '#ffffff'; document.getElementById('textColor').value = obj.fill || '#000000'; } 
+            else if (obj.type === 'rect' || obj.type === 'circle') { document.getElementById('shapeBgColor').value = obj.fill; document.getElementById('textColor').value = obj.stroke; } 
+            else if (obj.type === 'i-text') { document.getElementById('textColor').value = obj.fill; }
+            else if (obj.type === 'path') { document.getElementById('shapeBgColor').value = obj.stroke; }
+        }
+
+        function setWbMode(mode) {
+            document.querySelectorAll('.wb-tool-btn').forEach(b => b.classList.remove('active')); event.currentTarget.classList.add('active');
+            if(mode === 'draw') { fCanvas.isDrawingMode = true; fCanvas.freeDrawingBrush.color = document.getElementById('shapeBgColor').value; fCanvas.freeDrawingBrush.width = 4; } 
+            else { fCanvas.isDrawingMode = false; }
+        }
+
+        function addShape(type) {
+            let bgColor = document.getElementById('shapeBgColor').value; let strokeColor = document.getElementById('textColor').value; let shape;
+            if(type === 'rect') shape = new fabric.Rect({ left: 100, top: 100, fill: bgColor, stroke: strokeColor, strokeWidth: 2, width: 100, height: 80, rx: 5, ry: 5 });
+            else if(type === 'circle') shape = new fabric.Circle({ left: 150, top: 100, fill: bgColor, stroke: strokeColor, strokeWidth: 2, radius: 40 });
+            fCanvas.add(shape); fCanvas.setActiveObject(shape); fCanvas.isDrawingMode = false; saveDrawingToLocal();
+        }
+
+        function addStickyNote() {
+            let bgColor = document.getElementById('shapeBgColor').value; let txColor = document.getElementById('textColor').value;
+            let text = new fabric.Textbox('Gõ nội dung...', { left: 100, top: 100, width: 200, fontSize: 16, fontFamily: 'Nunito', fill: txColor, backgroundColor: bgColor, padding: 12, borderColor: '#3b82f6', cornerColor: '#3b82f6' });
+            fCanvas.add(text); fCanvas.setActiveObject(text); fCanvas.isDrawingMode = false; saveDrawingToLocal();
+        }
+
+        function addPureText() {
+            let txColor = document.getElementById('textColor').value;
+            let text = new fabric.IText('Chữ không nền', { left: 150, top: 150, fontFamily: 'Nunito', fill: txColor, fontSize: 20 });
+            fCanvas.add(text); fCanvas.setActiveObject(text); fCanvas.isDrawingMode = false; saveDrawingToLocal();
+        }
+
+        function applyWbColor(type, hex) {
+            if(fCanvas.isDrawingMode && type === 'bg') fCanvas.freeDrawingBrush.color = hex;
+            const activeObj = fCanvas.getActiveObject(); if(!activeObj) return;
+            if(type === 'bg') { if(activeObj.type === 'textbox') activeObj.set('backgroundColor', hex); else if (activeObj.type === 'path') activeObj.set('stroke', hex); else activeObj.set('fill', hex); } 
+            else if (type === 'text') { if(activeObj.type === 'textbox' || activeObj.type === 'i-text') activeObj.set('fill', hex); else activeObj.set('stroke', hex); }
+            fCanvas.renderAll(); saveDrawingToLocal();
+        }
+
+        function deleteSelected() { const activeObjs = fCanvas.getActiveObjects(); if (activeObjs.length) { fCanvas.discardActiveObject(); activeObjs.forEach(function(object) { fCanvas.remove(object); }); saveDrawingToLocal(); } }
+        function newDrawing() { if(confirm("Xóa SẠCH toàn bộ bảng vẽ này?")) { fCanvas.clear(); localforage.removeItem('kv_global_whiteboard'); } }
+
+        function toggleFullscreen() {
+            const widget = document.getElementById('notesWidget'); widget.classList.toggle('fullscreen-widget');
+            setTimeout(() => { if(fCanvas) { const wrapper = document.getElementById('drawArea'); fCanvas.setWidth(wrapper.clientWidth); fCanvas.setHeight(wrapper.clientHeight); fCanvas.renderAll(); } }, 350); 
+        }
+
+        // --- ĐÓNG/MỞ WIDGET ---
+        function toggleNotes() { 
+            document.getElementById('chatWidget').classList.remove('active'); 
+            const widget = document.getElementById('notesWidget');
+            widget.classList.toggle('active'); 
+            if(widget.classList.contains('active')) {
+                document.getElementById('stickyNoteText').value = localStorage.getItem('kv_global_notepad') || '';
+                setTimeout(initFabric, 300);
+            }
+        }
+        function toggleChat() { document.getElementById('notesWidget').classList.remove('active'); document.getElementById('chatWidget').classList.toggle('active'); }
+        function handleChatEnter(e) { if(e.key === 'Enter') sendChatMessage(); }
+        
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput'); 
+            const text = input.value.trim().toLowerCase(); 
+            if(!text) return;
+            const history = document.getElementById('chatHistory');
+            history.innerHTML += `<div class="bg-blue-600 text-white p-3 rounded-lg text-[13px] self-end max-w-[85%] shadow-sm">${input.value}</div>`;
+            input.value = ''; history.scrollTop = history.scrollHeight;
+
+            let reply = "Tôi có thể giúp bạn truy vấn dữ liệu từ Hệ thống L&D. Bạn hãy thử hỏi: 'Có bao nhiêu khóa?', 'Tỷ lệ pass là bao nhiêu?' hoặc 'Lịch dạy tháng này?'";
+            
+            if(text.includes("bao nhiêu khóa") || text.includes("mấy khóa") || text.includes("tổng số khóa")) {
+                reply = `Hệ thống ghi nhận tổng cộng **${globalMasterDB.length}** khóa học đã được vận hành.`;
+            } else if(text.includes("tỷ lệ pass") || text.includes("hiệu suất") || text.includes("bao nhiêu pass")) {
+                let sT = 0, sP = 0; globalMasterDB.forEach(i => { sT+=parseInt(i.totalTrainees)||0; sP+=parseInt(i.passedTrainees)||0; });
+                reply = sT > 0 ? `Tỷ lệ học viên vượt qua bài kiểm tra hiện tại là **${Math.round((sP/sT)*100)}%** (${sP}/${sT} HV).` : `Chưa có đủ dữ liệu học viên để tính toán.`;
+            } else if(text.includes("lịch") || text.includes("ngày mai") || text.includes("khi nào")) {
+                const cal = JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {};
+                const currentMonth = new Date().getMonth() + 1;
+                const currentYear = new Date().getFullYear();
+                const mData = cal[`${currentYear}-${currentMonth}`];
+                if(mData) {
+                    reply = `Tháng ${currentMonth}/${currentYear} có các lịch đã cài đặt: Khóa KV1 vào ngày ${mData.kv1||'Chưa setup'}, Khóa HĐĐT-Thuế vào ngày ${mData.tax||'Chưa setup'}.`;
+                } else {
+                    reply = `Tháng này bạn chưa setup Lịch trong phần Thiết lập Hệ thống.`;
+                }
+            } else if(text.includes("chào") || text.includes("hello")) {
+                reply = "Chào bạn! Tôi có thể lấy data thống kê, đọc master data và lịch trình giúp bạn ngay lập tức.";
+            }
 
             setTimeout(() => {
-                const autoSummarySteps = aiExtractStepsFromHTML(html);
-                let docs = JSON.parse(localStorage.getItem('kv_wp_docs')) || {}; if(!docs[node]) docs[node] = [];
-                
-                docs[node].push({ id: Date.now(), title, summary: autoSummarySteps, html }); 
-                
-                try { localStorage.setItem('kv_wp_docs', JSON.stringify(docs)); } 
-                catch (e) {
-                    alert("CẢNH BÁO: Bộ nhớ trình duyệt đã đầy do lưu quá nhiều tài liệu HTML. Hệ thống chỉ lưu được Sơ đồ thao tác.");
-                    docs[node][docs[node].length - 1].html = "<i>Dữ liệu HTML gốc không được lưu để tối ưu dung lượng trình duyệt. Bạn vẫn xem được Mindmap.</i>";
-                    localStorage.setItem('kv_wp_docs', JSON.stringify(docs)); 
-                }
-
-                closeWPModal(); if(activeKnowledgeNode === node) renderNodeDetail(node);
-            }, 1200);
+                history.innerHTML += `<div class="bg-white border border-slate-200 p-3 rounded-lg shadow-sm text-[13px] text-slate-700 max-w-[85%] flex gap-2 items-start"><i class="fas fa-robot text-blue-500 mt-0.5"></i><div class="leading-relaxed">${reply}</div></div>`;
+                history.scrollTop = history.scrollHeight;
+            }, 800);
         }
 
-        // --- BẢO MẬT XÓA TÀI LIỆU ---
-        function deleteWPDoc(nodeId, docId, docTitle) {
-            docToDelete = { nodeId, docId };
-            document.getElementById('deleteDocTitle').innerText = docTitle; document.getElementById('deleteConfirmInput').value = ''; checkDeleteInput();
-            document.getElementById('deleteConfirmModal').classList.remove('hidden'); document.getElementById('deleteConfirmModal').classList.add('flex');
-        }
-        function closeDeleteModal() { document.getElementById('deleteConfirmModal').classList.add('hidden'); document.getElementById('deleteConfirmModal').classList.remove('flex'); docToDelete = null; }
-        function checkDeleteInput() {
-            const val = document.getElementById('deleteConfirmInput').value.trim().toUpperCase(); const btn = document.getElementById('btnConfirmDelete');
-            if (val === 'XOA') { btn.classList.remove('bg-rose-200', 'text-rose-400', 'cursor-not-allowed'); btn.classList.add('bg-rose-600', 'text-white', 'hover:bg-rose-700', 'shadow-md'); btn.disabled = false; } 
-            else { btn.classList.add('bg-rose-200', 'text-rose-400', 'cursor-not-allowed'); btn.classList.remove('bg-rose-600', 'text-white', 'hover:bg-rose-700', 'shadow-md'); btn.disabled = true; }
-        }
-        function executeDelete() {
-            if(!docToDelete) return; let docs = JSON.parse(localStorage.getItem('kv_wp_docs')) || {};
-            if(docs[docToDelete.nodeId]) { docs[docToDelete.nodeId] = docs[docToDelete.nodeId].filter(d => d.id !== docToDelete.docId); localStorage.setItem('kv_wp_docs', JSON.stringify(docs)); renderNodeDetail(docToDelete.nodeId); }
-            closeDeleteModal();
-        }
+        // --- KHỞI CHẠY ---
+        window.onload = () => {
+            const prof = JSON.parse(localStorage.getItem('kv_trainer_profile'));
+            if(prof) {
+                document.getElementById('display-prof-name').innerText = prof.name;
+                document.getElementById('display-prof-title').innerText = prof.title;
+                document.getElementById('display-prof-ava').innerText = prof.name.charAt(0).toUpperCase();
+            }
+            
+            globalMasterDB = JSON.parse(localStorage.getItem('kv_master_db')) || [];
+            if(!Array.isArray(globalMasterDB)) globalMasterDB = [];
+            switchTab('tong-quan');
 
-        // --- DRAG & DROP LOGIC ---
-        let dragStartIndex = null; let dragNodeId = null;
-        function handleDragStart(e, nodeId, index) { dragStartIndex = index; dragNodeId = nodeId; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.classList.add('opacity-40', 'border-purple-400', 'ring-2', 'ring-purple-200'), 0); }
-        function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; return false; }
-        function handleDragEnter(e) { e.preventDefault(); const wrapper = e.target.closest('.doc-drag-wrapper'); if(wrapper) wrapper.classList.add('border-t-4', 'border-t-blue-500'); }
-        function handleDragLeave(e) { const wrapper = e.target.closest('.doc-drag-wrapper'); if(wrapper) wrapper.classList.remove('border-t-4', 'border-t-blue-500'); }
-        function handleDrop(e, nodeId, dropIndex) {
-            e.stopPropagation(); const wrapper = e.target.closest('.doc-drag-wrapper'); if(wrapper) wrapper.classList.remove('border-t-4', 'border-t-blue-500');
-            if (dragNodeId !== nodeId || dragStartIndex === dropIndex) return;
-            let docs = JSON.parse(localStorage.getItem('kv_wp_docs')) || {}; let arr = docs[nodeId];
-            const draggedItem = arr.splice(dragStartIndex, 1)[0]; arr.splice(dropIndex, 0, draggedItem); 
-            localStorage.setItem('kv_wp_docs', JSON.stringify(docs)); renderNodeDetail(nodeId); return false;
-        }
-        function handleDragEnd(e) { e.target.classList.remove('opacity-40', 'border-purple-400', 'ring-2', 'ring-purple-200'); document.querySelectorAll('.doc-drag-wrapper').forEach(el => el.classList.remove('border-t-4', 'border-t-blue-500')); }
-
-        // --- SKETCHPAD (SỔ VẼ) ---
-        let sketchCanvas, ctx, isDrawing = false, currentTool = 'pen', currentColor = '#1e293b';
-        function initSketchpad() {
-            sketchCanvas = document.getElementById('sketchCanvas'); if(!sketchCanvas) return;
-            ctx = sketchCanvas.getContext('2d'); sketchCanvas.width = 480; sketchCanvas.height = 520; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-            const savedImg = localStorage.getItem('kv_sketchpad'); if(savedImg) { let img = new Image(); img.onload = () => ctx.drawImage(img, 0, 0); img.src = savedImg; }
-            sketchCanvas.addEventListener('mousedown', startDraw); sketchCanvas.addEventListener('mousemove', drawLine);
-            sketchCanvas.addEventListener('mouseup', stopDraw); sketchCanvas.addEventListener('mouseout', stopDraw);
-        }
-        function getDrawPos(e) { const rect = sketchCanvas.getBoundingClientRect(); return { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
-        function startDraw(e) { isDrawing = true; const pos = getDrawPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
-        function drawLine(e) { if (!isDrawing) return; const pos = getDrawPos(e); if (currentTool === 'eraser') { ctx.globalCompositeOperation = 'destination-out'; ctx.lineWidth = 20; } else { ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = currentColor; ctx.lineWidth = 3; } ctx.lineTo(pos.x, pos.y); ctx.stroke(); }
-        function stopDraw() { if(isDrawing) { ctx.closePath(); isDrawing = false; localStorage.setItem('kv_sketchpad', sketchCanvas.toDataURL()); } }
-        function setDrawMode(tool, color) { currentTool = tool; if(color) currentColor = color; }
-        function clearCanvas() { if(confirm('XÓA SẠCH toàn bộ hình vẽ?')) { ctx.clearRect(0, 0, sketchCanvas.width, sketchCanvas.height); localStorage.removeItem('kv_sketchpad'); } }
-        function switchNoteTab(tab) {
-            const dBtn = document.getElementById('tab-draw'); const tBtn = document.getElementById('tab-text'); const drawArea = document.getElementById('drawArea'); const textArea = document.getElementById('stickyNoteText');
-            if(tab === 'draw') { dBtn.className = "flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500"; tBtn.className = "flex-1 py-2.5 font-semibold text-slate-500 bg-slate-50 border-b border-slate-200"; drawArea.classList.remove('hidden'); textArea.classList.add('hidden'); } 
-            else { tBtn.className = "flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500"; dBtn.className = "flex-1 py-2.5 font-semibold text-slate-500 bg-slate-50 border-b border-slate-200"; textArea.classList.remove('hidden'); drawArea.classList.add('hidden'); }
-        }
-        function toggleNotes() { document.getElementById('notesWidget').classList.toggle('active'); document.getElementById('stickyNoteText').value = localStorage.getItem('kv_trainer_notes') || ''; }
-        function saveNotes() { localStorage.setItem('kv_trainer_notes', document.getElementById('stickyNoteText').value); }
-
-        window.onload = () => { switchTab('kien-thuc'); setTimeout(initSketchpad, 1000); };
+            fetchDatabase().then(() => {
+                if(document.getElementById('statusChart')) switchTab('tong-quan');
+            });
+        };
     </script>
 </body>
 </html>
