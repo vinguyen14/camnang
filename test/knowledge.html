@@ -531,13 +531,23 @@
         }
 
         window.onload = () => { 
-            const prof = JSON.parse(localStorage.getItem('kv_trainer_profile'));
-            if(prof) {
-                document.getElementById('display-prof-name').innerText = prof.name;
-                document.getElementById('display-prof-title').innerText = prof.title;
-                document.getElementById('display-prof-ava').innerText = prof.name.charAt(0).toUpperCase();
+            try {
+                const prof = JSON.parse(localStorage.getItem('kv_trainer_profile'));
+                if(prof) {
+                    const elName = document.getElementById('display-prof-name');
+                    const elTitle = document.getElementById('display-prof-title');
+                    const elAva = document.getElementById('display-prof-ava');
+                    
+                    if(elName) elName.innerText = prof.name;
+                    if(elTitle) elTitle.innerText = prof.title;
+                    if(elAva) elAva.innerText = prof.name.charAt(0).toUpperCase();
+                }
+            } catch(e) {
+                console.warn("Chưa load được Profile User, bỏ qua.");
+            } finally {
+                // Đảm bảo hàm vẽ UI luôn được chạy dù có lỗi Profile hay không
+                renderUI(); 
             }
-            renderUI(); 
         };
     </script>
 </body>
