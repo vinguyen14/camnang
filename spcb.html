@@ -43,6 +43,12 @@
         .grade-table th { background: #f8fafc; font-size: 10px; font-weight: bold; color: #64748b; padding: 8px; border: 1px solid #e2e8f0; text-transform: uppercase;}
         .grade-table td { padding: 8px; font-size: 12px; border: 1px solid #e2e8f0; }
 
+        /* Kéo thả Table Row */
+        .draggable-row { cursor: grab; }
+        .draggable-row:active { cursor: grabbing; }
+        .draggable-row.dragging { opacity: 0.5; background-color: #eff6ff; }
+        .drag-over { border-top: 2px solid #2563eb !important; }
+
         .stepper-container { display: flex; justify-content: space-between; position: relative; margin-bottom: 10px; padding: 0 20px;}
         .stepper-line { position: absolute; top: 15px; left: 40px; right: 40px; height: 3px; background: #e2e8f0; z-index: 1;}
         .stepper-line-fill { position: absolute; top: 15px; left: 40px; height: 3px; background: #2563eb; z-index: 2; transition: width 0.4s ease;}
@@ -91,7 +97,6 @@
         <!-- CỘT PHẢI: STEPPER NGANG + CONTENT -->
         <div class="flex-grow min-h-[600px] pb-20 w-full relative overflow-hidden">
             
-            <!-- THANH TIẾN TRÌNH NGANG (STEPPER) -->
             <div class="saas-card p-6 mb-6 bg-white relative shadow-sm shrink-0">
                 <div class="stepper-container" id="horizontal-stepper">
                     <div class="stepper-line"></div>
@@ -150,7 +155,6 @@
                 <div class="mb-6 border-b border-slate-100 pb-4">
                     <h2 class="text-xl font-bold text-slate-800">Bước 2: Mời học & Chào mừng (Thứ 7 - CN)</h2>
                 </div>
-                
                 <div class="space-y-6">
                     <div class="relative bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
                         <p class="text-xs font-bold text-slate-500 uppercase mb-2"><i class="fas fa-envelope mr-1"></i> Sáng Thứ 7: Mail Mời Học Tuần Sau</p>
@@ -171,7 +175,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="mt-8 pt-6 border-t border-slate-100 flex justify-end">
                     <button onclick="markStepDone(2)" class="btn-primary shadow-md">Đã gửi tin xong <i class="fas fa-arrow-right ml-2"></i></button>
                 </div>
@@ -210,15 +213,24 @@
                         <h4 class="font-bold text-indigo-800 mb-2"><i class="fas fa-magic mr-1"></i> AI Daily Grader (Cộng dồn điểm Buổi 1)</h4>
                         <textarea id="daily-raw-tue" class="saas-input h-24 text-[10px] font-mono mb-2 border-indigo-300" placeholder="Dán Data xuất từ LMS Buổi 1 vào đây... (Gồm các cột Email, Số câu trả lời đúng)."></textarea>
                         <button onclick="runDailyGrader('tue', 52)" class="w-full btn-primary bg-indigo-600 border-indigo-700 py-3 shadow-md hover:bg-indigo-700">Chấm điểm Báo cáo Buổi 1 (52 Câu)</button>
+                        
                         <div id="daily-res-tue" class="hidden mt-4">
-                            <div class="flex justify-between items-center mb-2">
-                                <h4 class="font-bold text-sm text-indigo-800">Kết quả Buổi 1</h4>
-                                <button onclick="copyTableToClipboard('table-tue', this)" class="btn-outline border-indigo-300 text-indigo-700 bg-white !py-1"><i class="far fa-copy mr-1"></i> Copy Excel</button>
+                            <!-- THANH CÔNG CỤ FILTER & SORT -->
+                            <div class="flex justify-between items-center mb-3 bg-white p-2 rounded-lg border border-indigo-100">
+                                <div class="flex gap-2">
+                                    <select id="filter-reg-tue" onchange="renderDailyTable('tue')" class="saas-input py-1.5 text-xs w-40 border-indigo-200 text-indigo-700 font-bold outline-none cursor-pointer">
+                                        <option value="ALL">Tất cả Khu vực</option>
+                                    </select>
+                                    <button onclick="sortDailyTable('tue')" class="btn-outline border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 !py-1.5"><i class="fas fa-sort-alpha-down mr-1"></i> Sắp xếp Phòng ban</button>
+                                </div>
+                                <button onclick="copyTableToClipboard('table-tue', this)" class="btn-outline border-indigo-300 text-indigo-700 bg-white !py-1.5 font-bold"><i class="far fa-copy mr-1"></i> Copy Dán Excel</button>
                             </div>
-                            <div class="bg-white p-3 rounded-lg border border-indigo-100 overflow-x-auto"><table class="w-full grade-table" id="table-tue"></table></div>
+                            <!-- BẢNG ĐIỂM CÓ KÉO THẢ -->
+                            <div class="bg-white p-2 rounded-lg border border-indigo-100 overflow-x-auto"><table class="w-full grade-table" id="table-tue"></table></div>
+                            
                             <div id="warn-tue" class="mt-4 hidden flex-col">
                                 <p class="text-xs font-bold text-rose-600 mb-2"><i class="fas fa-exclamation-triangle"></i> Cảnh báo Học viên Lạ (Không có trong Roster):</p>
-                                <div class="bg-rose-50 border border-rose-200 rounded p-3 overflow-x-auto"><table class="w-full grade-table" id="table-stranger-tue"></table></div>
+                                <div class="bg-rose-50 border border-rose-200 rounded p-2 overflow-x-auto"><table class="w-full grade-table" id="table-stranger-tue"></table></div>
                             </div>
                         </div>
                     </div>
@@ -234,15 +246,20 @@
                         <h4 class="font-bold text-indigo-800 mb-2"><i class="fas fa-magic mr-1"></i> AI Daily Grader (Cộng dồn điểm Buổi 2)</h4>
                         <textarea id="daily-raw-wed" class="saas-input h-24 text-[10px] font-mono mb-2 border-indigo-300" placeholder="Dán Data xuất từ LMS Buổi 2 vào đây..."></textarea>
                         <button onclick="runDailyGrader('wed', 75)" class="w-full btn-primary bg-indigo-600 border-indigo-700 py-3 shadow-md hover:bg-indigo-700">Chấm điểm Báo cáo Buổi 2 (75 Câu)</button>
+                        
                         <div id="daily-res-wed" class="hidden mt-4">
-                            <div class="flex justify-between items-center mb-2">
-                                <h4 class="font-bold text-sm text-indigo-800">Kết quả Buổi 2</h4>
-                                <button onclick="copyTableToClipboard('table-wed', this)" class="btn-outline border-indigo-300 text-indigo-700 bg-white !py-1"><i class="far fa-copy mr-1"></i> Copy Excel</button>
+                            <!-- THANH CÔNG CỤ FILTER & SORT -->
+                            <div class="flex justify-between items-center mb-3 bg-white p-2 rounded-lg border border-indigo-100">
+                                <div class="flex gap-2">
+                                    <select id="filter-reg-wed" onchange="renderDailyTable('wed')" class="saas-input py-1.5 text-xs w-40 border-indigo-200 text-indigo-700 font-bold outline-none cursor-pointer"><option value="ALL">Tất cả Khu vực</option></select>
+                                    <button onclick="sortDailyTable('wed')" class="btn-outline border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 !py-1.5"><i class="fas fa-sort-alpha-down mr-1"></i> Sắp xếp Phòng ban</button>
+                                </div>
+                                <button onclick="copyTableToClipboard('table-wed', this)" class="btn-outline border-indigo-300 text-indigo-700 bg-white !py-1.5 font-bold"><i class="far fa-copy mr-1"></i> Copy Dán Excel</button>
                             </div>
-                            <div class="bg-white p-3 rounded-lg border border-indigo-100 overflow-x-auto"><table class="w-full grade-table" id="table-wed"></table></div>
+                            <div class="bg-white p-2 rounded-lg border border-indigo-100 overflow-x-auto"><table class="w-full grade-table" id="table-wed"></table></div>
                             <div id="warn-wed" class="mt-4 hidden flex-col">
                                 <p class="text-xs font-bold text-rose-600 mb-2"><i class="fas fa-exclamation-triangle"></i> Cảnh báo Học viên Lạ (Không có trong Roster):</p>
-                                <div class="bg-rose-50 border border-rose-200 rounded p-3 overflow-x-auto"><table class="w-full grade-table" id="table-stranger-wed"></table></div>
+                                <div class="bg-rose-50 border border-rose-200 rounded p-2 overflow-x-auto"><table class="w-full grade-table" id="table-stranger-wed"></table></div>
                             </div>
                         </div>
                     </div>
@@ -265,15 +282,20 @@
                         <h4 class="font-bold text-indigo-800 mb-2"><i class="fas fa-magic mr-1"></i> AI Daily Grader (Cộng dồn điểm Buổi 3)</h4>
                         <textarea id="daily-raw-thu" class="saas-input h-24 text-[10px] font-mono mb-2 border-indigo-300" placeholder="Dán Data xuất từ LMS Buổi 3 vào đây..."></textarea>
                         <button onclick="runDailyGrader('thu', 76)" class="w-full btn-primary bg-indigo-600 border-indigo-700 py-3 shadow-md hover:bg-indigo-700">Chấm điểm Báo cáo Buổi 3 (76 Câu)</button>
+                        
                         <div id="daily-res-thu" class="hidden mt-4">
-                            <div class="flex justify-between items-center mb-2">
-                                <h4 class="font-bold text-sm text-indigo-800">Kết quả Buổi 3</h4>
-                                <button onclick="copyTableToClipboard('table-thu', this)" class="btn-outline border-indigo-300 text-indigo-700 bg-white !py-1"><i class="far fa-copy mr-1"></i> Copy Excel</button>
+                            <!-- THANH CÔNG CỤ FILTER & SORT -->
+                            <div class="flex justify-between items-center mb-3 bg-white p-2 rounded-lg border border-indigo-100">
+                                <div class="flex gap-2">
+                                    <select id="filter-reg-thu" onchange="renderDailyTable('thu')" class="saas-input py-1.5 text-xs w-40 border-indigo-200 text-indigo-700 font-bold outline-none cursor-pointer"><option value="ALL">Tất cả Khu vực</option></select>
+                                    <button onclick="sortDailyTable('thu')" class="btn-outline border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 !py-1.5"><i class="fas fa-sort-alpha-down mr-1"></i> Sắp xếp Phòng ban</button>
+                                </div>
+                                <button onclick="copyTableToClipboard('table-thu', this)" class="btn-outline border-indigo-300 text-indigo-700 bg-white !py-1.5 font-bold"><i class="far fa-copy mr-1"></i> Copy Dán Excel</button>
                             </div>
-                            <div class="bg-white p-3 rounded-lg border border-indigo-100 overflow-x-auto"><table class="w-full grade-table" id="table-thu"></table></div>
+                            <div class="bg-white p-2 rounded-lg border border-indigo-100 overflow-x-auto"><table class="w-full grade-table" id="table-thu"></table></div>
                             <div id="warn-thu" class="mt-4 hidden flex-col">
                                 <p class="text-xs font-bold text-rose-600 mb-2"><i class="fas fa-exclamation-triangle"></i> Cảnh báo Học viên Lạ (Không có trong Roster):</p>
-                                <div class="bg-rose-50 border border-rose-200 rounded p-3 overflow-x-auto"><table class="w-full grade-table" id="table-stranger-thu"></table></div>
+                                <div class="bg-rose-50 border border-rose-200 rounded p-2 overflow-x-auto"><table class="w-full grade-table" id="table-stranger-thu"></table></div>
                             </div>
                         </div>
                     </div>
@@ -606,7 +628,7 @@
         // --- 2. LOGIC TỰ ĐỘNG TÍNH NGÀY & Roster Parsing ---
         let rosterData = []; 
         let gradedStats = { total: 0, pass: 0, fail: 0 };
-        let currentDailyData = {}; // Cache kết quả ngày để xử lý xóa
+        let currentDailyData = {}; // Cache kết quả ngày để xử lý xóa, lọc, kéo thả
 
         function saveSpcbConfig() {
             const raw = document.getElementById('spcb-roster').value.trim();
@@ -739,25 +761,30 @@
                 }
             }
 
-            currentDailyData[dayKey] = []; // Khởi tạo cache danh sách in ra để có thể copy
+            currentDailyData[dayKey] = []; // Reset bộ đệm array
+            let regionsSet = new Set(["ALL"]);
 
-            // 2. Cross-check với Roster để tìm người lạ
-            let tHtml = `<thead><tr><th>Họ và tên</th><th>Phòng ban</th><th>Số câu đúng / ${totalQuestions}</th><th>Tỷ lệ đúng</th><th>Khu vực</th><th>Địa điểm</th><th>Thao tác</th></tr></thead><tbody>`;
-            
+            // 2. Điền dữ liệu vào bộ đệm (Array)
             rosterData.forEach((r) => {
                 let sData = lmsMap[r.email];
                 let ans = sData ? sData.correct : 0;
                 let pct = Math.round((ans / totalQuestions) * 100);
-                let scoreText = sData ? `<span class="font-bold text-blue-600">${ans}</span>` : `<span class="italic text-rose-500">0</span>`;
-                let pctText = sData ? `<span class="font-bold text-blue-600">${pct}%</span>` : `<span class="italic text-rose-500">0%</span>`;
                 
                 let region = getRegion(r.dept);
                 let location = getLocation(region);
+                regionsSet.add(region);
 
-                currentDailyData[dayKey].push({ email: r.email, isRoster: true });
-                tHtml += `<tr id="row-${dayKey}-${r.email.replace(/[@.]/g,'')}">
-                    <td class="font-semibold">${r.name}</td><td>${r.dept}</td><td class="text-center">${scoreText}</td><td class="text-center">${pctText}</td><td>${region}</td><td>${location}</td><td class="text-center"><i class="fas fa-user-check text-emerald-500" title="Học viên hợp lệ"></i></td>
-                </tr>`;
+                currentDailyData[dayKey].push({
+                    name: r.name,
+                    dept: r.dept,
+                    email: r.email,
+                    ans: ans,
+                    pct: pct,
+                    region: region,
+                    location: location,
+                    isStranger: false,
+                    isTaken: !!sData // Kiểm tra xem có làm bài hay Vắng
+                });
             });
 
             // Người lạ (Có trong LMS nhưng không có trong Roster)
@@ -768,40 +795,133 @@
                     hasStranger = true;
                     let sData = lmsMap[em];
                     let pct = Math.round((sData.correct / totalQuestions) * 100);
-                    currentDailyData[dayKey].push({ email: em, isRoster: false });
-                    let rowId = `row-${dayKey}-${em.replace(/[@.]/g,'')}`;
-                    tHtml += `<tr id="${rowId}" class="stranger-row bg-rose-50 border-rose-200">
-                        <td class="font-semibold text-rose-700">${sData.name} <span class="text-[9px] bg-rose-500 text-white px-1 rounded ml-1">LẠ</span></td>
-                        <td class="text-rose-500 text-xs">${em}</td>
-                        <td class="text-center font-bold text-rose-700">${sData.correct}</td>
-                        <td class="text-center font-bold text-rose-700">${pct}%</td>
-                        <td>-</td><td>-</td>
-                        <td class="text-center"><button onclick="removeStrangerRow('${rowId}')" class="w-6 h-6 bg-white border border-rose-300 text-rose-500 hover:bg-rose-500 hover:text-white rounded transition"><i class="fas fa-trash-alt"></i></button></td>
-                    </tr>`;
+                    currentDailyData[dayKey].push({
+                        name: sData.name,
+                        dept: '-',
+                        email: em,
+                        ans: sData.correct,
+                        pct: pct,
+                        region: '-',
+                        location: '-',
+                        isStranger: true,
+                        isTaken: true
+                    });
                 }
             }
-            tHtml += `</tbody>`;
 
-            document.getElementById(`table-${dayKey}`).innerHTML = tHtml;
-            document.getElementById(`daily-res-${dayKey}`).classList.remove('hidden');
+            // Tạo Option cho Dropdown Lọc
+            const regFilter = document.getElementById(`filter-reg-${dayKey}`);
+            regFilter.innerHTML = '';
+            regionsSet.forEach(reg => {
+                regFilter.innerHTML += `<option value="${reg}">${reg === 'ALL' ? 'Tất cả Khu vực' : reg}</option>`;
+            });
+
+            // Gọi hàm render
+            renderDailyTable(dayKey, totalQuestions);
 
             const warnBox = document.getElementById(`warn-${dayKey}`);
-            if(hasStranger) {
-                warnBox.classList.remove('hidden'); warnBox.classList.add('flex');
-            } else {
+            if(hasStranger) { warnBox.classList.remove('hidden'); warnBox.classList.add('flex'); } 
+            else { warnBox.classList.remove('flex'); warnBox.classList.add('hidden'); }
+        }
+
+        // HÀM RENDER HTML TABLE TỪ ARRAY CÓ TÍNH NĂNG KÉO THẢ, LỌC, SORT
+        function renderDailyTable(dayKey, totalQuestions) {
+            const arr = currentDailyData[dayKey];
+            const regFilter = document.getElementById(`filter-reg-${dayKey}`).value;
+            
+            let htmlMain = `<thead><tr><th>STT</th><th>Họ và tên</th><th>Phòng ban</th><th>Số câu đúng / ${totalQuestions || 52}</th><th>Tỷ lệ đúng</th><th>Khu vực</th><th>Địa điểm</th><th class="w-8"></th></tr></thead><tbody>`;
+            let htmlStranger = `<thead><tr><th>Họ và tên Lạ</th><th>Email LMS</th><th>Số câu đúng / ${totalQuestions || 52}</th><th>Tỷ lệ đúng</th><th>Hành động</th></tr></thead><tbody>`;
+            
+            let stt = 1;
+            arr.forEach((item, index) => {
+                if(item.isStranger) {
+                    let rowId = `row-${dayKey}-${index}`;
+                    htmlStranger += `<tr id="${rowId}" class="stranger-row bg-rose-50 border-rose-200">
+                        <td class="font-semibold text-rose-700">${item.name} <span class="text-[9px] bg-rose-500 text-white px-1 rounded ml-1">LẠ</span></td>
+                        <td class="text-rose-500 text-xs">${item.email}</td>
+                        <td class="text-center font-bold text-rose-700">${item.ans}</td>
+                        <td class="text-center font-bold text-rose-700">${item.pct}%</td>
+                        <td class="text-center"><button onclick="removeStrangerRow('${dayKey}', ${index})" class="w-6 h-6 bg-white border border-rose-300 text-rose-500 hover:bg-rose-500 hover:text-white rounded transition"><i class="fas fa-trash-alt"></i></button></td>
+                    </tr>`;
+                } else {
+                    // Filter Khu vực
+                    if(regFilter !== 'ALL' && item.region !== regFilter) return;
+
+                    let scoreText = item.isTaken ? `<span class="font-bold text-blue-600">${item.ans}</span>` : `<span class="font-bold text-rose-500">Vắng mặt</span>`;
+                    let pctText = item.isTaken ? `<span class="font-bold text-blue-600">${item.pct}%</span>` : `<span class="font-bold text-rose-500">Vắng mặt</span>`;
+                    
+                    htmlMain += `<tr class="draggable-row bg-white hover:bg-slate-50 transition" draggable="true" ondragstart="dragStart(event, ${index}, '${dayKey}')" ondragover="dragOver(event)" ondrop="drop(event, ${index}, '${dayKey}')" ondragend="dragEnd(event)">
+                        <td class="text-center text-slate-400 font-bold">${stt++}</td>
+                        <td class="font-semibold">${item.name}</td>
+                        <td>${item.dept}</td>
+                        <td class="text-center">${scoreText}</td>
+                        <td class="text-center">${pctText}</td>
+                        <td>${item.region}</td>
+                        <td>${item.location}</td>
+                        <td class="text-center text-slate-300"><i class="fas fa-grip-vertical"></i></td>
+                    </tr>`;
+                }
+            });
+
+            htmlMain += `</tbody>`;
+            htmlStranger += `</tbody>`;
+
+            document.getElementById(`table-${dayKey}`).innerHTML = htmlMain;
+            document.getElementById(`table-stranger-${dayKey}`).innerHTML = htmlStranger;
+            document.getElementById(`daily-res-${dayKey}`).classList.remove('hidden');
+        }
+
+        // HÀM SẮP XẾP PHÒNG BAN THEO CHUẨN NATURAL SORT (TSHNI10 > TSHNI2)
+        function sortDailyTable(dayKey) {
+            currentDailyData[dayKey].sort((a, b) => {
+                if(a.isStranger) return 1; if(b.isStranger) return -1;
+                return a.dept.localeCompare(b.dept, undefined, {numeric: true, sensitivity: 'base'});
+            });
+            // Lấy lại totalQuestions từ UI (Do hàm này gọi từ button không truyền tham số đc)
+            let tq = 52;
+            if(dayKey === 'wed') tq = 75; else if(dayKey === 'thu') tq = 76;
+            renderDailyTable(dayKey, tq);
+        }
+
+        // CÁC HÀM DRAG & DROP HTML5
+        let dragSourceIdx = null;
+        function dragStart(e, idx, dayKey) {
+            dragSourceIdx = idx;
+            e.dataTransfer.effectAllowed = "move";
+            e.dataTransfer.setData("text/plain", idx);
+            setTimeout(() => e.target.classList.add('dragging'), 0);
+        }
+        function dragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; e.currentTarget.classList.add('drag-over'); }
+        function drop(e, targetIdx, dayKey) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            if(dragSourceIdx === targetIdx || dragSourceIdx === null) return;
+            
+            const arr = currentDailyData[dayKey];
+            const item = arr.splice(dragSourceIdx, 1)[0];
+            arr.splice(targetIdx, 0, item);
+            
+            let tq = 52; if(dayKey === 'wed') tq = 75; else if(dayKey === 'thu') tq = 76;
+            renderDailyTable(dayKey, tq);
+        }
+        function dragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        }
+
+        function removeStrangerRow(dayKey, index) {
+            currentDailyData[dayKey].splice(index, 1);
+            let tq = 52; if(dayKey === 'wed') tq = 75; else if(dayKey === 'thu') tq = 76;
+            renderDailyTable(dayKey, tq);
+            
+            // Tự ẩn cảnh báo nếu hết người lạ
+            if(!currentDailyData[dayKey].some(i => i.isStranger)) {
+                const warnBox = document.getElementById(`warn-${dayKey}`);
                 warnBox.classList.remove('flex'); warnBox.classList.add('hidden');
             }
         }
 
-        function removeStrangerRow(rowId) {
-            const row = document.getElementById(rowId);
-            if(row) {
-                row.style.display = 'none';
-                row.classList.remove('stranger-row'); // Remove class so it won't be counted if someone unhides it
-            }
-        }
-
-        // HÀM B: Chấm điểm Bài Thi (30 Câu - 80% Pass) - GIỮ NGUYÊN NHƯ KV1
+        // HÀM B: Chấm điểm Bài Thi (30 Câu - 80% Pass) - GIỮ NGUYÊN
         function runFinalGrader(round) {
             if(rosterData.length === 0) return alert('Roster trống! Hãy dán danh sách ở Bước 1.');
             const lmsRaw = round === 1 ? document.getElementById(`lms-raw-1`).value.trim() : document.getElementById(`lms-raw-2`).value.trim();
@@ -875,17 +995,6 @@
             document.getElementById('totalTrainees').value = gradedStats.total;
             document.getElementById('passedTrainees').value = gradedStats.pass;
             document.getElementById('failedTrainees').value = gradedStats.fail;
-        }
-
-        function triggerConfetti() {
-            var duration = 3 * 1000; var animationEnd = Date.now() + duration; var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 999999 };
-            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
-            var interval = setInterval(function() {
-                var timeLeft = animationEnd - Date.now(); if (timeLeft <= 0) { return clearInterval(interval); }
-                var particleCount = 50 * (timeLeft / duration);
-                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-            }, 250);
         }
 
         function submitFinal(event, groupName) {
