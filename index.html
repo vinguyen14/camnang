@@ -852,10 +852,22 @@
         function exportCSV() {
             const data = getFilteredAndSortedData();
             if(!data.length) return alert('Không có dữ liệu!');
-            let csv = "\uFEFFSTT,Nhóm Khóa,Mã Khóa,Tháng,Bắt Đầu,Tổng HV,Đạt,Fail,Trạng Thái\n";
-            data.forEach((i, idx) => { csv += `${idx+1},${i.groupName},${i.courseId},${i.month},${i.startDate},${i.totalTrainees||0},${i.passedTrainees||0},${i.failedTrainees||0},${i.status}\n`; });
-            const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); 
-            link.setAttribute("download", `Master_Data_${new Date().toLocaleDateString('vi-VN')}.csv`); link.click();
+            
+            // Thêm 2 cột Link DS và Link Kết quả vào Header
+            let csv = "\uFEFFSTT,Nhóm Khóa,Mã Khóa,Tháng,Bắt Đầu,Tổng HV,Đạt,Fail,Trạng Thái,Link DS,Link Kết quả\n";
+            
+            data.forEach((i, idx) => { 
+                // Cần bọc Link trong dấu ngoặc kép " " phòng trường hợp link chứa dấu phẩy làm rách file Excel
+                let lLink = i.listLink ? `"${i.listLink}"` : "";
+                let qLink = i.quizLink ? `"${i.quizLink}"` : "";
+                
+                csv += `${idx+1},${i.groupName},${i.courseId},${i.month},${i.startDate},${i.totalTrainees||0},${i.passedTrainees||0},${i.failedTrainees||0},${i.status},${lLink},${qLink}\n`; 
+            });
+            
+            const link = document.createElement("a"); 
+            link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); 
+            link.setAttribute("download", `Master_Data_BaoCao_${new Date().toLocaleDateString('vi-VN')}.csv`); 
+            link.click();
         }
 
         let fCanvas = null;
