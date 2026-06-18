@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cài đặt Hệ thống | Trainer OS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .sidebar-saas { background-color: #ffffff; border-right: 1px solid #e2e8f0; }
+        .set-menu { display: flex; align-items: center; gap: 12px; padding: 10px 20px; font-size: 13px; font-weight: 500; color: #475569; border-radius: 8px; margin-bottom: 4px; transition: all 0.2s; cursor: pointer; }
+        .set-menu:hover { background-color: #f1f5f9; color: #1e293b; }
+        .set-menu.active { background-color: #eff6ff; color: #2563eb; font-weight: 600; }
+        .set-menu i { width: 20px; text-align: center; }
+
+        .saas-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .saas-input { width: 100%; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #334155; outline: none; transition: all 0.2s; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02); }
+        .saas-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+        .form-label { display: block; font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 6px; text-transform: uppercase; }
+        
+        .btn-primary { background-color: #2563eb; color: white; border: 1px solid #1d4ed8; border-radius: 8px; font-size: 13px; font-weight: 500; padding: 10px 16px; transition: all 0.2s; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary:hover { background-color: #1d4ed8; }
+        .btn-danger { background-color: #ef4444; color: white; border: 1px solid #dc2626; border-radius: 8px; font-size: 13px; font-weight: 500; padding: 10px 16px; transition: all 0.2s; cursor: pointer; }
+
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1); z-index: 9999; }
+        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col relative">
+
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-50 shrink-0">
+        <div class="flex items-center">
+            <a href="index.html" class="flex items-center gap-3 text-slate-500 hover:text-blue-600 transition-colors mr-8">
+                <i class="fas fa-arrow-left"></i>
+                <span class="font-bold text-sm">Trở về Dashboard</span>
+            </a>
+            <div class="h-6 w-px bg-slate-200 mr-8"></div>
+            <h1 class="text-lg font-bold tracking-tight text-slate-800">Cài đặt Hệ thống</h1>
+        </div>
+        <button onclick="saveAllSettings()" class="btn-primary">
+            <i class="fas fa-save"></i> Lưu Hệ Thống
+        </button>
+    </header>
+
+    <main class="flex-grow p-8 w-full max-w-6xl mx-auto flex flex-col md:flex-row gap-8">
+        
+        <aside class="w-full md:w-64 flex-shrink-0">
+            <div class="saas-card p-2 sticky top-24">
+                <div onclick="switchSetTab('tab-profile')" id="btn-tab-profile" class="set-menu active"><i class="fas fa-user-circle"></i> Cá nhân & API</div>
+                <div onclick="switchSetTab('tab-dynamic-cal')" id="btn-tab-dynamic-cal" class="set-menu"><i class="far fa-calendar-alt"></i> Quản trị Lịch Năm</div>
+                <div class="h-px bg-slate-100 my-2 mx-2"></div>
+                <div onclick="switchSetTab('tab-data')" id="btn-tab-data" class="set-menu text-rose-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-trash-alt"></i> Xóa Dữ liệu Local</div>
+            </div>
+        </aside>
+
+        <div class="flex-grow saas-card p-8 min-h-[500px]">
+            <!-- TAB 1: PROFILE & API -->
+            <div id="tab-profile" class="setting-content space-y-8">
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Cá nhân & Kết nối API</h2>
+                </div>
+                <div class="bg-blue-50 border border-blue-100 p-6 rounded-xl flex items-start gap-4">
+                    <div class="w-10 h-10 bg-white text-blue-600 rounded-lg flex items-center justify-center shrink-0 border border-blue-200"><i class="fas fa-link"></i></div>
+                    <div class="flex-grow">
+                        <label class="form-label">Link API Google Apps Script</label>
+                        <input type="text" id="api-url" class="saas-input font-mono text-[11px] text-blue-600" placeholder="https://script.google.com/macros/s/.../exec">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div><label class="form-label">Tên hiển thị</label><input type="text" id="prof-name" class="saas-input"></div>
+                    <div><label class="form-label">Chức danh</label><input type="text" id="prof-title" class="saas-input"></div>
+                </div>
+            </div>
+
+            <!-- TAB 2: LỊCH ĐỘNG -->
+            <div id="tab-dynamic-cal" class="setting-content hidden space-y-6">
+                <div class="flex justify-between items-end border-b border-slate-200 pb-4">
+                    <div><h2 class="text-xl font-bold text-slate-800">Quản trị Lịch Đào tạo Năm</h2></div>
+                    <select id="calMonthSelect" onchange="renderDynamicCalendar()" class="saas-input w-40 cursor-pointer font-bold text-blue-600">
+                        <option value="1">Tháng 1/2026</option><option value="2">Tháng 2/2026</option><option value="3">Tháng 3/2026</option><option value="4">Tháng 4/2026</option><option value="5">Tháng 5/2026</option><option value="6">Tháng 6/2026</option><option value="7">Tháng 7/2026</option><option value="8">Tháng 8/2026</option><option value="9">Tháng 9/2026</option><option value="10">Tháng 10/2026</option><option value="11">Tháng 11/2026</option><option value="12">Tháng 12/2026</option>
+                    </select>
+                </div>
+
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-6">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div><label class="form-label">Ngày dạy <span class="text-rose-600">Khóa KV1</span></label><input type="date" id="cal-kv1" class="saas-input cursor-pointer" onchange="updateCalTemp()"></div>
+                        <div><label class="form-label">Ngày dạy <span class="text-emerald-600">HĐĐT - Thuế</span></label><input type="date" id="cal-tax" class="saas-input cursor-pointer" onchange="updateCalTemp()"></div>
+                    </div>
+                    
+                    <!-- BỔ SUNG KHÓA CHUYÊN NGÀNH -->
+                    <div class="grid grid-cols-3 gap-6 pt-4 border-t border-slate-200">
+                        <div><label class="form-label">Deadline <span class="text-orange-500">Khóa FNB</span></label><input type="date" id="cal-fnb" class="saas-input cursor-pointer" onchange="updateCalTemp()"></div>
+                        <div><label class="form-label">Deadline <span class="text-pink-500">Khóa Salon</span></label><input type="date" id="cal-salon" class="saas-input cursor-pointer" onchange="updateCalTemp()"></div>
+                        <div><label class="form-label">Deadline <span class="text-teal-600">Khóa Hotel</span></label><input type="date" id="cal-hotel" class="saas-input cursor-pointer" onchange="updateCalTemp()"></div>
+                    </div>
+
+                    <div class="border-t border-slate-200 pt-6">
+                        <label class="form-label mb-4">Các đợt Onboard (Thứ 2)</label>
+                        <div class="grid grid-cols-4 gap-4">
+                            <div><label class="text-[10px] text-slate-500 font-bold uppercase mb-1 block">Tuần 1</label><input type="date" id="cal-ob1" class="saas-input" onchange="updateCalTemp()"></div>
+                            <div><label class="text-[10px] text-slate-500 font-bold uppercase mb-1 block">Tuần 2</label><input type="date" id="cal-ob2" class="saas-input" onchange="updateCalTemp()"></div>
+                            <div><label class="text-[10px] text-slate-500 font-bold uppercase mb-1 block">Tuần 3</label><input type="date" id="cal-ob3" class="saas-input" onchange="updateCalTemp()"></div>
+                            <div><label class="text-[10px] text-slate-500 font-bold uppercase mb-1 block">Tuần 4</label><input type="date" id="cal-ob4" class="saas-input" onchange="updateCalTemp()"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: DATA LOCAL -->
+            <div id="tab-data" class="setting-content hidden space-y-8">
+                <div class="bg-rose-50 p-6 rounded-xl border border-rose-200 text-center">
+                    <i class="fas fa-exclamation-triangle text-3xl text-rose-500 mb-3"></i>
+                    <h4 class="font-bold text-rose-800 mb-2">Khôi phục Cài đặt Trình duyệt</h4>
+                    <p class="text-xs text-rose-600 mb-6">Xóa trắng Profile, Link API, Lịch khỏi trình duyệt hiện tại.</p>
+                    <button onclick="executeWipe()" class="btn-danger">Xóa Sạch LocalStorage</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="bg-slate-800 text-white px-6 py-3 rounded-lg shadow-xl font-medium text-sm flex items-center gap-3"><i class="fas fa-check text-emerald-400"></i><span id="toast-msg">Đã lưu!</span></div>
+
+    <script>
+        let dynamicCalTemp = {};
+        window.onload = () => {
+            const m = new Date().getMonth() + 1; document.getElementById('calMonthSelect').value = m;
+            loadProfile(); loadAPI();
+            dynamicCalTemp = JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {}; renderDynamicCalendar();
+        };
+        function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toast-msg').innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+        function switchSetTab(t) { document.querySelectorAll('.setting-content').forEach(e => e.classList.add('hidden')); document.querySelectorAll('.set-menu').forEach(e => e.classList.remove('active')); document.getElementById(t).classList.remove('hidden'); document.getElementById('btn-' + t).classList.add('active'); }
+        function loadAPI() { document.getElementById('api-url').value = localStorage.getItem('kv_api_url') || ""; }
+        function loadProfile() { const p = JSON.parse(localStorage.getItem('kv_trainer_profile')) || { name: 'Nguyễn Lê Nhật Vi', title: 'L&D Specialist' }; document.getElementById('prof-name').value = p.name; document.getElementById('prof-title').value = p.title; }
+        function renderDynamicCalendar() {
+            const key = `2026-${document.getElementById('calMonthSelect').value}`;
+            const d = dynamicCalTemp[key] || { kv1: '', tax: '', fnb: '', salon: '', hotel: '', onboards: ['', '', '', ''] };
+            document.getElementById('cal-kv1').value = d.kv1 || ''; document.getElementById('cal-tax').value = d.tax || '';
+            document.getElementById('cal-fnb').value = d.fnb || ''; document.getElementById('cal-salon').value = d.salon || ''; document.getElementById('cal-hotel').value = d.hotel || '';
+            const ob = d.onboards || ['', '', '', ''];
+            document.getElementById('cal-ob1').value = ob[0] || ''; document.getElementById('cal-ob2').value = ob[1] || ''; document.getElementById('cal-ob3').value = ob[2] || ''; document.getElementById('cal-ob4').value = ob[3] || '';
+        }
+        function updateCalTemp() {
+            const key = `2026-${document.getElementById('calMonthSelect').value}`;
+            dynamicCalTemp[key] = {
+                kv1: document.getElementById('cal-kv1').value, tax: document.getElementById('cal-tax').value,
+                fnb: document.getElementById('cal-fnb').value, salon: document.getElementById('cal-salon').value, hotel: document.getElementById('cal-hotel').value,
+                onboards: [document.getElementById('cal-ob1').value, document.getElementById('cal-ob2').value, document.getElementById('cal-ob3').value, document.getElementById('cal-ob4').value]
+            };
+        }
+        function saveAllSettings() {
+            localStorage.setItem('kv_api_url', document.getElementById('api-url').value.trim());
+            localStorage.setItem('kv_trainer_profile', JSON.stringify({ name: document.getElementById('prof-name').value.trim(), title: document.getElementById('prof-title').value.trim() }));
+            updateCalTemp(); localStorage.setItem('kv_dynamic_calendar', JSON.stringify(dynamicCalTemp));
+            showToast('Đã lưu toàn bộ Thiết lập!');
+        }
+        function executeWipe() { if(confirm("Xóa Local Storage?")) { localStorage.clear(); location.reload(); } }
+    </script>
+</body>
+</html>
