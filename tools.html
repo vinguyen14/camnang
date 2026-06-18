@@ -337,38 +337,64 @@
         </div>
     </div>
 
-    <!-- 4. Điểm danh AI -->
+    <!-- 4. Điểm danh AI (ĐÃ FIX SCROLL & UI MƯỢT) -->
     <div id="attendanceModal" class="modal fixed inset-0 items-center justify-center p-4">
-        <div class="modal-content bg-white w-full max-w-5xl h-[85vh] flex flex-col relative overflow-hidden">
+        <div class="modal-content bg-white w-full max-w-5xl h-[85vh] flex flex-col relative overflow-hidden shadow-2xl">
             <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
-                <h3 class="text-lg font-bold text-slate-800"><i class="fas fa-user-check text-blue-600 mr-2"></i> AI Attendance Scanner</h3>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800"><i class="fas fa-user-check text-blue-600 mr-2"></i> AI Attendance Scanner</h3>
+                    <p class="text-xs text-slate-500 mt-1">Tự động đối chiếu Log Google Meet/Zoom với danh sách lớp.</p>
+                </div>
                 <div class="flex gap-2">
-                    <button onclick="resetAllAttendance()" class="btn-outline py-1.5 px-3 text-xs">Reset</button>
-                    <button onclick="closeModal('attendanceModal')" class="text-slate-400 hover:text-slate-700 w-8 h-8 flex items-center justify-center"><i class="fas fa-times"></i></button>
+                    <button onclick="resetAllAttendance()" class="btn-outline py-1.5 px-3 text-xs bg-white shadow-sm"><i class="fas fa-undo mr-1"></i> Làm mới</button>
+                    <button onclick="closeModal('attendanceModal')" class="text-slate-400 hover:text-rose-500 w-8 h-8 flex items-center justify-center transition-colors"><i class="fas fa-times text-xl"></i></button>
                 </div>
             </div>
-            <div class="p-6 flex-grow grid grid-cols-2 gap-6 bg-white overflow-hidden">
-                <div class="saas-card p-5 flex flex-col bg-slate-50 border-dashed border-2">
-                    <label class="form-label flex justify-between"><span>1. Target List</span> <span id="count-original" class="text-slate-400">0</span></label>
-                    <textarea id="input-roster" oninput="loadRoster()" class="saas-input flex-grow resize-none custom-scrollbar bg-white" placeholder="Dán danh sách gốc..."></textarea>
+
+            <div class="p-6 flex-grow grid grid-cols-2 gap-6 bg-slate-100 overflow-hidden">
+                <!-- Cột trái: Target List -->
+                <div class="saas-card p-5 flex flex-col bg-white border-dashed border-2 border-slate-300">
+                    <label class="form-label flex justify-between mb-3">
+                        <span class="text-blue-600 font-bold"><i class="fas fa-list-ol mr-1"></i> 1. Danh sách Học viên Gốc</span> 
+                        <span id="count-original" class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold border border-slate-200">0 HV</span>
+                    </label>
+                    <textarea id="input-roster" oninput="loadRoster()" class="saas-input flex-grow resize-none custom-scrollbar text-[12px] leading-relaxed bg-slate-50 focus:bg-white" placeholder="Dán danh sách học viên cần điểm danh vào đây (Mỗi người 1 dòng)..."></textarea>
                 </div>
-                <div class="saas-card p-5 flex flex-col relative">
+
+                <!-- Cột phải: Input Meet & Kết quả -->
+                <div class="saas-card p-5 flex flex-col relative bg-white overflow-hidden shadow-md border-transparent">
+                    
+                    <!-- Khung Nhập Log -->
                     <div id="att-view-input" class="flex flex-col h-full">
-                        <label class="form-label">2. Log Meet/Zoom</label>
-                        <textarea id="input-meet" class="saas-input flex-grow resize-none custom-scrollbar mb-4" placeholder="Dán log người tham gia..."></textarea>
-                        <button onclick="scanAttendance()" class="btn-primary w-full justify-center">Scan Data</button>
+                        <label class="form-label text-emerald-600 font-bold mb-3"><i class="fas fa-comments mr-1"></i> 2. Log người tham gia (Meet/Zoom)</label>
+                        <textarea id="input-meet" class="saas-input flex-grow resize-none custom-scrollbar mb-4 text-[11px] font-mono text-slate-600 bg-slate-50 focus:bg-white" placeholder="Dán toàn bộ text copy từ khung Chat hoặc khung People của Google Meet/Zoom vào đây..."></textarea>
+                        <button onclick="scanAttendance()" class="btn-primary w-full justify-center py-3 text-sm shadow-lg hover:shadow-xl transform transition hover:-translate-y-0.5"><i class="fas fa-magic mr-2"></i> Chạy AI Quét Điểm Danh</button>
                     </div>
-                    <div id="att-view-result" class="hidden flex-col h-full">
+
+                    <!-- Khung Kết quả (Đã fix Scroll) -->
+                    <div id="att-view-result" class="hidden flex-col h-full overflow-hidden">
+                        <!-- Thống kê tổng (Cố định ở trên) -->
                         <div class="flex gap-3 mb-4 shrink-0">
-                            <div class="flex-1 bg-slate-50 rounded-lg p-3 text-center border border-slate-200"><p class="text-[10px] text-slate-500 font-bold uppercase">Total</p><p class="text-xl font-bold text-slate-800" id="res-total">0</p></div>
-                            <div class="flex-1 bg-emerald-50 rounded-lg p-3 text-center border border-emerald-100"><p class="text-[10px] text-emerald-600 font-bold uppercase">Present</p><p class="text-xl font-bold text-emerald-600" id="res-present">0</p></div>
-                            <div class="flex-1 bg-rose-50 rounded-lg p-3 text-center border border-rose-100"><p class="text-[10px] text-rose-500 font-bold uppercase">Absent</p><p class="text-xl font-bold text-rose-500" id="res-absent">0</p></div>
+                            <div class="flex-1 bg-slate-50 rounded-xl p-3 text-center border border-slate-200 shadow-inner"><p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Tổng</p><p class="text-2xl font-black text-slate-800" id="res-total">0</p></div>
+                            <div class="flex-1 bg-emerald-50 rounded-xl p-3 text-center border border-emerald-200 shadow-inner"><p class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Có mặt</p><p class="text-2xl font-black text-emerald-600" id="res-present">0</p></div>
+                            <div class="flex-1 bg-rose-50 rounded-xl p-3 text-center border border-rose-200 shadow-inner"><p class="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Vắng</p><p class="text-2xl font-black text-rose-500" id="res-absent">0</p></div>
                         </div>
-                        <input type="text" id="search-box-att" oninput="renderAttendanceResult()" placeholder="Filter..." class="saas-input mb-3 shrink-0">
-                        <div class="flex-grow overflow-y-auto custom-scrollbar space-y-1.5 pr-1" id="result-list"></div>
-                        <div class="flex gap-3 mt-4 shrink-0">
-                            <button onclick="copyAbsent()" class="btn-outline border-rose-200 text-rose-600 hover:bg-rose-50 flex-1 justify-center py-2">Copy Absent</button>
-                            <button onclick="backToInput()" class="btn-outline flex-1 justify-center py-2">Edit Logs</button>
+
+                        <!-- Thanh tìm kiếm (Cố định) -->
+                        <div class="relative shrink-0 mb-3">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="search-box-att" oninput="renderAttendanceResult()" placeholder="Lọc nhanh tên học viên..." class="saas-input pl-9 bg-slate-50 focus:bg-white border-transparent focus:border-blue-400">
+                        </div>
+
+                        <!-- Danh sách kết quả (CUỘN ĐƯỢC Ở ĐÂY) -->
+                        <div class="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2" id="result-list">
+                            <!-- JS tự render nội dung vào đây -->
+                        </div>
+
+                        <!-- Nút Copy (Cố định ở dưới cùng) -->
+                        <div class="flex gap-3 mt-4 shrink-0 pt-4 border-t border-slate-100">
+                            <button onclick="backToInput()" class="btn-outline flex-1 justify-center py-2.5 font-bold"><i class="fas fa-arrow-left mr-1"></i> Sửa Log</button>
+                            <button onclick="copyAbsent(this)" class="btn-primary flex-[2] justify-center py-2.5 bg-rose-500 border-rose-600 hover:bg-rose-600 shadow-md font-bold"><i class="far fa-copy mr-1"></i> Copy Danh Sách Vắng Mặt</button>
                         </div>
                     </div>
                 </div>
