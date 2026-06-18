@@ -3,22 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SP Cơ bản | Trainer OS</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>Sản phẩm Cơ Bản | Trainer OS</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
     <style>
         html { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow-x: hidden; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
         .saas-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
-        
-        .sidebar-item { padding: 12px 20px; font-size: 13px; font-weight: 500; color: #475569; border-left: 3px solid transparent; transition: all 0.2s; cursor: pointer; display: flex; items-center; gap: 12px; }
+        .sidebar-item { padding: 12px 20px; font-size: 13px; font-weight: 500; color: #475569; border-left: 3px solid transparent; transition: all 0.2s; cursor: pointer; display: flex; align-items: center; gap: 12px; }
         .sidebar-item:hover { background-color: #f1f5f9; color: #1e293b; }
         .sidebar-item.active { background-color: #eff6ff; border-left-color: #2563eb; color: #2563eb; font-weight: 600; }
         .sidebar-item i { width: 20px; text-align: center; }
@@ -27,293 +25,386 @@
         .step-content.active { display: block; opacity: 1; transform: translateY(0); }
 
         .form-label { display: block; font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 6px; text-transform: uppercase; }
-        .saas-input { width: 100%; padding: 10px 14px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; color: #1e293b; outline: none; transition: all 0.2s; }
-        .saas-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
-        .text-area-code { font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.6; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; width: 100%; resize: none; outline: none; color: #334155; }
+        .saas-input { width: 100%; padding: 10px 14px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; transition: all 0.2s; }
+        .saas-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+        .text-area-code { font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.6; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; width: 100%; resize: none; outline: none; }
         
-        .btn-outline { background: white; color: #475569; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; transition: all 0.2s; cursor: pointer; }
+        .btn-outline { background: white; color: #475569; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; transition: all 0.2s; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
         .btn-outline:hover { background: #f1f5f9; color: #0f172a; }
-        .btn-primary { background: #2563eb; color: white; border: 1px solid #1d4ed8; padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; transition: all 0.2s; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;}
+        .btn-primary { background: #2563eb; color: white; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; transition: all 0.2s; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;}
         .btn-primary:hover { background: #1d4ed8; }
 
         .copy-btn { position: absolute; top: 12px; right: 12px; }
-        .checkbox-container input:checked + div { background-color: #2563eb; border-color: #2563eb; }
-        .checkbox-container input:checked + div i { opacity: 1; transform: scale(1); }
-
         .modal { display: none; opacity: 0; transition: opacity 0.2s; z-index: 9999; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px); }
         .modal.active { display: flex; opacity: 1; }
-        .modal-content { transform: scale(0.98) translateY(10px); opacity: 0; transition: all 0.3s; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; }
+        .modal-content { transform: scale(0.98) translateY(10px); opacity: 0; transition: all 0.3s; border-radius: 16px; background: white;}
         .modal.active .modal-content { transform: scale(1) translateY(0); opacity: 1; }
+        
+        .grade-table th { background: #f8fafc; font-size: 10px; font-weight: bold; color: #64748b; padding: 8px; border: 1px solid #e2e8f0; text-transform: uppercase;}
+        .grade-table td { padding: 8px; font-size: 12px; border: 1px solid #e2e8f0; }
+
+        .stepper-container { display: flex; justify-content: space-between; position: relative; margin-bottom: 10px; padding: 0 20px;}
+        .stepper-line { position: absolute; top: 15px; left: 40px; right: 40px; height: 3px; background: #e2e8f0; z-index: 1;}
+        .stepper-line-fill { position: absolute; top: 15px; left: 40px; height: 3px; background: #2563eb; z-index: 2; transition: width 0.4s ease;}
+        .step-circle { width: 32px; height: 32px; border-radius: 50%; background: #ffffff; border: 3px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; color: #94a3b8; z-index: 3; position: relative; transition: all 0.3s;}
+        .step-label { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 600; color: #64748b; text-align: center; white-space: nowrap; transition: all 0.3s;}
+        
+        .step-wrap.active .step-circle { border-color: #2563eb; color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+        .step-wrap.active .step-label { color: #2563eb; font-weight: 700;}
+        .step-wrap.completed .step-circle { background: #2563eb; border-color: #2563eb; color: white; }
+        .step-wrap.completed .step-label { color: #334155; }
+        .step-wrap.skipped .step-circle { background: #cbd5e1; border-color: #cbd5e1; color: white; }
     </style>
 </head>
 <body class="antialiased">
 
+    <!-- HEADER TOP -->
     <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-50 shrink-0">
         <div class="flex items-center gap-4">
             <a href="index.html" class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition"><i class="fas fa-arrow-left"></i></a>
             <div class="h-6 w-px bg-slate-200"></div>
-            <h1 class="text-lg font-bold tracking-tight text-slate-800">SP Cơ bản (Retail)</h1>
+            <h1 class="text-lg font-bold tracking-tight text-slate-800">Sản phẩm Cơ Bản (Retail)</h1>
         </div>
-        <span class="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase rounded border border-blue-100">Core Product</span>
+        <div class="flex items-center gap-3">
+            <span class="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase rounded border border-blue-100">Core Product</span>
+        </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row gap-8 items-start">
-        <!-- SIDEBAR -->
+    <main class="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row gap-8 items-start relative z-10">
+        
+        <!-- CỘT TRÁI: SIDEBAR DỌC -->
         <aside class="w-full md:w-64 flex-shrink-0 saas-card py-2 sticky top-24">
             <div class="px-5 py-3 border-b border-slate-100 mb-2">
-                <h3 class="text-xs font-bold text-slate-800 uppercase">Tiến trình Giảng dạy</h3>
+                <h3 class="text-xs font-bold text-slate-800 uppercase">Luồng Vận Hành SPCB</h3>
             </div>
             <div class="space-y-1">
-                <div onclick="showStep('weekend')" id="btn-weekend" class="sidebar-item active"><i class="fas fa-calendar-alt"></i> 1. T7 - CN (Zalo)</div>
-                <div onclick="showStep('monday')" id="btn-monday" class="sidebar-item"><i class="fas fa-paper-plane"></i> 2. Thứ 2 (Nhắc lịch)</div>
-                <div onclick="showStep('tuesday')" id="btn-tuesday" class="sidebar-item"><i class="fas fa-book-open"></i> 3. Thứ 3 (Buổi 1)</div>
-                <div onclick="showStep('wednesday')" id="btn-wednesday" class="sidebar-item"><i class="fas fa-comments"></i> 4. Thứ 4 (Buổi 2)</div>
-                <div onclick="showStep('thursday')" id="btn-thursday" class="sidebar-item"><i class="fas fa-mobile-alt"></i> 5. Thứ 5 (Buổi 3)</div>
-                <div onclick="showStep('friday')" id="btn-friday" class="sidebar-item text-rose-600 hover:bg-rose-50"><i class="fas fa-award"></i> 6. Thứ 6 (Test)</div>
+                <div onclick="jumpToStep(1)" id="btn-step1" class="sidebar-item active"><i class="fas fa-cogs"></i> 1. Setup & Cấu hình</div>
+                <div onclick="jumpToStep(2)" id="btn-step2" class="sidebar-item"><i class="fas fa-comments"></i> 2. Pre-course (T7-CN)</div>
+                <div onclick="jumpToStep(3)" id="btn-step3" class="sidebar-item"><i class="fas fa-chalkboard-teacher"></i> 3. Daily Class (T2-T5)</div>
+                <div onclick="jumpToStep(4)" id="btn-step4" class="sidebar-item"><i class="fas fa-tasks text-orange-500"></i> 4. Thi Final (T6)</div>
+                <div onclick="jumpToStep(5)" id="btn-step5" class="sidebar-item"><i class="fas fa-medal text-rose-500"></i> 5. Chấm Lại L2 (T7)</div>
                 <div class="h-px bg-slate-100 my-2 mx-4"></div>
-                <div onclick="showStep('tools')" id="btn-tools" class="sidebar-item text-emerald-600 hover:bg-emerald-50"><i class="fas fa-tasks"></i> Công cụ hỗ trợ</div>
-                <div class="px-4 mt-4 mb-2"><button onclick="showStep('finalize')" id="btn-finalize" class="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition">ĐÓNG KHÓA (API)</button></div>
+                <div onclick="jumpToStep(6)" id="btn-step6" class="sidebar-item text-blue-600 hover:bg-blue-50"><i class="fas fa-cloud-upload-alt"></i> Báo Cáo & Đóng Khóa</div>
             </div>
         </aside>
 
-        <!-- CONTENT -->
-        <div class="flex-grow min-h-[600px] pb-20">
+        <!-- CỘT PHẢI: STEPPER NGANG + CONTENT -->
+        <div class="flex-grow min-h-[600px] pb-20 w-full relative overflow-hidden">
             
-            <!-- STEP 1: CHỦ NHẬT -->
-            <section id="weekend" class="step-content active saas-card p-8 border-t-4 border-blue-500">
+            <!-- THANH TIẾN TRÌNH NGANG (STEPPER) -->
+            <div class="saas-card p-6 mb-6 bg-white relative shadow-sm shrink-0">
+                <div class="stepper-container" id="horizontal-stepper">
+                    <div class="stepper-line"></div>
+                    <div class="stepper-line-fill" id="stepper-progress" style="width: 0%;"></div>
+                    
+                    <div class="step-wrap relative flex flex-col items-center cursor-pointer active" onclick="jumpToStep(1)"><div class="step-circle" id="circle-1">1</div><span class="step-label">Cấu hình</span></div>
+                    <div class="step-wrap relative flex flex-col items-center cursor-pointer" onclick="jumpToStep(2)"><div class="step-circle" id="circle-2">2</div><span class="step-label">Mời học</span></div>
+                    <div class="step-wrap relative flex flex-col items-center cursor-pointer" onclick="jumpToStep(3)"><div class="step-circle" id="circle-3">3</div><span class="step-label">Daily Class</span></div>
+                    <div class="step-wrap relative flex flex-col items-center cursor-pointer" onclick="jumpToStep(4)"><div class="step-circle" id="circle-4">4</div><span class="step-label">Test L1 (T6)</span></div>
+                    <div class="step-wrap relative flex flex-col items-center cursor-pointer" onclick="jumpToStep(5)"><div class="step-circle" id="circle-5">5</div><span class="step-label">Test L2 (T7)</span></div>
+                    <div class="step-wrap relative flex flex-col items-center cursor-pointer" onclick="jumpToStep(6)"><div class="step-circle" id="circle-6">6</div><span class="step-label">Đóng khóa</span></div>
+                </div>
+            </div>
+
+            <!-- STEP 1: SETUP & CONFIG -->
+            <section id="step1" class="step-content active saas-card p-8 border-t-4 border-blue-500">
                 <div class="mb-6 border-b border-slate-100 pb-4">
-                    <h2 class="text-xl font-bold text-slate-800">Chào mừng Group Zalo</h2>
-                    <p class="text-sm text-slate-500 mt-1">Timeline: 10:00 Sáng Chủ Nhật (Gửi 7 tin nhắn tuần tự)</p>
-                </div>
-                <div class="space-y-4">
-                    <div class="relative bg-white border border-slate-200 rounded-xl">
-                        <textarea id="s1-1" readonly class="text-area-code h-16 border-none">Chào mừng các bạn tới Group Zalo Đào tạo KiotViet</textarea>
-                        <button onclick="copyContent('s1-1', this)" class="btn-outline copy-btn">Copy</button>
-                    </div>
-                    <div class="relative bg-white border border-slate-200 rounded-xl">
-                        <textarea id="s1-2" readonly class="text-area-code h-28 border-none">Xin chào các bạn 😉
-Mình là Nhật Vi - Chuyên viên đào tạo, tuần này mình và bạn Nguyễn Phương sẽ đồng hành cùng các bạn tham gia khóa đào tạo tại KiotViet.</textarea>
-                        <button onclick="copyContent('s1-2', this)" class="btn-outline copy-btn">Copy</button>
-                    </div>
-                    <div class="relative bg-white border border-slate-200 rounded-xl">
-                        <textarea id="s1-3" readonly class="text-area-code h-28 border-none">Như đã thông tin trong Kế hoạch đào tạo đính kèm email, sáng mai thứ 2 các bạn sẽ làm thủ tục gia nhập và làm quen tại từng team dưới sự hỗ trợ của team Tuyển dụng.</textarea>
-                        <button onclick="copyContent('s1-3', this)" class="btn-outline copy-btn">Copy</button>
-                    </div>
-                    <div class="relative bg-white border border-slate-200 rounded-xl">
-                        <textarea id="s1-4" readonly class="text-area-code h-24 border-none">Chiều mai từ 14:00, chúng ta sẽ bắt đầu chương trình Đào tạo hội nhập, hình thức Đào tạo online trên Zoom (mình sẽ gửi lại link sau ạ)</textarea>
-                        <button onclick="copyContent('s1-4', this)" class="btn-outline copy-btn">Copy</button>
-                    </div>
-                    <div class="relative bg-blue-50 border border-blue-200 rounded-xl">
-                        <textarea id="s1-5" readonly class="text-area-code h-24 bg-transparent border-none text-blue-800 font-semibold">Link dùng để đăng ký trải nghiệm phần mềm KiotViet dành cho nhân viên mới tham gia đào tạo:
-https://www.kiotviet.vn/?refcode=3670</textarea>
-                        <button onclick="copyContent('s1-5', this)" class="btn-outline copy-btn bg-white">Copy</button>
-                    </div>
-                    <div class="relative bg-white border border-slate-200 rounded-xl">
-                        <textarea id="s1-6" readonly class="text-area-code h-32 border-none text-[12px]">KiotViet là phần mềm ai cũng có thể tạo tài khoản dùng thử free 7 ngày, mọi người đặc biệt lưu ý chỉ đăng ký dùng thử bằng link này để hệ thống nhận diện chúng ta đang tham gia Đào tạo, không phải là khách hàng cần team Telesales liên hệ tư vấn nha.</textarea>
-                        <button onclick="copyContent('s1-6', this)" class="btn-outline copy-btn">Copy</button>
-                    </div>
-                    <div class="relative bg-amber-50 border border-amber-200 rounded-xl">
-                        <textarea id="s1-7" readonly class="text-area-code h-20 bg-transparent border-none text-amber-800 italic">Để chuẩn bị tốt nhất cho tuần đào tạo nhân sự mới, các bạn nếu có thể thì cố gắng chuẩn bị thêm tai nghe có dây ạ.</textarea>
-                        <button onclick="copyContent('s1-7', this)" class="btn-outline copy-btn bg-white">Copy</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- STEP 2: THỨ 2 -->
-            <section id="monday" class="step-content saas-card p-8 border-t-4 border-blue-500">
-                <div class="mb-6 border-b border-slate-100 pb-4">
-                    <h2 class="text-xl font-bold text-slate-800">Chiều Thứ 2: Nhắc lịch học</h2>
-                </div>
-                <div class="relative bg-white border border-slate-200 rounded-xl">
-                    <textarea id="s2-1" readonly class="text-area-code h-80 border-none">Chào mọi người @All ,
-Từ sáng mai, Vi sẽ đồng hành cùng mọi người trong chương trình Đào tạo sản phẩm cơ bản, diễn ra trong 3 buổi: Thứ 3, Thứ 4, Thứ 5.
-Thời gian: 8:30 – 10:30am
-
-Các bạn cần lưu ý chuẩn bị:
-- Một chiếc bụng no (ăn sáng đầy đủ)
-- Một tâm hồn đẹp (đi học là phải vui) :-*
-- Một chiếc máy tính kết nối mạng ổn định (có mạng ngon là có tất cả) ;p
-- Tai nghe (không bị hỏng)
-- Mic để trao đổi (mic của tai nghe hoặc mic laptop đều được)
-- Webcam
-
-Link tham gia đào tạo online trên Google Meet
-Buổi 1: https://meet.google.com/sxr-hnuk-fob?authuser=0</textarea>
-                    <button onclick="copyContent('s2-1', this)" class="btn-outline copy-btn">Copy Tất Cả</button>
-                </div>
-            </section>
-
-            <!-- STEP 3: THỨ 3 (BUỔI 1) -->
-            <section id="tuesday" class="step-content saas-card p-8 border-t-4 border-blue-500">
-                <div class="mb-6 border-b border-slate-100 pb-4">
-                    <h2 class="text-xl font-bold text-slate-800">Thứ 3: Buổi 1</h2>
-                </div>
-                <div class="space-y-6">
-                    <div class="relative bg-slate-50 border border-slate-200 rounded-xl p-4">
-                        <p class="text-xs font-bold text-slate-500 uppercase mb-2">Gửi 10:30 (Sau dạy)</p>
-                        <textarea id="s3-1" readonly class="text-area-code h-40 border-none bg-white">NỘI DUNG ĐÀO TẠO SẢN PHẨM - TỔNG QUAN KHÓA HỌC + 6 BƯỚC DEMO CƠ BẢN
-Nội dung học Buổi 1: Đào tạo Sản phẩm Cơ bản 01
----------------------------------
-Lưu ý:
-- Dành 2 phút xem trước hướng dẫn trên LMS: https://kiotvietlnd.github.io/training/hdsd-lms-sales#dangnhap
-- Học lần lượt theo 2 bước:
-+ Bước 1: Học và ôn trên Thư viên E-Learning (Github)
-+ Bước 2: Làm bài quiz nhỏ + quiz tổng hợp trên LMS
-Hoàn thành khóa học trước 12h trưa nay nhé!</textarea>
-                        <button onclick="copyContent('s3-1', this)" class="btn-outline copy-btn mt-6">Copy</button>
-                    </div>
-
-                    <div class="relative bg-slate-50 border border-slate-200 rounded-xl p-4">
-                        <p class="text-xs font-bold text-slate-500 uppercase mb-2">Gửi 13:30 (Kết quả & BT)</p>
-                        <textarea id="s3-2" readonly class="text-area-code h-28 border-none bg-white">Vi gửi kết quả học sáng nay của mọi người nha... (Kết quả in đậm kiểm tra lại)
-Vi gửi nhiệm vụ B1: Mọi người vào LMS - Buổi 1 -> Tab tài liệu tải file Word B1... hoàn thành bài tập và up lên nhóm trước 16:00 nhé.</textarea>
-                        <button onclick="copyContent('s3-2', this)" class="btn-outline copy-btn mt-6">Copy</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- STEP 4: THỨ 4 (BUỔI 2) -->
-            <section id="wednesday" class="step-content saas-card p-8 border-t-4 border-blue-500">
-                <div class="mb-6 border-b border-slate-100 pb-4">
-                    <h2 class="text-xl font-bold text-slate-800">Thứ 4: Buổi 2</h2>
-                </div>
-                <div class="space-y-6">
-                    <div class="relative bg-slate-50 border border-slate-200 rounded-xl p-4">
-                        <textarea id="s4-1" readonly class="text-area-code h-28 border-none bg-white">NỘI DUNG ĐÀO TẠO SẢN PHẨM - NHỮNG CÂU HỎI THƯỜNG GẶP
-Nội dung học Buổi 2: Đào tạo Sản phẩm Cơ bản 02
----------------------------------
-Lưu ý: Dành 2 phút xem hướng dẫn LMS... Hoàn thành khóa học trước 12h trưa nay nhé!</textarea>
-                        <button onclick="copyContent('s4-1', this)" class="btn-outline copy-btn">Copy</button>
-                    </div>
-
-                    <div class="relative bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-                        <p class="text-xs font-bold text-emerald-700 uppercase mb-2">Note: Nhóm Khách Hàng</p>
-                        <textarea id="s4-2" readonly class="text-area-code h-44 bg-white border-emerald-100 text-emerald-800">Có 1 vài bạn đang hiểu chưa đúng phần tạo Nhóm khách hàng, Vi diễn giải lại 1 chút phần này nha:
-1. Thêm theo điều kiện: Khách đủ điều kiện được thêm tự động, nhưng không tự động loại ra nếu sau này hết đủ điều kiện.
-2. Cập nhật lại theo điều kiện: Phần mềm liên tục cập nhật danh sách (đủ thì thêm, không đủ thì loại).
-3. Không cập nhật lại: Danh sách thành viên được giữ nguyên bất kể thay đổi điều kiện sau này.</textarea>
-                        <button onclick="copyContent('s4-2', this)" class="btn-outline copy-btn mt-6">Copy Note</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- STEP 5: THỨ 5 (BUỔI 3) -->
-            <section id="thursday" class="step-content saas-card p-8 border-t-4 border-blue-500">
-                <div class="mb-6 border-b border-slate-100 pb-4">
-                    <h2 class="text-xl font-bold text-slate-800">Thứ 5: Buổi 3</h2>
-                </div>
-                <div class="space-y-6">
-                    <div class="relative bg-slate-50 border border-slate-200 rounded-xl p-4">
-                        <textarea id="s5-1" readonly class="text-area-code h-20 border-none bg-white">NỘI DUNG ĐÀO TẠO SẢN PHẨM - LUỒNG CƠ BẢN 06 BƯỚC (MOBILE APP) + PHẦN CỨNG
-Nội dung học Buổi 3: Đào tạo Sản phẩm Cơ bản 03</textarea>
-                        <button onclick="copyContent('s5-1', this)" class="btn-outline copy-btn">Copy</button>
-                    </div>
-
-                    <div class="relative bg-rose-50 border border-rose-200 rounded-xl p-4">
-                        <p class="text-xs font-bold text-rose-700 uppercase mb-2">Quan trọng: Dặn dò Ôn Thi</p>
-                        <textarea id="s5-2" readonly class="text-area-code h-36 bg-white border-rose-100 text-rose-800">📌 [QUAN TRỌNG] TÀI LIỆU & HƯỚNG DẪN ÔN TẬP SẢN PHẨM CƠ BẢN
-Hình thức: Online 30p - 30 câu (80% Pass). Được mở phần mềm thao tác.
-1. Ôn lý thuyết trên Github (B1-B2-B3).
-2. Ôn Quiz trên LMS.
-3. Xem Record khóa: https://drive.google.com/drive/folders/15ghXFGcR67ErIxB_SPIaSrHt3QiNhfJh</textarea>
-                        <button onclick="copyContent('s5-2', this)" class="btn-outline copy-btn mt-6">Copy Note</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- STEP 6: THỨ 6 (TEST) -->
-            <section id="friday" class="step-content saas-card p-8 border-t-4 border-rose-500">
-                <div class="mb-6 border-b border-slate-100 pb-4">
-                    <h2 class="text-xl font-bold text-slate-800">Thứ 6: Ngày TEST</h2>
-                </div>
-                <div class="space-y-6">
-                    <div class="relative bg-amber-50 border border-amber-200 rounded-xl p-4">
-                        <textarea id="s6-1" readonly class="text-area-code h-20 border-none bg-white text-amber-800">Yếu tố phong thủy chọn món ăn đi thi may mắn: https://www.bachhoaxanh.com/kinh-nghiem-hay/di-thi-thi-dung-an-nhung-mon-nay-keo-bi-tu-de-1175082</textarea>
-                        <button onclick="copyContent('s6-1', this)" class="btn-outline copy-btn">Copy</button>
-                    </div>
-
-                    <div class="relative bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-                        <p class="text-xs font-bold text-emerald-700 uppercase mb-2">Gửi khi có điểm PASS</p>
-                        <textarea id="s6-2" readonly class="text-area-code h-36 bg-white border-emerald-100 text-emerald-800">Sau khi PASS bài kiểm tra, chương trình Đào tạo Cơ bản kết thúc!
-- Khối Non-Sale: Điền khảo sát và OUT NHÓM.
-- Khối Sale: Ở lại chờ thông tin khóa COC-CRM.
-- Link Group chat "Xóm Đào": https://chat.google.com/room/AAAAEOKr7G8?cls=4
-- Link khảo sát: https://docs.google.com/forms/d/1_LhtIYlk-nMqcdZLIpn_wFitwj6K6-LeVOF1b9-TY9k/preview</textarea>
-                        <button onclick="copyContent('s6-2', this)" class="btn-outline copy-btn mt-6">Copy</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TOOLS -->
-            <section id="tools" class="step-content space-y-6">
-                <div class="saas-card p-6 border-t-4 border-purple-500">
-                    <h3 class="text-sm font-bold text-slate-800 uppercase mb-4">Tài nguyên Giảng dạy</h3>
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
-                            <span class="text-sm font-semibold">Slide Dạy B1</span>
-                            <a href="https://kiotvietlnd.github.io/slides/san-pham-retail" target="_blank" class="text-xs text-blue-600 hover:underline">Mở link</a>
-                        </div>
-                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
-                            <span class="text-sm font-semibold">Gamification SPCB</span>
-                            <a href="https://vinguyen14.github.io/camnang/gamification" target="_blank" class="text-xs text-blue-600 hover:underline">Chơi Game</a>
-                        </div>
-                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">Bước 1: Khởi tạo Dữ liệu & Cấu hình</h2>
+                    <p class="text-sm text-slate-500 mt-1">Cài đặt biến số 1 lần duy nhất, toàn bộ Kịch bản Zalo & Mail ở các bước sau sẽ tự động sinh ra.</p>
                 </div>
                 
-                <div class="saas-card p-6 border-t-4 border-emerald-500">
-                    <h3 class="text-sm font-bold text-slate-800 uppercase mb-4">Checklist Vận hành</h3>
-                    <div class="space-y-3" id="checklist">
-                        <label class="flex items-center p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg cursor-pointer checkbox-container">
-                            <input type="checkbox" onchange="checkTask(0)" class="absolute opacity-0 w-0 h-0">
-                            <div class="w-5 h-5 rounded border-2 border-slate-300 flex items-center justify-center mr-3 bg-white transition-colors"><i class="fas fa-check text-white text-[10px] opacity-0 transition-opacity"></i></div>
-                            <span class="text-sm font-medium text-slate-700">Gửi mail thư mời đào tạo</span>
-                        </label>
-                        <label class="flex items-center p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg cursor-pointer checkbox-container">
-                            <input type="checkbox" onchange="checkTask(1)" class="absolute opacity-0 w-0 h-0">
-                            <div class="w-5 h-5 rounded border-2 border-slate-300 flex items-center justify-center mr-3 bg-white transition-colors"><i class="fas fa-check text-white text-[10px] opacity-0 transition-opacity"></i></div>
-                            <span class="text-sm font-medium text-slate-700">Tạo group Zalo Khóa & Add HV</span>
-                        </label>
+                <div class="grid grid-cols-2 gap-6 mb-8 bg-blue-50 p-6 rounded-xl border border-blue-100 shadow-inner">
+                    <div>
+                        <label class="form-label text-blue-800">Ngày học Buổi 1 (Thứ 3)</label>
+                        <input type="date" id="conf-date-tue" class="saas-input border-blue-300 font-bold" onchange="updateSpcbTemplates()">
+                        <p class="text-[10px] text-blue-600 mt-1 italic">*Hệ thống sẽ tự tính lùi lại T7/CN và cộng lên T4, T5, T6 thi.</p>
+                    </div>
+                    <div>
+                        <label class="form-label">Tên Mã Khóa Học (VD: 26KV14)</label>
+                        <input type="text" id="conf-course-code" class="saas-input font-bold" value="26KV14" oninput="updateSpcbTemplates()">
+                    </div>
+                    
+                    <div class="col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-blue-200 pt-4 mt-2">
+                        <div><label class="form-label text-blue-700">Link Meet Buổi 1 (T3)</label><input type="url" id="conf-meet-1" class="saas-input text-blue-600 text-xs" placeholder="https://meet.google.com/..." oninput="updateSpcbTemplates()"></div>
+                        <div><label class="form-label text-blue-700">Link Meet Buổi 2 (T4)</label><input type="url" id="conf-meet-2" class="saas-input text-blue-600 text-xs" placeholder="https://meet.google.com/..." oninput="updateSpcbTemplates()"></div>
+                        <div><label class="form-label text-blue-700">Link Meet Buổi 3 (T5)</label><input type="url" id="conf-meet-3" class="saas-input text-blue-600 text-xs" placeholder="https://meet.google.com/..." oninput="updateSpcbTemplates()"></div>
+                    </div>
+
+                    <div><label class="form-label mt-2">Link Group Zalo (Lớp)</label><input type="url" id="conf-zalo" class="saas-input text-xs" placeholder="https://zalo.me/g/..." oninput="updateSpcbTemplates()"></div>
+                    <div><label class="form-label mt-2">Link Record Video (Khóa thi)</label><input type="url" id="conf-record" class="saas-input text-xs" placeholder="https://drive.google.com/..." oninput="updateSpcbTemplates()"></div>
+                </div>
+
+                <div class="mb-2 flex justify-between items-end">
+                    <h3 class="font-bold text-slate-800"><i class="fas fa-users text-blue-500 mr-2"></i>Danh sách Lớp (Roster)</h3>
+                    <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded">Dữ liệu lấy từ danh sách Onboard</span>
+                </div>
+                <textarea id="spcb-roster" class="saas-input h-48 font-mono text-[11px] whitespace-pre bg-slate-50 focus:bg-white" placeholder="Dán danh sách Tân binh (Copy từ file Onboard tuần này) vào đây. Cột 'Email' hoặc 'Email Công ty' là bắt buộc để AI tự động chấm điểm..."></textarea>
+                
+                <div class="mt-8 pt-6 border-t border-slate-100 flex justify-end">
+                    <button onclick="saveSpcbConfig()" class="btn-primary bg-blue-600 border-blue-700 hover:bg-blue-700 shadow-md">Lưu Cấu hình & Quét Danh sách <i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+            </section>
+
+            <!-- STEP 2: PRE-COURSE (T7 - CN) -->
+            <section id="step2" class="step-content saas-card p-8 border-t-4 border-blue-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Bước 2: Mời học & Chào mừng (Thứ 7 - CN)</h2>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="relative bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                        <p class="text-xs font-bold text-slate-500 uppercase mb-2"><i class="fas fa-envelope mr-1"></i> Sáng Thứ 7: Mail Mời Học Tuần Sau</p>
+                        <textarea id="tpl-mail-invite" readonly class="text-area-code h-32 border-none bg-slate-50"></textarea>
+                        <button onclick="copyContent('tpl-mail-invite', this)" class="btn-outline copy-btn">Copy Mail</button>
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 shadow-sm">
+                        <p class="text-xs font-bold text-blue-800 uppercase mb-3"><i class="fas fa-comments mr-1"></i> Sáng Chủ Nhật: 7 Tin Nhắn Chào Mừng Zalo</p>
+                        <div class="space-y-3">
+                            <div class="relative"><textarea id="z1" readonly class="text-area-code h-12 py-2 border-transparent"></textarea><button onclick="copyContent('z1', this)" class="btn-outline copy-btn !top-2 !right-2 !py-1">Copy 1</button></div>
+                            <div class="relative"><textarea id="z2" readonly class="text-area-code h-16 py-2 border-transparent"></textarea><button onclick="copyContent('z2', this)" class="btn-outline copy-btn !top-2 !right-2 !py-1">Copy 2</button></div>
+                            <div class="relative"><textarea id="z3" readonly class="text-area-code h-16 py-2 border-transparent"></textarea><button onclick="copyContent('z3', this)" class="btn-outline copy-btn !top-2 !right-2 !py-1">Copy 3</button></div>
+                            <div class="relative"><textarea id="z4" readonly class="text-area-code h-16 py-2 border-transparent"></textarea><button onclick="copyContent('z4', this)" class="btn-outline copy-btn !top-2 !right-2 !py-1">Copy 4</button></div>
+                            <div class="relative"><textarea id="z5" readonly class="text-area-code h-16 py-2 border-blue-300 text-blue-800 font-bold bg-white"></textarea><button onclick="copyContent('z5', this)" class="btn-outline copy-btn !top-2 !right-2 !py-1">Copy 5</button></div>
+                            <div class="relative"><textarea id="z6" readonly class="text-area-code h-20 py-2 border-transparent text-[12px]"></textarea><button onclick="copyContent('z6', this)" class="btn-outline copy-btn !top-2 !right-2 !py-1">Copy 6</button></div>
+                            <div class="relative"><textarea id="z7" readonly class="text-area-code h-16 py-2 border-amber-300 text-amber-800 bg-amber-50"></textarea><button onclick="copyContent('z7', this)" class="btn-outline copy-btn !top-2 !right-2 !py-1 bg-white">Copy 7</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-slate-100 flex justify-end">
+                    <button onclick="markStepDone(2)" class="btn-primary shadow-md">Đã gửi tin xong <i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+            </section>
+
+            <!-- STEP 3: DAILY CLASS & DAILY GRADER -->
+            <section id="step3" class="step-content saas-card p-8 border-t-4 border-blue-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Bước 3: Vận hành Lớp Hằng Ngày (T2 - T5)</h2>
+                </div>
+
+                <!-- TABS NGÀY -->
+                <div class="flex border-b border-slate-200 mb-6 gap-2">
+                    <button onclick="switchDailyTab('mon')" id="tab-mon" class="px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600">Thứ 2 (Nhắc)</button>
+                    <button onclick="switchDailyTab('tue')" id="tab-tue" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800">Thứ 3 (B1)</button>
+                    <button onclick="switchDailyTab('wed')" id="tab-wed" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800">Thứ 4 (B2)</button>
+                    <button onclick="switchDailyTab('thu')" id="tab-thu" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800">Thứ 5 (B3)</button>
+                </div>
+
+                <!-- Nội dung T2 -->
+                <div id="content-mon" class="daily-content block space-y-4">
+                    <div class="relative bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-2">Chiều Thứ 2 (16:30): Nhắc Lịch Học (Link B1)</p>
+                        <textarea id="d-mon-1" readonly class="text-area-code h-60 border-none bg-slate-50"></textarea>
+                        <button onclick="copyContent('d-mon-1', this)" class="btn-outline copy-btn">Copy Zalo</button>
+                    </div>
+                </div>
+
+                <!-- Nội dung T3 -->
+                <div id="content-tue" class="daily-content hidden space-y-4">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="relative bg-white border border-slate-200 p-4 rounded-xl shadow-sm"><p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Sáng: Nhắc vào lớp (Link B1)</p><textarea id="d-tue-1" readonly class="text-area-code h-16 text-xs border-none bg-slate-50"></textarea><button onclick="copyContent('d-tue-1', this)" class="btn-outline copy-btn !py-1 !text-[9px]">Copy</button></div>
+                        <div class="relative bg-white border border-slate-200 p-4 rounded-xl shadow-sm"><p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Trưa: Giao bài tập LMS</p><textarea id="d-tue-2" readonly class="text-area-code h-16 text-xs border-none bg-slate-50"></textarea><button onclick="copyContent('d-tue-2', this)" class="btn-outline copy-btn !py-1 !text-[9px]">Copy</button></div>
+                    </div>
+                    <div class="bg-indigo-50 p-5 rounded-xl border border-indigo-200 shadow-inner">
+                        <h4 class="font-bold text-indigo-800 mb-2"><i class="fas fa-magic mr-1"></i> AI Daily Grader (Cộng dồn điểm Buổi 1)</h4>
+                        <textarea id="daily-raw-tue" class="saas-input h-24 text-[10px] font-mono mb-2 border-indigo-300" placeholder="Dán Data xuất từ LMS Buổi 1 vào đây... (Gồm các cột Email, Số câu trả lời đúng)."></textarea>
+                        <button onclick="runDailyGrader('tue', 52)" class="w-full btn-primary bg-indigo-600 border-indigo-700 py-3 shadow-md hover:bg-indigo-700">Chấm điểm Báo cáo Buổi 1 (52 Câu)</button>
+                        <div id="daily-res-tue" class="hidden mt-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-bold text-sm text-indigo-800">Kết quả Buổi 1</h4>
+                                <button onclick="copyTableToClipboard('table-tue', this)" class="btn-outline border-indigo-300 text-indigo-700 bg-white !py-1"><i class="far fa-copy mr-1"></i> Copy Excel</button>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg border border-indigo-100 overflow-x-auto"><table class="w-full grade-table" id="table-tue"></table></div>
+                            <div id="warn-tue" class="mt-4 hidden flex-col">
+                                <p class="text-xs font-bold text-rose-600 mb-2"><i class="fas fa-exclamation-triangle"></i> Cảnh báo Học viên Lạ (Không có trong Roster):</p>
+                                <div class="bg-rose-50 border border-rose-200 rounded p-3 overflow-x-auto"><table class="w-full grade-table" id="table-stranger-tue"></table></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nội dung T4 -->
+                <div id="content-wed" class="daily-content hidden space-y-4">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="relative bg-white border border-slate-200 p-4 rounded-xl shadow-sm"><p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Sáng: Nhắc vào lớp (Link B2)</p><textarea id="d-wed-1" readonly class="text-area-code h-16 text-xs border-none bg-slate-50"></textarea><button onclick="copyContent('d-wed-1', this)" class="btn-outline copy-btn !py-1 !text-[9px]">Copy</button></div>
+                        <div class="relative bg-emerald-50 border border-emerald-200 p-4 rounded-xl shadow-sm"><p class="text-[10px] font-bold text-emerald-700 uppercase mb-1">Note: Phân biệt Nhóm KH</p><textarea id="d-wed-2" readonly class="text-area-code h-24 text-xs border-none bg-transparent text-emerald-800"></textarea><button onclick="copyContent('d-wed-2', this)" class="btn-outline copy-btn !py-1 !text-[9px] bg-white">Copy</button></div>
+                    </div>
+                    <div class="bg-indigo-50 p-5 rounded-xl border border-indigo-200 shadow-inner">
+                        <h4 class="font-bold text-indigo-800 mb-2"><i class="fas fa-magic mr-1"></i> AI Daily Grader (Cộng dồn điểm Buổi 2)</h4>
+                        <textarea id="daily-raw-wed" class="saas-input h-24 text-[10px] font-mono mb-2 border-indigo-300" placeholder="Dán Data xuất từ LMS Buổi 2 vào đây..."></textarea>
+                        <button onclick="runDailyGrader('wed', 75)" class="w-full btn-primary bg-indigo-600 border-indigo-700 py-3 shadow-md hover:bg-indigo-700">Chấm điểm Báo cáo Buổi 2 (75 Câu)</button>
+                        <div id="daily-res-wed" class="hidden mt-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-bold text-sm text-indigo-800">Kết quả Buổi 2</h4>
+                                <button onclick="copyTableToClipboard('table-wed', this)" class="btn-outline border-indigo-300 text-indigo-700 bg-white !py-1"><i class="far fa-copy mr-1"></i> Copy Excel</button>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg border border-indigo-100 overflow-x-auto"><table class="w-full grade-table" id="table-wed"></table></div>
+                            <div id="warn-wed" class="mt-4 hidden flex-col">
+                                <p class="text-xs font-bold text-rose-600 mb-2"><i class="fas fa-exclamation-triangle"></i> Cảnh báo Học viên Lạ (Không có trong Roster):</p>
+                                <div class="bg-rose-50 border border-rose-200 rounded p-3 overflow-x-auto"><table class="w-full grade-table" id="table-stranger-wed"></table></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nội dung T5 -->
+                <div id="content-thu" class="daily-content hidden space-y-4">
+                    <div class="relative bg-white border border-slate-200 rounded-xl p-4 mb-4 shadow-sm">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-2">Sáng Thứ 5 (08:30): Nhắc vào lớp (Link B3)</p>
+                        <textarea id="d-thu-0" readonly class="text-area-code h-16 border-none bg-slate-50"></textarea>
+                        <button onclick="copyContent('d-thu-0', this)" class="btn-outline copy-btn">Copy Nhắc Lớp</button>
+                    </div>
+
+                    <div class="relative bg-white border border-slate-200 rounded-xl p-4 mb-4 shadow-sm">
+                        <p class="text-[10px] font-bold text-rose-600 uppercase mb-2">Chiều Thứ 5 (16:30): Dặn Dò Ôn Thi</p>
+                        <textarea id="d-thu-1" readonly class="text-area-code h-64 border-none bg-rose-50 text-rose-800"></textarea>
+                        <button onclick="copyContent('d-thu-1', this)" class="btn-outline copy-btn bg-white border-rose-200 text-rose-600">Copy Zalo Ôn Thi</button>
+                    </div>
+                    <div class="bg-indigo-50 p-5 rounded-xl border border-indigo-200 shadow-inner">
+                        <h4 class="font-bold text-indigo-800 mb-2"><i class="fas fa-magic mr-1"></i> AI Daily Grader (Cộng dồn điểm Buổi 3)</h4>
+                        <textarea id="daily-raw-thu" class="saas-input h-24 text-[10px] font-mono mb-2 border-indigo-300" placeholder="Dán Data xuất từ LMS Buổi 3 vào đây..."></textarea>
+                        <button onclick="runDailyGrader('thu', 76)" class="w-full btn-primary bg-indigo-600 border-indigo-700 py-3 shadow-md hover:bg-indigo-700">Chấm điểm Báo cáo Buổi 3 (76 Câu)</button>
+                        <div id="daily-res-thu" class="hidden mt-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-bold text-sm text-indigo-800">Kết quả Buổi 3</h4>
+                                <button onclick="copyTableToClipboard('table-thu', this)" class="btn-outline border-indigo-300 text-indigo-700 bg-white !py-1"><i class="far fa-copy mr-1"></i> Copy Excel</button>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg border border-indigo-100 overflow-x-auto"><table class="w-full grade-table" id="table-thu"></table></div>
+                            <div id="warn-thu" class="mt-4 hidden flex-col">
+                                <p class="text-xs font-bold text-rose-600 mb-2"><i class="fas fa-exclamation-triangle"></i> Cảnh báo Học viên Lạ (Không có trong Roster):</p>
+                                <div class="bg-rose-50 border border-rose-200 rounded p-3 overflow-x-auto"><table class="w-full grade-table" id="table-stranger-thu"></table></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-slate-100 flex justify-end">
+                    <button onclick="markStepDone(3)" class="btn-primary shadow-md">Hoàn tất Lớp Hằng ngày <i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+            </section>
+
+            <!-- STEP 4: THI FINAL L1 (THỨ 6) -->
+            <section id="step4" class="step-content saas-card border-t-4 border-orange-500 overflow-hidden">
+                <div class="px-8 py-6 bg-slate-50 border-b border-slate-200">
+                    <h2 class="text-xl font-bold text-slate-800"><i class="fas fa-flag-checkered text-orange-500 mr-2"></i> Bước 4: Thi Final Lần 1 (Thứ 6)</h2>
+                </div>
+                
+                <div class="p-6">
+                    <div class="relative bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-2">Sáng T6 (09:00): Nhắc vào thi</p>
+                        <textarea id="t6-nhac" readonly class="text-area-code h-40 border-none bg-slate-50"></textarea>
+                        <button onclick="copyContent('t6-nhac', this)" class="btn-outline copy-btn">Copy Zalo</button>
+                    </div>
+
+                    <div class="bg-orange-50 border border-orange-200 rounded-xl p-5 mb-6 shadow-inner">
+                        <h4 class="font-bold text-orange-800 mb-2"><i class="fas fa-magic mr-1"></i> AI Final Grader (Chấm Thi L1)</h4>
+                        <textarea id="lms-raw-1" class="saas-input h-24 text-[10px] font-mono mb-2 border-orange-300" placeholder="Dán Data xuất từ LMS Bài Thi (30 câu) vào đây... (Tự động match theo Email Roster)"></textarea>
+                        <button onclick="runFinalGrader(1)" class="w-full btn-primary bg-orange-500 border-orange-600 hover:bg-orange-600 py-3 shadow-md">Chấm Điểm Thi & Xét Duyệt L1</button>
+                    </div>
+
+                    <div id="grade-result-1" class="hidden border-t border-slate-200 pt-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-bold text-orange-800 text-sm">Bảng Điểm Lần 1</h3>
+                            <button onclick="copyTableToClipboard('result-table-1', this)" class="btn-outline border-orange-300 text-orange-700 font-bold bg-white"><i class="far fa-copy mr-1"></i> Copy Bảng Điểm</button>
+                        </div>
+                        <div class="overflow-x-auto custom-scrollbar mb-6"><table class="w-full grade-table" id="result-table-1"></table></div>
+                        
+                        <div id="action-l1-fail" class="bg-white border border-slate-200 rounded-xl p-4 hidden flex-col shadow-sm">
+                            <label class="form-label text-rose-600">Có HV Rớt. Gửi Mail Báo Rớt L1 & Hẹn L2</label>
+                            <div class="relative"><textarea id="mail-out-1" readonly class="text-area-code h-24 border-none bg-slate-50"></textarea><button onclick="copyContent('mail-out-1', this)" class="btn-outline copy-btn">Copy Mail</button></div>
+                            <div class="mt-4 flex justify-end"><button onclick="markStepDone(4)" class="btn-primary bg-orange-600 shadow-md">Chuyển sang Bước L2 <i class="fas fa-arrow-right ml-2"></i></button></div>
+                        </div>
+
+                        <div id="action-l1-pass" class="bg-emerald-50 border border-emerald-200 rounded-xl p-6 hidden flex-col text-center shadow-inner">
+                            <i class="fas fa-check-circle text-4xl text-emerald-500 mb-3"></i>
+                            <h3 class="font-bold text-emerald-800 text-lg mb-2">Tất cả 100% Học viên đã PASS!</h3>
+                            <p class="text-sm text-emerald-600 mb-4">Tuyệt vời! Không có ai Rớt/Miss. Hãy gửi thông báo chúc mừng.</p>
+                            <div class="space-y-3 text-left mb-6">
+                                <div class="relative"><textarea id="t6-pass1" readonly class="text-area-code h-24 border-emerald-200 bg-white"></textarea><button onclick="copyContent('t6-pass1', this)" class="btn-outline copy-btn !py-1 text-emerald-700">Copy Chúc Mừng</button></div>
+                                <div class="relative"><textarea id="t6-pass2" readonly class="text-area-code h-20 border-emerald-200 bg-white"></textarea><button onclick="copyContent('t6-pass2', this)" class="btn-outline copy-btn !py-1 text-emerald-700">Copy Mời Xóm Đào</button></div>
+                                <div class="relative"><textarea id="t6-pass4" readonly class="text-area-code h-28 border-emerald-200 bg-white"></textarea><button onclick="copyContent('t6-pass4', this)" class="btn-outline copy-btn !py-1 text-emerald-700">Copy Khối Non-Sale</button></div>
+                                <div class="relative"><textarea id="t6-pass5" readonly class="text-area-code h-24 border-emerald-200 bg-white"></textarea><button onclick="copyContent('t6-pass5', this)" class="btn-outline copy-btn !py-1 text-emerald-700">Copy Khối Sales</button></div>
+                                <div class="relative"><textarea id="t6-pass3" readonly class="text-area-code h-20 border-emerald-200 bg-white"></textarea><button onclick="copyContent('t6-pass3', this)" class="btn-outline copy-btn !py-1 text-emerald-700">Copy Khảo sát</button></div>
+                            </div>
+                            <button onclick="skipToFinalize()" class="btn-primary bg-emerald-600 border-emerald-700 hover:bg-emerald-700 mx-auto px-8 py-3 shadow-lg text-lg">Bỏ qua L2 -> Đi tới Đóng khóa <i class="fas fa-forward ml-2"></i></button>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- STEP 7: ĐÓNG KHÓA API -->
-            <section id="finalize" class="step-content">
-                <div class="saas-card overflow-hidden">
-                    <div class="px-8 py-6 bg-slate-800 text-white">
-                        <h2 class="text-xl font-bold">Nộp Báo cáo Khóa SPCB</h2>
-                        <p class="text-xs text-slate-400 mt-1">Dữ liệu sẽ được tự động đồng bộ lên Google Sheets qua API.</p>
+            <!-- STEP 5: THI LẠI L2 (THỨ 7) -->
+            <section id="step5" class="step-content saas-card border-t-4 border-rose-500 overflow-hidden">
+                <div class="px-8 py-6 bg-slate-50 border-b border-slate-200">
+                    <h2 class="text-xl font-bold text-slate-800"><i class="fas fa-life-ring text-rose-500 mr-2"></i> Bước 5: Chấm Thi Lại L2 (Thứ 7)</h2>
+                </div>
+                <div class="p-6">
+                    <div class="bg-rose-50 p-4 rounded-xl border border-rose-100 flex items-center justify-between mb-4 shadow-sm">
+                        <span class="text-sm font-bold text-rose-800">Số lượng học viên cần thi Lại/Bù:</span>
+                        <span id="l2-target-count" class="px-3 py-1 bg-rose-500 text-white rounded font-bold text-lg">0</span>
+                    </div>
+                    <label class="form-label text-rose-600">Dán Dữ liệu Thô từ LMS (Lần 2)</label>
+                    <textarea id="lms-raw-2" class="saas-input h-32 font-mono text-[10px] whitespace-pre mb-2 border-rose-300" placeholder="STT	Họ và tên	Email..."></textarea>
+                    <button onclick="runFinalGrader(2)" class="w-full btn-primary bg-rose-500 border-rose-600 hover:bg-rose-600 py-3 shadow-md">Chấm Điểm Lần 2 & Chốt Kết Quả</button>
+                    
+                    <div id="grade-result-2" class="hidden border-t border-slate-200 pt-6 mt-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-bold text-rose-800 text-sm">Bảng Điểm Chốt Khóa (Final)</h3>
+                            <button onclick="copyTableToClipboard('result-table-2', this)" class="btn-outline border-rose-300 text-rose-700 font-bold bg-white"><i class="far fa-copy mr-1"></i> Copy Bảng Điểm</button>
+                        </div>
+                        <div class="overflow-x-auto custom-scrollbar mb-6"><table class="w-full grade-table" id="result-table-2"></table></div>
+                        
+                        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                            <label class="form-label text-rose-600">Gửi Mail Báo Điểm Final</label>
+                            <div class="relative"><textarea id="mail-out-2" readonly class="text-area-code h-24 border-none bg-slate-50"></textarea><button onclick="copyContent('mail-out-2', this)" class="btn-outline copy-btn">Copy Mail</button></div>
+                        </div>
+
+                        <div class="mt-6 space-y-3 p-6 bg-emerald-50 rounded-xl border border-emerald-200">
+                            <p class="text-xs font-bold text-emerald-800 uppercase mb-2"><i class="fas fa-bullhorn mr-1"></i> Các kịch bản Zalo kết thúc khóa</p>
+                            <div class="relative"><textarea id="t7-pass1" readonly class="text-area-code h-24 border-emerald-200 bg-white"></textarea><button onclick="copyContent('t7-pass1', this)" class="btn-outline copy-btn !py-1 text-emerald-700">Chúc Mừng</button></div>
+                            <div class="relative"><textarea id="t7-pass2" readonly class="text-area-code h-20 border-emerald-200 bg-white"></textarea><button onclick="copyContent('t7-pass2', this)" class="btn-outline copy-btn !py-1 text-emerald-700">Mời Xóm Đào</button></div>
+                            <div class="relative"><textarea id="t7-pass4" readonly class="text-area-code h-28 border-emerald-200 bg-white"></textarea><button onclick="copyContent('t7-pass4', this)" class="btn-outline copy-btn !py-1 text-emerald-700">Khối Non-Sale</button></div>
+                            <div class="relative"><textarea id="t7-pass5" readonly class="text-area-code h-24 border-emerald-200 bg-white"></textarea><button onclick="copyContent('t7-pass5', this)" class="btn-outline copy-btn !py-1 text-emerald-700">Khối Sales</button></div>
+                            <div class="relative"><textarea id="t7-pass3" readonly class="text-area-code h-20 border-emerald-200 bg-white"></textarea><button onclick="copyContent('t7-pass3', this)" class="btn-outline copy-btn !py-1 text-emerald-700">Khảo sát</button></div>
+                        </div>
+
+                        <div class="mt-8 flex justify-end"><button onclick="markStepDone(5)" class="btn-primary bg-rose-600 border-rose-700 hover:bg-rose-700 shadow-md">Đã chốt xong điểm L2 <i class="fas fa-arrow-right ml-2"></i></button></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STEP 6: ĐÓNG KHÓA API -->
+            <section id="step6" class="step-content saas-card border-t-4 border-slate-800 overflow-hidden">
+                <div class="px-8 py-6 bg-slate-800 text-white">
+                    <h2 class="text-xl font-bold">Bước 6: Nộp Báo Cáo & Đóng khóa SPCB</h2>
+                    <p class="text-xs text-slate-400 mt-1">Dữ liệu sẽ được tự động đồng bộ lên Google Sheets qua API để kết xuất ra Bảng Điều Khiển Tổng.</p>
+                </div>
+                <div class="p-8 space-y-6 bg-white">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><label class="form-label">Mã Khóa <span class="text-rose-500">*</span></label><input type="text" id="courseId" value="SPCB-MXX" class="saas-input uppercase font-bold text-blue-600 bg-blue-50"></div>
+                        <div><label class="form-label">Trạng thái</label><select id="status" class="saas-input"><option value="Hoàn thành" selected>Hoàn thành</option><option value="Đang diễn ra">Đang diễn ra</option><option value="Hủy">Hủy</option></select></div>
+                    </div>
+
+                    <div class="bg-slate-50 p-5 rounded-lg border border-slate-200 shadow-inner">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-3 flex items-center justify-between">
+                            <span>Hiệu suất Học viên (Final)</span>
+                            <button onclick="fillStatsFromGrader()" class="text-[10px] bg-white border border-slate-200 px-3 py-1.5 rounded text-blue-600 font-bold hover:bg-blue-50 shadow-sm"><i class="fas fa-magic mr-1"></i> Lấy dữ liệu từ Bảng Chấm Điểm</button>
+                        </p>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div><label class="form-label">Tổng HV</label><input type="number" id="totalTrainees" class="saas-input text-center font-bold text-lg"></div>
+                            <div><label class="form-label text-emerald-600">Đạt (Pass)</label><input type="number" id="passedTrainees" class="saas-input text-center font-bold border-emerald-200 text-emerald-600 text-lg bg-emerald-50"></div>
+                            <div><label class="form-label text-rose-500">Fail/Miss</label><input type="number" id="failedTrainees" class="saas-input text-center font-bold border-rose-200 text-rose-600 text-lg bg-rose-50"></div>
+                        </div>
                     </div>
                     
-                    <div class="p-8 space-y-6 bg-white">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div><label class="form-label">Mã Khóa <span class="text-rose-500">*</span></label><input type="text" id="courseId" class="saas-input uppercase font-bold text-blue-600" placeholder="VD: SPCB-01-HCM"></div>
-                            <div>
-                                <label class="form-label">Trạng thái</label>
-                                <select id="status" class="saas-input"><option value="Hoàn thành">Hoàn thành</option><option value="Đang diễn ra">Đang diễn ra</option><option value="Hủy">Hủy</option></select>
-                            </div>
-                            <div><label class="form-label">Ngày Bắt đầu <span class="text-rose-500">*</span></label><input type="date" id="start" class="saas-input"></div>
-                            <div><label class="form-label">Ngày Kết thúc <span class="text-rose-500">*</span></label><input type="date" id="finish" class="saas-input"></div>
-                        </div>
-
-                        <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
-                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-3">Hiệu suất Học viên</p>
-                            <div class="grid grid-cols-3 gap-4">
-                                <div><label class="form-label">Tổng HV</label><input type="number" id="totalTrainees" class="saas-input text-center font-bold"></div>
-                                <div><label class="form-label text-emerald-600">Đạt (Pass)</label><input type="number" id="passedTrainees" class="saas-input text-center font-bold"></div>
-                                <div><label class="form-label text-rose-500">Fail</label><input type="number" id="failedTrainees" class="saas-input text-center font-bold"></div>
-                            </div>
-                        </div>
-
-                        <div class="space-y-4">
-                            <div><label class="form-label">Link DS (Google Sheet)</label><input type="url" id="listLink" class="saas-input" placeholder="https://..."></div>
-                            <div><label class="form-label">Link Kết quả (LMS)</label><input type="url" id="quizLink" class="saas-input" placeholder="https://..."></div>
-                        </div>
-
-                        <button id="btnSubmit" onclick="submitFinal(event, 'SPCB')" class="btn-primary w-full py-4 text-sm mt-4">
-                            <i class="fas fa-cloud-upload-alt"></i> Xác nhận Đẩy Dữ liệu
-                        </button>
+                    <div class="space-y-4">
+                        <div><label class="form-label">Link File Danh Sách Đào Tạo (Master)</label><input type="url" id="listLink" class="saas-input" placeholder="https://docs.google.com/spreadsheets/..."></div>
+                        <div><label class="form-label">Link Khóa Học LMS</label><input type="url" id="quizLink" class="saas-input" placeholder="https://..."></div>
                     </div>
+                    
+                    <button id="btnSubmit" onclick="submitFinal(event, 'SPCB')" class="btn-primary w-full py-4 text-lg mt-4 bg-slate-800 border-slate-900 hover:bg-slate-900 shadow-xl transform transition hover:-translate-y-1">
+                        <i class="fas fa-lock mr-2"></i> XÁC NHẬN NỘP BÁO CÁO ĐÓNG KHÓA
+                    </button>
                 </div>
             </section>
         </div>
@@ -321,71 +412,494 @@ Hình thức: Online 30p - 30 câu (80% Pass). Được mở phần mềm thao t
 
     <!-- SUCCESS MODAL -->
     <div id="successModal" class="modal fixed inset-0 items-center justify-center p-4">
-        <div class="modal-content bg-white p-8 max-w-sm w-full text-center">
-            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fas fa-check"></i></div>
-            <h3 class="text-xl font-bold text-slate-800 mb-2">Sync Success!</h3>
-            <p class="text-sm text-slate-500 mb-6">Dữ liệu khóa học SPCB đã được đồng bộ lên Google Sheets thành công.</p>
+        <div class="modal-content p-8 max-w-md w-full text-center shadow-2xl border border-emerald-200">
+            <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 shadow-inner"><i class="fas fa-check"></i></div>
+            <h3 class="text-2xl font-black text-slate-800 mb-2">ĐÓNG KHÓA THÀNH CÔNG!</h3>
+            <p class="text-sm text-slate-500 mb-8 leading-relaxed">Dữ liệu khóa học SPCB đã được đồng bộ lên MasterDB.<br>Bạn có muốn chuyển về Trang chủ để xem Báo cáo Dashboard không?</p>
             <div class="flex gap-3">
-                <button onclick="closeSuccess()" class="btn-outline flex-1">Ở lại trang</button>
-                <a href="index.html" class="btn-primary flex-1 text-center">Về Dashboard</a>
+                <button onclick="closeSuccess()" class="btn-outline flex-1 py-3 font-bold text-slate-500">Ở lại trang này</button>
+                <a href="index.html" class="btn-primary flex-1 text-center bg-emerald-600 border-emerald-700 py-3 font-bold shadow-lg">Về Bảng Điều Khiển</a>
             </div>
         </div>
     </div>
 
+    <!-- LOGIC XỬ LÝ JS -->
     <script>
-        function showStep(id) {
-            document.querySelectorAll('.step-content').forEach(el => { el.classList.remove('active'); setTimeout(() => el.style.display = 'none', 300); });
-            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-            document.getElementById('btn-' + id).classList.add('active');
-            setTimeout(() => { const target = document.getElementById(id); target.style.display = 'block'; void target.offsetWidth; target.classList.add('active'); }, 310);
-            window.scrollTo({top: 0, behavior: 'smooth'});
+        // --- DICTIONARY MAP PHÒNG BAN -> KHU VỰC ---
+        const DEPT_TO_REGION = {
+            "contract renewal (kvs)": "Tái Ký",
+            "account manager": "Back Office",
+            "accounting": "Back Office",
+            "administration": "Back Office",
+            "brand & content marketing": "Back Office",
+            "customer service - cto": "Back Office",
+            "customer service - dng": "Back Office",
+            "customer service - hcm": "Back Office",
+            "customer service - hni": "Back Office",
+            "customer service - kv ship": "Back Office",
+            "customer success": "Back Office",
+            "data catalog": "Back Office",
+            "data intelligence platform": "Back Office",
+            "design": "Back Office",
+            "digital marketing": "Back Office",
+            "dsbdh": "DS Miền Trung",
+            "dsbmt": "DS Đông Tây",
+            "dsbnh": "DS Miền Bắc",
+            "dsbtn": "DS Đông Tây",
+            "dscto1": "DS Mekong",
+            "dscto2": "DS Mekong",
+            "dscto3": "DS Mekong",
+            "dsdng1": "DS Miền Trung",
+            "dsdng2": "DS Miền Trung",
+            "dsdtp": "DS Mekong",
+            "dsgli": "DS Đông Tây",
+            "dshdg": "DS Đông Bắc",
+            "dshni1": "DS Miền Bắc",
+            "dshni2": "DS Miền Bắc",
+            "dshni3": "DS Miền Bắc",
+            "dshpg": "DS Đông Bắc",
+            "dshpg dsqnh dshdg (đb)": "DS Đông Bắc",
+            "dshpg1": "DS Đông Bắc",
+            "dshpg2": "DS Đông Bắc",
+            "dskgg": "DS Mekong",
+            "dsldg": "DS Đông Tây",
+            "dsnan": "DS Miền Bắc",
+            "dsndh": "DS Miền Bắc",
+            "dsntg": "DS Đông Tây",
+            "dspto": "DS Miền Bắc",
+            "dsqnh": "DS Đông Bắc",
+            "dsqni": "DS Miền Trung",
+            "dssgn1": "DS Sài Gòn",
+            "dssgn2": "DS Sài Gòn",
+            "dssgn3": "DS Sài Gòn",
+            "dstha": "DS Miền Bắc",
+            "dstnn": "DS Miền Bắc",
+            "dstth": "DS Miền Trung",
+            "dsvpc": "DS Miền Bắc",
+            "dsvtu": "DS Đông Tây",
+            "expert": "Back Office",
+            "finance service": "Back Office",
+            "financial management": "Back Office",
+            "growth marketing manager": "Back Office",
+            "hr": "Back Office",
+            "hrbp": "Back Office",
+            "hrbp hcm-1": "Back Office",
+            "hrbp hn": "Back Office",
+            "hrit": "Back Office",
+            "information security": "Back Office",
+            "infrastructure": "Back Office",
+            "kms": "Back Office",
+            "kv booking": "Back Office",
+            "kv employee": "Back Office",
+            "kv fnb": "Back Office",
+            "kv retail": "Back Office",
+            "kv retail - tech": "Back Office",
+            "kv retail + team kv online": "Back Office",
+            "kv retail tech": "Back Office",
+            "kvc director": "Back Office",
+            "marketing": "Back Office",
+            "marketing kvs": "Back Office",
+            "marketing oversea": "Back Office",
+            "operation management": "Back Office",
+            "operation management department": "Back Office",
+            "outsourcing": "Back Office",
+            "product kv booking": "Back Office",
+            "product kv fnb": "Back Office",
+            "product kv retail": "Back Office",
+            "team internal": "Back Office",
+            "tscto": "TSSGN - TSCTO",
+            "tshni1": "TS Hà Nội",
+            "tshni10": "TS Hà Nội",
+            "tshni2": "TS Hà Nội",
+            "tshni3": "TS Hà Nội",
+            "tshni4": "TS Hà Nội",
+            "tshni5": "TS Hà Nội",
+            "tshni6": "TS Hà Nội",
+            "tshni7": "TS Hà Nội",
+            "tshni8": "TS Hà Nội",
+            "tshni9": "TS Hà Nội",
+            "tssgn1": "TSSGN - TSCTO",
+            "tssgn10": "TSSGN - TSCTO",
+            "tssgn11": "TSSGN - TSCTO",
+            "tssgn2": "TSSGN - TSCTO",
+            "tssgn3": "TSSGN - TSCTO",
+            "tssgn4": "TSSGN - TSCTO",
+            "tssgn5": "TSSGN - TSCTO",
+            "tssgn6": "TSSGN - TSCTO",
+            "tssgn7": "TSSGN - TSCTO",
+            "tssgn8": "TSSGN - TSCTO",
+            "tssgn9": "TSSGN - TSCTO",
+            "upgrade": "Back Office",
+            "ux hub": "Back Office",
+            "kat": "Back Office",
+            "data & ai": "Back Office",
+            "executive office": "Back Office"
+        };
+
+        function getRegion(deptName) {
+            if(!deptName) return "Chưa xác định";
+            const k = deptName.toLowerCase().trim();
+            return DEPT_TO_REGION[k] || "Chưa xác định";
         }
 
-        function copyContent(elementId, btnElement) {
-            const copyText = document.getElementById(elementId);
-            copyText.select(); navigator.clipboard.writeText(copyText.value).then(() => {
-                const originalHTML = btnElement.innerHTML; btnElement.innerHTML = 'Đã Copy!'; btn.classList.add('bg-slate-800', 'text-white');
-                setTimeout(() => { btnElement.innerHTML = originalHTML; btnElement.classList.remove('bg-slate-800', 'text-white'); }, 2000);
-            });
+        function getLocation(regionName) {
+            if(!regionName) return "";
+            if(regionName.includes("Hà Nội") || regionName.includes("Miền Bắc") || regionName.includes("Đông Bắc")) return "Hà Nội";
+            if(regionName.includes("Sài Gòn") || regionName.includes("TSCTO")) return "Hồ Chí Minh";
+            if(regionName.includes("Mekong")) return "Cần Thơ";
+            if(regionName.includes("Đông Tây")) return "Buôn Ma Thuột";
+            if(regionName.includes("Miền Trung")) return "Đà Nẵng";
+            return "Hà Nội"; // Default fallback
         }
 
-        function checkTask(i) {
-            let data = JSON.parse(localStorage.getItem('trainer_checklists')) || { SPCB: { completed: false, steps: {} } };
-            data.SPCB.steps[i] = !data.SPCB.steps[i]; localStorage.setItem('trainer_checklists', JSON.stringify(data));
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            let data = JSON.parse(localStorage.getItem('trainer_checklists'));
-            if(data && data.SPCB && data.SPCB.steps) {
-                const checkboxes = document.querySelectorAll('#checklist input[type="checkbox"]');
-                checkboxes.forEach((cb, idx) => { if(data.SPCB.steps[idx]) cb.checked = true; });
+        // --- 1. UI STEPPER & TABS ---
+        let currentStep = 1; const totalSteps = 6;
+        function updateStepperUI() {
+            let progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            document.getElementById('stepper-progress').style.width = progress + '%';
+            for(let i = 1; i <= totalSteps; i++) {
+                const wrap = document.getElementById('circle-' + i).parentElement;
+                wrap.className = 'step-wrap relative flex flex-col items-center cursor-pointer';
+                if(i < currentStep) { wrap.classList.add('completed'); document.getElementById('circle-' + i).innerHTML = '<i class="fas fa-check"></i>'; } 
+                else if(i === currentStep) { wrap.classList.add('active'); document.getElementById('circle-' + i).innerHTML = i; } 
+                else { document.getElementById('circle-' + i).innerHTML = i; }
             }
-        });
+        }
+        function jumpToStep(step) {
+            document.querySelectorAll('.step-content').forEach(el => { el.classList.remove('active'); setTimeout(() => el.style.display = 'none', 200); });
+            setTimeout(() => { const target = document.getElementById('step' + step); if(target) { target.style.display = 'block'; void target.offsetWidth; target.classList.add('active'); } }, 210);
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            let btn = document.getElementById('btn-step' + step); if(btn) btn.classList.add('active');
+        }
+        function markStepDone(stepNum) { if(currentStep === stepNum && currentStep < totalSteps) { currentStep++; updateStepperUI(); } jumpToStep(stepNum + 1); window.scrollTo({top: 0, behavior: 'smooth'}); }
+        function skipToFinalize() {
+            document.getElementById('circle-5').parentElement.classList.add('skipped'); document.getElementById('circle-5').innerHTML = '<i class="fas fa-forward"></i>';
+            document.getElementById('circle-5').parentElement.querySelector('.step-label').innerText = "Bỏ qua L2";
+            currentStep = 6; updateStepperUI(); jumpToStep(6); window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+        function switchDailyTab(day) {
+            ['mon','tue','wed','thu'].forEach(d => {
+                document.getElementById('content-'+d).classList.replace('block', 'hidden');
+                document.getElementById('tab-'+d).className = "px-4 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800";
+            });
+            document.getElementById('content-'+day).classList.replace('hidden', 'block');
+            document.getElementById('tab-'+day).className = "px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600";
+        }
+        function copyContent(id, btn) { const el = document.getElementById(id); el.select(); navigator.clipboard.writeText(el.value).then(() => { const old = btn.innerHTML; btn.innerHTML = '<i class="fas fa-check mr-1"></i> Copied'; btn.classList.add('bg-slate-800', 'text-white'); setTimeout(() => { btn.innerHTML = old; btn.classList.remove('bg-slate-800', 'text-white'); }, 1500); }); }
+        
+        // HÀM COPY BẢNG ĐIỂM BỎ QUA CÁC DÒNG CÓ CLASS 'stranger-row'
+        function copyTableToClipboard(id, btn) { 
+            const el = document.getElementById(id); let text = ""; 
+            for (let i=0; i<el.rows.length; i++) { 
+                if(el.rows[i].classList.contains('stranger-row')) continue; // Bỏ qua học viên lạ đã bị xóa hoặc đang cảnh báo
+                let row = []; 
+                for (let j=0; j<el.rows[i].cells.length - 1; j++) { // Bỏ cột Action cuối cùng
+                    row.push(el.rows[i].cells[j].innerText); 
+                } 
+                text += row.join("\t") + "\n"; 
+            } 
+            navigator.clipboard.writeText(text).then(() => { const old = btn.innerHTML; btn.innerHTML = '<i class="fas fa-check mr-1"></i> Copied'; setTimeout(() => { btn.innerHTML = old; }, 1500); }); 
+        }
+        
+        function formatD(d) { return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`; }
 
-        // --- HÀM API CHUẨN HÓA (ĐỒNG BỘ 2 CHIỀU) ---
+        // --- 2. LOGIC TỰ ĐỘNG TÍNH NGÀY & Roster Parsing ---
+        let rosterData = []; 
+        let gradedStats = { total: 0, pass: 0, fail: 0 };
+        let currentDailyData = {}; // Cache kết quả ngày để xử lý xóa
+
+        function saveSpcbConfig() {
+            const raw = document.getElementById('spcb-roster').value.trim();
+            localStorage.setItem('kv_roster_SPCB', raw);
+            rosterData = [];
+            if(raw) {
+                const lines = raw.split('\n');
+                if(lines.length > 1) {
+                    const h = lines[0].split('\t').map(x => x.toLowerCase().trim());
+                    const iId = h.findIndex(x=>x.includes('mã')); 
+                    const iName = h.findIndex(x=>x.includes('họ và tên') || x.includes('họ tên') || x.includes('tên'));
+                    const iEmail = h.findIndex(x=>x.includes('email')); 
+                    const iDept = h.findIndex(x=>x.includes('phòng ban'));
+                    for(let i=1; i<lines.length; i++) {
+                        const cols = lines[i].split('\t');
+                        if(cols.length > Math.max(0, iEmail) && cols[iEmail].trim() !== '') {
+                            rosterData.push({ 
+                                code: iId!==-1 ? cols[iId] : '', 
+                                name: iName!==-1 ? cols[iName] : '', 
+                                email: iEmail!==-1 ? cols[iEmail].trim().toLowerCase() : '', 
+                                dept: iDept!==-1 ? cols[iDept] : '', 
+                                attempt: 0, score: 0, status: 'Miss' 
+                            });
+                        }
+                    }
+                }
+            }
+            alert(`✅ Cấu hình thành công! Đã ghi nhận ${rosterData.length} học viên từ danh sách.`);
+            markStepDone(1);
+        }
+
+        window.onload = () => {
+            updateStepperUI();
+            const savedRoster = localStorage.getItem('kv_roster_SPCB');
+            if(savedRoster) document.getElementById('spcb-roster').value = savedRoster;
+            
+            let today = new Date();
+            let nextTue = new Date(today); nextTue.setDate(today.getDate() + ((2 + 7 - today.getDay()) % 7));
+            document.getElementById('conf-date-tue').value = nextTue.toISOString().split('T')[0];
+            updateSpcbTemplates();
+        };
+
+        function updateSpcbTemplates() {
+            const courseCode = document.getElementById('conf-course-code').value || "[Mã Khóa]";
+            const m1 = document.getElementById('conf-meet-1').value || "[Link Meet B1]";
+            const m2 = document.getElementById('conf-meet-2').value || "[Link Meet B2]";
+            const m3 = document.getElementById('conf-meet-3').value || "[Link Meet B3]";
+            const zaloLink = document.getElementById('conf-zalo').value || "[Link Zalo Group]";
+            const recordLink = document.getElementById('conf-record').value || "[Link Drive Record]";
+            
+            const tueStr = document.getElementById('conf-date-tue').value;
+            if(!tueStr) return;
+            const dTue = new Date(tueStr);
+            
+            const dMon = new Date(dTue); dMon.setDate(dTue.getDate() - 1);   // T2
+            const dWed = new Date(dTue); dWed.setDate(dTue.getDate() + 1);   // T4
+            const dThu = new Date(dTue); dThu.setDate(dTue.getDate() + 2);   // T5
+            const dFri = new Date(dTue); dFri.setDate(dTue.getDate() + 3);   // T6 (Test)
+            const dSat = new Date(dTue); dSat.setDate(dTue.getDate() + 4);   // T7 (L2)
+
+            document.getElementById('courseId').value = courseCode;
+
+            // STEP 2
+            document.getElementById('tpl-mail-invite').value = `Dear các anh/chị Leader/SM,\nPhòng Đào tạo gửi kế hoạch Đào tạo tuần sau, khóa ${courseCode} cho các bạn nhân sự Sale (TS-DS) mới onboard tuần này.\n\nLink Group Zalo lớp: ${zaloLink}\nChi tiết xem tại File Excel đính kèm.`;
+            document.getElementById('z1').value = `Chào mừng các bạn tới Group Zalo Đào tạo KiotViet`;
+            document.getElementById('z2').value = `Xin chào các bạn 😉\nMình là Nhật Vi - Chuyên viên đào tạo, tuần này mình và bạn Nguyễn Phương sẽ đồng hành cùng các bạn tham gia khóa đào tạo tại KiotViet.`;
+            document.getElementById('z3').value = `Như đã thông tin trong Kế hoạch đào tạo đính kèm email, sáng mai thứ 2 (${formatD(dMon)}) các bạn sẽ làm thủ tục gia nhập và làm quen tại từng team dưới sự hỗ trợ của team Tuyển dụng.`;
+            document.getElementById('z4').value = `Chiều mai từ 14:00, chúng ta sẽ bắt đầu chương trình Đào tạo hội nhập, hình thức Đào tạo online trên Zoom (mình sẽ gửi lại link sau ạ)`;
+            document.getElementById('z5').value = `Link dùng để đăng ký trải nghiệm phần mềm KiotViet dành cho nhân viên mới tham gia đào tạo:\nhttps://www.kiotviet.vn/?refcode=3670`;
+            document.getElementById('z6').value = `KiotViet là phần mềm ai cũng có thể tạo tài khoản dùng thử free 7 ngày, mọi người đặc biệt lưu ý chỉ đăng ký dùng thử bằng link này để hệ thống nhận diện chúng ta đang tham gia Đào tạo, không phải là khách hàng cần team Telesales liên hệ tư vấn nha.`;
+            document.getElementById('z7').value = `Để chuẩn bị tốt nhất cho tuần đào tạo nhân sự mới, các bạn nếu có thể thì cố gắng chuẩn bị thêm tai nghe có dây ạ.`;
+
+            // STEP 3 - T2
+            document.getElementById('d-mon-1').value = `Chào mọi người @All ,\nTừ sáng mai, Vi sẽ đồng hành cùng mọi người trong chương trình Đào tạo sản phẩm cơ bản, diễn ra trong 3 buổi: Thứ 3, Thứ 4, Thứ 5.\nThời gian: 8:30 – 10:30am\n\nCác bạn cần lưu ý chuẩn bị:\n- Một chiếc bụng no (ăn sáng đầy đủ)\n- Một tâm hồn đẹp (đi học là phải vui) :-*\n- Một chiếc máy tính kết nối mạng ổn định (có mạng ngon là có tất cả) ;p\n- Tai nghe (không bị hỏng)\n- Mic để trao đổi (mic của tai nghe hoặc mic laptop đều được)\n- Webcam\n\nLink tham gia đào tạo online trên Google Meet\nBuổi 1: ${m1}`;
+            
+            // STEP 3 - T3
+            document.getElementById('d-tue-1').value = `Chào buổi sáng mọi người @all, 8h30 mình bắt đầu buổi học đầu tiên nha.\nLink Meet: ${m1}`;
+            document.getElementById('d-tue-2').value = `NỘI DUNG ĐÀO TẠO - TỔNG QUAN KHÓA HỌC + 6 BƯỚC DEMO CƠ BẢN\nNội dung học Buổi 1: Đào tạo Sản phẩm Cơ bản 01\n---------------------------------\nLưu ý:\n- Dành 2 phút xem trước hướng dẫn trên LMS: https://kiotvietlnd.github.io/training/hdsd-lms-sales#dangnhap\n- Học lần lượt theo 2 bước:\n+ Bước 1: Học và ôn trên Thư viên E-Learning (Github)\n+ Bước 2: Làm bài quiz nhỏ + quiz tổng hợp trên LMS\nHoàn thành khóa học trước 12h trưa nay nhé!`;
+            
+            // STEP 3 - T4
+            document.getElementById('d-wed-1').value = `Chào buổi sáng mọi người @all, 8h30 mình bắt đầu Buổi 2 nha.\nLink Meet: ${m2}`;
+            document.getElementById('d-wed-2').value = `Có 1 vài bạn đang hiểu chưa đúng phần tạo Nhóm khách hàng, Vi diễn giải lại 1 chút phần này nha:\n1. Thêm theo điều kiện: Khách đủ điều kiện được thêm tự động, nhưng không tự động loại ra nếu sau này hết đủ điều kiện.\n2. Cập nhật lại theo điều kiện: Phần mềm liên tục cập nhật danh sách.\n3. Không cập nhật lại: Danh sách thành viên được giữ nguyên.`;
+            
+            // STEP 3 - T5
+            document.getElementById('d-thu-0').value = `Chào buổi sáng mọi người @all, 8h30 mình bắt đầu Buổi 3 nha.\nLink Meet: ${m3}`;
+            document.getElementById('d-thu-1').value = `📌 [QUAN TRỌNG] TÀI LIỆU & HƯỚNG DẪN ÔN TẬP SẢN PHẨM CƠ BẢN\n\nHình thức thi: online 30 phút - 30 câu trắc nghiệm - được sử dụng phần mềm trong quá trình làm test\n\n1. Tài liệu ôn tập để thi\n- Tài liệu ôn lý thuyết : Thư viện E-Learning - Github\n+ Buổi 1: https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-san-pham-co-ban-b1\n+ Buổi 2: https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-san-pham-co-ban-b2\n+ Buổi 3: https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-san-pham-co-ban-b3\n\n- Tài liệu ôn bài tập Quiz: Hệ thống LMS\n+ Có thể xem lại khóa buổi 1 + 2 +3 và Quiz tổng hợp của buổi\n\n- Record khóa ${courseCode}: ${recordLink}\n\nMột số lưu ý cho bài test ngày mai như sau:\n+ Giờ làm bài 10:00 ${formatD(dFri)}, test trắc nghiệm online 30 câu trên trang https://daotao.kiotviet.vn/lich-su-kiem-tra/phien-kiem-tra/ trên hệ thống LMS, yêu cầu cần đạt 80% trở lên là Pass.\n+ Trong quá trình làm bài có thể mở kèm phần mềm để thao tác, nhưng không mở tài liệu.\n+ Tùy theo nhân phẩm mà mỗi bạn sẽ bốc được 30 câu khác nhau, nội dung test đều là nội dung đã học.\n\nMặc dù việc học là 1 yếu tố quan trọng quyết định thành bại của việc đi thi ngày mai, mọi người tham khảo thêm yếu tố phong thủy khi chọn món ăn để đi thi may mắn bốc được đề vừa sức nha:\nhttps://www.bachhoaxanh.com/kinh-nghiem-hay/di-thi-thi-dung-an-nhung-mon-nay-keo-bi-tu-de-1175082`;
+
+            // STEP 4 - T6
+            document.getElementById('t6-nhac').value = `Một số lưu ý cho bài test hôm nay:\n📌 📌\n1. Gần đến giờ Test 10:00, mọi người đăng nhập vào trang https://daotao.kiotviet.vn/lich-su-kiem-tra/phien-kiem-tra/ nhé, đúng 10:00 mọi người F5 refresh sẽ có nút Start để làm bài.\n2. Trong quá trình làm bài có thể mở kèm Phần mềm KiotViet để thao tác. (Nhưng không mở tài liệu).\n3. Mọi người có thể nộp bài sớm nhưng theo mình thì nên tận dụng thời gian 30 phút rà soát loại rồi hãy bấm Nộp bài.\n4. Nộp bài xong là có điểm luôn, từ 80% trở lên là vào bờ ⛵ ⛵\n5. Từ 10:00 đến 10:30, mọi người không chat trao đổi trên nhóm nha, nếu ai có trục trặc gì trong quá trình làm bài thì cứ inbox lên Group để Team Đào tạo hỗ trợ nha.`;
+            document.getElementById('mail-out-1').value = `Dear các bạn,\n\nTeam LnD gửi kết quả bài kiểm tra SPCB khóa ${courseCode} lần 1 ngày ${formatD(dFri)} và thông báo lịch test lần 2 với trường hợp Fail/ Chưa test.\n\nHạn chót Test Lần 2: 10:00 sáng ngày mai (${formatD(dSat)}).\nThông tin đăng nhập LMS giữ nguyên không đổi.`;
+            
+            const txtPass1 = `Chúc mừng các bạn được cấp thẻ xanh nha, cả lớp mình quá giỏi 🥳🥳🥳\nSau khi PASS bài kiểm tra, chúng ta đã có thành công bước đầu tại KiotViet, chương trình đào tạo CƠ BẢN về Sản phẩm dành cho các bạn nhân viên tạm thời kết thúc!\n\nTeam Đào tạo hy vọng các bạn đã sẵn sàng demo sản phẩm theo luồng mẫu và tự tự trả lời các câu hỏi thường gặp của khách hàng ^^\n\nCác bạn lưu đường link Github E-Learning về Sản phẩm KiotViet để tra cứu trong quá trình làm việc và chuẩn bị cho các khóa học sau nhé:\nhttps://kiotvietlnd.github.io/elearning/`;
+            const txtPass2 = `Sau khi vượt qua bài kiểm tra sản phẩm, trong khoảng 1 ngày làm việc, Team IT sẽ cấp tài khoản Gmail KiotViet cho bạn, khi đó, bạn có thể đăng nhập và truy cập Group chat Đào tạo x Everyone "Xóm Đào":\nhttps://chat.google.com/room/AAAAEOKr7G8?cls=4\nSau khi Team IT gửi tài khoản Gmail @kiotviet.com, các bạn nhớ truy cập tham gia nhóm nhé!`;
+            const txtPass3 = `Trước khi dùng bữa trưa và tham gia khóa học tiếp theo, mời các bạn tham gia khảo sát góp ý cho Team Đào tạo về chương trình Đào tạo sản phẩm Tuần 1 tại đây nhé:\nhttps://docs.google.com/forms/d/1_LhtIYlk-nMqcdZLIpn_wFitwj6K6-LeVOF1b9-TY9k/preview`;
+            const txtPass4 = `Các bạn bộ phận Tái ký, DVKH, Phát triển sản phẩm... (Khối Non-Sale) sau khi PASS bài Test Sản phẩm, các bạn đã hoàn thành các chương trình đào tạo nhân viên mới rồi, mọi người điền form khảo sát xong có thể OUT NHÓM CHAT trước nhé! Các bạn nhớ join các group Bản Xi, Xóm Đào trên Google Spaces để cập nhật thông tin của Đào tạo và Truyền thông nội bộ! Chúc các bạn thành công trong công việc tại KiotViet`;
+            const txtPass5 = `Đối với các bạn Telesale và Direct Sales, sau khi vượt vũ môn bài Test Sản phẩm, các bạn sẽ tiếp tục tham gia khóa đào tạo về COC-CRM (team đào tạo sẽ gửi mail cho các bạn trong sáng nay), các kỹ năng tư vấn bán hàng, Team Đào tạo sẽ tiếp tục thông tin với các bạn trên nhóm Zalo này, nên mọi người vẫn "Ở LẠI NHÓM CHAT" nhận thông tin tiếp theo nha!`;
+
+            document.getElementById('t6-pass1').value = txtPass1; document.getElementById('t6-pass2').value = txtPass2; document.getElementById('t6-pass3').value = txtPass3; document.getElementById('t6-pass4').value = txtPass4; document.getElementById('t6-pass5').value = txtPass5;
+            document.getElementById('t7-pass1').value = txtPass1; document.getElementById('t7-pass2').value = txtPass2; document.getElementById('t7-pass3').value = txtPass3; document.getElementById('t7-pass4').value = txtPass4; document.getElementById('t7-pass5').value = txtPass5;
+
+            // STEP 5 - L2
+            document.getElementById('mail-out-2').value = `Dear các bạn,\n\nTeam LnD gửi kết quả bài kiểm tra SPCB khóa ${courseCode} lần 2 ngày ${formatD(dSat)}.\nĐây là kết quả cuối cùng của chương trình đánh giá Sản phẩm Cơ bản đợt này.\n\nKết quả chi tiết vui lòng xem bảng bên dưới.`;
+        }
+
+        // --- 3. AUTO GRADER LOGIC ---
+        
+        // HÀM A: Chấm điểm hằng ngày (Cộng Dồn Nhiều Quiz)
+        function runDailyGrader(dayKey, totalQuestions) {
+            if(rosterData.length === 0) return alert('Roster trống! Hãy dán danh sách và bấm Lưu Cấu hình ở Bước 1.');
+            const lmsRaw = document.getElementById(`daily-raw-${dayKey}`).value.trim();
+            if(!lmsRaw) return alert('Hãy dán Data xuất từ LMS vào khung (Gồm cả Tiêu đề)!');
+            
+            const lmsRows = lmsRaw.split('\n');
+            const h = lmsRows[0].split('\t').map(x => x.toLowerCase().trim());
+            const iEmail = h.findIndex(x => x.includes('email'));
+            const iName = h.findIndex(x => x.includes('họ và tên') || x.includes('họ tên') || x.includes('tên'));
+            const iA = h.findIndex(x => x.includes('câu trả lời đúng') || x.includes('câu đúng'));
+            if(iEmail===-1 || iA===-1) return alert('Data LMS thiếu cột. Cần copy đủ cột: Email, Số câu trả lời đúng.');
+
+            // 1. Phân tích LMS Data - CỘNG DỒN ĐIỂM
+            let lmsMap = {}; // { email: { name: "", correct: 0 } }
+            for(let i=1; i<lmsRows.length; i++) {
+                const cols = lmsRows[i].split('\t');
+                if(cols.length > Math.max(iEmail, iA)) {
+                    let em = cols[iEmail].trim().toLowerCase();
+                    let nm = iName !== -1 ? cols[iName].trim() : '';
+                    let tA = parseInt(cols[iA]) || 0;
+                    if(!lmsMap[em]) lmsMap[em] = { name: nm, correct: 0 };
+                    lmsMap[em].correct += tA; 
+                }
+            }
+
+            currentDailyData[dayKey] = []; // Khởi tạo cache danh sách in ra để có thể copy
+
+            // 2. Cross-check với Roster để tìm người lạ
+            let tHtml = `<thead><tr><th>Họ và tên</th><th>Phòng ban</th><th>Số câu đúng / ${totalQuestions}</th><th>Tỷ lệ đúng</th><th>Khu vực</th><th>Địa điểm</th><th>Thao tác</th></tr></thead><tbody>`;
+            
+            rosterData.forEach((r) => {
+                let sData = lmsMap[r.email];
+                let ans = sData ? sData.correct : 0;
+                let pct = Math.round((ans / totalQuestions) * 100);
+                let scoreText = sData ? `<span class="font-bold text-blue-600">${ans}</span>` : `<span class="italic text-rose-500">0</span>`;
+                let pctText = sData ? `<span class="font-bold text-blue-600">${pct}%</span>` : `<span class="italic text-rose-500">0%</span>`;
+                
+                let region = getRegion(r.dept);
+                let location = getLocation(region);
+
+                currentDailyData[dayKey].push({ email: r.email, isRoster: true });
+                tHtml += `<tr id="row-${dayKey}-${r.email.replace(/[@.]/g,'')}">
+                    <td class="font-semibold">${r.name}</td><td>${r.dept}</td><td class="text-center">${scoreText}</td><td class="text-center">${pctText}</td><td>${region}</td><td>${location}</td><td class="text-center"><i class="fas fa-user-check text-emerald-500" title="Học viên hợp lệ"></i></td>
+                </tr>`;
+            });
+
+            // Người lạ (Có trong LMS nhưng không có trong Roster)
+            let hasStranger = false;
+            for(let em in lmsMap) {
+                let found = rosterData.find(r => r.email === em);
+                if(!found) {
+                    hasStranger = true;
+                    let sData = lmsMap[em];
+                    let pct = Math.round((sData.correct / totalQuestions) * 100);
+                    currentDailyData[dayKey].push({ email: em, isRoster: false });
+                    let rowId = `row-${dayKey}-${em.replace(/[@.]/g,'')}`;
+                    tHtml += `<tr id="${rowId}" class="stranger-row bg-rose-50 border-rose-200">
+                        <td class="font-semibold text-rose-700">${sData.name} <span class="text-[9px] bg-rose-500 text-white px-1 rounded ml-1">LẠ</span></td>
+                        <td class="text-rose-500 text-xs">${em}</td>
+                        <td class="text-center font-bold text-rose-700">${sData.correct}</td>
+                        <td class="text-center font-bold text-rose-700">${pct}%</td>
+                        <td>-</td><td>-</td>
+                        <td class="text-center"><button onclick="removeStrangerRow('${rowId}')" class="w-6 h-6 bg-white border border-rose-300 text-rose-500 hover:bg-rose-500 hover:text-white rounded transition"><i class="fas fa-trash-alt"></i></button></td>
+                    </tr>`;
+                }
+            }
+            tHtml += `</tbody>`;
+
+            document.getElementById(`table-${dayKey}`).innerHTML = tHtml;
+            document.getElementById(`daily-res-${dayKey}`).classList.remove('hidden');
+
+            const warnBox = document.getElementById(`warn-${dayKey}`);
+            if(hasStranger) {
+                warnBox.classList.remove('hidden'); warnBox.classList.add('flex');
+            } else {
+                warnBox.classList.remove('flex'); warnBox.classList.add('hidden');
+            }
+        }
+
+        function removeStrangerRow(rowId) {
+            const row = document.getElementById(rowId);
+            if(row) {
+                row.style.display = 'none';
+                row.classList.remove('stranger-row'); // Remove class so it won't be counted if someone unhides it
+            }
+        }
+
+        // HÀM B: Chấm điểm Bài Thi (30 Câu - 80% Pass) - GIỮ NGUYÊN NHƯ KV1
+        function runFinalGrader(round) {
+            if(rosterData.length === 0) return alert('Roster trống! Hãy dán danh sách ở Bước 1.');
+            const lmsRaw = round === 1 ? document.getElementById(`lms-raw-1`).value.trim() : document.getElementById(`lms-raw-2`).value.trim();
+            if(!lmsRaw) return alert('Hãy dán Data xuất từ LMS Bài Thi vào khung!');
+            
+            const lmsRows = lmsRaw.split('\n');
+            const h = lmsRows[0].split('\t').map(x => x.toLowerCase().trim());
+            const iEmail = h.findIndex(x => x.includes('email'));
+            const iQ = h.findIndex(x => x.includes('câu hỏi'));
+            const iA = h.findIndex(x => x.includes('câu trả lời đúng') || x.includes('câu đúng'));
+            if(iEmail===-1 || iA===-1) return alert('Data LMS thiếu cột. Cần cột: Email, Số câu trả lời đúng.');
+
+            let lmsMap = {};
+            for(let i=1; i<lmsRows.length; i++) {
+                const cols = lmsRows[i].split('\t');
+                if(cols.length > Math.max(iEmail, iA)) {
+                    let em = cols[iEmail].trim().toLowerCase();
+                    let tQ = iQ!==-1 ? parseInt(cols[iQ]) : 30; 
+                    let tA = parseInt(cols[iA]) || 0;
+                    let p = Math.round((tA / tQ) * 100);
+                    if(!lmsMap[em] || lmsMap[em] < p) lmsMap[em] = p; 
+                }
+            }
+
+            gradedStats = { total: rosterData.length, pass: 0, fail: 0 };
+            
+            rosterData.forEach(r => {
+                let s = lmsMap[r.email];
+                if(round === 1) {
+                    if(s !== undefined) {
+                        r.score = s; r.attempt = 1;
+                        if(r.score >= 80) { r.status = 'Pass'; gradedStats.pass++; } else { r.status = 'Fail'; gradedStats.fail++; }
+                    } else { r.status = 'Miss'; gradedStats.fail++; }
+                } else {
+                    if(r.status === 'Pass') { gradedStats.pass++; } 
+                    else {
+                        if(s !== undefined) {
+                            if(s > r.score) r.score = s; r.attempt = 2;
+                            if(r.score >= 80) { r.status = 'Pass'; gradedStats.pass++; } else { r.status = 'Fail'; gradedStats.fail++; }
+                        } else { gradedStats.fail++; }
+                    }
+                }
+            });
+
+            let tHtml = `<thead><tr><th>STT</th><th>Mã NV</th><th>Họ tên</th><th>Email</th><th>Lần thi</th><th>Điểm Final</th><th>Kết quả</th></tr></thead><tbody>`;
+            rosterData.forEach((r, idx) => {
+                let cColor = r.status === 'Pass' ? 'text-emerald-600 font-bold' : (r.status === 'Fail' ? 'text-rose-600 font-bold' : 'text-slate-400 italic');
+                let rowOp = (round === 2 && r.attempt === 1) ? 'opacity-60 bg-slate-50' : 'bg-white';
+                tHtml += `<tr class="${rowOp}"><td class="text-center">${idx+1}</td><td>${r.code}</td><td class="font-semibold">${r.name}</td><td>${r.email}</td><td class="text-center">${r.attempt || '-'}</td><td class="text-center ${cColor}">${r.score ? r.score + '%' : '-'}</td><td class="text-center ${cColor}">${r.status}</td></tr>`;
+            });
+            tHtml += `</tbody>`;
+
+            if(round === 1) {
+                document.getElementById('result-table-1').innerHTML = tHtml;
+                document.getElementById('grade-result-1').classList.remove('hidden');
+                if(gradedStats.fail === 0) {
+                    document.getElementById('action-l1-fail').classList.replace('flex', 'hidden');
+                    document.getElementById('action-l1-pass').classList.replace('hidden', 'flex');
+                } else {
+                    document.getElementById('action-l1-fail').classList.replace('hidden', 'flex');
+                    document.getElementById('action-l1-pass').classList.replace('flex', 'hidden');
+                    document.getElementById('l2-target-count').innerText = gradedStats.fail;
+                }
+            } else {
+                document.getElementById('result-table-2').innerHTML = tHtml;
+                document.getElementById('grade-result-2').classList.remove('hidden');
+            }
+        }
+
+        function fillStatsFromGrader() {
+            document.getElementById('totalTrainees').value = gradedStats.total;
+            document.getElementById('passedTrainees').value = gradedStats.pass;
+            document.getElementById('failedTrainees').value = gradedStats.fail;
+        }
+
+        function triggerConfetti() {
+            var duration = 3 * 1000; var animationEnd = Date.now() + duration; var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 999999 };
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now(); if (timeLeft <= 0) { return clearInterval(interval); }
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+
         function submitFinal(event, groupName) {
             if(event) event.preventDefault();
-
             const GOOGLE_API_URL = localStorage.getItem('kv_api_url');
-            if(!GOOGLE_API_URL) { alert('CHƯA CÀI ĐẶT LINK API! Vui lòng quay lại Hub -> Cài đặt hệ thống để dán Link API Google Sheets vào.'); return; }
-
-            const cId = document.getElementById('courseId').value.trim().toUpperCase();
-            const startStr = document.getElementById('start').value;
-            const finishStr = document.getElementById('finish').value;
-
-            if(!cId || !startStr || !finishStr) { alert('Vui lòng điền đủ: Mã Khóa, Bắt Đầu và Kết Thúc!'); return; }
-
-            const dateObj = new Date(startStr);
-            const calcMonth = dateObj.getMonth() + 1;
+            if(!GOOGLE_API_URL) return alert('CHƯA CÀI ĐẶT LINK API BÁO CÁO! Hãy vào trang Thiết lập.');
 
             const payload = {
-                timestamp: new Date().getTime(),
-                groupName: groupName, 
-                courseId: cId,
-                month: calcMonth,
+                timestamp: new Date().getTime(), groupName: groupName, 
+                courseId: document.getElementById('courseId').value.trim().toUpperCase(),
+                month: parseInt(document.getElementById('conf-date-tue').value.split('-')[1]),
                 status: document.getElementById('status').value,
-                startDate: startStr,
-                finishDate: finishStr,
+                startDate: document.getElementById('conf-date-tue').value,
+                finishDate: new Date().toISOString().split('T')[0],
                 totalTrainees: document.getElementById('totalTrainees').value || "0",
                 passedTrainees: document.getElementById('passedTrainees').value || "0",
                 failedTrainees: document.getElementById('failedTrainees').value || "0",
@@ -394,38 +908,30 @@ Hình thức: Online 30p - 30 câu (80% Pass). Được mở phần mềm thao t
             };
 
             const btn = document.getElementById('btnSubmit');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang đồng bộ...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang đồng bộ Database...';
             btn.classList.add('opacity-70', 'pointer-events-none');
 
-            // 1. Lưu Ngay vào LocalStorage
             let db = [];
-            try { const storedDb = localStorage.getItem('kv_master_db'); if(storedDb) db = JSON.parse(storedDb); } catch (e) { db = []; }
-            const existIdx = db.findIndex(item => item.courseId === payload.courseId);
-            if(existIdx >= 0) db[existIdx] = {...db[existIdx], ...payload}; else db.push(payload);
+            try { const s = localStorage.getItem('kv_master_db'); if(s) db = JSON.parse(s); } catch(e){}
+            const ex = db.findIndex(i => i.courseId === payload.courseId);
+            if(ex >= 0) db[ex] = {...db[ex], ...payload}; else db.push(payload);
             localStorage.setItem('kv_master_db', JSON.stringify(db));
 
-            // 2. Bắn lên Google Sheets API
-            fetch(GOOGLE_API_URL, {
-                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-            }).then(() => {
-                btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Xác nhận Đẩy Dữ liệu';
-                btn.classList.remove('opacity-70', 'pointer-events-none');
-                
-                const modal = document.getElementById('successModal');
-                const content = document.getElementById('successContent');
-                modal.classList.add('active');
+            fetch(GOOGLE_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
+            .then(r => r.json()).then(() => {
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i> HOÀN THÀNH XUẤT SẮC';
+                btn.classList.remove('opacity-70', 'pointer-events-none', 'bg-slate-800'); btn.classList.add('bg-emerald-500', 'border-emerald-600', 'text-white');
+                triggerConfetti();
+                document.getElementById('stepper-progress').style.width = '100%';
+                document.getElementById('circle-6').innerHTML = '<i class="fas fa-check"></i>'; document.getElementById('circle-6').parentElement.classList.add('completed');
+                setTimeout(() => { document.getElementById('successModal').classList.add('active'); }, 1000);
             }).catch(error => {
-                alert("Lưu cục bộ thành công nhưng lỗi đẩy lên Server: " + error);
-                btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Xác nhận Đẩy Dữ liệu';
-                btn.classList.remove('opacity-70', 'pointer-events-none');
+                alert("Đã lưu Cục bộ. Lỗi đẩy lên Google Sheets: " + error);
+                btn.innerHTML = '<i class="fas fa-lock"></i> XÁC NHẬN NỘP BÁO CÁO ĐÓNG KHÓA'; btn.classList.remove('opacity-70', 'pointer-events-none');
             });
         }
 
-        function closeSuccess() {
-            document.getElementById('successModal').classList.remove('active');
-            document.getElementById('courseId').value = '';
-            document.getElementById('totalTrainees').value = ''; document.getElementById('passedTrainees').value = ''; document.getElementById('failedTrainees').value = '';
-        }
+        function closeSuccess() { document.getElementById('successModal').classList.remove('active'); }
     </script>
 </body>
 </html>
