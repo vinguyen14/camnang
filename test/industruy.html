@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SP Chuyên Ngành (FNB/Booking) | Trainer OS</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* === CLEAN TECH SAAS STYLES === */
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow-x: hidden; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .saas-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        
+        .sidebar-item { padding: 12px 20px; font-size: 13px; font-weight: 500; color: #475569; border-left: 3px solid transparent; transition: all 0.2s; cursor: pointer; display: flex; align-items: center; gap: 12px; }
+        .sidebar-item:hover { background-color: #f1f5f9; color: #1e293b; }
+        .sidebar-item.active { background-color: #faf5ff; border-left-color: #9333ea; color: #7e22ce; font-weight: 600; }
+        .sidebar-item i { width: 20px; text-align: center; }
+
+        .step-content { display: none; opacity: 0; transform: translateY(10px); transition: all 0.3s; }
+        .step-content.active { display: block; opacity: 1; transform: translateY(0); }
+
+        .form-label { display: block; font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 6px; text-transform: uppercase; }
+        .saas-input { width: 100%; padding: 10px 14px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; color: #1e293b; outline: none; transition: all 0.2s; }
+        .saas-input:focus { border-color: #a855f7; box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15); }
+        .text-area-code { font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.6; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; width: 100%; resize: none; outline: none; color: #334155; }
+        
+        .btn-outline { background: white; color: #475569; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; transition: all 0.2s; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;}
+        .btn-outline:hover { background: #f1f5f9; color: #0f172a; }
+        .btn-primary { background: #9333ea; color: white; border: 1px solid #7e22ce; padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; transition: all 0.2s; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;}
+        .btn-primary:hover { background: #7e22ce; }
+
+        .copy-btn { position: absolute; top: 12px; right: 12px; }
+
+        .modal { display: none; opacity: 0; transition: opacity 0.2s; z-index: 9999; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px); }
+        .modal.active { display: flex; opacity: 1; }
+        .modal-content { transform: scale(0.98) translateY(10px); opacity: 0; transition: all 0.3s; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; }
+        .modal.active .modal-content { transform: scale(1) translateY(0); opacity: 1; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- HEADER NAVIGATION -->
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-50 shrink-0">
+        <div class="flex items-center gap-4">
+            <a href="index.html" class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-purple-50 hover:text-purple-600 transition"><i class="fas fa-arrow-left"></i></a>
+            <div class="h-6 w-px bg-slate-200"></div>
+            <h1 class="text-lg font-bold tracking-tight text-slate-800">SP Chuyên ngành <span class="text-purple-600">FNB / SALON / HOTEL</span></h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="https://docs.google.com/spreadsheets/d/1jwu1tV4a8S0sRExhasjtQ0lGprZoUg2y/edit?rtpof=true" target="_blank" class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded text-[11px] font-bold hover:bg-slate-50 transition flex items-center gap-2">
+                <i class="fas fa-file-excel text-emerald-500"></i> Danh sách Đủ điều kiện
+            </a>
+            <span class="px-3 py-1.5 bg-purple-50 text-purple-600 text-[10px] font-bold uppercase rounded border border-purple-100 flex items-center">
+                <div class="w-1.5 h-1.5 rounded-full bg-purple-500 mr-2 animate-pulse"></div> Industry Workflow
+            </span>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row gap-8 items-start relative z-10">
+
+        <!-- SIDEBAR -->
+        <aside class="w-full md:w-64 flex-shrink-0 saas-card py-2 sticky top-24">
+            <div class="px-5 py-3 border-b border-slate-100 mb-2">
+                <h3 class="text-xs font-bold text-slate-800 uppercase">Tiến trình Khóa học</h3>
+            </div>
+            <div class="space-y-1">
+                <div onclick="showStep('step1')" id="btn-step1" class="sidebar-item active"><i class="fas fa-envelope"></i> 1. Mail Đầu Tháng</div>
+                <div onclick="showStep('step2')" id="btn-step2" class="sidebar-item"><i class="fas fa-comments"></i> 2. Group Zalo & Hướng dẫn</div>
+                <div onclick="showStep('step3')" id="btn-step3" class="sidebar-item"><i class="fas fa-bell"></i> 3. Đôn đốc Nhắc nhở</div>
+                <div onclick="showStep('step4')" id="btn-step4" class="sidebar-item"><i class="fas fa-award text-orange-500"></i> 4. Mail Kết quả Lần 1</div>
+                <div onclick="showStep('step5')" id="btn-step5" class="sidebar-item"><i class="fas fa-medal text-rose-500"></i> 5. Mail Kết quả Lần 2</div>
+                <div class="h-px bg-slate-100 my-2 mx-4"></div>
+                <div onclick="showStep('step6')" id="btn-step6" class="sidebar-item text-cyan-600 hover:bg-cyan-50"><i class="fas fa-link"></i> Link & Tài nguyên</div>
+                <div class="px-4 mt-4 mb-2"><button onclick="showStep('finalize')" id="btn-finalize" class="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition">ĐÓNG KHÓA (API)</button></div>
+            </div>
+        </aside>
+
+        <!-- CONTENT AREA -->
+        <div class="flex-grow min-h-[600px] pb-20">
+            
+            <!-- CONFIG PANEL -->
+            <div class="saas-card p-5 mb-6 bg-slate-50 border-dashed border-2 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div>
+                        <label class="form-label">Chọn Tháng</label>
+                        <select id="conf-month" onchange="updateTemplates()" class="saas-input w-32 py-1.5 text-xs font-bold text-purple-600 cursor-pointer">
+                            <option value="01">Tháng 01</option><option value="02">Tháng 02</option><option value="03">Tháng 03</option><option value="04">Tháng 04</option><option selected value="05">Tháng 05</option><option value="06">Tháng 06</option><option value="07">Tháng 07</option><option value="08">Tháng 08</option><option value="09">Tháng 09</option><option value="10">Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Năm</label>
+                        <input type="text" id="conf-year" value="2026" oninput="updateTemplates()" class="saas-input w-24 py-1.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="form-label">Hạn chót học (L1)</label>
+                        <input type="date" id="conf-deadline-1" onchange="updateTemplates()" class="saas-input py-1.5 text-xs cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="form-label">Hạn chót Test (L2)</label>
+                        <input type="date" id="conf-deadline-2" onchange="updateTemplates()" class="saas-input py-1.5 text-xs cursor-pointer">
+                    </div>
+                </div>
+                <div class="text-[10px] text-slate-500 font-medium">
+                    <i class="fas fa-info-circle text-purple-500"></i> Học viên đi làm đủ 2 tháng (Tháng M-3).
+                </div>
+            </div>
+
+            <!-- STEP 1: MAIL ĐẦU THÁNG -->
+            <section id="step1" class="step-content active saas-card p-8 border-t-4 border-purple-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Gửi Mail Đầu Tháng</h2>
+                    <p class="text-sm text-slate-500 mt-1">Sử dụng Tool Lọc HRM (M-3) trên trang chủ và tạo File Danh sách trước khi gửi.</p>
+                </div>
+                <div class="relative bg-white border border-slate-200 rounded-xl">
+                    <textarea id="tpl-mail-1" readonly class="text-area-code h-[500px] border-none">Dear anh/chị,
+
+Team LnD gửi thông tin chi tiết về Chương trình Đào tạo và Test Sản phẩm FNB / Booking dành cho nhân viên sales (gia nhập vào Tháng 02/2026).
+
+Chi tiết như sau:
+
+1. Nội dung: Tính năng Phần mềm KiotViet FNB / Salon / Hotel.
+Học viên tự lựa chọn hoàn thành tối thiểu 1 trong 3 khóa học.
+
+2. Hình thức: Đào tạo và Test trắc nghiệm trên nền tảng LMS
+
+3. Thông tin đăng nhập:
+
+Link Tham gia khóa học trên LMS: 
+- KiotViet FNB: https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-fnb/
+- KiotViet Salon: https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-salon/ 
+- KiotViet Hotel: https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-hotel/
+
+User và mật khẩu mặc định: Xem chi tiết TẠI ĐÂY
+
+4. Thời gian hoàn thành: 
+- Mỗi bài học trên LMS trong khóa học tương ứng với 1 trang Github E-Learning để học tương tác, tìm hiểu nội dung trước khi làm quiz trên LMS.
+- Học viên tự sắp xếp thời gian tham gia học và hoàn thành quiz từng bài học trong khóa học trên LMS theo trình tự, sau đó chủ động hoàn thành bài quiz cuối khóa trên LMS để nhận Chứng chỉ hoàn thành khóa học.
+- Thời hạn hoàn thành: Trước 11:00, thứ 2 ngày 15/05/2026
+
+5. Số lượng câu hỏi: 40 câu
+6. Thời gian làm bài: 60 phút
+7. Tỉ lệ đạt: 80%
+
+Lưu ý:
+Tài liệu ôn tập:
+Link tài liệu ôn tập trên Github (dùng để ôn tập trong khóa học và tra cứu sau khóa học): 
+- FNB: https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-fnb
+- Salon: https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-salon
+- Hotel: https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-hotel
+
+Group chat Đào tạo FNB / Booking 05/2026 
+(Team Đào tạo sẽ add danh sách các bạn vào group chat để trao đổi về thông tin đăng nhập hệ thống LMS và nội dung bài test).
+
+Anh/chị SM/Leader và admin hỗ trợ nhắc nhở các bạn đăng nhập LMS, tham gia khóa học và hoàn thành đúng thời hạn quy định.
+
+Mọi thắc mắc hoặc phát sinh: Vui lòng liên hệ daotao@kiotviet.com</textarea>
+                    <button onclick="copyContent('tpl-mail-1', this)" class="btn-outline copy-btn border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300">Copy Mail</button>
+                </div>
+            </section>
+
+            <!-- STEP 2: GROUP ZALO -->
+            <section id="step2" class="step-content saas-card p-8 border-t-4 border-purple-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Truyền thông Group Zalo</h2>
+                    <p class="text-sm text-slate-500 mt-1">Tạo group tên: <b id="group-name" class="text-purple-600">Group chat 05/2026 Đào tạo Sản phẩm KiotViet FNB / Booking</b></p>
+                </div>
+                <div class="relative bg-white border border-slate-200 rounded-xl">
+                    <textarea id="tpl-zalo-1" readonly class="text-area-code h-[600px] border-none">Hello @all các bạn,
+
+Theo lịch, tuần này các bạn sẽ tham gia Chương trình Đào tạo FNB/Booking trên nền tảng LMS, thông tin đã được gửi qua mail, các bạn nhận được mail rồi thì like giúp mình nhé!Chi tiết như sau:
+
+1. Nội dung: Tính năng Phần mềm KiotViet FNB / Salon / Hotel. Học viên tự lựa chọn hoàn thành tối thiểu 1 trong 3 khóa học trên LMS trước 11:00 15/05/2026
+
+2. Hình thức: Đào tạo và Test trắc nghiệm trên nền tảng LMS
+
+3. Thông tin đăng nhập:
+DANH SÁCH ĐÀO TẠO ONLINE FNB / BOOKING 05-2026.xlsx 
+
+Link Tham gia khóa học trên LMS: 
+KiotViet FNB: https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-fnb/ 
+KiotViet Salon: https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-salon/   
+KiotViet Hotel: https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-hotel/ 
+
+4. Thời gian hoàn thành bài kiểm tra: 
+Học viên hoàn thành quiz từng bài học lần lượt, sau đó hoàn thành bài quiz cuối khóa để nhận Chứng chỉ hoàn thành khóa học.
+Thời hạn hoàn thành: Trước 11:00, thứ 6 ngày 15/05/2026
+
+5. Số lượng câu hỏi: 40 câu
+6. Thời gian làm bài: 60 phút
+7. Tỉ lệ đạt: 80%
+
+Học theo 2 bước: 
+
+Bước 1 – Học trên Github: 
+Nếu đăng ký khóa nào thì vào học khóa đó nhé!
+Link Github KiotViet FNB: https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-fnb
+Link Github KiotViet Salon: https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-salon
+Link Github KiotViet Hotel: https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-hotel
+
+Bạn truy cập link bài học trên Github để bắt đầu tự học, chọn tên học phần và bấm "Bài học lý thuyết"
+Lần lượt theo dõi Bài học, Mô phỏng của từng chuyên đề
+Cuối bài, bạn nhấn tham gia Kiểm tra Kiến thức để ôn tập (Bài Quiz này chỉ mang tính luyện tập, chuẩn bị cho bài tập trên LMS). 
+
+Bước 2 – Quay về LMS làm bài kiểm tra: 
+Sau khi đã nắm chắc kiến thức, bạn quay lại LMS của học phần này, bấm "Làm Bài tập".
+Hoàn thành Bài test nhanh gồm các câu hỏi trắc nghiệm để hệ thống ghi nhận kết quả chính thức, mở khóa học phần tiếp theo
+
+Hoàn tất học phần:
+Khi bạn đạt yêu cầu trên LMS, bạn đã hoàn thành học phần này, bạn có thể đánh dấu trên trang Github - "Đã nắm vững" của từng học phần để tự theo dõi tiến độ và tự tin chuyển sang học phần tiếp theo.</textarea>
+                    <button onclick="copyContent('tpl-zalo-1', this)" class="btn-outline copy-btn border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300">Copy Tin Zalo</button>
+                </div>
+            </section>
+
+            <!-- STEP 3: ĐÔN ĐỐC -->
+            <section id="step3" class="step-content saas-card p-8 border-t-4 border-purple-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Đôn đốc nhắc nhở</h2>
+                    <p class="text-sm text-slate-500 mt-1">Đến deadline hoặc trước 1 ngày sẽ nhắn lại vào group.</p>
+                </div>
+                <div class="relative bg-white border border-slate-200 rounded-xl">
+                    <textarea id="tpl-remind" readonly class="text-area-code h-20 border-none bg-amber-50 text-amber-800 font-medium">Hôm nay cố gắng hoàn thiện các khóa học FNB/Salon/Hotel nha mọi người</textarea>
+                    <button onclick="copyContent('tpl-remind', this)" class="btn-outline copy-btn">Copy</button>
+                </div>
+            </section>
+
+            <!-- STEP 4: KẾT QUẢ LẦN 1 -->
+            <section id="step4" class="step-content saas-card p-8 border-t-4 border-orange-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Mail Kết quả Lần 1</h2>
+                    <p class="text-sm text-slate-500 mt-1">Trích xuất kết quả từ LMS, gửi bảng điểm và gia hạn làm lại Lần 2.</p>
+                </div>
+                <div class="relative bg-white border border-slate-200 rounded-xl">
+                    <textarea id="tpl-mail-l1" readonly class="text-area-code h-[600px] border-none">Dear anh/chị,
+
+Team LnD gửi kết quả Test Sản phẩm KiotViet FNB-BOOKING lần 1 ngày 17/4/2026 và thông báo lịch test lần 2 với trường hợp Fail, Miss lần 1 hạn chót vào 16:00 ngày 18/04/2026, thông tin đăng nhập LMS giữ nguyên, chi tiết theo danh sách sau: DANH SÁCH ĐÀO TẠO ONLINE FNB / BOOKING 04-2026
+
+1. Khóa FNB:
+
+STT	Mã nhân viên	Họ tên	Phòng ban	Username	Password	Lần kiểm tra	Điểm	Kết quả
+1	ĐT00096	Mai Lạt Viện	DSDTP	vien.ml@kiotviet.com	123456A@	1	100%	Pass
+2	HN04789	Nguyễn Xuân Huy	DSHNI1	huy.nx@kiotviet.com	123456A@	1	95%	Pass
+3	GL00164	Hồ Thị Thanh Tùng	DSGLI	tung.htt1@kiotviet.com	123456A@	1	95%	Pass
+4	QNI00106	Nguyễn Trần Minh Triết	DSQNI	triet.ntm@kiotviet.com	123456A@	1	98%	Pass
+5	BMT00174	Nguyễn Kim Hưng Thịnh	DSBMT	thinh.nkh@kiotviet.com	123456A@	1	98%	Pass
+6	QNI00109	Nguyễn Thị Thu Mỹ	DSQNI	my.ntt3@kiotviet.com	123456A@	1	68%	Fail
+7	KG00172	Nguyễn Thị Huỳnh Điểu	DSKGG	dieu.nth3@kiotviet.com	123456A@	1	95%	Pass
+
+2. Khóa Salon:
+
+STT	Mã nhân viên	Họ tên	Phòng ban	Username	Password	Lần kiểm tra	Điểm	Kết quả
+1	SG02713	Hồ Thị Duyên An	Contract renewal (KVS)	an.htd@kiotviet.com	123456A@	1	90%	Pass
+2	HN04796	Nguyễn Tuấn Khang	DSHNI1	khang.nt1@kiotviet.com	123456A@	1	98%	Pass
+
+3. Khóa Hotel:
+
+STT	Mã nhân viên	Họ tên	Phòng ban	Username	Password	Lần kiểm tra	Điểm	Kết quả
+1	HN04789	Nguyễn Xuân Huy	DSHNI1	huy.nx@kiotviet.com	123456A@	1	100%	Pass
+2	HN04788	Nguyễn Quang Huy	DSHNI1	huy.nq16@kiotviet.com	123456A@	1	95%	Pass</textarea>
+                    <button onclick="copyContent('tpl-mail-l1', this)" class="btn-outline copy-btn border-orange-200 text-orange-600 hover:bg-orange-50">Copy Mail L1</button>
+                </div>
+            </section>
+
+            <!-- STEP 5: KẾT QUẢ LẦN 2 -->
+            <section id="step5" class="step-content saas-card p-8 border-t-4 border-rose-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Mail Kết quả Final (Lần 2)</h2>
+                    <p class="text-sm text-slate-500 mt-1">Kết quả chốt cuối cùng, đóng tiến trình.</p>
+                </div>
+                <div class="relative bg-white border border-slate-200 rounded-xl">
+                    <textarea id="tpl-mail-l2" readonly class="text-area-code h-[450px] border-none">Dear anh/chị,
+
+Team LnD gửi kết quả Test Sản phẩm KiotViet FNB-BOOKING lần 2 ngày 18/4/2026, chi tiết theo danh sách sau: DANH SÁCH ĐÀO TẠO ONLINE FNB / BOOKING 04-2026
+
+1. Khóa FNB:
+
+STT	Mã nhân viên	Họ tên	Phòng ban	Username	Password	Lần kiểm tra	Điểm	Kết quả
+1	CT00539	Phạm Nguyễn Hùng Thuận	DSCTO3	thuan.pnh1@kiotviet.com	123456A@	2	95%	Pass
+2	CT00535	Nguyễn Trọng Hiền	DSCTO3	hien.nt16@kiotviet.com	123456A@	2	98%	Pass
+3	NĐ00166	Trần Thị Hồng Hạnh	Contract renewal (KVS)	hanh.tth2@kiotviet.com	123456A@	2	95%	Pass
+4	CT00536	Lâm Hiếu Kiên	DSCTO3	kien.lh@kiotviet.com	123456A@	2	80%	Pass
+5	HN04794	Nguyễn Thị Thanh Huyền	TSHNI6	huyen.ntt13@kiotviet.com	123456A@	2	80%	Pass
+
+2.Khóa Salon: 
+
+STT	Mã nhân viên	Họ tên	Phòng ban	Username	Password	Lần kiểm tra	Điểm	Kết quả
+1	HN04791	Công Việt Hùng	TSHNI4	hung.cv@kiotviet.com	123456A@	2	90%	Pass
+
+Vậy là hoàn thiện 3 khóa này.</textarea>
+                    <button onclick="copyContent('tpl-mail-l2', this)" class="btn-outline copy-btn border-rose-200 text-rose-600 hover:bg-rose-50">Copy Mail Final</button>
+                </div>
+            </section>
+
+            <!-- STEP 6: LINKS VÀ TÀI NGUYÊN -->
+            <section id="step6" class="step-content saas-card p-8 border-t-4 border-cyan-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Links & Tài nguyên</h2>
+                    <p class="text-sm text-slate-500 mt-1">Danh sách các liên kết dùng để quản lý khóa học.</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200 flex justify-between items-center">
+                        <div>
+                            <p class="font-bold text-sm text-slate-800">Danh sách hàng tháng (File Master)</p>
+                            <p class="text-xs text-slate-500 mt-1">Mỗi tháng mới nhớ copy ra bảng mới và đổi lại thông tin tên file.</p>
+                        </div>
+                        <a href="https://docs.google.com/spreadsheets/d/1jwu1tV4a8S0sRExhasjtQ0lGprZoUg2y/edit?gid=127907272#gid=127907272" target="_blank" class="btn-outline text-blue-600 border-blue-200"><i class="fas fa-file-excel mr-1"></i> Mở File Sheet</a>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
+                            <h4 class="font-bold text-orange-600 mb-2"><i class="fas fa-utensils"></i> Khóa FNB</h4>
+                            <a href="https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-fnb" target="_blank" class="block text-xs text-blue-600 hover:underline mb-2"><i class="fab fa-github mr-1 text-slate-400"></i> Thư viện Github</a>
+                            <a href="https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-fnb/" target="_blank" class="block text-xs text-blue-600 hover:underline"><i class="fas fa-graduation-cap mr-1 text-slate-400"></i> Khóa học trên LMS</a>
+                        </div>
+                        <div class="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
+                            <h4 class="font-bold text-pink-600 mb-2"><i class="fas fa-spa"></i> Khóa Salon</h4>
+                            <a href="https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-salon" target="_blank" class="block text-xs text-blue-600 hover:underline mb-2"><i class="fab fa-github mr-1 text-slate-400"></i> Thư viện Github</a>
+                            <a href="https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-salon/" target="_blank" class="block text-xs text-blue-600 hover:underline"><i class="fas fa-graduation-cap mr-1 text-slate-400"></i> Khóa học trên LMS</a>
+                        </div>
+                        <div class="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
+                            <h4 class="font-bold text-emerald-600 mb-2"><i class="fas fa-hotel"></i> Khóa Hotel</h4>
+                            <a href="https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-hotel" target="_blank" class="block text-xs text-blue-600 hover:underline mb-2"><i class="fab fa-github mr-1 text-slate-400"></i> Thư viện Github</a>
+                            <a href="https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-hotel/" target="_blank" class="block text-xs text-blue-600 hover:underline"><i class="fas fa-graduation-cap mr-1 text-slate-400"></i> Khóa học trên LMS</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STEP 7: ĐÓNG KHÓA (CHỌN ĐA KHÓA) -->
+            <section id="finalize" class="step-content">
+                <div class="saas-card overflow-hidden">
+                    <div class="px-8 py-6 bg-slate-800 text-white">
+                        <h2 class="text-xl font-bold">Nộp Báo cáo Khóa Chuyên Ngành</h2>
+                        <p class="text-xs text-slate-400 mt-1">Hệ thống hỗ trợ nộp tách biệt số liệu cho FNB, Salon, Hotel. Hãy chọn Tab tương ứng bên dưới.</p>
+                    </div>
+                    
+                    <div class="p-8 space-y-6 bg-white">
+                        
+                        <!-- BỘ LỌC CHỌN NGÀNH -->
+                        <div class="bg-purple-50 p-6 rounded-xl border border-purple-100 shadow-inner">
+                            <label class="form-label text-purple-700">CHỌN NGÀNH ĐỂ NỘP BÁO CÁO</label>
+                            <div class="flex gap-4">
+                                <label class="flex-1 border border-purple-200 bg-white p-4 rounded-lg cursor-pointer flex items-center gap-3 transition-colors hover:bg-purple-50">
+                                    <input type="radio" name="industryType" value="FNB" checked class="w-4 h-4 accent-purple-600" onchange="updateFormCode()">
+                                    <span class="font-bold text-slate-700"><i class="fas fa-utensils text-orange-500 mr-2"></i> KiotViet FNB</span>
+                                </label>
+                                <label class="flex-1 border border-purple-200 bg-white p-4 rounded-lg cursor-pointer flex items-center gap-3 transition-colors hover:bg-purple-50">
+                                    <input type="radio" name="industryType" value="SALON" class="w-4 h-4 accent-purple-600" onchange="updateFormCode()">
+                                    <span class="font-bold text-slate-700"><i class="fas fa-spa text-pink-500 mr-2"></i> KiotViet Salon</span>
+                                </label>
+                                <label class="flex-1 border border-purple-200 bg-white p-4 rounded-lg cursor-pointer flex items-center gap-3 transition-colors hover:bg-purple-50">
+                                    <input type="radio" name="industryType" value="HOTEL" class="w-4 h-4 accent-purple-600" onchange="updateFormCode()">
+                                    <span class="font-bold text-slate-700"><i class="fas fa-hotel text-emerald-500 mr-2"></i> KiotViet Hotel</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="form-label">Mã Khóa Hệ Thống</label><input type="text" id="db-code" class="saas-input uppercase font-bold text-purple-600 bg-slate-50" readonly></div>
+                            <div>
+                                <label class="form-label">Trạng thái</label>
+                                <select id="status" class="saas-input"><option value="Hoàn thành">Hoàn thành</option><option value="Đang diễn ra">Đang diễn ra</option><option value="Hủy">Hủy</option></select>
+                            </div>
+                            <div><label class="form-label">Ngày Gửi Mail Lần 1 <span class="text-rose-500">*</span></label><input type="date" id="start" class="saas-input cursor-pointer"></div>
+                            <div><label class="form-label">Ngày Chốt Điểm L2 <span class="text-rose-500">*</span></label><input type="date" id="finish" class="saas-input cursor-pointer"></div>
+                        </div>
+
+                        <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-3">Hiệu suất Học viên (Của khóa được chọn)</p>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div><label class="form-label">Tổng HV</label><input type="number" id="totalTrainees" placeholder="0" class="saas-input text-center font-bold"></div>
+                                <div><label class="form-label text-emerald-600">Đạt (Pass)</label><input type="number" id="passedTrainees" placeholder="0" class="saas-input text-center font-bold border-emerald-200"></div>
+                                <div><label class="form-label text-rose-500">Fail</label><input type="number" id="failedTrainees" placeholder="0" class="saas-input text-center font-bold border-rose-200"></div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div><label class="form-label">Link DS Quản lý chung</label><input type="url" id="listLink" class="saas-input" value="https://docs.google.com/spreadsheets/d/1jwu1tV4a8S0sRExhasjtQ0lGprZoUg2y/edit?rtpof=true"></div>
+                            <div><label class="form-label">Link Kết quả LMS</label><input type="url" id="quizLink" class="saas-input" placeholder="https://daotao.kiotviet.vn/..."></div>
+                        </div>
+
+                        <button id="btnSubmit" onclick="submitFinal(event)" class="btn-primary w-full py-4 text-sm mt-4 bg-purple-600 border-purple-700 hover:bg-purple-700">
+                            <i class="fas fa-cloud-upload-alt"></i> Nộp Báo Cáo Lên API
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- SUCCESS MODAL -->
+    <div id="successModal" class="modal fixed inset-0 items-center justify-center p-4">
+        <div class="modal-content bg-white p-8 max-w-sm w-full text-center">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fas fa-check"></i></div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Sync Success!</h3>
+            <p class="text-sm text-slate-500 mb-6" id="successDesc">Dữ liệu khóa học FNB đã được đẩy lên Google Sheets.</p>
+            <div class="flex gap-3">
+                <button onclick="closeSuccess()" class="btn-outline flex-1">Nộp khóa tiếp theo</button>
+                <a href="index.html" class="btn-primary flex-1 text-center bg-purple-600 border-purple-700">Về Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showStep(id) {
+            document.querySelectorAll('.step-content').forEach(el => { el.classList.remove('active'); setTimeout(() => el.style.display = 'none', 300); });
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('btn-' + id).classList.add('active');
+            setTimeout(() => { const target = document.getElementById(id); target.style.display = 'block'; void target.offsetWidth; target.classList.add('active'); }, 310);
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function copyContent(elementId, btnElement) {
+            const copyText = document.getElementById(elementId);
+            copyText.select(); navigator.clipboard.writeText(copyText.value).then(() => {
+                const originalHTML = btnElement.innerHTML; btnElement.innerHTML = 'Đã Copy!'; btn.classList.add('bg-slate-800', 'text-white', 'border-slate-800');
+                setTimeout(() => { btnElement.innerHTML = originalHTML; btnElement.classList.remove('bg-slate-800', 'text-white', 'border-slate-800'); }, 2000);
+            });
+        }
+
+        // Logic Kịch bản (Tự động điền Ngày và Nội dung)
+        function updateTemplates() {
+            const m = document.getElementById('conf-month').value;
+            const y = document.getElementById('conf-year').value;
+            const deadlineRaw1 = document.getElementById('conf-deadline-1').value;
+            const deadlineRaw2 = document.getElementById('conf-deadline-2').value;
+            
+            let mNum = parseInt(m);
+            let joinMonth = mNum - 3;
+            let joinYear = parseInt(y);
+            if(joinMonth <= 0) {
+                joinMonth = joinMonth + 12;
+                joinYear = joinYear - 1;
+            }
+            const joinMonthStr = joinMonth.toString().padStart(2, '0');
+
+            const formatD = (raw, defaultText) => {
+                if(!raw) return defaultText;
+                const d = new Date(raw);
+                return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+            };
+            const dlStr1 = formatD(deadlineRaw1, "15/05/2026");
+            const dlStr2 = formatD(deadlineRaw2, "18/04/2026");
+
+            document.getElementById('group-name').innerText = `Group chat ${m}/${y} Đào tạo Sản phẩm KiotViet FNB / Booking`;
+
+            document.getElementById('tpl-mail-1').value = `Dear anh/chị,\n\nTeam LnD gửi thông tin chi tiết về Chương trình Đào tạo và Test Sản phẩm FNB / Booking dành cho nhân viên sales (gia nhập vào Tháng ${joinMonthStr}/${joinYear}).\n\nChi tiết như sau:\n\n1. Nội dung: Tính năng Phần mềm KiotViet FNB / Salon / Hotel.\nHọc viên tự lựa chọn hoàn thành tối thiểu 1 trong 3 khóa học.\n\n2. Hình thức: Đào tạo và Test trắc nghiệm trên nền tảng LMS\n\n3. Thông tin đăng nhập:\n\nLink Tham gia khóa học trên LMS: \n- KiotViet FNB: https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-fnb/\n- KiotViet Salon: https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-salon/ \n- KiotViet Hotel: https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-hotel/\n\nUser và mật khẩu mặc định: Xem chi tiết TẠI ĐÂY\n4. Thời gian hoàn thành: \n- Mỗi bài học trên LMS trong khóa học tương ứng với 1 trang Github E-Learning để học tương tác, tìm hiểu nội dung trước khi làm quiz trên LMS.\n- Học viên tự sắp xếp thời gian tham gia học và hoàn thành quiz từng bài học trong khóa học trên LMS theo trình tự, sau đó chủ động hoàn thành bài quiz cuối khóa trên LMS để nhận Chứng chỉ hoàn thành khóa học.\n- Thời hạn hoàn thành: Trước 11:00, thứ 2 ngày ${dlStr1}\n\n5. Số lượng câu hỏi: 40 câu\n\n6. Thời gian làm bài: 60 phút\n\n7. Tỉ lệ đạt: 80%\n\n\nLưu ý:\n\nTài liệu ôn tập:\n\nLink tài liệu ôn tập trên Github (dùng để ôn tập trong khóa học và tra cứu sau khóa học): \n- FNB: https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-fnb\n- Salon: https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-salon\n- Hotel: https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-hotel\n\nGroup chat Đào tạo FNB / Booking ${m}/${y} \n(Team Đào tạo sẽ add danh sách các bạn vào group chat để trao đổi về thông tin đăng nhập hệ thống LMS và nội dung bài test).\n\nAnh/chị SM/Leader và admin hỗ trợ nhắc nhở các bạn đăng nhập LMS, tham gia khóa học và hoàn thành đúng thời hạn quy định.\n\nMọi thắc mắc hoặc phát sinh: Vui lòng liên hệ daotao@kiotviet.com`;
+
+            document.getElementById('tpl-zalo-1').value = `Hello @all các bạn,\n\nTheo lịch, tuần này các bạn sẽ tham gia Chương trình Đào tạo FNB/Booking trên nền tảng LMS, thông tin đã được gửi qua mail, các bạn nhận được mail rồi thì like giúp mình nhé!Chi tiết như sau:\n\n1. Nội dung: Tính năng Phần mềm KiotViet FNB / Salon / Hotel. Học viên tự lựa chọn hoàn thành tối thiểu 1 trong 3 khóa học trên LMS trước 11:00 ${dlStr1}\n\n2. Hình thức: Đào tạo và Test trắc nghiệm trên nền tảng LMS\n\n3. Thông tin đăng nhập:\n DANH SÁCH ĐÀO TẠO ONLINE FNB / BOOKING ${m}-${y}.xlsx \n\nLink Tham gia khóa học trên LMS: \nKiotViet FNB: https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-fnb/ \nKiotViet Salon: https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-salon/   \nKiotViet Hotel: https://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-hotel/ \n\n4. Thời gian hoàn thành bài kiểm tra: \nHọc viên hoàn thành quiz từng bài học lần lượt, sau đó hoàn thành bài quiz cuối khóa để nhận Chứng chỉ hoàn thành khóa học.\nThời hạn hoàn thành: Trước 11:00, ${dlStr1}\n\n5. Số lượng câu hỏi: 40 câu\n\n6. Thời gian làm bài: 60 phút\n\n7. Tỉ lệ đạt: 80%\n\nHọc theo 2 bước: \n\nBước 1 – Học trên Github: \n\nNếu đăng ký khóa nào thì vào học khóa đó nhé!\nLink Github KiotViet FNB: https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-fnb\nLink Github KiotViet Salon: https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-salon\nLink Github KiotViet Hotel: https://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-hotel\n\nBạn truy cập link bài học trên Github để bắt đầu tự học, chọn tên học phần và bấm "Bài học lý thuyết"\nLần lượt theo dõi Bài học, Mô phỏng của từng chuyên đề\nCuối bài, bạn nhấn tham gia Kiểm tra Kiến thức để ôn tập (Bài Quiz này chỉ mang tính luyện tập, chuẩn bị cho bài tập trên LMS). \n\nBước 2 – Quay về LMS làm bài kiểm tra: \nSau khi đã nắm chắc kiến thức, bạn quay lại LMS của học phần này, bấm "Làm Bài tập".\nHoàn thành Bài test nhanh gồm các câu hỏi trắc nghiệm để hệ thống ghi nhận kết quả chính thức, mở khóa học phần tiếp theo\n\nHoàn tất học phần:\nKhi bạn đạt yêu cầu trên LMS, bạn đã hoàn thành học phần này, bạn có thể đánh dấu trên trang Github - "Đã nắm vững" của từng học phần để tự theo dõi tiến độ và tự tin chuyển sang học phần tiếp theo.`;
+
+            document.getElementById('tpl-mail-l1').value = `Dear anh/chị,\n\nTeam LnD gửi kết quả Test Sản phẩm KiotViet FNB-BOOKING lần 1 ngày ${dlStr1} và thông báo lịch test lần 2 với trường hợp Fail, Miss lần 1 hạn chót vào 16:00 ngày ${dlStr2}, thông tin đăng nhập LMS giữ nguyên, chi tiết theo danh sách sau: DANH SÁCH ĐÀO TẠO ONLINE FNB / BOOKING ${m}-${y}\n\n1. Khóa FNB:\n\nSTT\tMã nhân viên\tHọ tên\tPhòng ban\tUsername\tPassword\tLần kiểm tra\tĐiểm\tKết quả\n1\tĐT00096\tMai Lạt Viện\tDSDTP\tvien.ml@kiotviet.com\t123456A@\t1\t100%\tPass\n2\tHN04789\tNguyễn Xuân Huy\tDSHNI1\thuy.nx@kiotviet.com\t123456A@\t1\t95%\tPass\n3\tGL00164\tHồ Thị Thanh Tùng\tDSGLI\ttung.htt1@kiotviet.com\t123456A@\t1\t95%\tPass\n4\tQNI00106\tNguyễn Trần Minh Triết\tDSQNI\ttriet.ntm@kiotviet.com\t123456A@\t1\t98%\tPass\n5\tBMT00174\tNguyễn Kim Hưng Thịnh\tDSBMT\tthinh.nkh@kiotviet.com\t123456A@\t1\t98%\tPass\n6\tQNI00109\tNguyễn Thị Thu Mỹ\tDSQNI\tmy.ntt3@kiotviet.com\t123456A@\t1\t68%\tFail\n7\tKG00172\tNguyễn Thị Huỳnh Điểu\tDSKGG\tdieu.nth3@kiotviet.com\t123456A@\t1\t95%\tPass\n\n2. Khóa Salon:\n\nSTT\tMã nhân viên\tHọ tên\tPhòng ban\tUsername\tPassword\tLần kiểm tra\tĐiểm\tKết quả\n1\tSG02713\tHồ Thị Duyên An\tContract renewal (KVS)\tan.htd@kiotviet.com\t123456A@\t1\t90%\tPass\n2\tHN04796\tNguyễn Tuấn Khang\tDSHNI1\tkhang.nt1@kiotviet.com\t123456A@\t1\t98%\tPass\n\n3. Khóa Hotel:\n\nSTT\tMã nhân viên\tHọ tên\tPhòng ban\tUsername\tPassword\tLần kiểm tra\tĐiểm\tKết quả\n1\tHN04789\tNguyễn Xuân Huy\tDSHNI1\thuy.nx@kiotviet.com\t123456A@\t1\t100%\tPass\n2\tHN04788\tNguyễn Quang Huy\tDSHNI1\thuy.nq16@kiotviet.com\t123456A@\t1\t95%\tPass`;
+
+            document.getElementById('tpl-mail-l2').value = `Dear anh/chị,\n\nTeam LnD gửi kết quả Test Sản phẩm KiotViet FNB-BOOKING lần 2 ngày ${dlStr2}, chi tiết theo danh sách sau: DANH SÁCH ĐÀO TẠO ONLINE FNB / BOOKING ${m}-${y}\n\n1. Khóa FNB:\n\nSTT\tMã nhân viên\tHọ tên\tPhòng ban\tUsername\tPassword\tLần kiểm tra\tĐiểm\tKết quả\n1\tCT00539\tPhạm Nguyễn Hùng Thuận\tDSCTO3\tthuan.pnh1@kiotviet.com\t123456A@\t2\t95%\tPass\n2\tCT00535\tNguyễn Trọng Hiền\tDSCTO3\thien.nt16@kiotviet.com\t123456A@\t2\t98%\tPass\n3\tNĐ00166\tTrần Thị Hồng Hạnh\tContract renewal (KVS)\thanh.tth2@kiotviet.com\t123456A@\t2\t95%\tPass\n4\tCT00536\tLâm Hiếu Kiên\tDSCTO3\tkien.lh@kiotviet.com\t123456A@\t2\t80%\tPass\n5\tHN04794\tNguyễn Thị Thanh Huyền\tTSHNI6\thuyen.ntt13@kiotviet.com\t123456A@\t2\t80%\tPass\n\n2.Khóa Salon: \n\nSTT\tMã nhân viên\tHọ tên\tPhòng ban\tUsername\tPassword\tLần kiểm tra\tĐiểm\tKết quả\n1\tHN04791\tCông Việt Hùng\tTSHNI4\thung.cv@kiotviet.com\t123456A@\t2\t90%\tPass\n\nVậy là hoàn thiện 3 khóa này.`;
+
+            updateFormCode();
+        }
+
+        function updateFormCode() {
+            const m = document.getElementById('conf-month').value;
+            const y = document.getElementById('conf-year').value.slice(-2);
+            const type = document.querySelector('input[name="industryType"]:checked').value; 
+            document.getElementById('db-code').value = `${type}-${m}-${y}`;
+        }
+
+        // HÀM BẮN API
+        function submitFinal(event) {
+            if(event) event.preventDefault();
+
+            const GOOGLE_API_URL = localStorage.getItem('kv_api_url');
+            if(!GOOGLE_API_URL) { alert('CHƯA CÀI ĐẶT LINK API! Vui lòng quay lại Hub -> Thiết lập để dán Link API Google Sheets vào.'); return; }
+
+            const type = document.querySelector('input[name="industryType"]:checked').value;
+            const cId = document.getElementById('db-code').value.trim().toUpperCase();
+            const startStr = document.getElementById('start').value;
+            const finishStr = document.getElementById('finish').value;
+
+            if(!startStr || !finishStr) { alert('Vui lòng chọn Ngày Bắt Đầu và Ngày Kết Thúc!'); return; }
+
+            const dateObj = new Date(startStr);
+            const calcMonth = dateObj.getMonth() + 1;
+
+            const payload = {
+                timestamp: new Date().getTime(),
+                groupName: type, // Truyền ĐÚNG phân loại ngành (FNB, SALON, HOTEL) lên Google Sheets
+                courseId: cId,
+                month: calcMonth,
+                status: document.getElementById('status').value,
+                startDate: startStr,
+                finishDate: finishStr,
+                totalTrainees: document.getElementById('totalTrainees').value || "0",
+                passedTrainees: document.getElementById('passedTrainees').value || "0",
+                failedTrainees: document.getElementById('failedTrainees').value || "0",
+                listLink: document.getElementById('listLink').value || '',
+                quizLink: document.getElementById('quizLink').value || ''
+            };
+
+            const btn = document.getElementById('btnSubmit');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang đồng bộ...';
+            btn.classList.add('opacity-70', 'pointer-events-none');
+
+            // 1. Lưu Local Storage
+            let db = [];
+            try { const storedDb = localStorage.getItem('kv_master_db'); if(storedDb) db = JSON.parse(storedDb); } catch (e) { db = []; }
+            const existIdx = db.findIndex(item => item.courseId === payload.courseId);
+            if(existIdx >= 0) db[existIdx] = {...db[existIdx], ...payload}; else db.push(payload);
+            localStorage.setItem('kv_master_db', JSON.stringify(db));
+
+            // 2. Bắn API Google Sheets (Đã fix lỗi CORS giống file Thuế)
+            fetch(GOOGLE_API_URL, {
+                method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload)
+            }).then(r => r.json()).then(() => {
+                btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Nộp Báo Cáo Lên API';
+                btn.classList.remove('opacity-70', 'pointer-events-none');
+                
+                document.getElementById('successDesc').innerText = `Dữ liệu báo cáo ngành ${type} đã được đẩy lên Google Sheets.`;
+                const modal = document.getElementById('successModal');
+                modal.classList.add('active');
+            }).catch(error => {
+                alert("Lưu cục bộ thành công nhưng lỗi đẩy lên Server: " + error);
+                btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Nộp Báo Cáo Lên API';
+                btn.classList.remove('opacity-70', 'pointer-events-none');
+            });
+        }
+
+        function closeSuccess() {
+            document.getElementById('successModal').classList.remove('active');
+            document.getElementById('totalTrainees').value = ''; 
+            document.getElementById('passedTrainees').value = ''; 
+            document.getElementById('failedTrainees').value = '';
+        }
+
+        window.onload = () => updateTemplates();
+    </script>
+</body>
+</html>
