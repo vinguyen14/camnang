@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HĐĐT - Thuế | Trainer OS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .saas-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .sidebar-item { padding: 12px 20px; font-size: 13px; font-weight: 500; color: #475569; border-left: 3px solid transparent; transition: all 0.2s; cursor: pointer; display: flex; align-items: center; gap: 12px; }
+        .sidebar-item:hover { background-color: #f1f5f9; color: #1e293b; }
+        .sidebar-item.active { background-color: #ecfdf5; border-left-color: #10b981; color: #10b981; font-weight: 600; }
+        .step-content { display: none; opacity: 0; transform: translateY(10px); transition: all 0.3s; }
+        .step-content.active { display: block; opacity: 1; transform: translateY(0); }
+        .saas-input { width: 100%; padding: 10px 14px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; }
+        .saas-input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15); }
+        .text-area-code { font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.6; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; width: 100%; resize: none; outline: none; }
+        .btn-outline { background: white; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; }
+        .btn-primary { background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .form-label { display: block; font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 6px; text-transform: uppercase; }
+        .copy-btn { position: absolute; top: 12px; right: 12px; }
+        .modal { display: none; opacity: 0; transition: opacity 0.2s; z-index: 9999; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px); }
+        .modal.active { display: flex; opacity: 1; }
+        .modal-content { transform: scale(0.98) translateY(10px); opacity: 0; transition: all 0.3s; border-radius: 16px; background: white; }
+        .modal.active .modal-content { transform: scale(1) translateY(0); opacity: 1; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- HEADER -->
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-50 shrink-0">
+        <div class="flex items-center gap-4">
+            <a href="index.html" class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition"><i class="fas fa-arrow-left"></i></a>
+            <div class="h-6 w-px bg-slate-200"></div>
+            <h1 class="text-lg font-bold tracking-tight text-slate-800">Sản phẩm Chuyên đề <span class="text-emerald-600">HĐĐT - Thuế</span></h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="px-3 py-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase rounded border border-emerald-100 flex items-center">
+                <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse"></div> Specialist Workflow
+            </span>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row gap-8 items-start relative z-10">
+
+        <!-- SIDEBAR -->
+        <aside class="w-full md:w-64 flex-shrink-0 saas-card py-2 sticky top-24">
+            <div class="px-5 py-3 border-b border-slate-100 mb-2">
+                <h3 class="text-xs font-bold text-slate-800 uppercase">Tiến trình Khóa học</h3>
+            </div>
+            <div class="space-y-1">
+                <div onclick="showStep('step1')" id="btn-step1" class="sidebar-item active"><i class="fas fa-envelope"></i> 1. Mail Mời học</div>
+                <div onclick="showStep('step2')" id="btn-step2" class="sidebar-item"><i class="fas fa-comments"></i> 2. Tạo Group Zalo</div>
+                <div onclick="showStep('step3')" id="btn-step3" class="sidebar-item"><i class="fas fa-bell"></i> 3. Trong ngày học</div>
+                <div onclick="showStep('step4')" id="btn-step4" class="sidebar-item"><i class="fas fa-tasks"></i> 4. Mail Tổng kết & LMS</div>
+                <div onclick="showStep('step5')" id="btn-step5" class="sidebar-item"><i class="fas fa-exclamation-circle text-orange-500"></i> 5. Nhắc nhở & Kết quả L1</div>
+                <div onclick="showStep('step6')" id="btn-step6" class="sidebar-item"><i class="fas fa-medal text-rose-500"></i> 6. Kết quả Lần 2 (Final)</div>
+                <div class="h-px bg-slate-100 my-2 mx-4"></div>
+                <div onclick="showStep('tools')" id="btn-tools" class="sidebar-item text-emerald-600 hover:bg-emerald-50"><i class="fas fa-link"></i> Link & Tài nguyên</div>
+                <div class="px-4 mt-4 mb-2"><button onclick="showStep('finalize')" id="btn-finalize" class="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition">ĐÓNG KHÓA (API)</button></div>
+            </div>
+        </aside>
+
+        <!-- CONTENT AREA -->
+        <div class="flex-grow min-h-[600px] pb-20">
+            
+            <!-- CONFIG PANEL -->
+            <div class="saas-card p-5 mb-6 bg-slate-50 border-dashed border-2 flex flex-wrap items-center gap-4">
+                <div><label class="form-label">Tháng</label><input type="text" id="conf-month" value="05" oninput="updateTemplates()" class="saas-input w-16 text-center py-1.5 font-bold text-emerald-600"></div>
+                <div><label class="form-label">Năm</label><input type="text" id="conf-year" value="2026" oninput="updateTemplates()" class="saas-input w-20 text-center py-1.5 text-xs"></div>
+                <div><label class="form-label">Ngày học Online (T6)</label><input type="date" id="conf-class-date" onchange="updateTemplates()" class="saas-input py-1.5 text-xs cursor-pointer"></div>
+                <div><label class="form-label">Deadline LMS (L1)</label><input type="date" id="conf-dl1" onchange="updateTemplates()" class="saas-input py-1.5 text-xs cursor-pointer"></div>
+                <div><label class="form-label">Deadline Test (L2)</label><input type="date" id="conf-dl2" onchange="updateTemplates()" class="saas-input py-1.5 text-xs cursor-pointer"></div>
+                <div class="w-full mt-2"><label class="form-label">Link Google Meet</label><input type="text" id="conf-meet" value="https://meet.google.com/qrh-mcpp-ewf?authuser=0" oninput="updateTemplates()" class="saas-input py-1.5 text-xs text-blue-600"></div>
+            </div>
+
+            <!-- STEP 1: MAIL MỜI HỌC -->
+            <section id="step1" class="step-content active saas-card p-8 border-t-4 border-emerald-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Gửi Mail Mời Đi Học</h2>
+                    <p class="text-sm text-slate-500 mt-1">Gửi mail trước ngày học. Lịch dạy là thứ 6 đầu tiên mỗi tháng.</p>
+                </div>
+                <div class="relative bg-white border border-slate-200 rounded-xl">
+                    <textarea id="tpl-mail-1" readonly class="text-area-code h-[600px] border-none"></textarea>
+                    <button onclick="copyContent('tpl-mail-1', this)" class="btn-outline copy-btn border-emerald-200 text-emerald-600 hover:bg-emerald-50">Copy Mail</button>
+                </div>
+            </section>
+
+            <!-- STEP 2: GROUP ZALO KHỞI TẠO -->
+            <section id="step2" class="step-content saas-card p-8 border-t-4 border-emerald-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Tạo Group Zalo & Hướng dẫn</h2>
+                    <p class="text-sm text-slate-500 mt-1">Tên Group: <b id="group-name" class="text-emerald-600">Đào tạo hóa đơn điện tử Tháng ...</b></p>
+                </div>
+                <div class="relative bg-white border border-slate-200 rounded-xl">
+                    <textarea id="tpl-zalo-1" readonly class="text-area-code h-80 border-none"></textarea>
+                    <button onclick="copyContent('tpl-zalo-1', this)" class="btn-outline copy-btn border-emerald-200 text-emerald-600 hover:bg-emerald-50">Copy Zalo</button>
+                </div>
+            </section>
+
+            <!-- STEP 3: TRONG NGÀY HỌC -->
+            <section id="step3" class="step-content saas-card p-8 border-t-4 border-emerald-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Trong Ngày Học Online</h2>
+                    <p class="text-sm text-slate-500 mt-1">Sáng sớm gửi nhắc nhở. Sau khi học xong, gửi hướng dẫn LMS.</p>
+                </div>
+                <div class="space-y-6">
+                    <div class="relative bg-white border border-slate-200 rounded-xl">
+                        <p class="text-xs font-bold text-slate-500 uppercase px-4 pt-4 mb-2">Sáng Thứ 6: Nhắc vào lớp</p>
+                        <textarea id="tpl-zalo-2" readonly class="text-area-code h-32 border-none bg-slate-50/50"></textarea>
+                        <button onclick="copyContent('tpl-zalo-2', this)" class="btn-outline copy-btn">Copy Nhắc Lớp</button>
+                    </div>
+                    <div class="relative bg-white border border-slate-200 rounded-xl">
+                        <p class="text-xs font-bold text-emerald-600 uppercase px-4 pt-4 mb-2">Sau Buổi học: Hướng dẫn LMS</p>
+                        <textarea id="tpl-zalo-3" readonly class="text-area-code h-[500px] border-none"></textarea>
+                        <button onclick="copyContent('tpl-zalo-3', this)" class="btn-outline copy-btn border-emerald-200 text-emerald-600 hover:bg-emerald-50">Copy Hướng dẫn</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STEP 4: MAIL TỔNG KẾT -->
+            <section id="step4" class="step-content saas-card p-8 border-t-4 border-emerald-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Mail Tổng Kết & Điểm Danh</h2>
+                </div>
+                <div class="relative bg-white border border-slate-200 rounded-xl">
+                    <textarea id="tpl-mail-2" readonly class="text-area-code h-96 border-none"></textarea>
+                    <button onclick="copyContent('tpl-mail-2', this)" class="btn-outline copy-btn border-emerald-200 text-emerald-600 hover:bg-emerald-50">Copy Mail</button>
+                </div>
+            </section>
+
+            <!-- STEP 5: KẾT QUẢ LẦN 1 -->
+            <section id="step5" class="step-content saas-card p-8 border-t-4 border-orange-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Hối Thúc & Mail Kết quả Lần 1</h2>
+                </div>
+                <div class="space-y-6">
+                    <div class="relative bg-white border border-slate-200 rounded-xl">
+                        <p class="text-xs font-bold text-orange-500 uppercase px-4 pt-4 mb-2">Nhắc Deadline trên Zalo</p>
+                        <textarea id="tpl-zalo-4" readonly class="text-area-code h-24 border-none bg-orange-50/50 text-orange-800"></textarea>
+                        <button onclick="copyContent('tpl-zalo-4', this)" class="btn-outline copy-btn">Copy Zalo</button>
+                    </div>
+                    <div class="relative bg-white border border-slate-200 rounded-xl">
+                        <p class="text-xs font-bold text-slate-700 uppercase px-4 pt-4 mb-2">Mail Kết Quả Lần 1 (Gia hạn L2)</p>
+                        <textarea id="tpl-mail-l1" readonly class="text-area-code h-56 border-none"></textarea>
+                        <button onclick="copyContent('tpl-mail-l1', this)" class="btn-outline copy-btn border-orange-200 text-orange-600 hover:bg-orange-50">Copy Mail L1</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STEP 6: KẾT QUẢ FINAL -->
+            <section id="step6" class="step-content saas-card p-8 border-t-4 border-rose-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Mail Kết Quả Final (Lần 2)</h2>
+                </div>
+                <div class="relative bg-white border border-slate-200 rounded-xl">
+                    <textarea id="tpl-mail-l2" readonly class="text-area-code h-48 border-none bg-rose-50/30"></textarea>
+                    <button onclick="copyContent('tpl-mail-l2', this)" class="btn-outline copy-btn border-rose-200 text-rose-600 hover:bg-rose-50">Copy Mail L2</button>
+                </div>
+            </section>
+
+            <!-- TOOLS -->
+            <section id="tools" class="step-content saas-card p-8 border-t-4 border-slate-500">
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800">Link & Tài nguyên Khóa Thuế</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 border border-slate-200 rounded-lg bg-slate-50 flex justify-between items-center group hover:bg-slate-100">
+                        <a href="https://docs.google.com/spreadsheets/d/1NQWxmQcWI2J4I-211rJpB3FCXtUCsMKk3hPB2QF5RLw/edit" target="_blank" class="truncate text-sm font-medium"><i class="fas fa-file-excel text-emerald-600 mr-2"></i> File Danh sách Học viên (Master)</a>
+                        <button onclick="copyToClipboard('https://docs.google.com/spreadsheets/d/1NQWxmQcWI2J4I-211rJpB3FCXtUCsMKk3hPB2QF5RLw/edit', this)" class="text-slate-400 hover:text-blue-600 transition"><i class="fas fa-copy"></i></button>
+                    </div>
+                    <div class="p-4 border border-slate-200 rounded-lg bg-slate-50 flex justify-between items-center group hover:bg-slate-100">
+                        <a href="https://kiotvietlnd.github.io/slides/san-pham-thuehkd" target="_blank" class="truncate text-sm font-medium"><i class="fas fa-desktop text-orange-500 mr-2"></i> Bài giảng Slide Thuế</a>
+                        <button onclick="copyToClipboard('https://kiotvietlnd.github.io/slides/san-pham-thuehkd', this)" class="text-slate-400 hover:text-blue-600 transition"><i class="fas fa-copy"></i></button>
+                    </div>
+                    <div class="p-4 border border-slate-200 rounded-lg bg-slate-50 flex justify-between items-center group hover:bg-slate-100">
+                        <a href="https://docs.google.com/forms/d/e/1FAIpQLScYtyZn5jf-vs76j9SQh0KUH69mTSKSVndydmfJ7YL7105hXA/viewform" target="_blank" class="truncate text-sm font-medium"><i class="fas fa-check-square text-blue-500 mr-2"></i> Form Điểm danh</a>
+                        <button onclick="copyToClipboard('https://docs.google.com/forms/d/e/1FAIpQLScYtyZn5jf-vs76j9SQh0KUH69mTSKSVndydmfJ7YL7105hXA/viewform', this)" class="text-slate-400 hover:text-blue-600 transition"><i class="fas fa-copy"></i></button>
+                    </div>
+                    <div class="p-4 border border-slate-200 rounded-lg bg-slate-50 flex justify-between items-center group hover:bg-slate-100">
+                        <a href="https://kiotvietlnd.github.io/elearning/khoa-hoc/dao-tao-san-pham-ke-toan-01" target="_blank" class="truncate text-sm font-medium"><i class="fab fa-github mr-2"></i> Thư viện E-Learning Github</a>
+                        <button onclick="copyToClipboard('https://kiotvietlnd.github.io/elearning/khoa-hoc/dao-tao-san-pham-ke-toan-01', this)" class="text-slate-400 hover:text-blue-600 transition"><i class="fas fa-copy"></i></button>
+                    </div>
+                    <div class="p-4 border border-slate-200 rounded-lg bg-slate-50 flex justify-between items-center group hover:bg-slate-100">
+                        <a href="https://daotao.kiotviet.vn/khoa-hoc/ke-toan-01/" target="_blank" class="truncate text-sm font-medium"><i class="fas fa-graduation-cap text-slate-800 mr-2"></i> Khóa Học trên hệ thống LMS</a>
+                        <button onclick="copyToClipboard('https://daotao.kiotviet.vn/khoa-hoc/ke-toan-01/', this)" class="text-slate-400 hover:text-blue-600 transition"><i class="fas fa-copy"></i></button>
+                    </div>
+                    <div class="p-4 border border-slate-200 rounded-lg bg-slate-50 flex justify-between items-center group hover:bg-slate-100">
+                        <a href="https://notebooklm.google.com/notebook/17ae9fc0-6d1b-4ab5-ab0f-3f980651062e?addSource=true" target="_blank" class="truncate text-sm font-medium"><i class="fas fa-robot text-blue-600 mr-2"></i> Chatbot Thuế (Agent Kevin)</a>
+                        <button onclick="copyToClipboard('https://notebooklm.google.com/notebook/17ae9fc0-6d1b-4ab5-ab0f-3f980651062e?addSource=true', this)" class="text-slate-400 hover:text-blue-600 transition"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STEP 7: ĐÓNG KHÓA (API) -->
+            <section id="finalize" class="step-content">
+                <div class="saas-card overflow-hidden">
+                    <div class="px-8 py-6 bg-slate-800 text-white">
+                        <h2 class="text-xl font-bold">Nộp Báo cáo Khóa Thuế - Kế toán</h2>
+                    </div>
+                    <div class="p-8 space-y-6 bg-white">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="form-label">Mã Khóa</label><input type="text" id="db-code" class="saas-input uppercase font-bold text-emerald-600 bg-slate-50" readonly></div>
+                            <div><label class="form-label">Trạng thái</label><select id="status" class="saas-input"><option value="Hoàn thành">Hoàn thành</option><option value="Đang diễn ra">Đang diễn ra</option><option value="Hủy">Hủy</option></select></div>
+                            <div><label class="form-label">Ngày Học (Bắt đầu)</label><input type="date" id="start" class="saas-input cursor-pointer"></div>
+                            <div><label class="form-label">Ngày Chốt Điểm L2</label><input type="date" id="finish" class="saas-input cursor-pointer"></div>
+                        </div>
+
+                        <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-3">Hiệu suất Học viên</p>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div><label class="form-label">Tổng HV</label><input type="number" id="totalTrainees" placeholder="0" class="saas-input text-center font-bold"></div>
+                                <div><label class="form-label text-emerald-600">Đạt (Pass)</label><input type="number" id="passedTrainees" placeholder="0" class="saas-input text-center font-bold"></div>
+                                <div><label class="form-label text-rose-500">Fail</label><input type="number" id="failedTrainees" placeholder="0" class="saas-input text-center font-bold"></div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div><label class="form-label">Link DS Quản lý chung</label><input type="url" id="listLink" class="saas-input" value="https://docs.google.com/spreadsheets/d/1NQWxmQcWI2J4I-211rJpB3FCXtUCsMKk3hPB2QF5RLw/edit"></div>
+                            <div><label class="form-label">Link Kết quả LMS</label><input type="url" id="quizLink" class="saas-input" value="https://daotao.kiotviet.vn/khoa-hoc/ke-toan-01/"></div>
+                        </div>
+
+                        <button id="btnSubmit" onclick="submitFinal(event)" class="btn-primary w-full py-4 text-sm mt-4">
+                            <i class="fas fa-cloud-upload-alt"></i> Nộp Báo Cáo Lên API
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- SUCCESS MODAL -->
+    <div id="successModal" class="modal fixed inset-0 items-center justify-center p-4">
+        <div class="modal-content p-8 max-w-sm w-full text-center">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fas fa-check"></i></div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Sync Success!</h3>
+            <p class="text-sm text-slate-500 mb-6">Dữ liệu khóa học Thuế đã đẩy lên Google Sheets thành công.</p>
+            <div class="flex gap-3">
+                <button onclick="closeSuccess()" class="btn-outline flex-1">Ở lại trang</button>
+                <a href="index.html" class="btn-primary flex-1 text-center">Về Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showStep(id) {
+            document.querySelectorAll('.step-content').forEach(el => { el.classList.remove('active'); setTimeout(() => el.style.display = 'none', 300); });
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('btn-' + id).classList.add('active');
+            setTimeout(() => { const target = document.getElementById(id); target.style.display = 'block'; void target.offsetWidth; target.classList.add('active'); }, 310);
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function copyContent(elementId, btnElement) {
+            const copyText = document.getElementById(elementId);
+            copyText.select(); navigator.clipboard.writeText(copyText.value).then(() => {
+                const originalHTML = btnElement.innerHTML; btnElement.innerHTML = 'Đã Copy!'; btnElement.classList.add('bg-slate-800', 'text-white');
+                setTimeout(() => { btnElement.innerHTML = originalHTML; btnElement.classList.remove('bg-slate-800', 'text-white'); }, 2000);
+            });
+        }
+
+        function formatD(raw, defaultText) {
+            if(!raw) return defaultText;
+            const d = new Date(raw);
+            return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+        }
+
+        function updateTemplates() {
+            const m = document.getElementById('conf-month').value || "05";
+            const y = document.getElementById('conf-year').value || "2026";
+            const d1Raw = document.getElementById('conf-class-date').value;
+            const dl1Raw = document.getElementById('conf-dl1').value;
+            const dl2Raw = document.getElementById('conf-dl2').value;
+            const meetLink = document.getElementById('conf-meet').value;
+
+            const cDate = formatD(d1Raw, "08/05/2026");
+            const dl1Date = formatD(dl1Raw, "14/05/2026");
+            const dl2Date = formatD(dl2Raw, "17/04/2026"); // VD của lần 2
+
+            // Tính toán trước 1 ngày của ngày học (dùng cho mail mời học)
+            let beforeDateStr = "07/05/2026";
+            if(d1Raw) {
+                let temp = new Date(d1Raw); temp.setDate(temp.getDate() - 1);
+                beforeDateStr = formatD(temp, "07/05/2026");
+            }
+            
+            document.getElementById('group-name').innerText = `Đào tạo hóa đơn điện tử Tháng ${m}/${y}`;
+            document.getElementById('db-code').value = `TAX-${m}-${y.slice(-2)}`;
+
+            document.getElementById('tpl-mail-1').value = `Dear các bạn,\n\nTeam LND gửi các bạn thông tin Chương trình Đào tạo Sản phẩm - Tính năng Hóa đơn điện tử - Tháng ${m}/${y}:\n\n1. Đối tượng tham gia:\nNhân viên kinh doanh (NVKD) mới, bắt đầu sang tháng làm việc thứ hai theo danh sách.\nDS HDĐT & CKS Sales toàn quốc Tháng ${m}/${y}\n\n2. Mục tiêu chương trình:\nNắm vững kiến thức tổng quan và quy định pháp lý về Hóa đơn điện tử, Chữ ký số cập nhật nhất.\nThành thạo quy trình triển khai ban đầu Hóa đơn điện tử, Chữ ký số cho Hộ kinh doanh.\nXử lý tình huống và giải quyết các lỗi thường gặp khi tư vấn, triển khai thực tế.\n\n3. Lộ trình Đào tạo:\n\nPhần 1: Học online tập trung cùng giảng viên\nThời gian: 09:00 - 12:00, Thứ 6 ngày ${cDate}\nHình thức: Đào tạo Online trên Google Meets\nLink tham gia: ${meetLink} \nGiảng viên: Nguyễn Lê Nhật Vi - Chuyên viên Đào tạo\n\nPhần 2: Tự học trên hệ thống Github và LMS\nThời gian: Từ ${cDate} đến ${dl1Date}\nLink truy cập hệ thống: https://daotao.kiotviet.vn/dang-nhap/\nUser & Password: Cấp sau khi hoàn thành buổi học tập trung phần 01.\n\nĐánh giá sau đào tạo\nChứng chỉ hoàn thành được cấp tự động trên hệ thống sau khi hoàn thành bài học và đạt 80% kết quả bài kiểm tra cuối khóa trong thời gian quy định (Từ ${cDate} đến ${dl1Date}).\n\n4. Lưu ý quan trọng:\nThực hiện khảo sát trước đào tạo để chia sẻ các vướng mắc thực tế: https://forms.gle/xwkR7QkTiaz6JUEk9\nChuẩn bị trước buổi học: Học viên cần chuẩn bị máy tính, tai nghe, mic hoạt động ổn định và sắp xếp công việc để tham gia đúng thời gian đã thông báo.\n\nTrường hợp bất khả kháng không thể tham gia, vui lòng phản hồi lại email này trước 17h00 ngày ${beforeDateStr}.`;
+
+            document.getElementById('tpl-zalo-1').value = `Hi @all, sáng mai Team Đào tạo có lịch đào tạo HĐĐT - Thuế - Kế toán định kỳ cho các bạn nhân sự mới. Các bạn trong group mình trong danh sách bắt buộc tham gia khóa học này theo lộ trình đào tạo nhân viên mới.\n\nNội dung đào tạo gồm 2 phần: \n\nPhần 1: Học online tập trung cùng giảng viên\nThời gian: 09:00 - 12:00, Thứ 6 ngày ${cDate}\nHình thức: Đào tạo Online trên Google Meets\nLink tham gia: ${meetLink} \nGiảng viên: Nguyễn Lê Nhật Vi\n\nPhần 2: Tự học trên hệ thống Github và LMS\nThời gian: Từ ${cDate} đến ${dl1Date}\nLink truy cập hệ thống: https://daotao.kiotviet.vn/dang-nhap/\nUser & Password: Cấp sau khi hoàn thành buổi học tập trung phần 01.\n\nBạn nào nhận thông tin bấm Yes trên Google Calendar và bấm Like xác nhận tin nhắn này nhé!`;
+
+            document.getElementById('tpl-zalo-2').value = `Mình gửi thông tin tham gia Khóa học HĐĐT - Thuế - Kế toán sáng nay:\n\nThời gian học: 09:00 - 12:00, Thứ 6 (${cDate.substring(0,5)})\nHình thức: Google Meet\nLink tham gia: ${meetLink}`;
+
+            document.getElementById('tpl-zalo-3').value = `Hi @all ,\nSau khi hoàn thành Phần 1: Học online tập trung cùng giảng viên\nTiếp tục chúng ta sẽ đến với phần tiếp theo,\n\nPhần 2: Tự học trên hệ thống Github và LMS\nThời gian: Từ ${cDate} đến ${dl1Date}\nLink truy cập Khóa học: https://daotao.kiotviet.vn/khoa-hoc/ke-toan-01/\nUser & Password: Mail Công ty + 123456A@\nDanh sách tham gia buổi học sáng nay: DS HDĐT & CKS Sales toàn quốc Tháng ${m}/${y} \n\nHọc theo 2 bước: \nBước 1 – Học trên Github: https://kiotvietlnd.github.io/elearning/thuehkd/#ke-toan-01\nBạn truy cập link bài học trên Github để bắt đầu tự học, chọn tên học phần và bấm "E-Learning"\nLần lượt theo dõi Bài học và Mô phỏng ôn tập tương ứng.\nCuối bài, bạn chọn vào Kiểm tra kiến thức để ôn tập (Bài Quiz này chỉ mang tính luyện tập, chuẩn bị cho bài tập trên LMS). Sau khi hoàn thành bài Quiz Game, bạn có thể đánh dấu trên trang Github của khóa học để tự theo dõi tiến độ.\n\nBước 2 – Quay về LMS làm bài kiểm tra:\nSau khi đã nắm chắc kiến thức, bạn quay lại LMS của học phần này, bấm "Làm Bài tập".\nHoàn thành Bài test nhanh gồm các câu hỏi trắc nghiệm để hệ thống ghi nhận kết quả chính thức, mở khóa học phần tiếp theo\n\nHoàn tất học phần:\nKhi bạn đạt yêu cầu trên LMS, bạn đã hoàn thành học phần này, bạn có thể đánh dấu trên trang Github để theo dõi tiến độ và tự tin chuyển sang học phần tiếp theo.\n\n-----------------\nĐánh giá sau đào tạo\nChứng chỉ hoàn thành được cấp tự động trên hệ thống sau khi hoàn thành bài học và đạt 80% kết quả bài kiểm tra cuối khóa trong thời gian quy định (Từ ${cDate} đến ${dl1Date}).\n\nMình gửi lại link tài liệu trong buổi học\n1. Website KiotViet: \nHDSD: https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-hoa-don-dien-tu/thiet-lap-ho-so-ke-khai-thue/?industry=retailer\n\n2. Nền tảng Github: (Ôn luyên kiến thức)\nKhóa học Kế toán 01: https://kiotvietlnd.github.io/elearning/khoa-hoc/dao-tao-san-pham-ke-toan-01\nVăn bản phát luật, công cụ tính thuế: https://kiotvietlnd.github.io/elearning/thuehkd/#tai-lieu\nChatbot Thuế (Agent Kevin): https://notebooklm.google.com/notebook/17ae9fc0-6d1b-4ab5-ab0f-3f980651062e?addSource=true\n\n3. Nền tảng LMS: (Ghi nhận kết quả và chứng chỉ)\nKhóa học Kế toán 01: https://daotao.kiotviet.vn/khoa-hoc/ke-toan-01/\n\nLink record khóa học buổi sáng hôm nay thì mình sẽ gửi lại trong hôm nay nhé!`;
+
+            document.getElementById('tpl-mail-2').value = `Chào Các bạn, \nCC: Các Anh/ Chị SM,\n\nCảm ơn các bạn đã tham gia Phần 1 (Học online tập trung) của khóa đào tạo HĐĐT & CKS sáng nay. Danh sách điểm danh chi tiết được đính kèm tại link này: DS HDĐT & CKS Sales toàn quốc Tháng ${m}/${y}.\n\nĐể chính thức hoàn tất chương trình và được cấp chứng chỉ nghiệp vụ, các bạn cần hoàn thành Phần 2 (Tự ôn tập và Kiểm tra) với điều kiện bài Test đạt tối thiểu 80% điểm.\n\nHướng dẫn thực hiện:\nÔn tập kiến thức: Truy cập tài liệu tại Github (https://kiotvietlnd.github.io/elearning/thuehkd/#ke-toan-01)\nLàm bài kiểm tra: Truy cập hệ thống LMS (https://daotao.kiotviet.vn/khoa-hoc/ke-toan-01/)\nTài khoản: Email công ty\nMật khẩu: 123456A@\n\nThời hạn hoàn thành: Chậm nhất 23:59 ngày ${dl1Date}.\n\nLưu ý:\nPhòng Đào tạo sẽ trích xuất kết quả từ hệ thống và gửi báo cáo tiến độ cho các Quản lý trực tiếp (SM) vào ngày kế tiếp. Nếu gặp vấn đề về đăng nhập hệ thống, các bạn vui lòng phản hồi trực tiếp tại email này để được hỗ trợ kịp thời.\n\nTrân trọng,\nPhòng Đào tạo`;
+
+            document.getElementById('tpl-zalo-4').value = `Các bạn ơi, hôm nay hạn chót học khóa Kế toán trên LMS, các bạn tranh thủ học trước 3h chiều ngày hôm nay nhé, vẫn còn rất nhiều bạn bị miss nè.\n DS HDĐT & CKS Sales toàn quốc Tháng ${m}/${y}`;
+
+            document.getElementById('tpl-mail-l1').value = `Dear các bạn,\n\nTeam LnD gửi Kết quả bài kiểm tra kiến thức về Hóa đơn điện tử & Số kế toán – Tờ khai thuế lần 1 ngày ${dl1Date} và thông báo lịch test lần 2 với trường hợp Fail/ Chưa test hạn chót 11:00 thứ sáu, ngày ${dl2Date}, thông tin đăng nhập LMS giữ nguyên, chi tiết như sau:\n\nSTT\tMã nhân viên\tHọ tên\tPhòng ban\tEmail Công ty\tLần kiểm tra\tUsername\tPassword\tĐiểm\tKết quả\n\n(Dán danh sách từ file vào đây)`;
+
+            document.getElementById('tpl-mail-l2').value = `Dear các bạn,\n\nTeam LnD gửi Kết quả bài kiểm tra kiến thức về Hóa đơn điện tử & Số kế toán – Tờ khai thuế lần 2 ngày ${dl2Date}, thông tin chi tiết như sau:\n\nSTT\tMã nhân viên\tHọ tên\tPhòng ban\tEmail Công ty\tLần kiểm tra\tUsername\tPassword\tĐiểm\tKết quả\n\n(Dán danh sách từ file vào đây)\n\nVậy là hoàn thiện tháng ${m}, sau đó nộp báo cáo.`;
+        }
+
+        // Bắn API với Fix CORS text/plain
+        function submitFinal(event) {
+            if(event) event.preventDefault();
+
+            const GOOGLE_API_URL = localStorage.getItem('kv_api_url');
+            if(!GOOGLE_API_URL) { alert('CHƯA CÀI ĐẶT LINK API! Vui lòng quay lại Hub -> Cài đặt để dán Link API.'); return; }
+
+            const payload = {
+                timestamp: new Date().getTime(),
+                groupName: 'TAX',
+                courseId: document.getElementById('db-code').value.trim().toUpperCase(),
+                month: parseInt(document.getElementById('conf-month').value || 1),
+                status: document.getElementById('status').value,
+                startDate: document.getElementById('start').value,
+                finishDate: document.getElementById('finish').value,
+                totalTrainees: document.getElementById('totalTrainees').value || "0",
+                passedTrainees: document.getElementById('passedTrainees').value || "0",
+                failedTrainees: document.getElementById('failedTrainees').value || "0",
+                listLink: document.getElementById('listLink').value || '',
+                quizLink: document.getElementById('quizLink').value || ''
+            };
+
+            const btn = document.getElementById('btnSubmit');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang đồng bộ...';
+            btn.classList.add('opacity-70', 'pointer-events-none');
+
+            // Lưu Local Storage
+            let db =[];
+            try { const storedDb = localStorage.getItem('kv_master_db'); if(storedDb) db = JSON.parse(storedDb); } catch (e) { db =[]; }
+            const existIdx = db.findIndex(item => item.courseId === payload.courseId);
+            if(existIdx >= 0) db[existIdx] = {...db[existIdx], ...payload}; else db.push(payload);
+            localStorage.setItem('kv_master_db', JSON.stringify(db));
+
+            // Bắn API (Content-Type: text/plain để né lỗi CORS của GAS)
+            fetch(GOOGLE_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            }).then(r => r.json()).then(data => {
+                if(data.status === "success") {
+                    btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Nộp Báo Cáo Lên API';
+                    btn.classList.remove('opacity-70', 'pointer-events-none');
+                    document.getElementById('successModal').classList.add('active');
+                } else throw new Error(data.message || "Lỗi Server");
+            }).catch(error => {
+                alert("Đã lưu Cục Bộ. Tuy nhiên có lỗi đẩy lên Google Sheets. Hãy kiểm tra lại link API. Lỗi: " + error);
+                btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Nộp Báo Cáo Lên API';
+                btn.classList.remove('opacity-70', 'pointer-events-none');
+            });
+        }
+
+        function closeSuccess() { document.getElementById('successModal').classList.remove('active'); }
+        window.onload = () => updateTemplates();
+        function copyToClipboard(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+        const icon = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check text-emerald-500"></i>';
+        setTimeout(() => { btn.innerHTML = icon; }, 1500);
+    });
+}
+    </script>
+</body>
+</html>
