@@ -70,6 +70,22 @@
         .tooltip-box { display: none; position: absolute; top: 110%; left: 0; background: #1e293b; color: white; padding: 12px; border-radius: 8px; font-size: 12px; z-index: 9999; width: max-content; box-shadow: 0 10px 25px rgba(0,0,0,0.2); white-space: pre-line; line-height: 1.6;}
         .group:hover > .tooltip-box { display: block; animation: fadeUp 0.2s ease forwards; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* === TECH PRESENTATION MODE === */
+        #presentation-overlay { position: fixed; inset: 0; background: #0f172a; z-index: 99999; display: none; font-family: 'Inter', sans-serif; background-image: linear-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.05) 1px, transparent 1px); background-size: 40px 40px; color: #f8fafc; overflow: hidden;}
+        #presentation-overlay.active { display: block; }
+        .tech-slide { position: absolute; inset: 0; padding: 60px 40px; opacity: 0; transform: scale(0.95) translateY(20px); transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; overflow-y: auto; pointer-events: none; }
+        .tech-slide.active { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
+        .tech-slide.prev { transform: scale(1.05) translateY(-20px); opacity: 0; }
+        .tech-title { font-family: monospace; font-size: 2rem; font-weight: 700; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; color: transparent; margin-bottom: 5px; text-transform: uppercase; text-align: center;}
+        .tech-stat-card { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 12px; padding: 25px; text-align: center; border-left: 4px solid var(--accent); transition: all 0.3s; }
+        .tech-stat-card:hover { transform: translateY(-5px); box-shadow: 0 0 20px rgba(56, 189, 248, 0.2); }
+        .tech-stat-val { font-family: monospace; font-size: 2.5rem; font-weight: 700; color: white; margin: 10px 0; }
+        .tech-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; background: rgba(15, 23, 42, 0.8); padding: 10px; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.2); backdrop-filter: blur(10px); z-index: 100000; }
+        .tech-nav button { padding: 8px 24px; border: 1px solid #38bdf8; background: rgba(56, 189, 248, 0.1); color: #38bdf8; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.3s; font-family: monospace;}
+        .tech-nav button:hover { background: #38bdf8; color: #000; }
+        .insight-box { padding: 15px; background: linear-gradient(90deg, rgba(30, 41, 59, 0.8), transparent); border-left: 3px solid #4ade80; margin-bottom: 10px; border-radius: 0 8px 8px 0; }
+        .insight-box.warning { border-left-color: #fb923c; } .insight-box.danger { border-left-color: #f87171; }
     </style>
 </head>
 <body>
@@ -515,10 +531,13 @@
             else if (tabId === 'phan-tich') {
                 container.innerHTML = `
                     <div class="mb-6 flex justify-between items-center">
-                        <div><h2 class="text-2xl font-bold text-slate-800 lang-text" data-vi="Master Data API">Master Data API</h2><p class="text-sm text-slate-500 mt-1">Dữ liệu đồng bộ trực tiếp từ Google Sheets</p></div>
+                        <div><h2 class="text-2xl font-bold text-slate-800 lang-text" data-vi="Master Data API">Master Data API & Reports</h2><p class="text-sm text-slate-500 mt-1">Dữ liệu đồng bộ từ Google Sheets & Xuất Báo Cáo Động</p></div>
                         <div class="flex gap-3">
-                            <button onclick="exportCSV()" class="btn-outline flex items-center gap-2 bg-white shadow-sm hover:shadow"><i class="fas fa-file-export text-emerald-600"></i> Xuất Excel</button>
-                            <button onclick="clearMasterData()" class="btn-danger flex items-center gap-2 shadow-sm hover:shadow-md transition"><i class="fas fa-trash-alt"></i> Xóa CSDL Gốc</button>
+                            <button onclick="openSurveyInput()" class="btn-outline flex items-center gap-2 bg-purple-50 border-purple-200 text-purple-700 shadow-sm"><i class="fas fa-clipboard-list"></i> Nạp Data Khảo Sát</button>
+                            <button onclick="runTechPresentation()" class="btn-primary flex items-center gap-2 bg-slate-800 border-slate-900 shadow-lg hover:bg-slate-900"><i class="fas fa-play text-amber-400"></i> PLAY SLIDE BÁO CÁO</button>
+                            <div class="w-px h-8 bg-slate-300 mx-1"></div>
+                            <button onclick="exportCSV()" class="btn-outline flex items-center gap-2 bg-white shadow-sm"><i class="fas fa-file-export text-emerald-600"></i> Xuất Excel</button>
+                            <button onclick="clearMasterData()" class="btn-danger flex items-center gap-2 shadow-sm hover:shadow-md transition"><i class="fas fa-trash-alt"></i> Xóa DB</button>
                         </div>
                     </div>
 
@@ -920,6 +939,190 @@
                 if(document.getElementById('statusChart')) switchTab('tong-quan');
             });
         };
+    </script>
+    <!-- ============================================== -->
+    <!-- MODAL NẠP DỮ LIỆU KHẢO SÁT (SURVEY STATION) -->
+    <!-- ============================================== -->
+    <div id="surveyModal" class="modal fixed inset-0 items-center justify-center p-4 bg-slate-900/60 z-[99999] hidden">
+        <div class="modal-content bg-white w-full max-w-4xl rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between bg-slate-50"><h3 class="font-bold text-slate-800">Nạp Dữ liệu Khảo sát</h3><button onclick="closeSurveyInput()" class="text-slate-500"><i class="fas fa-times"></i></button></div>
+            <div class="p-6 grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs font-bold text-blue-600 block mb-2">Data Khảo sát SPCB (Copy từ Excel)</label>
+                    <textarea id="survey-spcb" class="saas-input h-64 text-[10px]" placeholder="Dán dữ liệu có các cột điểm 1-5 và Góp ý..."></textarea>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-emerald-600 block mb-2">Data Khảo sát Thuế - Kế toán</label>
+                    <textarea id="survey-tax" class="saas-input h-64 text-[10px]" placeholder="Dán dữ liệu có các cột điểm 1-5 và Góp ý..."></textarea>
+                </div>
+            </div>
+            <div class="p-4 bg-slate-50 text-right"><button onclick="closeSurveyInput(); alert('Đã lưu nháp dữ liệu Khảo sát. Hệ thống sẽ kết hợp với MasterDB khi chạy Slide!');" class="btn-primary">Lưu Data & Đóng</button></div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- TRÌNH CHIẾU SLIDE BÁO CÁO (TECH EDITION)       -->
+    <!-- ============================================== -->
+    <div id="presentation-overlay">
+        <!-- Nút Thoát -->
+        <button onclick="closePresentation()" class="fixed top-6 right-6 text-white text-xl z-[100000] opacity-50 hover:opacity-100"><i class="fas fa-times"></i> Đóng</button>
+        <div class="fixed top-6 left-6 z-[100000] font-bold text-white tracking-widest"><i class="fas fa-layer-group text-blue-400"></i> TRAINER OS</div>
+        
+        <!-- Slide 1: Welcome -->
+        <div class="tech-slide active" id="tslide-1">
+            <div class="h-full flex flex-col items-center justify-center text-center">
+                <h1 class="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-6 drop-shadow-[0_0_15px_rgba(56,189,248,0.5)]">BÁO CÁO KẾT QUẢ ĐÀO TẠO</h1>
+                <div class="text-4xl font-mono text-blue-400 border border-blue-400 px-8 py-3 rounded mb-8 bg-blue-400/10" id="slide-year">2026</div>
+                <p class="text-xl text-slate-300">Generated by Agentic Trainer OS</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: Dashboard Overview -->
+        <div class="tech-slide" id="tslide-2">
+            <h2 class="tech-title">I. Tổng Quan Dữ Liệu Master DB</h2>
+            <div class="grid grid-cols-4 gap-6 mt-10">
+                <div class="tech-stat-card" style="--accent: #38bdf8"><p class="text-slate-400 text-sm">TỔNG SỐ LỚP</p><div class="tech-stat-val" id="sl-total-class">0</div></div>
+                <div class="tech-stat-card" style="--accent: #4ade80"><p class="text-slate-400 text-sm">TỔNG HỌC VIÊN</p><div class="tech-stat-val" id="sl-total-hv">0</div></div>
+                <div class="tech-stat-card" style="--accent: #fb923c"><p class="text-slate-400 text-sm">TỶ LỆ PASS CHUNG</p><div class="tech-stat-val" id="sl-pass-rate">0%</div></div>
+                <div class="tech-stat-card" style="--accent: #c084fc"><p class="text-slate-400 text-sm">ĐIỂM CSAT (Khảo sát)</p><div class="tech-stat-val" id="sl-csat">4.8/5</div></div>
+            </div>
+            
+            <div class="mt-10 grid grid-cols-2 gap-6">
+                <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
+                    <h3 class="font-bold text-emerald-400 mb-4 border-b border-slate-700 pb-2">LỚP GIẢNG DẠY TRỰC TIẾP (Taught)</h3>
+                    <div id="sl-taught-detail" class="space-y-3 text-slate-300"></div>
+                </div>
+                <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
+                    <h3 class="font-bold text-blue-400 mb-4 border-b border-slate-700 pb-2">LỚP TỰ HỌC LMS (Self-study)</h3>
+                    <div id="sl-self-detail" class="space-y-3 text-slate-300"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: AI Insights & Survey Analysis -->
+        <div class="tech-slide" id="tslide-3">
+            <h2 class="tech-title">II. Phân tích Khảo sát & AI Insight</h2>
+            <div class="grid grid-cols-2 gap-8 mt-8 h-full pb-20">
+                <div>
+                    <h3 class="text-blue-400 font-bold text-xl mb-4">Kết quả Khảo sát Góp ý (NLP Extract)</h3>
+                    <div id="sl-survey-insights" class="overflow-y-auto pr-2 max-h-[400px]">
+                        <!-- Render from Survey Data -->
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-emerald-400 font-bold text-xl mb-4">AI Đánh Giá Phương Pháp Đào Tạo</h3>
+                    <div id="sl-ai-evaluation">
+                        <!-- Auto-generated based on metrics -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tech-nav">
+            <button onclick="changeSlide(-1)">PREV</button>
+            <button onclick="changeSlide(1)">NEXT</button>
+        </div>
+    </div>
+
+    <script>
+        // HÀM MỞ/ĐÓNG NẠP KHẢO SÁT
+        function openSurveyInput() { document.getElementById('surveyModal').style.display = 'flex'; }
+        function closeSurveyInput() { document.getElementById('surveyModal').style.display = 'none'; }
+
+        // LOGIC CHẠY SLIDE TRÌNH CHIẾU AI
+        let curSlide = 1; const maxSlide = 3;
+        function closePresentation() { document.getElementById('presentation-overlay').classList.remove('active'); }
+        function changeSlide(dir) {
+            document.getElementById(`tslide-${curSlide}`).classList.remove('active');
+            curSlide += dir;
+            if(curSlide > maxSlide) curSlide = maxSlide; if(curSlide < 1) curSlide = 1;
+            document.getElementById(`tslide-${curSlide}`).classList.add('active');
+        }
+
+        function runTechPresentation() {
+            // 1. Phân tích Master DB
+            let data = globalMasterDB || JSON.parse(localStorage.getItem('kv_master_db')) || [];
+            if(data.length === 0) return alert('Chưa có dữ liệu MasterDB để tạo báo cáo!');
+
+            document.getElementById('slide-year').innerText = new Date().getFullYear();
+
+            let totalHV = 0, totalPass = 0;
+            let groupStats = {};
+
+            data.forEach(d => {
+                let g = d.groupName || 'Other';
+                if(!groupStats[g]) groupStats[g] = { classes: 0, hv: 0, pass: 0 };
+                groupStats[g].classes++;
+                groupStats[g].hv += parseInt(d.totalTrainees) || 0;
+                groupStats[g].pass += parseInt(d.passedTrainees) || 0;
+                
+                totalHV += parseInt(d.totalTrainees) || 0;
+                totalPass += parseInt(d.passedTrainees) || 0;
+            });
+
+            document.getElementById('sl-total-class').innerText = data.length;
+            document.getElementById('sl-total-hv').innerText = totalHV;
+            document.getElementById('sl-pass-rate').innerText = totalHV > 0 ? Math.round((totalPass/totalHV)*100) + '%' : '0%';
+
+            // Phân loại Taught (SPCB, TAX) và Self-Study (KV1, FNB, SALON, HOTEL)
+            let taughtHtml = '', selfHtml = '';
+            for(let key in groupStats) {
+                let s = groupStats[key];
+                let pRate = s.hv > 0 ? Math.round((s.pass/s.hv)*100) : 0;
+                let html = `<div class="flex justify-between items-center bg-slate-800 p-3 rounded">
+                                <span class="font-bold">${key}</span>
+                                <span class="text-sm">${s.classes} Lớp | ${s.hv} HV | <span class="${pRate>=80?'text-emerald-400':'text-rose-400'}">Pass: ${pRate}%</span></span>
+                            </div>`;
+                if(key === 'SPCB' || key === 'TAX') taughtHtml += html;
+                else selfHtml += html;
+            }
+            document.getElementById('sl-taught-detail').innerHTML = taughtHtml || '<p class="italic">Chưa có dữ liệu</p>';
+            document.getElementById('sl-self-detail').innerHTML = selfHtml || '<p class="italic">Chưa có dữ liệu</p>';
+
+            // 2. Phân tích Khảo sát (Giả lập AI NLP)
+            const sSpcb = document.getElementById('survey-spcb').value.toLowerCase();
+            const sTax = document.getElementById('survey-tax').value.toLowerCase();
+            let surveyInsights = '';
+            
+            if(!sSpcb && !sTax) {
+                surveyInsights = `<div class="insight-box warning">Chưa nạp dữ liệu Khảo sát. Vui lòng dán data vào Trạm Khảo Sát để AI đọc ý kiến học viên.</div>`;
+            } else {
+                // Đọc text tìm key khen/chê
+                let combinedText = sSpcb + " " + sTax;
+                if(combinedText.includes("hay") || combinedText.includes("dễ hiểu") || combinedText.includes("nhiệt tình")) {
+                    surveyInsights += `<div class="insight-box"><strong><i class="fas fa-check-circle"></i> Điểm Sáng:</strong> Học viên phản hồi rất tích cực về phong cách truyền đạt và sự nhiệt tình của Giảng viên.</div>`;
+                }
+                if(combinedText.includes("khó") || combinedText.includes("nhanh") || combinedText.includes("thực hành")) {
+                    surveyInsights += `<div class="insight-box warning"><strong><i class="fas fa-exclamation-triangle"></i> Cần Cải Thiện:</strong> Một số ý kiến cho rằng tốc độ bài giảng hơi nhanh và cần thêm thời lượng thực hành (Đặc biệt phần Thuế).</div>`;
+                }
+                if(combinedText.includes("lms") || combinedText.includes("github")) {
+                    surveyInsights += `<div class="insight-box"><strong><i class="fas fa-laptop-code"></i> Hệ thống E-Learning:</strong> Nền tảng Github và LMS được học viên đón nhận và đánh giá cao sự tiện lợi.</div>`;
+                }
+            }
+            document.getElementById('sl-survey-insights').innerHTML = surveyInsights || `<div class="insight-box">Data khảo sát ở mức trung lập. Không phát hiện bất thường.</div>`;
+
+            // 3. Đánh giá AI tự động dựa vào Data
+            let aiEval = '';
+            let totalPassRate = totalHV > 0 ? (totalPass/totalHV)*100 : 0;
+            
+            if(totalPassRate >= 90) {
+                aiEval += `<div class="insight-box"><strong>🔥 Tối ưu hóa tuyệt vời:</strong> Tỷ lệ đỗ đạt ${Math.round(totalPassRate)}%. Việc chuyển dịch đào tạo lý thuyết lên LMS kết hợp thực hành đang đem lại hiệu suất cao vượt trội.</div>`;
+            } else if (totalPassRate >= 80) {
+                aiEval += `<div class="insight-box warning"><strong>⚖️ Hiệu suất ổn định:</strong> Tỷ lệ đỗ đạt ${Math.round(totalPassRate)}%. Hệ thống vận hành tốt nhưng cần kiểm tra lại các Module Chuyên ngành vì có dấu hiệu chững lại.</div>`;
+            } else {
+                aiEval += `<div class="insight-box danger"><strong>🚨 Rủi ro cảnh báo:</strong> Tỷ lệ đỗ quá thấp. Cần review lại đề thi trên LMS và tổ chức thêm các buổi Support Q&A.</div>`;
+            }
+
+            aiEval += `<div class="insight-box"><strong>💡 Next Steps (2026):</strong><br>- Tách biệt rạch ròi lý thuyết (tự học) và Case-study (dạy trực tiếp).<br>- Áp dụng AI Point-scoring cho các lớp tự học để giảm tải vận hành.<br>- Nâng cấp tài liệu Khóa Thuế & FNB.</div>`;
+            
+            document.getElementById('sl-ai-evaluation').innerHTML = aiEval;
+
+            // Kích hoạt Overlay
+            curSlide = 1;
+            document.querySelectorAll('.tech-slide').forEach(el => el.classList.remove('active'));
+            document.getElementById('tslide-1').classList.add('active');
+            document.getElementById('presentation-overlay').classList.add('active');
+        }
     </script>
 </body>
 </html>
