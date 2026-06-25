@@ -75,7 +75,7 @@
 <body>
 
     <div class="flex h-screen">
-        <!-- SIDEBAR CHÍNH - ĐÃ KHÔI PHỤC FULL MENU GỐC -->
+        <!-- SIDEBAR CHÍNH -->
         <aside id="sidebar" class="sidebar-saas w-64 flex flex-col z-50 shrink-0 border-r border-slate-200">
             <div class="h-16 flex items-center px-6 border-b border-slate-100 shrink-0">
                 <div class="w-6 h-6 bg-purple-600 rounded flex items-center justify-center text-white text-[10px] mr-3"><i class="fas fa-layer-group"></i></div>
@@ -336,22 +336,33 @@
         </div>
     </div>
 
-    <!-- 4. MODAL THÙNG RÁC LÝ DO XÓA -->
+    <!-- 4. MODAL THÙNG RÁC CÓ CHECKBOX MULTI-SELECT -->
     <div id="trashVaultModal" class="modal fixed inset-0 items-center justify-center p-4">
-        <div class="modal-content w-full max-w-4xl h-[75vh] flex flex-col border border-rose-200 shadow-2xl">
+        <div class="modal-content w-full max-w-5xl h-[85vh] flex flex-col border border-rose-200 shadow-2xl">
             <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-rose-50 rounded-t-2xl shrink-0">
                 <h3 class="text-lg font-bold text-rose-700"><i class="fas fa-trash-alt mr-2"></i> Thùng Rác Vault (Lịch sử Xóa)</h3>
                 <button onclick="closeModal('trashVaultModal')" class="text-slate-400 hover:text-rose-700 w-8 h-8 bg-white rounded flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
+            
+            <!-- Toolbar Thùng rác -->
+            <div class="px-6 py-3 bg-white border-b border-slate-100 flex justify-between items-center shrink-0">
+                <div class="text-sm font-medium text-slate-600">Đã chọn: <span id="trashSelectedCount" class="font-bold text-rose-600 text-lg">0</span> tài nguyên</div>
+                <div class="flex gap-2">
+                    <button onclick="restoreSelectedTrash()" class="btn-outline text-emerald-600 border-emerald-200 hover:bg-emerald-50 text-xs px-4 py-2"><i class="fas fa-undo mr-1"></i> Khôi phục đã chọn</button>
+                    <button onclick="deleteSelectedTrashPermanently()" class="btn-primary bg-rose-600 border-rose-700 hover:bg-rose-700 text-xs px-4 py-2 shadow-md"><i class="fas fa-radiation mr-1"></i> Xóa vĩnh viễn đã chọn</button>
+                </div>
+            </div>
+
             <div class="flex-grow overflow-y-auto custom-scrollbar p-6 bg-slate-50/50">
                 <table class="v-table bg-white rounded-lg overflow-hidden shadow-sm">
                     <thead>
                         <tr>
-                            <th class="w-10">Icon</th>
+                            <th class="w-10 text-center"><input type="checkbox" id="masterTrashCheckbox" onchange="toggleSelectAllTrash(this)" class="accent-rose-500 cursor-pointer w-3.5 h-3.5"></th>
+                            <th class="w-10 text-center">Icon</th>
                             <th>Tên Tài Nguyên Đã Xóa</th>
                             <th>Lý do xóa</th>
                             <th class="w-32 text-center">Ngày xóa</th>
-                            <th class="w-24 text-center">Khôi phục</th>
+                            <th class="w-32 text-center">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="trashVaultBody" class="divide-y divide-slate-100">
@@ -370,6 +381,8 @@
         let vaultTrash = [];
         let currentFolderId = null;
         let isViewingPinnedOnly = false; 
+        
+        let selectedTrashItems = new Set(); // State cho Checkbox Thùng rác
 
         const ICONS_LIST = [
             'fa-folder', 'fa-folder-open', 'fa-book', 'fa-file-alt', 'fa-laptop', 
@@ -549,7 +562,6 @@
             return html;
         }
 
-        // Logic Mũi tên Lên/Xuống an toàn cho Folder
         function moveFolder(folderId, direction, event) {
             event.stopPropagation();
             const folder = vaultFolders.find(f => f.id === folderId);
@@ -950,7 +962,6 @@
 
         // --- 9. KÉO THẢ (DRAG & DROP) ---
         
-        // A. Kéo Item sang Thư mục bên trái
         let draggedItemId = null;
         function handleItemDragStart(e, id) {
             draggedItemId = id;
@@ -988,11 +999,10 @@
             }
         }
 
-        // B. Kéo Item để đổi vị trí (Reorder List)
         let dragSrcRowId = null;
         function handleRowDragStart(e, id) {
             dragSrcRowId = id;
-            draggedItemId = id; // Vẫn giữ để có thể thả sang folder
+            draggedItemId = id; 
             e.dataTransfer.effectAllowed = 'move';
             e.target.classList.add('dragging');
         }
@@ -1010,7 +1020,6 @@
                 const srcItem = vaultItems.find(x => x.id === dragSrcRowId);
                 const tgtItem = vaultItems.find(x => x.id === targetId);
                 if(srcItem && tgtItem && srcItem.folderId === tgtItem.folderId && !isViewingPinnedOnly && !document.getElementById('globalSearchInput').value) {
-                    // Swap order
                     const temp = srcItem.order;
                     srcItem.order = tgtItem.order;
                     tgtItem.order = temp;
@@ -1025,8 +1034,13 @@
             dragSrcRowId = null; draggedItemId = null;
         }
 
-        // --- 10. THÙNG RÁC (TRASH BIN) ---
+        // --- 10. THÙNG RÁC (TRASH BIN) VỚI BULK ACTIONS ---
         function openTrashModal() {
+            selectedTrashItems.clear(); // Reset chọn khi mở thùng rác
+            const masterCb = document.getElementById('masterTrashCheckbox');
+            if(masterCb) masterCb.checked = false;
+            updateTrashActionButtons();
+            
             renderTrashTable();
             document.getElementById('trashVaultModal').classList.add('active');
         }
@@ -1036,7 +1050,7 @@
             tbody.innerHTML = '';
             
             if(vaultTrash.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-slate-400 italic">Thùng rác trống.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-slate-400 italic">Thùng rác trống.</td></tr>`;
                 return;
             }
 
@@ -1046,8 +1060,11 @@
                 else if(item.type === 'file') typeIcon = 'fa-file-alt text-emerald-400 bg-emerald-50';
                 else typeIcon = 'fa-align-left text-purple-400 bg-purple-50';
 
+                const isChecked = selectedTrashItems.has(item.id) ? 'checked' : '';
+
                 tbody.innerHTML += `
                     <tr class="hover:bg-rose-50/50 transition border-b border-slate-100">
+                        <td class="text-center"><input type="checkbox" value="${item.id}" class="trash-cb accent-rose-500 cursor-pointer w-3.5 h-3.5" onchange="updateSelectedTrash(this)" ${isChecked}></td>
                         <td class="text-center"><div class="w-8 h-8 rounded flex items-center justify-center border border-slate-100 ${typeIcon}"><i class="fas ${typeIcon.split(' ')[0]} text-xs"></i></div></td>
                         <td>
                             <p class="font-bold text-slate-800 text-[13px]">${item.title}</p>
@@ -1056,26 +1073,104 @@
                         <td class="text-[11px] font-medium text-rose-600 bg-rose-50/50 rounded p-2 italic">"${item.deleteReason}"</td>
                         <td class="text-center text-[11px] text-slate-500 font-mono">${formatDate(item.deletedAt)}</td>
                         <td class="text-center">
-                            <button onclick="restoreVaultItem('${item.id}')" class="text-[11px] font-bold text-emerald-600 bg-white border border-emerald-200 px-3 py-1.5 rounded hover:bg-emerald-50 transition shadow-sm"><i class="fas fa-undo mr-1"></i> Undo</button>
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="restoreVaultItem('${item.id}')" title="Khôi phục" class="w-7 h-7 flex items-center justify-center text-[11px] font-bold text-emerald-600 bg-white border border-emerald-200 rounded hover:bg-emerald-50 transition shadow-sm"><i class="fas fa-undo"></i></button>
+                                <button onclick="deleteVaultItemPermanently('${item.id}')" title="Xóa vĩnh viễn" class="w-7 h-7 flex items-center justify-center text-[11px] font-bold text-rose-600 bg-white border border-rose-200 rounded hover:bg-rose-50 transition shadow-sm"><i class="fas fa-trash-alt"></i></button>
+                            </div>
                         </td>
                     </tr>
                 `;
             });
+            updateTrashActionButtons();
         }
 
+        // Checkbox Logic Thùng Rác
+        function toggleSelectAllTrash(m) {
+            document.querySelectorAll('.trash-cb').forEach(cb => { 
+                cb.checked = m.checked; 
+                if(cb.checked) selectedTrashItems.add(cb.value);
+                else selectedTrashItems.delete(cb.value);
+            });
+            updateTrashActionButtons();
+        }
+
+        function updateSelectedTrash(cb) {
+            if(cb.checked) selectedTrashItems.add(cb.value);
+            else selectedTrashItems.delete(cb.value);
+            
+            const masterCb = document.getElementById('masterTrashCheckbox');
+            if(masterCb) masterCb.checked = (selectedTrashItems.size > 0 && selectedTrashItems.size === vaultTrash.length);
+            updateTrashActionButtons();
+        }
+
+        function updateTrashActionButtons() {
+            const countEl = document.getElementById('trashSelectedCount');
+            if(countEl) countEl.innerText = selectedTrashItems.size;
+        }
+
+        // Action Cá nhân
         function restoreVaultItem(id) {
             const itemIndex = vaultTrash.findIndex(x => x.id === id);
             if(itemIndex > -1) {
                 const item = vaultTrash.splice(itemIndex, 1)[0];
-                delete item.deletedAt;
-                delete item.deleteReason;
+                delete item.deletedAt; delete item.deleteReason;
                 vaultItems.push(item);
                 
-                saveData();
-                renderTrashTable();
-                renderTree();
-                if(item.folderId === currentFolderId && !isViewingPinnedOnly) renderResourceList();
+                selectedTrashItems.delete(id); // Bỏ khỏi select set
+                saveData(); renderTrashTable(); renderTree();
+                if(item.folderId === currentFolderId && !isViewingPinnedOnly) renderResourceList(document.getElementById('globalSearchInput').value);
                 showToast("Khôi phục tài nguyên thành công!");
+            }
+        }
+
+        function deleteVaultItemPermanently(id) {
+            if(confirm("XÓA VĨNH VIỄN: Bạn có chắc chắn muốn xóa tài nguyên này khỏi hệ thống? (Không thể khôi phục)")) {
+                vaultTrash = vaultTrash.filter(x => x.id !== id);
+                selectedTrashItems.delete(id);
+                saveData(); renderTrashTable();
+                showToast("Đã xóa vĩnh viễn tài nguyên!");
+            }
+        }
+
+        // Action Hàng loạt (Bulk Actions)
+        function restoreSelectedTrash() {
+            if(selectedTrashItems.size === 0) return alert("Vui lòng tích chọn ít nhất 1 tài nguyên để khôi phục!");
+            
+            const idsToRestore = Array.from(selectedTrashItems);
+            let restoredCount = 0;
+            
+            idsToRestore.forEach(id => {
+                const itemIndex = vaultTrash.findIndex(x => x.id === id);
+                if(itemIndex > -1) {
+                    const item = vaultTrash.splice(itemIndex, 1)[0];
+                    delete item.deletedAt; delete item.deleteReason;
+                    vaultItems.push(item);
+                    restoredCount++;
+                }
+            });
+            
+            selectedTrashItems.clear();
+            const masterCb = document.getElementById('masterTrashCheckbox');
+            if(masterCb) masterCb.checked = false;
+
+            saveData(); renderTrashTable(); renderTree();
+            renderResourceList(document.getElementById('globalSearchInput').value);
+            showToast(`Đã khôi phục ${restoredCount} tài nguyên thành công!`);
+        }
+
+        function deleteSelectedTrashPermanently() {
+            if(selectedTrashItems.size === 0) return alert("Vui lòng tích chọn ít nhất 1 tài nguyên để xóa vĩnh viễn!");
+            
+            if(confirm(`CẢNH BÁO BẢO MẬT: Xóa vĩnh viễn ${selectedTrashItems.size} tài nguyên đã chọn? Hành động này sẽ làm sạch bộ nhớ và không thể khôi phục.`)) {
+                const idsToDelete = Array.from(selectedTrashItems);
+                vaultTrash = vaultTrash.filter(x => !idsToDelete.includes(x.id));
+                
+                selectedTrashItems.clear();
+                const masterCb = document.getElementById('masterTrashCheckbox');
+                if(masterCb) masterCb.checked = false;
+
+                saveData(); renderTrashTable();
+                showToast(`Đã dọn sạch ${idsToDelete.length} tài nguyên khỏi Thùng rác!`);
             }
         }
 
