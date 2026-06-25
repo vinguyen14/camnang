@@ -60,6 +60,13 @@
         .widget-panel { position: fixed; bottom: 80px; right: 30px; width: 340px; height: 450px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; z-index: 1000; transform: translateY(10px); opacity: 0; pointer-events: none; transition: all 0.2s; display: flex; flex-direction: column; overflow: hidden; }
         .widget-panel.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
         .floating-tool { bottom: 20px; right: 30px; z-index: 100; }
+        
+        /* VAULT SPECIFIC STYLES */
+        .vault-cat-item { padding: 10px 16px; font-size: 13px; font-weight: 600; color: #475569; cursor: pointer; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; margin-bottom: 4px; }
+        .vault-cat-item:hover { background: #f1f5f9; color: #1e293b; }
+        .vault-cat-item.active { background: #eff6ff; color: #2563eb; }
+        .vault-resource-card { padding: 16px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; transition: all 0.2s; display: flex; flex-direction: column; gap: 8px; }
+        .vault-resource-card:hover { border-color: #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
@@ -143,6 +150,13 @@
                 </div>
                 
                 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6" id="toolsGrid">
+                    <!-- TOOL 7: KNOWLEDGE VAULT (MỚI) -->
+                    <div onclick="openModal('vaultModal'); renderVaultCategories();" class="tool-card group border-purple-200 shadow-sm bg-purple-50/30">
+                        <div class="tool-icon-box bg-purple-100 text-purple-600 shadow-inner"><i class="fas fa-box-open"></i></div>
+                        <h4 class="font-bold text-[14px] text-purple-900">Kho Lưu Trữ</h4>
+                        <p class="text-[10px] text-purple-600 mt-1">Links, Prompts AI...</p>
+                    </div>
+
                     <div onclick="openModal('hrmFilterModal')" class="tool-card group">
                         <div class="tool-icon-box bg-blue-50 text-blue-500"><i class="fas fa-pen"></i></div>
                         <h4 class="font-semibold text-[14px] text-slate-800">Lọc Data HRM</h4>
@@ -209,6 +223,74 @@
     <!-- MODALS CÔNG CỤ -->
     <!-- ========================================================= -->
 
+    <!-- MỚI: 0. TOOL KHO LƯU TRỮ (KNOWLEDGE VAULT) -->
+    <div id="vaultModal" class="modal fixed inset-0 items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-6xl h-[90vh] flex flex-col relative overflow-hidden shadow-2xl">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-purple-50 shrink-0">
+                <div>
+                    <h3 class="text-lg font-bold text-purple-800"><i class="fas fa-box-open mr-2"></i> Kho Lưu Trữ Cá Nhân (Second Brain)</h3>
+                    <p class="text-xs text-purple-600 mt-0.5">Ghi nhớ mọi Links, Biểu mẫu, Prompts AI, Danh sách để truy cập nhanh chóng.</p>
+                </div>
+                <button onclick="closeModal('vaultModal')" class="text-purple-400 hover:text-purple-700 w-8 h-8 bg-white rounded-full border border-purple-200 shadow-sm flex items-center justify-center transition"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="flex-grow flex bg-slate-50 overflow-hidden">
+                <!-- Cột trái: Nhóm thư mục -->
+                <div class="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0">
+                    <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Danh mục</span>
+                        <button onclick="addVaultCategory()" class="text-blue-600 hover:text-blue-800 text-xs font-bold"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <div id="vaultCategoryList" class="flex-grow overflow-y-auto custom-scrollbar p-3 space-y-1">
+                        <!-- Render Categories Here -->
+                    </div>
+                </div>
+
+                <!-- Cột phải: Nội dung tài nguyên -->
+                <div class="flex-grow flex flex-col overflow-hidden relative bg-slate-50/50">
+                    <!-- Toolbar bên phải -->
+                    <div class="p-4 border-b border-slate-200 bg-white flex justify-between items-center shrink-0">
+                        <div class="relative w-80">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="vaultSearchInput" oninput="searchVaultItems(this.value)" placeholder="Tìm kiếm trong nhóm này..." class="saas-input pl-9 bg-slate-50">
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="toggleVaultItemForm()" class="btn-primary bg-purple-600 border-purple-700 hover:bg-purple-700 shadow-sm"><i class="fas fa-plus mr-1"></i> Thêm Tài nguyên</button>
+                        </div>
+                    </div>
+
+                    <!-- Form Thêm Tài nguyên (Ẩn mặc định) -->
+                    <div id="vaultAddItemForm" class="hidden bg-purple-50 p-5 border-b border-purple-100 shrink-0">
+                        <h4 class="text-sm font-bold text-purple-800 mb-3"><i class="fas fa-magic mr-1"></i> Lưu trữ mới</h4>
+                        <div class="grid grid-cols-4 gap-4 mb-4">
+                            <div class="col-span-2"><label class="form-label">Tên gọi / Tiêu đề</label><input type="text" id="vItemTitle" class="saas-input" placeholder="VD: Prompt tạo câu hỏi trắc nghiệm"></div>
+                            <div class="col-span-1">
+                                <label class="form-label">Loại Dữ liệu</label>
+                                <select id="vItemType" class="saas-input font-bold text-purple-700">
+                                    <option value="link">Đường Link (URL)</option>
+                                    <option value="text">Đoạn Text / Prompt AI</option>
+                                </select>
+                            </div>
+                            <div class="col-span-1 flex items-end">
+                                <button onclick="saveVaultItem()" class="btn-primary w-full py-2.5 bg-slate-800 border-slate-900 hover:bg-slate-900"><i class="fas fa-save mr-1"></i> Lưu lại</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="form-label">Nội dung (Link Hoặc Text/Prompt)</label><textarea id="vItemContent" class="saas-input h-24 resize-none font-mono text-[12px] text-blue-700 whitespace-pre custom-scrollbar" placeholder="Dán nội dung vào đây..."></textarea></div>
+                            <div><label class="form-label">Ghi chú thêm (Tùy chọn)</label><textarea id="vItemNote" class="saas-input h-24 resize-none text-[12px] custom-scrollbar" placeholder="Dùng cho mục đích gì? Khi nào cần dùng?..."></textarea></div>
+                        </div>
+                    </div>
+
+                    <!-- Danh sách Item -->
+                    <div id="vaultItemList" class="flex-grow overflow-y-auto custom-scrollbar p-6 grid grid-cols-1 lg:grid-cols-2 gap-4 align-items-start content-start">
+                        <!-- Render Items Here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <!-- 1. TOOL LỌC HRM -->
     <div id="hrmFilterModal" class="modal fixed inset-0 items-center justify-center p-4">
         <div class="modal-content bg-white w-full max-w-6xl h-[90vh] flex flex-col relative overflow-hidden">
@@ -272,7 +354,7 @@
         </div>
     </div>
 
-    <!-- 2. TOOL TRA CỨU NHÂN SỰ & QUẢN LÝ (GOOGLE SHEETS STYLE FILTER) -->
+    <!-- 2. TOOL TRA CỨU NHÂN SỰ & QUẢN LÝ -->
     <div id="emailCopyModal" class="modal fixed inset-0 items-center justify-center p-4">
         <div class="modal-content bg-white w-full max-w-6xl h-[85vh] flex flex-col relative overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
@@ -299,14 +381,14 @@
                     <h4 class="text-xs font-bold text-indigo-700 mb-2 uppercase"><i class="fas fa-file-import mr-1"></i> Import Dữ liệu (Ghi đè DB hiện tại)</h4>
                     <p class="text-[10px] text-indigo-600 mb-3">Vui lòng copy từ Excel theo đúng thứ tự 6 cột: <b>Vai trò | Phòng ban | Vị trí | Họ tên | Email Công ty | Mã nhân viên</b> (Có thể bao gồm dòng Tiêu đề).</p>
                     <div class="flex gap-3 items-end">
-                        <textarea id="importEmpRaw" class="saas-input text-xs font-mono whitespace-pre flex-grow h-20 resize-none" placeholder="Dán data từ Excel vào đây..."></textarea>
+                        <textarea id="importEmpRaw" class="saas-input text-xs font-mono whitespace-pre flex-grow h-20 resize-none custom-scrollbar" placeholder="Dán data từ Excel vào đây..."></textarea>
                         <button onclick="importEmployeeData()" class="btn-primary bg-indigo-600 border-indigo-700 hover:bg-indigo-700 w-32 h-[80px] text-xs font-bold flex flex-col items-center justify-center gap-1 shadow-md"><i class="fas fa-magic text-lg"></i> Xử lý & Lưu</button>
                     </div>
                 </div>
 
                 <!-- TOOLBAR TÌM KIẾM, LỌC & ACTIONS -->
                 <div class="flex gap-4 mb-4 shrink-0 flex-wrap items-center">
-                    <div class="relative min-w-[220px]">
+                    <div class="relative min-w-[180px]">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="emailSearchInput" oninput="filterEmailTable()" placeholder="Tìm Tên, Mã NV, Email..." class="saas-input pl-9 border-slate-300">
                     </div>
@@ -318,9 +400,7 @@
                             <i class="fas fa-caret-down text-slate-400"></i>
                         </button>
                         
-                        <!-- GSheet Style Dropdown Panel -->
                         <div id="gsheetFilterPanel" class="hidden absolute left-0 top-full mt-1 w-[260px] bg-white border border-slate-200 rounded-lg shadow-2xl z-50 flex flex-col font-sans overflow-hidden">
-                            <!-- Search & Quick Links -->
                             <div class="p-3 border-b border-slate-100 bg-slate-50/50">
                                 <div class="flex justify-between items-center text-[11px] font-medium text-emerald-600 mb-3 px-1">
                                     <div>
@@ -333,11 +413,7 @@
                                     <input type="text" id="gsheetSearchInput" oninput="filterGSheetCheckboxes(this.value)" placeholder="Search..." class="w-full pl-7 pr-2 py-1.5 border border-slate-300 rounded text-xs outline-none focus:border-emerald-500">
                                 </div>
                             </div>
-                            <!-- Checkbox List -->
-                            <div id="gsheetCheckboxList" class="max-h-56 overflow-y-auto custom-scrollbar p-2 flex flex-col gap-0.5">
-                                <!-- JS will inject labels with checkboxes here -->
-                            </div>
-                            <!-- Action Buttons -->
+                            <div id="gsheetCheckboxList" class="max-h-56 overflow-y-auto custom-scrollbar p-2 flex flex-col gap-0.5"></div>
                             <div class="p-3 border-t border-slate-200 flex justify-end gap-3 bg-white rounded-b-lg">
                                 <button onclick="toggleGSheetFilter()" class="px-4 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded transition">Cancel</button>
                                 <button onclick="applyGSheetFilter()" class="px-5 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 transition shadow-sm">OK</button>
@@ -822,6 +898,206 @@
             });
         }
 
+        // --- KNOWLEDGE VAULT (TOOL MỚI) ---
+        let globalVaultDB = [];
+        let currentVaultCatId = null;
+
+        const DEFAULT_VAULT = [
+            { id: 'cat-1', name: '🧠 Prompts Trợ lý AI', items: [
+                { id: 'item-1', title: 'Prompt Phân tích Khảo sát', type: 'text', content: 'Bạn là chuyên gia phân tích dữ liệu. Hãy đọc bảng dữ liệu khảo sát sau và đưa ra: 1. Đánh giá tổng quan. 2. Điểm mạnh. 3. Vấn đề cần khắc phục.', note: 'Dán vào Chatbot cùng file excel Khảo sát' }
+            ]},
+            { id: 'cat-2', name: '📊 Báo cáo & Dashboard', items: [] },
+            { id: 'cat-3', name: '🎮 Game & Quiz (LMS)', items: [
+                { id: 'item-2', title: 'Game Gamification SPCB', type: 'link', content: 'https://vinguyen14.github.io/camnang/gamification', note: 'Link chơi game ôn tập khóa Retail' }
+            ]},
+            { id: 'cat-4', name: '📚 Biểu mẫu / Tài liệu', items: [] }
+        ];
+
+        function loadVaultDB() {
+            const saved = localStorage.getItem('kv_knowledge_vault');
+            if(saved) {
+                globalVaultDB = JSON.parse(saved);
+            } else {
+                globalVaultDB = [...DEFAULT_VAULT];
+                localStorage.setItem('kv_knowledge_vault', JSON.stringify(globalVaultDB));
+            }
+        }
+
+        function renderVaultCategories() {
+            const list = document.getElementById('vaultCategoryList');
+            list.innerHTML = '';
+            
+            // Set default active if none selected
+            if(!currentVaultCatId && globalVaultDB.length > 0) {
+                currentVaultCatId = globalVaultDB[0].id;
+            }
+
+            globalVaultDB.forEach(cat => {
+                const isActive = cat.id === currentVaultCatId ? 'active' : '';
+                list.innerHTML += `
+                    <div class="vault-cat-item ${isActive}" onclick="selectVaultCategory('${cat.id}')">
+                        <div class="flex items-center gap-2 truncate pr-2">
+                            <i class="fas fa-folder text-purple-400"></i>
+                            <span class="truncate">${cat.name}</span>
+                        </div>
+                        <i class="fas fa-trash-alt text-[10px] text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition" onclick="deleteVaultCategory('${cat.id}', event)"></i>
+                    </div>
+                `;
+            });
+
+            // Make trash icons visible on hover by adding 'group' class to parent
+            document.querySelectorAll('.vault-cat-item').forEach(el => el.classList.add('group'));
+            
+            renderVaultItems();
+        }
+
+        function selectVaultCategory(id) {
+            currentVaultCatId = id;
+            document.getElementById('vaultSearchInput').value = '';
+            renderVaultCategories();
+        }
+
+        function addVaultCategory() {
+            const name = prompt("Nhập tên nhóm thư mục mới:");
+            if(name && name.trim()) {
+                const newCat = {
+                    id: 'cat-' + new Date().getTime(),
+                    name: name.trim(),
+                    items: []
+                };
+                globalVaultDB.push(newCat);
+                localStorage.setItem('kv_knowledge_vault', JSON.stringify(globalVaultDB));
+                currentVaultCatId = newCat.id;
+                renderVaultCategories();
+            }
+        }
+
+        function deleteVaultCategory(id, event) {
+            event.stopPropagation();
+            if(confirm("Bạn có chắc muốn xóa toàn bộ thư mục này và các tài nguyên bên trong?")) {
+                globalVaultDB = globalVaultDB.filter(c => c.id !== id);
+                localStorage.setItem('kv_knowledge_vault', JSON.stringify(globalVaultDB));
+                if(currentVaultCatId === id) currentVaultCatId = globalVaultDB.length > 0 ? globalVaultDB[0].id : null;
+                renderVaultCategories();
+            }
+        }
+
+        function toggleVaultItemForm() {
+            const form = document.getElementById('vaultAddItemForm');
+            form.classList.toggle('hidden');
+        }
+
+        function saveVaultItem() {
+            if(!currentVaultCatId) return alert("Vui lòng chọn hoặc tạo một Thư mục trước!");
+            
+            const title = document.getElementById('vItemTitle').value.trim();
+            const type = document.getElementById('vItemType').value;
+            const content = document.getElementById('vItemContent').value.trim();
+            const note = document.getElementById('vItemNote').value.trim();
+
+            if(!title || !content) return alert("Vui lòng nhập Tiêu đề và Nội dung!");
+
+            const catIndex = globalVaultDB.findIndex(c => c.id === currentVaultCatId);
+            if(catIndex > -1) {
+                globalVaultDB[catIndex].items.push({
+                    id: 'item-' + new Date().getTime(),
+                    title, type, content, note
+                });
+                
+                localStorage.setItem('kv_knowledge_vault', JSON.stringify(globalVaultDB));
+                
+                // Reset form
+                document.getElementById('vItemTitle').value = '';
+                document.getElementById('vItemContent').value = '';
+                document.getElementById('vItemNote').value = '';
+                toggleVaultItemForm();
+                
+                renderVaultItems();
+            }
+        }
+
+        function deleteVaultItem(itemId) {
+            if(confirm("Xóa tài nguyên này?")) {
+                const catIndex = globalVaultDB.findIndex(c => c.id === currentVaultCatId);
+                if(catIndex > -1) {
+                    globalVaultDB[catIndex].items = globalVaultDB[catIndex].items.filter(i => i.id !== itemId);
+                    localStorage.setItem('kv_knowledge_vault', JSON.stringify(globalVaultDB));
+                    renderVaultItems();
+                }
+            }
+        }
+
+        function renderVaultItems(searchQuery = '') {
+            const list = document.getElementById('vaultItemList');
+            list.innerHTML = '';
+
+            if(!currentVaultCatId) {
+                list.innerHTML = `<div class="col-span-full text-center text-slate-400 py-10 italic">Chưa có thư mục nào được chọn.</div>`;
+                return;
+            }
+
+            const cat = globalVaultDB.find(c => c.id === currentVaultCatId);
+            if(!cat || cat.items.length === 0) {
+                list.innerHTML = `<div class="col-span-full text-center text-slate-400 py-10 italic">Thư mục trống. Hãy thêm tài nguyên mới.</div>`;
+                return;
+            }
+
+            const q = searchQuery.toLowerCase();
+            const filteredItems = cat.items.filter(i => 
+                i.title.toLowerCase().includes(q) || 
+                i.content.toLowerCase().includes(q) || 
+                i.note.toLowerCase().includes(q)
+            );
+
+            filteredItems.forEach(item => {
+                let iconHtml = '';
+                let actionHtml = '';
+
+                if(item.type === 'link') {
+                    iconHtml = '<i class="fas fa-link text-blue-500 bg-blue-50 w-8 h-8 rounded flex items-center justify-center"></i>';
+                    actionHtml = `<a href="${item.content}" target="_blank" class="px-3 py-1.5 bg-blue-50 text-blue-600 text-[11px] font-bold rounded border border-blue-100 hover:bg-blue-100 transition"><i class="fas fa-external-link-alt mr-1"></i> Mở Link</a>`;
+                } else {
+                    iconHtml = '<i class="fas fa-align-left text-purple-500 bg-purple-50 w-8 h-8 rounded flex items-center justify-center"></i>';
+                    actionHtml = `<button onclick="copyVaultContent('${item.id}', this)" class="px-3 py-1.5 bg-purple-50 text-purple-600 text-[11px] font-bold rounded border border-purple-100 hover:bg-purple-100 transition"><i class="far fa-copy mr-1"></i> Copy Prompt</button>`;
+                }
+
+                list.innerHTML += `
+                    <div class="vault-resource-card relative group">
+                        <button onclick="deleteVaultItem('${item.id}')" class="absolute top-3 right-3 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition"><i class="fas fa-trash-alt"></i></button>
+                        <div class="flex gap-3">
+                            ${iconHtml}
+                            <div class="flex-grow">
+                                <h4 class="font-bold text-[13px] text-slate-800 pr-6">${item.title}</h4>
+                                <p class="text-[10px] text-slate-500 mt-1 line-clamp-2" title="${item.note}">${item.note || 'Không có ghi chú'}</p>
+                            </div>
+                        </div>
+                        <div class="mt-2 bg-slate-50 p-2 rounded border border-slate-100 text-[10px] font-mono text-slate-600 truncate" id="vcontent-${item.id}">
+                            ${item.content}
+                        </div>
+                        <div class="mt-1 flex justify-end">
+                            ${actionHtml}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function searchVaultItems(val) {
+            renderVaultItems(val);
+        }
+
+        function copyVaultContent(itemId, btn) {
+            const contentEl = document.getElementById(`vcontent-${itemId}`);
+            if(contentEl) {
+                navigator.clipboard.writeText(contentEl.innerText).then(() => {
+                    const oldHTML = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check mr-1"></i> Đã Copy';
+                    setTimeout(() => btn.innerHTML = oldHTML, 2000);
+                });
+            }
+        }
+
+
         // TOOL 1: LỌC HRM
         let hrmDataCache = {
             m2: { raw: '', kv1: '', tax: '' },
@@ -1031,7 +1307,6 @@
 
         function applyGSheetFilter() {
             const allDepts = getUniqueDepartments();
-            // Nếu chọn tất cả hoặc không chọn gì -> Xóa bộ lọc (hiển thị tất cả)
             if(tempSelectedDepts.size === allDepts.length || tempSelectedDepts.size === 0) {
                 globalSelectedDepts.clear();
                 document.getElementById('btnDeptFilterText').innerHTML = '<span class="text-slate-500 font-medium text-[13px]"><i class="fas fa-filter mr-2"></i>Lọc Phòng ban</span><i class="fas fa-caret-down text-slate-400"></i>';
@@ -1044,14 +1319,12 @@
             
             document.getElementById('gsheetFilterPanel').classList.add('hidden');
             
-            // Xóa master checkbox trước khi render
             const selectAllCheckbox = document.getElementById('masterEmailCheckbox');
             if(selectAllCheckbox) selectAllCheckbox.checked = false;
             
             filterEmailTable();
         }
 
-        // Hide panel when clicking outside
         document.addEventListener('click', function(e) {
             const wrapper = document.getElementById('gsheetFilterWrapper');
             const panel = document.getElementById('gsheetFilterPanel');
@@ -1091,7 +1364,6 @@
             alert("✅ Đã thêm nhân sự thành công!");
         }
 
-        // HÀM XÓA BẢO MẬT & ĐẨY VÀO THÙNG RÁC
         function deleteEmployee(email) {
             const emp = globalEmployeeDB.find(e => e.email === email);
             if(!emp) return;
@@ -1102,11 +1374,9 @@
                 return;
             }
 
-            // Đẩy vào Thùng rác
             globalTrashDB.push(emp);
             localStorage.setItem('kv_employee_trash', JSON.stringify(globalTrashDB));
 
-            // Xóa khỏi DB chính
             globalEmployeeDB = globalEmployeeDB.filter(e => e.email !== email);
             localStorage.setItem('kv_employee_db', JSON.stringify(globalEmployeeDB));
             
@@ -1121,7 +1391,6 @@
             
             globalSelectedEmails.clear();
             
-            // Clear GSheet Filter
             globalSelectedDepts.clear();
             document.getElementById('btnDeptFilterText').innerHTML = '<span class="text-slate-500 font-medium text-[13px]"><i class="fas fa-filter mr-2"></i>Lọc Phòng ban</span><i class="fas fa-caret-down text-slate-400"></i>';
             document.getElementById('btnDeptFilterText').classList.remove('bg-emerald-50', 'border-emerald-200');
@@ -1140,7 +1409,6 @@
             const filtered = globalEmployeeDB.filter(e => {
                 const matchName = e.name.toLowerCase().includes(nameVal) || (e.code && e.code.toLowerCase().includes(nameVal)) || e.email.toLowerCase().includes(nameVal);
                 
-                // Lọc theo GSheet Filter (OR logic)
                 let matchDept = true;
                 if(globalSelectedDepts.size > 0) {
                     matchDept = globalSelectedDepts.has(e.dept);
@@ -1174,7 +1442,6 @@
                 `;
             });
             
-            // Reset Master Checkbox mỗi khi render
             const selectAllCheckbox = document.getElementById('masterEmailCheckbox');
             if(selectAllCheckbox) selectAllCheckbox.checked = false;
             
@@ -1182,7 +1449,6 @@
         }
 
         function filterEmailTable() { 
-            // Xóa master checkbox trước khi lọc
             const selectAllCheckbox = document.getElementById('masterEmailCheckbox');
             if(selectAllCheckbox) selectAllCheckbox.checked = false;
             renderEmailTable(); 
@@ -1502,8 +1768,9 @@
             const prof = JSON.parse(localStorage.getItem('kv_trainer_profile'));
             if(prof) { document.getElementById('display-prof-name').innerText = prof.name; document.getElementById('display-prof-title').innerText = prof.title; document.getElementById('display-prof-ava').innerText = prof.name.charAt(0).toUpperCase(); }
             
-            // Tự động Load LocalStorage cho Data Nhân sự
+            // Tự động Load LocalStorage
             loadEmployeeDB();
+            loadVaultDB(); // Khởi tạo Database Kho Lưu Trữ
 
             await fetchDatabase();
         };
