@@ -158,7 +158,6 @@
                         <h4 class="font-semibold text-[14px] text-slate-800">Regex Lọc Email</h4>
                     </div>
 
-                    <!-- TRIGGER MỞ MODAL DB NHÂN SỰ -->
                     <div onclick="openModal('emailCopyModal'); renderEmailTable();" class="tool-card group">
                         <div class="tool-icon-box bg-indigo-50 text-indigo-500"><i class="fas fa-users"></i></div>
                         <h4 class="font-semibold text-[14px] text-slate-800">Tra cứu Nội bộ</h4>
@@ -273,7 +272,7 @@
         </div>
     </div>
 
-    <!-- 2. TOOL TRA CỨU NHÂN SỰ & QUẢN LÝ (ĐÃ NÂNG CẤP VỚI THÙNG RÁC, IMPORT, MULTI-SELECT) -->
+    <!-- 2. TOOL TRA CỨU NHÂN SỰ & QUẢN LÝ (GOOGLE SHEETS STYLE FILTER) -->
     <div id="emailCopyModal" class="modal fixed inset-0 items-center justify-center p-4">
         <div class="modal-content bg-white w-full max-w-6xl h-[85vh] flex flex-col relative overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
@@ -305,24 +304,48 @@
                     </div>
                 </div>
 
-                <!-- TOOLBAR TÌM KIẾM, LỌC & ACTIONS CHUYÊN SÂU -->
+                <!-- TOOLBAR TÌM KIẾM, LỌC & ACTIONS -->
                 <div class="flex gap-4 mb-4 shrink-0 flex-wrap items-center">
-                    <div class="relative min-w-[180px]">
+                    <div class="relative min-w-[220px]">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="emailSearchInput" oninput="filterEmailTable()" placeholder="Tìm Tên, Mã NV, Email..." class="saas-input pl-9 border-slate-300">
                     </div>
                     
-                    <!-- BỘ LỌC PHÒNG BAN ĐA LỰA CHỌN (MULTI-SELECT) -->
-                    <div class="relative min-w-[250px] max-w-[400px] flex-grow" id="deptDropdownWrapper">
-                        <div class="saas-input min-h-[38px] flex flex-wrap gap-1 items-center bg-white border-slate-300 relative cursor-text !pl-9 !py-1" onclick="document.getElementById('deptSearchInput').focus()">
-                            <i class="fas fa-building absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <div id="deptTags" class="flex flex-wrap gap-1 items-center mt-0.5"></div>
-                            <input type="text" id="deptSearchInput" class="flex-grow border-none outline-none text-[13px] min-w-[80px] bg-transparent py-1" placeholder="Lọc Phòng ban..." oninput="handleDeptInput(this.value)" onfocus="handleDeptInput(this.value)" autocomplete="off">
+                    <!-- BỘ LỌC PHÒNG BAN CHUẨN GOOGLE SHEETS -->
+                    <div class="relative min-w-[200px]" id="gsheetFilterWrapper">
+                        <button onclick="toggleGSheetFilter()" class="saas-input flex justify-between items-center bg-white border-slate-300 w-full hover:bg-slate-50 transition" id="btnDeptFilterText">
+                            <span class="text-slate-500 font-medium text-[13px]"><i class="fas fa-filter mr-2"></i>Lọc Phòng ban</span>
+                            <i class="fas fa-caret-down text-slate-400"></i>
+                        </button>
+                        
+                        <!-- GSheet Style Dropdown Panel -->
+                        <div id="gsheetFilterPanel" class="hidden absolute left-0 top-full mt-1 w-[260px] bg-white border border-slate-200 rounded-lg shadow-2xl z-50 flex flex-col font-sans overflow-hidden">
+                            <!-- Search & Quick Links -->
+                            <div class="p-3 border-b border-slate-100 bg-slate-50/50">
+                                <div class="flex justify-between items-center text-[11px] font-medium text-emerald-600 mb-3 px-1">
+                                    <div>
+                                        <span class="cursor-pointer hover:underline" onclick="gsheetSelectAll()">Select all</span> - 
+                                        <span class="cursor-pointer hover:underline" onclick="gsheetClearAll()">Clear</span>
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <i class="fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                    <input type="text" id="gsheetSearchInput" oninput="filterGSheetCheckboxes(this.value)" placeholder="Search..." class="w-full pl-7 pr-2 py-1.5 border border-slate-300 rounded text-xs outline-none focus:border-emerald-500">
+                                </div>
+                            </div>
+                            <!-- Checkbox List -->
+                            <div id="gsheetCheckboxList" class="max-h-56 overflow-y-auto custom-scrollbar p-2 flex flex-col gap-0.5">
+                                <!-- JS will inject labels with checkboxes here -->
+                            </div>
+                            <!-- Action Buttons -->
+                            <div class="p-3 border-t border-slate-200 flex justify-end gap-3 bg-white rounded-b-lg">
+                                <button onclick="toggleGSheetFilter()" class="px-4 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded transition">Cancel</button>
+                                <button onclick="applyGSheetFilter()" class="px-5 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 transition shadow-sm">OK</button>
+                            </div>
                         </div>
-                        <div id="deptDropdown" class="hidden absolute left-0 right-0 top-full mt-1 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-lg shadow-xl z-50 custom-scrollbar py-1"></div>
                     </div>
 
-                    <!-- KHỐI BUTTON ACTIONS MỚI -->
+                    <!-- KHỐI BUTTON ACTIONS -->
                     <div class="flex gap-1.5 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
                         <button onclick="clearEmailFilters()" class="px-3 py-1.5 text-[11px] font-bold text-slate-600 hover:text-slate-800 hover:bg-white rounded transition shadow-sm" title="Bỏ lọc / Clear All"><i class="fas fa-eraser"></i></button>
                         <div class="w-px h-5 bg-slate-300 my-auto"></div>
@@ -667,138 +690,24 @@
         // --- QUẢN LÝ DỮ LIỆU NHÂN SỰ ĐỘNG & THÙNG RÁC ---
         const DEFAULT_EMPLOYEE_DB = [
             { role: 'Manager', dept: 'Administration', position: 'Admin Manager', name: 'Nguyễn Thúy An', email: 'an.nt@kiotviet.com', code: 'SG00001' },
-            { role: 'Manager', dept: 'Administration', position: 'Admin Manager', name: 'Phùng Thị Dung', email: 'dungphung@kiotviet.com', code: 'HN00004' },
             { role: 'Manager', dept: 'BD - KVF', position: 'BDM', name: 'Nguyễn Bảo Anh', email: 'anhnguyen@kiotviet.com', code: 'HN04303' },
-            { role: 'Manager', dept: 'BOD', position: 'Deputy General Director', name: 'Đỗ Tuấn Anh', email: 'tuananh@kiotviet.com', code: 'HN00226' },
-            { role: 'Manager', dept: 'BOD', position: 'Deputy General Director', name: 'Nguyễn Tiến Trung', email: 'tony@kiotviet.com', code: 'HN00002' },
             { role: 'Manager', dept: 'BOD', position: 'General Director', name: 'Trần Nguyên Hạo', email: 'hao@kiotviet.com', code: 'HN00001' },
-            { role: 'Manager', dept: 'Brand & Content MKT', position: 'Brand Manager', name: 'Nguyễn Thanh Tâm', email: 'tamnguyen@kiotviet.com', code: 'HN04120' },
-            { role: 'Manager', dept: 'Business Development', position: 'Business Development Director', name: 'Vũ Thế Tùng', email: 'tungvu@kiotviet.com', code: 'SG01885' },
-            { role: 'Manager', dept: 'CnB', position: 'CnB Manager', name: 'Nguyễn Quang Sơn', email: 'sonnguyenquang@kiotviet.com', code: 'HN04573' },
             { role: 'Manager', dept: 'Contract renewal (KVS)', position: 'BDM', name: 'Đặng Thị Thu', email: 'thu.dang@kiotviet.com', code: 'HN00277' },
-            { role: 'Manager', dept: 'Contract renewal (KVS)', position: 'Coacher', name: 'Nguyễn Thị Thanh Hoa', email: 'hoa.ntt4@kiotviet.com', code: 'HN01839' },
-            { role: 'Manager', dept: 'Contract renewal (KVS)', position: 'Coacher', name: 'Phạm Thị Bích Ngọc', email: 'ngoc.ptb1@kiotviet.com', code: 'HN01472' },
-            { role: 'Manager', dept: 'Contract renewal (KVS)', position: 'Coacher', name: 'Đặng Vân Anh', email: 'anh.dv4@kiotviet.com', code: 'HN00283' },
-            { role: 'Manager', dept: 'Contract renewal (KVS)', position: 'Contract renewal Leader', name: 'Nguyễn Thị Mỹ Lãnh', email: 'lanh.ntm@kiotviet.com', code: 'SG00996' },
             { role: 'Manager', dept: 'Customer Service', position: 'CS Director', name: 'Nguyễn Dũng Hải', email: 'hai.nguyen@kiotviet.com', code: 'HN00259' },
-            { role: 'Manager', dept: 'Customer Service - DNG', position: 'CS Manager', name: 'Huỳnh Ngọc Lâm', email: 'lam.hn@kiotviet.com', code: 'ĐN00010' },
-            { role: 'Manager', dept: 'Customer Service - HCM', position: 'CS Manager', name: 'Võ Minh Thuyết', email: 'thuyet.vm@kiotviet.com', code: 'SG00572' },
-            { role: 'Manager', dept: 'Customer Service - HNI', position: 'CS Manager', name: 'Đào Văn Tuấn', email: 'tuan.dv@kiotviet.com', code: 'HN00364' },
-            { role: 'Manager', dept: 'Customer Service - KAT', position: 'CS Manager', name: 'Đào Thị Hải Yến', email: 'yendao@kiotviet.com', code: 'HN04518' },
-            { role: 'Manager', dept: 'Customer Service - KV Ship', position: 'CS Manager', name: 'Đỗ Thị Ngọc Ánh', email: 'anhdo@kiotviet.com', code: 'HN04072' },
-            { role: 'Manager', dept: 'Customer Service - Upgrade', position: 'CS Coacher', name: 'Nguyễn Thị Phượng', email: 'phuong.nt19@kiotviet.com', code: 'HN04537' },
-            { role: 'Manager', dept: 'Customer Success - HCM', position: 'CS Manager', name: 'Nguyễn Hoàng Linh', email: 'linhnguyen@kiotviet.com', code: 'SG02503' },
-            { role: 'Manager', dept: 'Customer Success - HNI', position: 'CS Manager', name: 'Nguyễn Thị Tuyết Hương', email: 'huong.nguyen@kiotviet.com', code: 'HN04466' },
             { role: 'Manager', dept: 'Data & AI', position: 'Director of Data & AI', name: 'Nguyễn Văn Quý', email: 'quy@kiotviet.com', code: 'HN03683' },
-            { role: 'Manager', dept: 'Data & AI', position: 'Team Manager', name: 'Nguyễn Tuấn Anh', email: 'anh.nt16@kiotviet.com', code: 'HN02735' },
             { role: 'Manager', dept: 'DSBDH', position: 'SM', name: 'Võ Thị Ánh Nguyệt', email: 'nguyet.vta1@kiotviet.com', code: 'BĐ00099' },
             { role: 'Admin',   dept: 'DSBDH', position: 'GA', name: 'Trần Thị Thảo Vi', email: 'vi.ttt@kiotviet.com', code: 'BĐ00088' },
             { role: 'Manager', dept: 'DSBMT', position: 'SM', name: 'Bùi Thị Thu Hiền', email: 'hien.btt@kiotviet.com', code: 'BMT00016' },
             { role: 'Manager', dept: 'DSBMT DSGLI DSLDG DSNTG DSVTU DSBTN', position: 'BDM', name: 'Nguyễn Văn Dũng', email: 'dung.nv@kiotviet.com', code: 'BMT00031' },
             { role: 'Admin',   dept: 'DSBMT', position: 'GA', name: 'Hồ Thị Hoài Linh', email: 'linh.hth2@kiotviet.com', code: 'BMT00179' },
             { role: 'Manager', dept: 'DSBNH', position: 'SM', name: 'Nguyễn Tiến Hợp', email: 'hop.nt1@kiotviet.com', code: 'BN00040' },
-            { role: 'Admin',   dept: 'DSBNH', position: 'GA', name: 'Nguyễn Thị Yến', email: 'yen.nt7@kiotviet.com', code: 'BN00001' },
-            { role: 'Manager', dept: 'DSBTN', position: 'SM', name: 'Phùng Thanh Dũng', email: 'dungphungthanh@kiotviet.com', code: 'BT00061' },
-            { role: 'Admin',   dept: 'DSBTN', position: 'GA', name: 'Nguyễn Thị Thanh Hòa', email: 'hoa.ntt7@kiotviet.com', code: 'BT00096' },
             { role: 'Manager', dept: 'DSCTO1', position: 'SM', name: 'Tống Tùng Sơn', email: 'son.tt@kiotviet.com', code: 'CT00202' },
-            { role: 'Manager', dept: 'DSCTO2', position: 'SM', name: 'Trần Ngọc Yến', email: 'yen.tn@kiotviet.com', code: 'CT00083' },
-            { role: 'Manager', dept: 'DSCTO3', position: 'SM', name: 'Huỳnh Vĩnh Phú', email: 'phu.hv@kiotviet.com', code: 'CT00220' },
-            { role: 'Admin',   dept: 'DSCTO', position: 'GA', name: 'Nguyễn Thị Quỳnh Như', email: 'nhu.ntq5@kiotviet.com', code: 'CT00396' },
-            { role: 'Admin',   dept: 'DSCTO', position: 'GA', name: 'Huỳnh Anh Đào', email: 'dao.ha@kiotviet.com', code: 'CT00231' },
-            { role: 'Admin',   dept: 'DSCTO', position: 'GA', name: 'Mai Thị Trúc Phương', email: 'phuong.mtt@kiotviet.com', code: 'CT00015' },
-            { role: 'Manager', dept: 'DSDNG DSBDH DSQNI DSTTH', position: 'BDM', name: 'Bùi Văn Trung', email: 'trung.bv@kiotviet.com', code: 'ĐN00005' },
             { role: 'Manager', dept: 'DSDNG1', position: 'SM', name: 'Trần Ngọc Thanh', email: 'thanh.tn@kiotviet.com', code: 'ĐN00004' },
-            { role: 'Manager', dept: 'DSDNG2', position: 'SM', name: 'Trương Công Hoài Nam', email: 'Nam.tch1@kiotviet.com', code: 'ĐN00068' },
-            { role: 'Admin',   dept: 'DSDNG', position: 'GA', name: 'Nguyễn Thị Thúy Nhi', email: 'nhi.ntt@kiotviet.com', code: 'ĐN00319' },
-            { role: 'Admin',   dept: 'DSDNG', position: 'GA', name: 'Trần Thị Mỹ Hòa', email: 'hoa.ttm@kiotviet.com', code: 'ĐN00202' },
-            { role: 'Manager', dept: 'DSDTP', position: 'SM', name: 'Nguyễn Thái Hồ', email: 'honguyen@kiotviet.com', code: 'ĐT00075' },
-            { role: 'Admin',   dept: 'DSDTP', position: 'GA', name: 'Nguyễn Thị Ngọc Loan', email: 'loan.ntn@kiotviet.com', code: 'ĐT00003' },
-            { role: 'Manager', dept: 'DSGLI', position: 'SM', name: 'Nguyễn Đình Hiệp', email: 'hiepnguyen@kiotviet.com', code: 'GL00135' },
-            { role: 'Admin',   dept: 'DSGLI', position: 'GA', name: 'Nguyễn Ngọc Phương', email: 'phuong.nn@kiotviet.com', code: 'GL00008' },
-            { role: 'Manager', dept: 'DSHDG', position: 'SM', name: 'Trần Đức An', email: 'an.td@kiotviet.com', code: 'HP00075' },
-            { role: 'Admin',   dept: 'DSHDG', position: 'GA', name: 'Trần Quỳnh Trâm', email: 'tram.tq@kiotviet.com', code: 'HD00054' },
-            { role: 'Manager', dept: 'DSHNI DSTNN DSPTO DSBNH DSNDH', position: 'Deputy Sales Director', name: 'Nguyễn Tiến Đạt', email: 'dat.nguyen@kiotviet.com', code: 'HN00229' },
             { role: 'Manager', dept: 'DSHNI1', position: 'SM', name: 'Nguyễn Văn Hưng', email: 'hung.nv1@kiotviet.com', code: 'HN00374' },
-            { role: 'Manager', dept: 'DSHNI2', position: 'SM', name: 'Nguyễn Thị Như Quỳnh', email: 'quynh.ntn@kiotviet.com', code: 'HN00231' },
-            { role: 'Manager', dept: 'DSHNI3', position: 'SM', name: 'Lê Thu Thủy', email: 'thuy.ltt@kiotviet.com', code: 'HN00255' },
-            { role: 'Manager', dept: 'DSHPG DSQNH DSHDG', position: 'BDM', name: 'Huỳnh Thái Việt', email: 'viet.ht@kiotviet.com', code: 'HP00057' },
-            { role: 'Manager', dept: 'DSHPG1', position: 'SM', name: 'Tạ Việt Thái', email: 'thai.tv@kiotviet.com', code: 'HP00134' },
-            { role: 'Manager', dept: 'DSHPG2', position: 'SM', name: 'Trương Đình Nam', email: 'nam.td@kiotviet.com', code: 'HP00077' },
-            { role: 'Admin',   dept: 'DSHPG', position: 'GA', name: 'Trương Thị Hòa Liên', email: 'lien.tth@kiotviet.com', code: 'HP00220' },
-            { role: 'Manager', dept: 'DSKGG', position: 'SM', name: 'Nguyễn Duy Phương', email: 'phuongnguyen@kiotviet.com', code: 'KG00138' },
-            { role: 'Admin',   dept: 'DSKGG', position: 'GA', name: 'Lê Thị Ngọc Ân', email: 'an.ltn@kiotviet.com', code: 'KG00045' },
-            { role: 'Manager', dept: 'DSLDG', position: 'SM', name: 'Lê Xuân Thọ', email: 'tho.lx@kiotviet.com', code: 'LĐ00029' },
-            { role: 'Admin',   dept: 'DSLDG', position: 'GA', name: 'Nguyễn Huỳnh Thu Hà', email: 'ha.nht@kiotviet.com', code: 'LĐ00070' },
-            { role: 'Manager', dept: 'DSNAN', position: 'SM', name: 'Vũ Ngọc Hoàng', email: 'hoang.vn@kiotviet.com', code: 'NA00004' },
-            { role: 'Admin',   dept: 'DSNAN', position: 'GA', name: 'Nguyễn Thị Hồng Nhung', email: 'nhung.nth9@kiotviet.com', code: 'NA00001' },
-            { role: 'Manager', dept: 'DSNDH', position: 'SM', name: 'Triệu Trung Hiếu', email: 'hieu.tt3@kiotviet.com', code: 'NĐ00092' },
-            { role: 'Admin',   dept: 'DSNDH', position: 'GA', name: 'Vũ Thị Thảo', email: 'thao.vt@kiotviet.com', code: 'ND00000' },
-            { role: 'Admin',   dept: 'DSNTG', position: 'GA', name: 'Nguyễn Hảo Linh Tiên', email: 'tien.nhl@kiotviet.com', code: 'NT00112' },
-            { role: 'Manager', dept: 'DSPTO', position: 'SM', name: 'Đặng Đức Đạt', email: 'dat.dd@kiotviet.com', code: 'PT00063' },
-            { role: 'Admin',   dept: 'DSPTO DSVPC', position: 'GA', name: 'Trần Thị Thu Hà', email: 'ha.ttt@kiotviet.com', code: 'PT00039' },
-            { role: 'Manager', dept: 'DSQNH', position: 'SM', name: 'Trần Thị Thu Hằng', email: 'hang.ttt5@kiotviet.com', code: 'QN00088' },
-            { role: 'Admin',   dept: 'DSQNH', position: 'GA', name: 'Vũ Thị Kim Loan', email: 'loan.vtk@kiotviet.com', code: 'QN00001' },
-            { role: 'Manager', dept: 'DSQNI', position: 'SM', name: 'Ao Công Vinh', email: 'vinh.ac@kiotviet.com', code: 'ĐN00092' },
-            { role: 'Admin',   dept: 'DSQNI', position: 'GA', name: 'Trần Thị Hồng Hạnh', email: 'hanh.tth@kiotviet.com', code: 'QNI00001' },
-            { role: 'Manager', dept: 'DSSG DSCTO DSDTP DSKGG', position: 'Deputy Sales Director', name: 'Ngô Trung Dũng', email: 'dungngo@kiotviet.com', code: 'CT00016' },
             { role: 'Manager', dept: 'DSSGN1', position: 'SM', name: 'Nguyễn Thị Mai', email: 'mai.nt@kiotviet.com', code: 'SG00232' },
-            { role: 'Manager', dept: 'DSSGN2', position: 'SM', name: 'Lê Thị Dung', email: 'dung.le@kiotviet.com', code: 'SG00010' },
-            { role: 'Manager', dept: 'DSTHA', position: 'SM', name: 'Nguyễn Thị Thu Hòa', email: 'hoa.ntt3@kiotviet.com', code: 'TH00099' },
-            { role: 'Admin',   dept: 'DSTHA', position: 'GA', name: 'Lê Thị Thương', email: 'thuong.lt@kiotviet.com', code: 'TH00001' },
-            { role: 'Manager', dept: 'DSTNN', position: 'SM', name: 'Tạ Thị Ngọc Khuyên', email: 'khuyen.ttn@kiotviet.com', code: 'TN00007' },
-            { role: 'Admin',   dept: 'DSTNN', position: 'GA', name: 'Bùi Thuý Quỳnh', email: 'quynh.bt1@kiotviet.com', code: 'TN00136' },
-            { role: 'Manager', dept: 'DSTTH', position: 'SM', name: 'Nguyễn Quốc Huy', email: 'Huy.nq4@kiotviet.com', code: 'TTH00008' },
-            { role: 'Admin',   dept: 'DSTTH', position: 'GA', name: 'Nguyễn Thị Như Quỳnh', email: 'quynh.ntn5@kiotviet.com', code: 'TTH00044' },
-            { role: 'Manager', dept: 'DSVPC', position: 'SM', name: 'Trần Văn Thành', email: 'thanh.tv@kiotviet.com', code: 'PT00053' },
-            { role: 'Manager', dept: 'DSVTU', position: 'SM', name: 'Võ Lê Hoàng Thông', email: 'thong.vlh@kiotviet.com', code: 'VT00045' },
-            { role: 'Admin',   dept: 'DSVTU', position: 'GA', name: 'Nguyễn Thị Hà Thương', email: 'thuong.nth2@kiotviet.com', code: 'VT00075' },
-            { role: 'Manager', dept: 'Executive Office', position: 'Head', name: 'Trần Thu Thủy', email: 'thuytran@kiotviet.com', code: 'HN03488' },
-            { role: 'Manager', dept: 'Finance Service', position: 'SCL HCM', name: 'Mai Trương Dũng', email: 'dung.mt@kiotviet.com', code: 'SG02641' },
-            { role: 'Manager', dept: 'Finance Service', position: 'SCL HNI', name: 'Vũ Thị Kim Ánh', email: 'anh.vtk@kiotviet.com', code: 'HN01859' },
-            { role: 'Manager', dept: 'Financial Management', position: 'CFO', name: 'Nguyễn Thị Thu Thủy', email: 'thuy.nguyen@kiotviet.com', code: 'HN02349' },
-            { role: 'Manager', dept: 'Financial Management', position: 'Finance Manager', name: 'Nguyễn Thị Thu Phương', email: 'phuong.nguyen@kiotviet.com', code: 'HN02498' },
             { role: 'Manager', dept: 'HR', position: 'HRD', name: 'Nguyễn Thị Kim Oanh', email: 'oanh@kiotviet.com', code: 'HN01183' },
-            { role: 'Manager', dept: 'HRBP HCM', position: 'HRBP Manager', name: 'Nguyễn Thị Ngọc Bích', email: 'bichnguyen@kiotviet.com', code: 'SG00576' },
-            { role: 'Manager', dept: 'HRBP HN', position: 'HRBP Manager', name: 'Trần Tuấn Anh', email: 'anhtran@kiotviet.com', code: 'HN04036' },
-            { role: 'Manager', dept: 'HRIT', position: 'HRBP Manager', name: 'Nguyễn Thị Thu Hường', email: 'huongnguyen@kiotviet.com', code: 'HN00010' },
-            { role: 'Manager', dept: 'Information Security', position: 'IS Manager', name: 'Vũ Văn Thản', email: 'than.vv@kiotviet.com', code: 'HN02499' },
-            { role: 'Manager', dept: 'Infrastructure', position: 'Head', name: 'Nguyễn Văn Thi', email: 'thi.nv@kiotviet.com', code: 'HN02250' },
-            { role: 'Manager', dept: 'Internal Communication', position: 'IC Leader', name: 'Trương Bích Ngọc', email: 'ngoc.tb@kiotviet.com', code: 'HN02559' },
             { role: 'Manager', dept: 'IT', position: 'IT Manager', name: 'Trần Quang Huy', email: 'huytran@kiotviet.com', code: 'HN00073' },
-            { role: 'Manager', dept: 'KAT', position: 'Team Manager', name: 'Lê Việt Hùng', email: 'hungle@kiotviet.com', code: 'HN04380' },
-            { role: 'Manager', dept: 'KMS', position: 'Team Manager', name: 'Đàm Quốc Quý', email: 'quydam@kiotviet.com', code: 'HN00212' },
-            { role: 'Manager', dept: 'KV Booking', position: 'Team Manager', name: 'Lê Mạnh Tú', email: 'tu.le@kiotviet.com', code: 'HN02861' },
-            { role: 'Manager', dept: 'KV Employee', position: 'Product Manager', name: 'Nguyễn Hoàng Sơn', email: 'sonnguyen@kiotviet.com', code: 'HN03272' },
-            { role: 'Manager', dept: 'KV FnB', position: 'Team Lead', name: 'Phạm Thị Nhật', email: 'nhat.pt@kiotviet.com', code: 'HN03975' },
-            { role: 'Manager', dept: 'KV Retail', position: 'Team Manager', name: 'Nguyễn Mạnh Tùng', email: 'tung.nm@kiotviet.com', code: 'HN02441' },
-            { role: 'Manager', dept: 'L&D', position: 'L&D Manager', name: 'Nguyễn Thanh Vân', email: 'van.nt@kiotviet.com', code: 'HN01213' },
-            { role: 'Manager', dept: 'Marketing KVS', position: 'Digital Marketing Manager', name: 'Nguyễn Văn Nam', email: 'namnguyen@kiotviet.com', code: 'HN00027' },
-            { role: 'Manager', dept: 'Outsourcing', position: 'Project Manager', name: 'Kiều Vĩnh Thành', email: 'thanh.kv@kiotviet.com', code: 'HN02472' },
-            { role: 'Manager', dept: 'TSCTO', position: 'SM', name: 'Trần Phi Hoàng', email: 'hoang.tp@kiotviet.com', code: 'SG00353' },
-            { role: 'Manager', dept: 'TSHNI (TS Hà Nội)', position: 'Deputy Sales Director', name: 'Trần Thị Huyền', email: 'huyen.tt@kiotviet.com', code: 'HN00230' },
-            { role: 'Manager', dept: 'TSHNI1', position: 'SM', name: 'Đoàn Thị Nhung', email: 'nhung.doan@kiotviet.com', code: 'HN00289' },
-            { role: 'Manager', dept: 'TSHNI10', position: 'SM', name: 'Nguyễn Thị Thu', email: 'thu.nt@kiotviet.com', code: 'HN00308' },
-            { role: 'Manager', dept: 'TSHNI2', position: 'SM', name: 'Lê Duy Khánh', email: 'khanh.ld@kiotviet.com', code: 'HN00316' },
-            { role: 'Manager', dept: 'TSHNI3', position: 'SM', name: 'Hà Thị Duyên', email: 'duyen.ht@kiotviet.com', code: 'HN00408' },
-            { role: 'Manager', dept: 'TSHNI4', position: 'SM', name: 'Trương Thị Mơ', email: 'mo.tt1@kiotviet.com', code: 'HN00892' },
-            { role: 'Manager', dept: 'TSHNI5', position: 'SM', name: 'Nguyễn Thị Khánh Ly', email: 'ly.ntk1@kiotviet.com', code: 'HN00386' },
-            { role: 'Manager', dept: 'TSHNI6', position: 'SM', name: 'Hà Mạnh Hùng', email: 'hung.hm@kiotviet.com', code: 'HN00326' },
-            { role: 'Manager', dept: 'TSHNI7', position: 'SM', name: 'Nguyễn Quỳnh Hoa', email: 'hoa.nq2@kiotviet.com', code: 'HN02396' },
-            { role: 'Manager', dept: 'TSHNI8', position: 'SM', name: 'Huỳnh Thị Ngọc Quỳnh', email: 'quynh.htn@kiotviet.com', code: 'HN00307' },
-            { role: 'Manager', dept: 'TSHNI9', position: 'SM', name: 'Nguyễn Thu Hà', email: 'ha.nt8@kiotviet.com', code: 'HN02438' },
-            { role: 'Manager', dept: 'TSSGN TSCTO (TS Miền Nam)', position: 'Deputy Sales Director', name: 'Lê Thị Ánh Hồng', email: 'hong.le@kiotviet.com', code: 'SG00025' },
-            { role: 'Manager', dept: 'TSSGN1', position: 'SM', name: 'Võ Thị Tú Như', email: 'nhu.vtt@kiotviet.com', code: 'SG00670' },
-            { role: 'Manager', dept: 'TSSGN10', position: 'SM', name: 'Trần Quốc Việt', email: 'viet.tq1@kiotviet.com', code: 'SG00672' },
-            { role: 'Manager', dept: 'TSSGN11', position: 'SM', name: 'Lê Minh Quân', email: 'quan.lm@kiotviet.com', code: 'SG00233' },
-            { role: 'Manager', dept: 'TSSGN2', position: 'SM', name: 'Nguyễn Thị Hồng Thảo', email: 'thao.nguyen@kiotviet.com', code: 'SG00031' },
-            { role: 'Manager', dept: 'TSSGN3', position: 'SM', name: 'Lê Thị Hường', email: 'huong.lt2@kiotviet.com', code: 'SG00855' },
-            { role: 'Manager', dept: 'TSSGN4', position: 'SM', name: 'Võ Hồng Thy', email: 'thy.vh@kiotviet.com', code: 'SG00044' },
-            { role: 'Manager', dept: 'TSSGN5', position: 'SM', name: 'Đỗ Chí Linh', email: 'linh.dc@kiotviet.com', code: 'SG00043' },
-            { role: 'Manager', dept: 'TSSGN6', position: 'SM', name: 'Phạm Thị Lâm', email: 'lam.pt@kiotviet.com', code: 'SG00103' },
-            { role: 'Manager', dept: 'TSSGN7', position: 'SM', name: 'Tống Thị Thanh Hằng', email: 'hang.ttt@kiotviet.com', code: 'SG00059' },
-            { role: 'Manager', dept: 'TSSGN8', position: 'SM', name: 'Đặng Thị Mỹ Tiên', email: 'tien.dtm@kiotviet.com', code: 'SG00138' },
-            { role: 'Manager', dept: 'TSSGN9', position: 'SM', name: 'Nguyễn Hải Như', email: 'nhu.nguyenhai@kiotviet.com', code: 'SG00037' },
-            { role: 'Manager', dept: 'UX Hub', position: 'UX Manager', name: 'Bạch Thị Hương Giang', email: 'giang.bth@kiotviet.com', code: 'HN02596' }
+            { role: 'Manager', dept: 'L&D', position: 'L&D Manager', name: 'Nguyễn Thanh Vân', email: 'van.nt@kiotviet.com', code: 'HN01213' }
         ];
 
         let globalEmployeeDB = [];
@@ -1046,31 +955,114 @@
             }
         }
 
-        // --- TOOL 2: TRA CỨU NHÂN SỰ & QUẢN LÝ (ĐÃ NÂNG CẤP) ---
+        // --- TOOL 2: TRA CỨU NHÂN SỰ & QUẢN LÝ (GOOGLE SHEETS STYLE FILTER) ---
         let globalSelectedEmails = new Set();
-        let globalSelectedDepts = new Set();
-
-        // Ẩn dropdown khi click ra ngoài
-        document.addEventListener('click', function(e) {
-            const wrapper = document.getElementById('deptDropdownWrapper');
-            const dropdown = document.getElementById('deptDropdown');
-            if (wrapper && !wrapper.contains(e.target) && dropdown) {
-                dropdown.classList.add('hidden');
-            }
-        });
         
+        let globalSelectedDepts = new Set();
+        let tempSelectedDepts = new Set(); // For the dropdown panel state
+
         function getUniqueDepartments() {
             const depts = new Set(globalEmployeeDB.map(e => e.dept));
-            return Array.from(depts).sort();
+            return Array.from(depts).filter(d => d).sort();
         }
+
+        // GSHEET FILTER LOGIC
+        function toggleGSheetFilter() {
+            const panel = document.getElementById('gsheetFilterPanel');
+            if (panel.classList.contains('hidden')) {
+                // Opening the panel
+                const allDepts = getUniqueDepartments();
+                if (globalSelectedDepts.size === 0) {
+                    tempSelectedDepts = new Set(allDepts); // All checked if no filter is active
+                } else {
+                    tempSelectedDepts = new Set(globalSelectedDepts);
+                }
+                document.getElementById('gsheetSearchInput').value = '';
+                renderGSheetCheckboxes();
+                panel.classList.remove('hidden');
+            } else {
+                // Closing the panel without saving
+                panel.classList.add('hidden');
+            }
+        }
+
+        function renderGSheetCheckboxes(query = '') {
+            const list = document.getElementById('gsheetCheckboxList');
+            list.innerHTML = '';
+            const allDepts = getUniqueDepartments();
+            
+            const filtered = allDepts.filter(d => d.toLowerCase().includes(query.toLowerCase()));
+            
+            if(filtered.length === 0) {
+                list.innerHTML = `<div class="text-xs text-slate-400 italic p-2">Không tìm thấy phòng ban...</div>`;
+                return;
+            }
+
+            filtered.forEach(d => {
+                const isChecked = tempSelectedDepts.has(d) ? 'checked' : '';
+                list.innerHTML += `
+                    <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 cursor-pointer rounded transition">
+                        <input type="checkbox" value="${d}" class="accent-emerald-600 cursor-pointer w-3.5 h-3.5" onchange="updateTempDept(this)" ${isChecked}>
+                        <span class="text-[12px] text-slate-700 truncate font-medium">${d}</span>
+                    </label>
+                `;
+            });
+        }
+
+        function updateTempDept(cb) {
+            if(cb.checked) tempSelectedDepts.add(cb.value);
+            else tempSelectedDepts.delete(cb.value);
+        }
+
+        function filterGSheetCheckboxes(val) {
+            renderGSheetCheckboxes(val);
+        }
+
+        function gsheetSelectAll() {
+            const allDepts = getUniqueDepartments();
+            tempSelectedDepts = new Set(allDepts);
+            renderGSheetCheckboxes(document.getElementById('gsheetSearchInput').value);
+        }
+
+        function gsheetClearAll() {
+            tempSelectedDepts.clear();
+            renderGSheetCheckboxes(document.getElementById('gsheetSearchInput').value);
+        }
+
+        function applyGSheetFilter() {
+            const allDepts = getUniqueDepartments();
+            // Nếu chọn tất cả hoặc không chọn gì -> Xóa bộ lọc (hiển thị tất cả)
+            if(tempSelectedDepts.size === allDepts.length || tempSelectedDepts.size === 0) {
+                globalSelectedDepts.clear();
+                document.getElementById('btnDeptFilterText').innerHTML = '<span class="text-slate-500 font-medium text-[13px]"><i class="fas fa-filter mr-2"></i>Lọc Phòng ban</span><i class="fas fa-caret-down text-slate-400"></i>';
+                document.getElementById('btnDeptFilterText').classList.remove('bg-emerald-50', 'border-emerald-200');
+            } else {
+                globalSelectedDepts = new Set(tempSelectedDepts);
+                document.getElementById('btnDeptFilterText').innerHTML = `<span class="text-emerald-700 font-bold text-[13px]"><i class="fas fa-filter mr-2"></i>Đã lọc (${globalSelectedDepts.size})</span><i class="fas fa-caret-down text-emerald-600"></i>`;
+                document.getElementById('btnDeptFilterText').classList.add('bg-emerald-50', 'border-emerald-200');
+            }
+            
+            document.getElementById('gsheetFilterPanel').classList.add('hidden');
+            
+            // Xóa master checkbox trước khi render
+            const selectAllCheckbox = document.getElementById('masterEmailCheckbox');
+            if(selectAllCheckbox) selectAllCheckbox.checked = false;
+            
+            filterEmailTable();
+        }
+
+        // Hide panel when clicking outside
+        document.addEventListener('click', function(e) {
+            const wrapper = document.getElementById('gsheetFilterWrapper');
+            const panel = document.getElementById('gsheetFilterPanel');
+            if (wrapper && !wrapper.contains(e.target) && panel && !panel.classList.contains('hidden')) {
+                panel.classList.add('hidden');
+            }
+        });
 
         function toggleAddEmployeeForm() {
             const form = document.getElementById('addEmployeeForm');
-            if (form.classList.contains('hidden')) {
-                form.classList.remove('hidden');
-            } else {
-                form.classList.add('hidden');
-            }
+            form.classList.toggle('hidden');
         }
 
         function addNewEmployee() {
@@ -1124,78 +1116,15 @@
             updateTrashCount();
         }
 
-        // --- XỬ LÝ LỌC PHÒNG BAN MULTI-SELECT ---
-        function handleDeptInput(val) {
-            const dropdown = document.getElementById('deptDropdown');
-            dropdown.innerHTML = '';
-            
-            const query = val.toLowerCase().trim();
-            const allDepts = getUniqueDepartments();
-            
-            const suggestions = allDepts.filter(d => 
-                d.toLowerCase().includes(query) && !globalSelectedDepts.has(d)
-            );
-
-            if(suggestions.length === 0) {
-                dropdown.innerHTML = `<div class="px-4 py-2 text-xs text-slate-400 italic">Không tìm thấy phòng ban...</div>`;
-            } else {
-                suggestions.forEach(d => {
-                    const div = document.createElement('div');
-                    div.className = "px-4 py-2 text-[13px] text-slate-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer font-medium transition-colors";
-                    div.innerText = d;
-                    div.onclick = () => selectDept(d);
-                    dropdown.appendChild(div);
-                });
-            }
-            dropdown.classList.remove('hidden');
-        }
-
-        function selectDept(dept) {
-            globalSelectedDepts.add(dept);
-            document.getElementById('deptSearchInput').value = '';
-            document.getElementById('deptDropdown').classList.add('hidden');
-            renderDeptTags();
-            filterEmailTable();
-            document.getElementById('deptSearchInput').focus();
-        }
-
-        function removeDeptTag(dept, event) {
-            if(event) {
-                event.stopPropagation();
-                event.preventDefault();
-            }
-            globalSelectedDepts.delete(dept);
-            renderDeptTags();
-            filterEmailTable();
-        }
-
-        function renderDeptTags() {
-            const container = document.getElementById('deptTags');
-            container.innerHTML = '';
-            globalSelectedDepts.forEach(dept => {
-                container.innerHTML += `
-                    <span class="bg-blue-100 text-blue-700 text-[11px] font-bold px-2 py-0.5 rounded flex items-center gap-1.5 border border-blue-200">
-                        ${dept}
-                        <i class="fas fa-times cursor-pointer hover:text-rose-500" onclick="removeDeptTag('${dept}', event)"></i>
-                    </span>
-                `;
-            });
-            
-            const input = document.getElementById('deptSearchInput');
-            if(globalSelectedDepts.size > 0) {
-                input.placeholder = "";
-            } else {
-                input.placeholder = "Lọc Phòng ban...";
-            }
-        }
-
         function clearEmailFilters() {
             document.getElementById('emailSearchInput').value = '';
             
             globalSelectedEmails.clear();
-            globalSelectedDepts.clear(); // Clear cả bộ lọc phòng ban
-            renderDeptTags();
-            document.getElementById('deptSearchInput').value = '';
+            
+            // Clear GSheet Filter
+            globalSelectedDepts.clear();
+            document.getElementById('btnDeptFilterText').innerHTML = '<span class="text-slate-500 font-medium text-[13px]"><i class="fas fa-filter mr-2"></i>Lọc Phòng ban</span><i class="fas fa-caret-down text-slate-400"></i>';
+            document.getElementById('btnDeptFilterText').classList.remove('bg-emerald-50', 'border-emerald-200');
             
             const selectAllCheckbox = document.getElementById('masterEmailCheckbox');
             if(selectAllCheckbox) selectAllCheckbox.checked = false;
@@ -1209,9 +1138,9 @@
             tbody.innerHTML = '';
             
             const filtered = globalEmployeeDB.filter(e => {
-                const matchName = e.name.toLowerCase().includes(nameVal) || e.code.toLowerCase().includes(nameVal) || e.email.toLowerCase().includes(nameVal);
+                const matchName = e.name.toLowerCase().includes(nameVal) || (e.code && e.code.toLowerCase().includes(nameVal)) || e.email.toLowerCase().includes(nameVal);
                 
-                // ĐÃ FIX: Lọc theo danh sách phòng ban đa lựa chọn (OR logic)
+                // Lọc theo GSheet Filter (OR logic)
                 let matchDept = true;
                 if(globalSelectedDepts.size > 0) {
                     matchDept = globalSelectedDepts.has(e.dept);
@@ -1225,13 +1154,13 @@
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50 transition">
                         <td class="text-center"><input type="checkbox" value="${e.email}" class="email-cb accent-blue-600 cursor-pointer" onchange="updateSelectedEmails(this)" ${isChecked}></td>
-                        <td class="text-xs text-slate-500 font-mono">${e.code}</td>
+                        <td class="text-xs text-slate-500 font-mono">${e.code || '-'}</td>
                         <td>
                             <div class="flex items-center gap-2">
                                 <div class="w-6 h-6 rounded bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-[10px] shrink-0">${e.name.charAt(0)}</div>
                                 <div>
                                     <p class="font-semibold text-slate-800 leading-tight">${e.name}</p>
-                                    <p class="text-[10px] text-slate-400 mt-0.5">${e.position}</p>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">${e.position || 'Nhân viên'}</p>
                                 </div>
                             </div>
                         </td>
@@ -1245,14 +1174,19 @@
                 `;
             });
             
-            // ĐÃ FIX LỖI SELECT ALL
+            // Reset Master Checkbox mỗi khi render
             const selectAllCheckbox = document.getElementById('masterEmailCheckbox');
             if(selectAllCheckbox) selectAllCheckbox.checked = false;
             
             updateEmailBtnText();
         }
 
-        function filterEmailTable() { renderEmailTable(); }
+        function filterEmailTable() { 
+            // Xóa master checkbox trước khi lọc
+            const selectAllCheckbox = document.getElementById('masterEmailCheckbox');
+            if(selectAllCheckbox) selectAllCheckbox.checked = false;
+            renderEmailTable(); 
+        }
         
         function updateSelectedEmails(cb) {
             if(cb.checked) globalSelectedEmails.add(cb.value); else globalSelectedEmails.delete(cb.value);
@@ -1264,7 +1198,7 @@
         }
         
         function updateEmailBtnText() { 
-            document.getElementById('btnCopyEmails').innerHTML = `Copy (<span id="countSelectedText">${globalSelectedEmails.size}</span>) Chọn`; 
+            document.getElementById('countSelectedText').innerText = globalSelectedEmails.size; 
         }
 
         function copySelectedEmails() {
