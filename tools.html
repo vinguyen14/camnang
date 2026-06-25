@@ -284,38 +284,56 @@
             </div>
             
             <div class="p-6 flex-grow flex flex-col bg-white overflow-hidden">
-                <!-- FORM THÊM MỚI NHÂN SỰ (ẨN/HIỆN) -->
+                <!-- FORM THÊM MỚI NHÂN SỰ (ĐÃ THÊM VỊ TRÍ) -->
                 <div id="addEmployeeForm" class="hidden bg-slate-50 p-4 border border-slate-200 rounded-lg mb-4 shadow-inner">
                     <h4 class="text-xs font-bold text-slate-600 mb-3 uppercase"><i class="fas fa-user-plus text-emerald-500 mr-1"></i> Thêm Nhân Sự Mới</h4>
-                    <div class="grid grid-cols-5 gap-3 items-end">
+                    <div class="grid grid-cols-6 gap-3 items-end">
                         <div><label class="form-label">Mã NV</label><input type="text" id="newEmpCode" class="saas-input text-xs" placeholder="VD: HN001"></div>
                         <div><label class="form-label">Họ Tên</label><input type="text" id="newEmpName" class="saas-input text-xs" placeholder="VD: Nguyễn Văn A"></div>
+                        <div><label class="form-label">Vị trí</label><input type="text" id="newEmpPos" class="saas-input text-xs" placeholder="VD: SM, Admin..."></div>
                         <div><label class="form-label">Email</label><input type="email" id="newEmpEmail" class="saas-input text-xs" placeholder="a.nv@kiotviet.com"></div>
                         <div><label class="form-label">Phòng Ban</label><input type="text" id="newEmpDept" class="saas-input text-xs" placeholder="VD: DSHNI1"></div>
                         <button onclick="addNewEmployee()" class="btn-primary w-full h-[38px] text-xs"><i class="fas fa-save mr-1"></i> Lưu Data</button>
                     </div>
                 </div>
 
-                <!-- TOOLBAR TÌM KIẾM & LỌC -->
+                <!-- FORM IMPORT DATA TỪ EXCEL (MỚI) -->
+                <div id="importEmployeeForm" class="hidden bg-indigo-50 p-4 border border-indigo-200 rounded-lg mb-4 shadow-inner">
+                    <h4 class="text-xs font-bold text-indigo-700 mb-2 uppercase"><i class="fas fa-file-import mr-1"></i> Import Dữ liệu (Ghi đè DB hiện tại)</h4>
+                    <p class="text-[10px] text-indigo-600 mb-3">Vui lòng copy từ Excel theo đúng thứ tự 6 cột: <b>Vai trò | Phòng ban | Vị trí | Họ tên | Email Công ty | Mã nhân viên</b> (Có thể bao gồm dòng Tiêu đề).</p>
+                    <div class="flex gap-3 items-end">
+                        <textarea id="importEmpRaw" class="saas-input text-xs font-mono whitespace-pre flex-grow h-20 resize-none" placeholder="Dán data từ Excel vào đây..."></textarea>
+                        <button onclick="importEmployeeData()" class="btn-primary bg-indigo-600 border-indigo-700 hover:bg-indigo-700 w-32 h-[80px] text-xs font-bold flex flex-col items-center justify-center gap-1 shadow-md"><i class="fas fa-magic text-lg"></i> Xử lý & Lưu</button>
+                    </div>
+                </div>
+
+                <!-- TOOLBAR TÌM KIẾM, LỌC & ACTIONS CHUYÊN SÂU -->
                 <div class="flex gap-4 mb-4 shrink-0 flex-wrap items-center">
-                    <div class="relative min-w-[220px]">
+                    <div class="relative min-w-[180px]">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="emailSearchInput" oninput="filterEmailTable()" placeholder="Tìm Tên, Mã NV, Email..." class="saas-input pl-9 border-slate-300">
                     </div>
                     
-                    <!-- BỘ LỌC PHÒNG BAN CHUẨN GOOGLE SHEETS -->
-                    <div class="relative min-w-[200px]">
+                    <div class="relative min-w-[160px]">
                         <i class="fas fa-building absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input type="text" id="deptSearchInput" list="deptList" oninput="filterEmailTable()" placeholder="Lọc theo Phòng ban..." class="saas-input pl-9 border-slate-300">
+                        <input type="text" id="deptSearchInput" list="deptList" oninput="filterEmailTable()" placeholder="Lọc Phòng ban..." class="saas-input pl-9 border-slate-300">
                         <datalist id="deptList"></datalist>
                     </div>
 
-                    <button onclick="clearEmailFilters()" class="btn-outline text-slate-500 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition px-4"><i class="fas fa-eraser mr-1"></i> Clear All</button>
-                    <div class="w-px h-6 bg-slate-300 mx-1"></div>
-                    <button onclick="toggleAddEmployeeForm()" class="btn-outline text-emerald-600 border-emerald-200 hover:bg-emerald-50 px-4"><i class="fas fa-plus mr-1"></i> Thêm NV</button>
+                    <!-- KHỐI BUTTON ACTIONS MỚI -->
+                    <div class="flex gap-1.5 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
+                        <button onclick="clearEmailFilters()" class="px-3 py-1.5 text-[11px] font-bold text-slate-600 hover:text-slate-800 hover:bg-white rounded transition shadow-sm" title="Bỏ lọc / Clear All"><i class="fas fa-eraser"></i></button>
+                        <div class="w-px h-5 bg-slate-300 my-auto"></div>
+                        <button onclick="toggleAddEmployeeForm()" class="px-3 py-1.5 text-[11px] font-bold text-emerald-600 hover:bg-white rounded transition shadow-sm" title="Thêm Nhân sự"><i class="fas fa-plus"></i></button>
+                        <button onclick="toggleImportEmployeeForm()" class="px-3 py-1.5 text-[11px] font-bold text-indigo-600 hover:bg-white rounded transition shadow-sm" title="Import Data Excel"><i class="fas fa-file-import"></i></button>
+                        <button onclick="exportEmployeeCSV()" class="px-3 py-1.5 text-[11px] font-bold text-blue-600 hover:bg-white rounded transition shadow-sm" title="Export Excel (CSV)"><i class="fas fa-file-export"></i></button>
+                        <div class="w-px h-5 bg-slate-300 my-auto"></div>
+                        <button onclick="openTrashModal()" class="px-3 py-1.5 text-[11px] font-bold text-orange-500 hover:bg-white rounded transition shadow-sm" title="Thùng rác"><i class="fas fa-trash-restore"></i> (<span id="trashCount">0</span>)</button>
+                        <button onclick="clearEntireEmployeeDB()" class="px-3 py-1.5 text-[11px] font-bold text-rose-600 hover:bg-white rounded transition shadow-sm" title="Xóa toàn bộ Database"><i class="fas fa-radiation"></i></button>
+                    </div>
                     
                     <div class="ml-auto">
-                        <button id="btnCopyEmails" onclick="copySelectedEmails()" class="btn-primary px-6 bg-slate-800 border-slate-900 hover:bg-slate-900 shadow-md">Copy (0) Email Đã Chọn</button>
+                        <button id="btnCopyEmails" onclick="copySelectedEmails()" class="btn-primary px-6 bg-slate-800 border-slate-900 hover:bg-slate-900 shadow-md">Copy (0) Chọn</button>
                     </div>
                 </div>
 
@@ -1126,6 +1144,98 @@
                 btn.innerHTML = '<i class="fas fa-check text-emerald-500"></i>';
                 setTimeout(() => btn.innerHTML = oldHTML, 1500);
             });
+        }
+        // --- CÁC HÀM IMPORT / EXPORT / CLEAR DATABASE NHÂN SỰ ---
+        function toggleImportEmployeeForm() {
+            const form = document.getElementById('importEmployeeForm');
+            form.classList.toggle('hidden');
+        }
+
+        function importEmployeeData() {
+            const raw = document.getElementById('importEmpRaw').value.trim();
+            if (!raw) return alert('Vui lòng dán dữ liệu từ file Excel vào khung!');
+
+            const rows = raw.split('\n');
+            let newDB = [];
+            let count = 0;
+
+            for(let i = 0; i < rows.length; i++) {
+                if(!rows[i].trim()) continue;
+                const cols = rows[i].split('\t');
+                
+                // Bỏ qua dòng nếu thiếu cột hoặc là dòng tiêu đề (Dòng có chữ "Vai trò" ở ô đầu, hoặc thiếu ký tự @ ở ô Email)
+                if(cols.length < 5) continue;
+                if(cols[0] && cols[0].toLowerCase().includes('vai trò')) continue;
+                if(!cols[4] || !cols[4].includes('@')) continue;
+
+                // Map dữ liệu chuẩn 6 cột: Vai trò (0) | Phòng ban (1) | Vị trí (2) | Họ tên (3) | Email (4) | Mã NV (5)
+                newDB.push({
+                    role: cols[0] ? cols[0].trim() : 'Trainee',
+                    dept: cols[1] ? cols[1].trim() : 'Uncategorized',
+                    position: cols[2] ? cols[2].trim() : 'Nhân viên',
+                    name: cols[3] ? cols[3].trim() : 'No Name',
+                    email: cols[4] ? cols[4].trim().toLowerCase() : '',
+                    code: cols[5] ? cols[5].trim() : ''
+                });
+                count++;
+            }
+
+            if(count === 0) return alert('Lỗi: Dữ liệu không hợp lệ hoặc sai thứ tự cột! Hãy check lại theo chuẩn 6 cột nhé.');
+
+            if(confirm(`Hệ thống đọc được ${count} nhân sự.\nBẠN CÓ CHẮC CHẮN MUỐN GHI ĐÈ XÓA SẠCH DATABASE HIỆN TẠI KHÔNG?`)) {
+                // Đóng gói Backup phòng hờ
+                const backupObj = { time: new Date().toLocaleString(), data: globalEmployeeDB };
+                localStorage.setItem('kv_employee_backup', JSON.stringify(backupObj));
+
+                globalEmployeeDB = newDB;
+                localStorage.setItem('kv_employee_db', JSON.stringify(globalEmployeeDB));
+                
+                document.getElementById('importEmpRaw').value = '';
+                toggleImportEmployeeForm();
+                populateDeptDatalist();
+                clearEmailFilters();
+                
+                alert(`✅ Import Thành Công ${count} Nhân sự!\nDatabase cũ đã được thay thế (Bản backup đã lưu ẩn).`);
+            }
+        }
+
+        function exportEmployeeCSV() {
+            if(globalEmployeeDB.length === 0) return alert('Database trống, không có dữ liệu để xuất!');
+            
+            // \uFEFF là BOM của UTF-8 giúp Excel hiện chuẩn Tiếng Việt có dấu
+            let csv = "\uFEFFVai trò\tPhòng ban\tVị trí\tHọ tên\tEmail Công ty\tMã nhân viên\n";
+            
+            globalEmployeeDB.forEach(e => {
+                csv += `${e.role || ''}\t${e.dept || ''}\t${e.position || ''}\t${e.name || ''}\t${e.email || ''}\t${e.code || ''}\n`;
+            });
+
+            // Sử dụng tab \t thay vì dấu phẩy để tương thích tốt nhất với Excel Tiếng Việt
+            const blob = new Blob([csv], { type: 'text/tsv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Export_DataNhanSu_${new Date().getTime()}.xls`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function clearEntireEmployeeDB() {
+            const pwd = prompt('☢️ CẢNH BÁO NGUY HIỂM ☢️\nBạn đang muốn XÓA TRẮNG toàn bộ Database nhân sự!\n\nVui lòng gõ chữ "XOA" để tiếp tục:');
+            if(pwd === "XOA") {
+                const backupObj = { time: new Date().toLocaleString(), data: globalEmployeeDB };
+                localStorage.setItem('kv_employee_backup', JSON.stringify(backupObj));
+
+                globalEmployeeDB = [];
+                localStorage.setItem('kv_employee_db', JSON.stringify(globalEmployeeDB));
+                
+                populateDeptDatalist();
+                clearEmailFilters();
+                alert('💥 ĐÃ XÓA TRẮNG DATABASE THÀNH CÔNG!');
+            } else {
+                alert('Đã hủy thao tác xóa.');
+            }
         }
 
         // TOOL 3: REGEX LỌC EMAIL
