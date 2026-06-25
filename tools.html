@@ -158,6 +158,7 @@
                         <h4 class="font-semibold text-[14px] text-slate-800">Regex Lọc Email</h4>
                     </div>
 
+                    <!-- TRIGGER MỞ MODAL DB NHÂN SỰ -->
                     <div onclick="openModal('emailCopyModal'); renderEmailTable();" class="tool-card group">
                         <div class="tool-icon-box bg-indigo-50 text-indigo-500"><i class="fas fa-users"></i></div>
                         <h4 class="font-semibold text-[14px] text-slate-800">Tra cứu Nội bộ</h4>
@@ -272,7 +273,7 @@
         </div>
     </div>
 
-    <!-- 2. TOOL TRA CỨU NHÂN SỰ & QUẢN LÝ -->
+    <!-- 2. TOOL TRA CỨU NHÂN SỰ & QUẢN LÝ (ĐÃ NÂNG CẤP VỚI THÙNG RÁC, IMPORT, MULTI-SELECT) -->
     <div id="emailCopyModal" class="modal fixed inset-0 items-center justify-center p-4">
         <div class="modal-content bg-white w-full max-w-6xl h-[85vh] flex flex-col relative overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
@@ -304,20 +305,24 @@
                     </div>
                 </div>
 
-                <!-- TOOLBAR TÌM KIẾM & LỌC -->
+                <!-- TOOLBAR TÌM KIẾM, LỌC & ACTIONS CHUYÊN SÂU -->
                 <div class="flex gap-4 mb-4 shrink-0 flex-wrap items-center">
                     <div class="relative min-w-[180px]">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="emailSearchInput" oninput="filterEmailTable()" placeholder="Tìm Tên, Mã NV, Email..." class="saas-input pl-9 border-slate-300">
                     </div>
                     
-                    <div class="relative min-w-[160px]">
-                        <i class="fas fa-building absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input type="text" id="deptSearchInput" list="deptList" oninput="filterEmailTable()" placeholder="Lọc Phòng ban..." class="saas-input pl-9 border-slate-300">
-                        <datalist id="deptList"></datalist>
+                    <!-- BỘ LỌC PHÒNG BAN ĐA LỰA CHỌN (MULTI-SELECT) -->
+                    <div class="relative min-w-[250px] max-w-[400px] flex-grow" id="deptDropdownWrapper">
+                        <div class="saas-input min-h-[38px] flex flex-wrap gap-1 items-center bg-white border-slate-300 relative cursor-text !pl-9 !py-1" onclick="document.getElementById('deptSearchInput').focus()">
+                            <i class="fas fa-building absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <div id="deptTags" class="flex flex-wrap gap-1 items-center mt-0.5"></div>
+                            <input type="text" id="deptSearchInput" class="flex-grow border-none outline-none text-[13px] min-w-[80px] bg-transparent py-1" placeholder="Lọc Phòng ban..." oninput="handleDeptInput(this.value)" onfocus="handleDeptInput(this.value)" autocomplete="off">
+                        </div>
+                        <div id="deptDropdown" class="hidden absolute left-0 right-0 top-full mt-1 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-lg shadow-xl z-50 custom-scrollbar py-1"></div>
                     </div>
 
-                    <!-- KHỐI BUTTON ACTIONS -->
+                    <!-- KHỐI BUTTON ACTIONS MỚI -->
                     <div class="flex gap-1.5 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
                         <button onclick="clearEmailFilters()" class="px-3 py-1.5 text-[11px] font-bold text-slate-600 hover:text-slate-800 hover:bg-white rounded transition shadow-sm" title="Bỏ lọc / Clear All"><i class="fas fa-eraser"></i></button>
                         <div class="w-px h-5 bg-slate-300 my-auto"></div>
@@ -330,7 +335,7 @@
                     </div>
                     
                     <div class="ml-auto">
-                        <button id="btnCopyEmails" onclick="copySelectedEmails()" class="btn-primary px-6 bg-slate-800 border-slate-900 hover:bg-slate-900 shadow-md">Copy (0) Chọn</button>
+                        <button id="btnCopyEmails" onclick="copySelectedEmails()" class="btn-primary px-6 bg-slate-800 border-slate-900 hover:bg-slate-900 shadow-md">Copy (<span id="countSelectedText">0</span>) Chọn</button>
                     </div>
                 </div>
 
@@ -1041,20 +1046,22 @@
             }
         }
 
-        // TOOL 2: TRA CỨU NHÂN SỰ & QUẢN LÝ
+        // --- TOOL 2: TRA CỨU NHÂN SỰ & QUẢN LÝ (ĐÃ NÂNG CẤP) ---
         let globalSelectedEmails = new Set();
+        let globalSelectedDepts = new Set();
+
+        // Ẩn dropdown khi click ra ngoài
+        document.addEventListener('click', function(e) {
+            const wrapper = document.getElementById('deptDropdownWrapper');
+            const dropdown = document.getElementById('deptDropdown');
+            if (wrapper && !wrapper.contains(e.target) && dropdown) {
+                dropdown.classList.add('hidden');
+            }
+        });
         
         function getUniqueDepartments() {
             const depts = new Set(globalEmployeeDB.map(e => e.dept));
             return Array.from(depts).sort();
-        }
-
-        function populateDeptDatalist() {
-            const list = document.getElementById('deptList');
-            list.innerHTML = '';
-            getUniqueDepartments().forEach(d => {
-                list.innerHTML += `<option value="${d}">`;
-            });
         }
 
         function toggleAddEmployeeForm() {
@@ -1088,7 +1095,6 @@
             document.getElementById('newEmpEmail').value = '';
             document.getElementById('newEmpDept').value = '';
             
-            populateDeptDatalist();
             renderEmailTable();
             alert("✅ Đã thêm nhân sự thành công!");
         }
@@ -1113,15 +1119,84 @@
             localStorage.setItem('kv_employee_db', JSON.stringify(globalEmployeeDB));
             
             globalSelectedEmails.delete(email); 
-            populateDeptDatalist();
+            
             renderEmailTable();
             updateTrashCount();
         }
 
+        // --- XỬ LÝ LỌC PHÒNG BAN MULTI-SELECT ---
+        function handleDeptInput(val) {
+            const dropdown = document.getElementById('deptDropdown');
+            dropdown.innerHTML = '';
+            
+            const query = val.toLowerCase().trim();
+            const allDepts = getUniqueDepartments();
+            
+            const suggestions = allDepts.filter(d => 
+                d.toLowerCase().includes(query) && !globalSelectedDepts.has(d)
+            );
+
+            if(suggestions.length === 0) {
+                dropdown.innerHTML = `<div class="px-4 py-2 text-xs text-slate-400 italic">Không tìm thấy phòng ban...</div>`;
+            } else {
+                suggestions.forEach(d => {
+                    const div = document.createElement('div');
+                    div.className = "px-4 py-2 text-[13px] text-slate-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer font-medium transition-colors";
+                    div.innerText = d;
+                    div.onclick = () => selectDept(d);
+                    dropdown.appendChild(div);
+                });
+            }
+            dropdown.classList.remove('hidden');
+        }
+
+        function selectDept(dept) {
+            globalSelectedDepts.add(dept);
+            document.getElementById('deptSearchInput').value = '';
+            document.getElementById('deptDropdown').classList.add('hidden');
+            renderDeptTags();
+            filterEmailTable();
+            document.getElementById('deptSearchInput').focus();
+        }
+
+        function removeDeptTag(dept, event) {
+            if(event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            globalSelectedDepts.delete(dept);
+            renderDeptTags();
+            filterEmailTable();
+        }
+
+        function renderDeptTags() {
+            const container = document.getElementById('deptTags');
+            container.innerHTML = '';
+            globalSelectedDepts.forEach(dept => {
+                container.innerHTML += `
+                    <span class="bg-blue-100 text-blue-700 text-[11px] font-bold px-2 py-0.5 rounded flex items-center gap-1.5 border border-blue-200">
+                        ${dept}
+                        <i class="fas fa-times cursor-pointer hover:text-rose-500" onclick="removeDeptTag('${dept}', event)"></i>
+                    </span>
+                `;
+            });
+            
+            const input = document.getElementById('deptSearchInput');
+            if(globalSelectedDepts.size > 0) {
+                input.placeholder = "";
+            } else {
+                input.placeholder = "Lọc Phòng ban...";
+            }
+        }
+
         function clearEmailFilters() {
             document.getElementById('emailSearchInput').value = '';
-            document.getElementById('deptSearchInput').value = '';
+            
             globalSelectedEmails.clear();
+            globalSelectedDepts.clear(); // Clear cả bộ lọc phòng ban
+            renderDeptTags();
+            document.getElementById('deptSearchInput').value = '';
+            
             const selectAllCheckbox = document.getElementById('masterEmailCheckbox');
             if(selectAllCheckbox) selectAllCheckbox.checked = false;
             renderEmailTable();
@@ -1129,14 +1204,19 @@
 
         function renderEmailTable() {
             const nameVal = document.getElementById('emailSearchInput').value.toLowerCase();
-            const deptVal = document.getElementById('deptSearchInput').value.toLowerCase();
             const tbody = document.getElementById('emailTableBody'); 
             
             tbody.innerHTML = '';
             
             const filtered = globalEmployeeDB.filter(e => {
                 const matchName = e.name.toLowerCase().includes(nameVal) || e.code.toLowerCase().includes(nameVal) || e.email.toLowerCase().includes(nameVal);
-                const matchDept = e.dept.toLowerCase().includes(deptVal);
+                
+                // ĐÃ FIX: Lọc theo danh sách phòng ban đa lựa chọn (OR logic)
+                let matchDept = true;
+                if(globalSelectedDepts.size > 0) {
+                    matchDept = globalSelectedDepts.has(e.dept);
+                }
+
                 return matchName && matchDept;
             });
 
@@ -1184,7 +1264,7 @@
         }
         
         function updateEmailBtnText() { 
-            document.getElementById('btnCopyEmails').innerText = `Copy (${globalSelectedEmails.size}) Chọn`; 
+            document.getElementById('btnCopyEmails').innerHTML = `Copy (<span id="countSelectedText">${globalSelectedEmails.size}</span>) Chọn`; 
         }
 
         function copySelectedEmails() {
@@ -1249,7 +1329,6 @@
                 renderTrashTable();
                 renderEmailTable();
                 updateTrashCount();
-                populateDeptDatalist();
             }
         }
 
@@ -1297,7 +1376,7 @@
                 
                 document.getElementById('importEmpRaw').value = '';
                 toggleImportEmployeeForm();
-                populateDeptDatalist();
+                
                 clearEmailFilters();
                 
                 alert(`✅ Import Thành Công ${count} Nhân sự!\nDatabase cũ đã được thay thế (Bản backup đã lưu ẩn).`);
@@ -1333,7 +1412,6 @@
                 globalEmployeeDB = [];
                 localStorage.setItem('kv_employee_db', JSON.stringify(globalEmployeeDB));
                 
-                populateDeptDatalist();
                 clearEmailFilters();
                 alert('💥 ĐÃ XÓA TRẮNG DATABASE THÀNH CÔNG!');
             } else {
@@ -1492,7 +1570,6 @@
             
             // Tự động Load LocalStorage cho Data Nhân sự
             loadEmployeeDB();
-            populateDeptDatalist();
 
             await fetchDatabase();
         };
