@@ -659,6 +659,10 @@
                     const iName = h.findIndex(x=>x.includes('họ và tên') || x.includes('họ tên') || x.includes('tên'));
                     const iEmail = h.findIndex(x=>x.includes('email')); 
                     const iDept = h.findIndex(x=>x.includes('phòng ban'));
+                    // NÂNG CẤP: Tìm thêm cột Khu Vực và Địa Điểm từ Excel
+                    const iLoc = h.findIndex(x=>x.includes('địa điểm') || x.includes('nơi làm việc') || x.includes('văn phòng'));
+                    const iReg = h.findIndex(x=>x.includes('khu vực') || x.includes('vùng'));
+
                     for(let i=1; i<lines.length; i++) {
                         const cols = lines[i].split('\t');
                         if(cols.length > Math.max(0, iEmail) && cols[iEmail].trim() !== '') {
@@ -667,6 +671,8 @@
                                 name: iName!==-1 ? cols[iName] : '', 
                                 email: iEmail!==-1 ? cols[iEmail].trim().toLowerCase() : '', 
                                 dept: iDept!==-1 ? cols[iDept] : '', 
+                                location: iLoc!==-1 ? cols[iLoc].trim() : '', // Lưu trực tiếp Địa điểm từ Excel
+                                region: iReg!==-1 ? cols[iReg].trim() : '',   // Lưu trực tiếp Khu vực từ Excel
                                 attempt: 0, score: 0, status: 'Miss' 
                             });
                         }
@@ -787,11 +793,10 @@
                 let ans = sData ? sData.correct : 0;
                 let pct = Math.round((ans / totalQuestions) * 100);
                 
-                let region = getRegion(r.dept);
-                let location = getLocation(r.dept, region);
+                // Ưu tiên lấy dữ liệu gốc từ Excel, nếu không có mới gọi hàm tự đoán (Fallback)
+                let region = r.region || getRegion(r.dept);
+                let location = r.location || getLocation(r.dept, region);
                 regionsSet.add(region);
-
-                currentDailyData[dayKey].push({
                     name: r.name,
                     dept: r.dept,
                     email: r.email,
