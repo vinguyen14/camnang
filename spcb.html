@@ -564,13 +564,30 @@
             return DEPT_TO_REGION[k] || "Chưa xác định";
         }
 
-        function getLocation(regionName) {
-            if(!regionName) return "";
+        function getLocation(deptName, regionName) {
+            if(!deptName) return "Chưa xác định";
+            const k = deptName.toUpperCase();
+
+            // 1. Quét theo mã Tỉnh/Thành phố trực tiếp trong tên Phòng ban
+            if(k.includes("HNI") || k.includes("HN") || k.includes("BNH") || k.includes("VPC") || k.includes("TNN") || k.includes("THA") || k.includes("NAN") || k.includes("NDH") || k.includes("PTO")) return "Hà Nội";
+            if(k.includes("SGN") || k.includes("SG") || k.includes("KVS")) return "Hồ Chí Minh";
+            if(k.includes("CTO") || k.includes("CT") || k.includes("KGG") || k.includes("DTP")) return "Cần Thơ";
+            if(k.includes("DNG") || k.includes("ĐN") || k.includes("TTH") || k.includes("QNI")) return "Đà Nẵng";
+            if(k.includes("BMT") || k.includes("GLI") || k.includes("LDG")) return "Buôn Ma Thuột";
+            if(k.includes("NTG")) return "Nha Trang";
+            if(k.includes("HPG") || k.includes("HDG") || k.includes("QNH")) return "Hải Phòng";
+            if(k.includes("VTU") || k.includes("BTN")) return "Vũng Tàu";
+            if(k.includes("BDH") || k.includes("BĐ")) return "Quy Nhơn";
+
+            // 2. Nếu không có mã Tỉnh rõ ràng, fallback về Khu vực (Region)
+            if(!regionName) return "Hà Nội";
             if(regionName.includes("Hà Nội") || regionName.includes("Miền Bắc") || regionName.includes("Đông Bắc")) return "Hà Nội";
             if(regionName.includes("Sài Gòn") || regionName.includes("TSCTO")) return "Hồ Chí Minh";
             if(regionName.includes("Mekong")) return "Cần Thơ";
-            if(regionName.includes("Đông Tây")) return "Buôn Ma Thuột";
+            if(regionName.includes("Đông Tây")) return "Buôn Ma Thuột"; // Fallback cho các vùng Tây Nguyên khác
             if(regionName.includes("Miền Trung")) return "Đà Nẵng";
+            if(regionName.includes("Back Office")) return "Trụ sở chính";
+            
             return "Hà Nội"; // Default fallback
         }
 
@@ -771,7 +788,7 @@
                 let pct = Math.round((ans / totalQuestions) * 100);
                 
                 let region = getRegion(r.dept);
-                let location = getLocation(region);
+                let location = getLocation(r.dept, region);
                 regionsSet.add(region);
 
                 currentDailyData[dayKey].push({
