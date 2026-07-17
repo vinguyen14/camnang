@@ -1263,6 +1263,28 @@
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('sidebar-collapsed');
         }
+        // --- LOGIC HOẠT ĐỘNG CỦA GLOBAL TOOLTIP ---
+        const tooltip = document.getElementById('global-tooltip');
+        const tooltipText = document.getElementById('tooltip-text');
+        
+        document.querySelectorAll('.nav-item[data-title]').forEach(item => {
+            item.addEventListener('mouseenter', (e) => {
+                // Chỉ hiện Tooltip khi Sidebar đang bị thu gọn
+                if (document.getElementById('sidebar').classList.contains('sidebar-collapsed')) {
+                    const rect = item.getBoundingClientRect();
+                    tooltipText.innerText = item.getAttribute('data-title');
+                    
+                    // Tính toán tọa độ Y (Căn giữa Icon) và tọa độ X (Nằm bên phải Sidebar)
+                    tooltip.style.top = (rect.top + (rect.height / 2) - 14) + 'px'; 
+                    tooltip.style.left = (rect.right + 12) + 'px'; 
+                    tooltip.style.opacity = '1';
+                }
+            });
+            
+            item.addEventListener('mouseleave', () => {
+                tooltip.style.opacity = '0'; // Ẩn mượt mà khi đưa chuột ra
+            });
+        });
         // Bật tắt Accordion (Menu con)
         function toggleAccordion(menuId, iconId) {
             const menu = document.getElementById(menuId);
@@ -1304,6 +1326,12 @@
 
             } catch(e) { console.warn("Lỗi load Profile:", e); }
         });
+        <!-- Global Tooltip đè lên mọi Layer -->
+    <div id="global-tooltip" class="fixed bg-slate-800 text-white text-[12px] font-medium px-3 py-1.5 rounded-lg shadow-xl pointer-events-none opacity-0 transition-opacity duration-200 z-[100000] whitespace-nowrap flex items-center">
+        <!-- Mũi tên nhỏ bên trái -->
+        <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
+        <span id="tooltip-text" class="relative z-10"></span>
+    </div>
     </script>
 </body>
 </html>
