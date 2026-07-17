@@ -804,7 +804,7 @@
         }
         function handleChatEnter(e) { if(e.key === 'Enter') sendChatMessage(); }
 
-        // --- 1. CHATBOT AI THỰC SỰ ---
+        // --- 1. CHATBOT AI THỰC SỰ (ĐÃ BƠM FULL DATA) ---
         async function sendChatMessage() {
             const input = document.getElementById('chatInput'); 
             const text = input.value.trim(); 
@@ -819,11 +819,21 @@
             history.innerHTML += `<div id="${replyId}" class="bg-white border border-slate-200 p-3 rounded-xl shadow-sm text-[13px] text-slate-700 max-w-[85%] flex gap-3 items-start animate-fade-up mr-auto"><i class="fas fa-robot text-blue-500 mt-1 text-lg"></i><div class="leading-relaxed flex-grow text-slate-400 italic"><i class="fas fa-circle-notch fa-spin mr-1"></i> AI đang suy nghĩ...</div></div>`;
             history.scrollTop = history.scrollHeight;
 
-            let systemContext = `Dưới đây là Data hệ thống hiện tại:\n- Tổng số khóa: ${globalMasterDB.length}\n`;
+            // BƠM DATA VÀO NÃO AI: Tổng hợp tồn kho quà tặng hiện tại
+            let giftData = "Trống";
+            try {
+                const gifts = JSON.parse(localStorage.getItem('kv_gift_db')) || globalGiftsDB || [];
+                if(gifts.length > 0) {
+                    giftData = gifts.map(g => `- ${g.name}: Tồn kho ${Math.max(0, g.in - g.out)} cái`).join('\n');
+                }
+            } catch(e) {}
+
+            let systemContext = `Dưới đây là Data hệ thống hiện tại:\n1. Tổng số khóa học đã vận hành: ${globalMasterDB.length} khóa.\n2. Tình hình Tồn Kho Quà Tặng hiện tại:\n${giftData}\n`;
+            
             const finalPrompt = `${systemContext}\nCâu hỏi của User: ${text}`;
 
             let aiResponse = await askAgenticAI(finalPrompt);
-            if (!aiResponse) aiResponse = "⚠️ Hệ thống không nhận được câu trả lời từ AI. Bạn hãy chắc chắn đã dán đúng code vào file Code.json và chọn **New Deployment** nhé!";
+            if (!aiResponse) aiResponse = "⚠️ Hệ thống không nhận được phản hồi từ AI. Hãy chắc chắn API Key hợp lệ và đã Deploy!";
             
             const replyBox = document.getElementById(replyId);
             if(replyBox) {
