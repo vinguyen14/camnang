@@ -1095,39 +1095,124 @@
         function toggleChat() { document.getElementById('notesWidget').classList.remove('active'); document.getElementById('chatWidget').classList.toggle('active'); }
         function handleChatEnter(e) { if(e.key === 'Enter') sendChatMessage(); }
         
-        function sendChatMessage() {
+        // --- HELPER: FORMAT MARKDOWN TỪ AI TRẢ VỀ ---
+        function formatAIResponse(text) {
+            return text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-800">$1</strong>')
+                       .replace(/\*(.*?)\*/g, '<em class="text-slate-600">$1</em>')
+                       .replace(/\n/g, '<br>');
+        }
+
+        // --- HELPER: GỌI API AI ---
+        async function askAgenticAI(promptText) {
+            if(!GOOGLE_API_URL) return "⚠️ Lỗi: Vui lòng cài đặt Link API Google Sheets trong phần Cấu hình trước khi dùng AI.";
+            try {
+                const res = await fetch(GOOGLE_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: "ask_ai", prompt: promptText })
+                });
+                const data = await res.json();
+                return data.status === 'success' ? data.reply : "⚠️ Lỗi từ Server: " + data.message;
+            } catch(e) { return "⚠️ Lỗi kết nối mạng hoặc Server không phản hồi."; }
+        }
+
+        // --- 1. CHATBOT AI THỰC SỰ ---
+        async function sendChatMessage() {
             const input = document.getElementById('chatInput'); 
-            const text = input.value.trim().toLowerCase(); 
+            const text = input.value.trim(); 
             if(!text) return;
-            const history = document.getElementById('chatHistory');
-            history.innerHTML += `<div class="bg-blue-600 text-white p-3 rounded-lg text-[13px] self-end max-w-[85%] shadow-sm">${input.value}</div>`;
-            input.value = ''; history.scrollTop = history.scrollHeight;
-
-            let reply = "Tôi có thể giúp bạn truy vấn dữ liệu từ Hệ thống L&D. Bạn hãy thử hỏi: 'Có bao nhiêu khóa?', 'Tỷ lệ pass là bao nhiêu?' hoặc 'Lịch dạy tháng này?'";
             
-            if(text.includes("bao nhiêu khóa") || text.includes("mấy khóa") || text.includes("tổng số khóa")) {
-                reply = `Hệ thống ghi nhận tổng cộng **${globalMasterDB.length}** khóa học đã được vận hành.`;
-            } else if(text.includes("tỷ lệ pass") || text.includes("hiệu suất") || text.includes("bao nhiêu pass")) {
-                let sT = 0, sP = 0; globalMasterDB.forEach(i => { sT+=parseInt(i.totalTrainees)||0; sP+=parseInt(i.passedTrainees)||0; });
-                reply = sT > 0 ? `Tỷ lệ học viên vượt qua bài kiểm tra hiện tại là **${Math.round((sP/sT)*100)}%** (${sP}/${sT} HV).` : `Chưa có đủ dữ liệu học viên để tính toán.`;
-            } else if(text.includes("lịch") || text.includes("ngày mai") || text.includes("khi nào")) {
-                const cal = JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {};
-                const currentMonth = new Date().getMonth() + 1;
-                const currentYear = new Date().getFullYear();
-                const mData = cal[`${currentYear}-${currentMonth}`];
-                if(mData) {
-                    reply = `Tháng ${currentMonth}/${currentYear} có các lịch đã cài đặt: Khóa KV1 vào ngày ${mData.kv1||'Chưa setup'}, Khóa HĐĐT-Thuế vào ngày ${mData.tax||'Chưa setup'}.`;
-                } else {
-                    reply = `Tháng này bạn chưa setup Lịch trong phần Thiết lập Hệ thống.`;
-                }
-            } else if(text.includes("chào") || text.includes("hello")) {
-                reply = "Chào bạn! Tôi có thể lấy data thống kê, đọc master data và lịch trình giúp bạn ngay lập tức.";
-            }
+            const history = document.getElementById('chatHistory');
+            
+            // Hiện câu hỏi của User
+            history.innerHTML += `<div class="bg-blue-600 text-white p-3 rounded-xl text-[13px] self-end max-w-[85%] shadow-sm ml-auto animate-fade-up">${text}</div>`;
+            input.value = ''; 
+            history.scrollTop = history.scrollHeight;
 
-            setTimeout(() => {
-                history.innerHTML += `<div class="bg-white border border-slate-200 p-3 rounded-lg shadow-sm text-[13px] text-slate-700 max-w-[85%] flex gap-2 items-start"><i class="fas fa-robot text-blue-500 mt-0.5"></i><div class="leading-relaxed">${reply}</div></div>`;
+            // Tạo ID ngẫu nhiên cho Box trả lời của AI để dễ update
+            const replyId = 'ai-reply-' + new Date().getTime();
+            history.innerHTML += `<div id="${replyId}" class="bg-white border border-slate-200 p-3 rounded-xl shadow-sm text-[13px] text-slate-700 max-w-[85%] flex gap-3 items-start animate-fade-up mr-auto"><i class="fas fa-robot text-blue-500 mt-1 text-lg"></i><div class="leading-relaxed flex-grow text-slate-400 italic"><i class="fas fa-circle-notch fa-spin mr-1"></i> AI đang suy nghĩ...</div></div>`;
+            history.scrollTop = history.scrollHeight;
+
+            // Cấp bối cảnh cho AI hiểu hệ thống đang có data gì
+            let systemContext = `Dưới đây là Data hệ thống hiện tại:\n- Tổng số khóa: ${globalMasterDB.length}\n`;
+            const finalPrompt = `${systemContext}\nCâu hỏi của User: ${text}`;
+
+            // Gọi AI và Cập nhật kết quả
+            const aiResponse = await askAgenticAI(finalPrompt);
+            
+            const replyBox = document.getElementById(replyId);
+            if(replyBox) {
+                replyBox.innerHTML = `<i class="fas fa-robot text-purple-500 mt-1 text-lg"></i><div class="leading-relaxed flex-grow text-slate-700">${formatAIResponse(aiResponse)}</div>`;
                 history.scrollTop = history.scrollHeight;
-            }, 800);
+            }
+        }
+
+        // --- 2. BÁO CÁO SLIDE (TỰ ĐỘNG PHÂN TÍCH SURVEY BẰNG AI) ---
+        async function runTechPresentation() {
+            let data = globalMasterDB || [];
+            if(data.length === 0) return alert('Chưa có dữ liệu MasterDB để tạo báo cáo!');
+
+            document.getElementById('slide-year').innerText = new Date().getFullYear();
+
+            let totalHV = 0, totalPass = 0; let groupStats = {};
+            data.forEach(d => {
+                let g = d.groupName || 'Other';
+                if(!groupStats[g]) groupStats[g] = { classes: 0, hv: 0, pass: 0 };
+                groupStats[g].classes++;
+                groupStats[g].hv += parseInt(d.totalTrainees) || 0;
+                groupStats[g].pass += parseInt(d.passedTrainees) || 0;
+                totalHV += parseInt(d.totalTrainees) || 0;
+                totalPass += parseInt(d.passedTrainees) || 0;
+            });
+
+            document.getElementById('sl-total-class').innerText = data.length;
+            document.getElementById('sl-total-hv').innerText = totalHV;
+            document.getElementById('sl-pass-rate').innerText = totalHV > 0 ? Math.round((totalPass/totalHV)*100) + '%' : '0%';
+
+            let taughtHtml = '', selfHtml = '';
+            for(let key in groupStats) {
+                let s = groupStats[key];
+                let pRate = s.hv > 0 ? Math.round((s.pass/s.hv)*100) : 0;
+                let html = `<div class="flex justify-between items-center bg-slate-800 p-3 rounded mb-2">
+                                <span class="font-bold text-white">${key}</span>
+                                <span class="text-sm text-slate-300">${s.classes} Lớp | ${s.hv} HV | <span class="${pRate>=80?'text-emerald-400 font-bold':'text-rose-400 font-bold'}">Pass: ${pRate}%</span></span>
+                            </div>`;
+                if(key === 'SPCB' || key === 'TAX') taughtHtml += html; else selfHtml += html;
+            }
+            document.getElementById('sl-taught-detail').innerHTML = taughtHtml || '<p class="italic text-slate-400">Chưa có dữ liệu</p>';
+            document.getElementById('sl-self-detail').innerHTML = selfHtml || '<p class="italic text-slate-400">Chưa có dữ liệu</p>';
+
+            // Kích hoạt Slide Mode ngay lập tức
+            curSlide = 1;
+            document.querySelectorAll('.tech-slide').forEach(el => el.classList.remove('active'));
+            document.getElementById('tslide-1').classList.add('active');
+            document.getElementById('presentation-overlay').classList.add('active');
+
+            // XỬ LÝ AI PHÂN TÍCH (CHẠY NGẦM ĐỂ KHÔNG BỊ ĐƠ MÀN HÌNH)
+            const sSpcb = document.getElementById('survey-spcb').value.trim();
+            const sTax = document.getElementById('survey-tax').value.trim();
+            
+            const insightBox = document.getElementById('sl-survey-insights');
+            const evalBox = document.getElementById('sl-ai-evaluation');
+
+            if(!sSpcb && !sTax) {
+                insightBox.innerHTML = `<div class="insight-box warning"><strong>⚠️ Cảnh báo:</strong><br>Bạn chưa nạp dữ liệu Khảo sát. Vui lòng dán data từ Excel vào "Trạm Khảo Sát" để AI tiến hành đọc và tóm tắt ý kiến học viên.</div>`;
+                evalBox.innerHTML = `<div class="insight-box">Hệ thống đang hoạt động ổn định. Tỷ lệ Pass trung bình là ${totalHV > 0 ? Math.round((totalPass/totalHV)*100) : 0}%.</div>`;
+            } else {
+                insightBox.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i><p class="font-bold">AI đang phân tích hàng ngàn ý kiến...</p></div>`;
+                evalBox.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fas fa-brain fa-pulse text-4xl text-emerald-500 mb-4"></i><p class="font-bold">Đang tổng hợp định hướng L&D...</p></div>`;
+                
+                // Prompt cho AI đọc Survey
+                const promptInsight = `Đóng vai Quản lý đào tạo. Hãy đọc những nhận xét sau của học viên và tóm tắt thành 2 mục ngắn gọn (có dùng icon): Điểm Sáng và Điểm Cần Cải Thiện.\nData: ${sSpcb} ${sTax}`;
+                const aiInsight = await askAgenticAI(promptInsight);
+                insightBox.innerHTML = `<div class="insight-box bg-blue-50 border-blue-200 text-[13px] leading-relaxed">${formatAIResponse(aiInsight)}</div>`;
+
+                // Prompt cho AI đưa ra Evaluate
+                const promptEval = `Đóng vai Giám đốc L&D. Tỷ lệ Pass học viên tháng này là ${totalHV > 0 ? Math.round((totalPass/totalHV)*100) : 0}%. Dựa vào tỷ lệ này và các nhận xét sau: "${sSpcb.substring(0,200)}", hãy đưa ra 2 Lời khuyên/Hành động ngắn gọn cho Trainer tháng tới. (Dùng icon)`;
+                const aiEval = await askAgenticAI(promptEval);
+                evalBox.innerHTML = `<div class="insight-box bg-emerald-50 border-emerald-200 text-[13px] leading-relaxed">${formatAIResponse(aiEval)}</div>`;
+            }
         }
 
         // HÀM MỞ/ĐÓNG NẠP KHẢO SÁT
@@ -1143,102 +1228,6 @@
             if(curSlide > maxSlide) curSlide = maxSlide; if(curSlide < 1) curSlide = 1;
             document.getElementById(`tslide-${curSlide}`).classList.add('active');
         }
-
-        function runTechPresentation() {
-            let data = globalMasterDB || JSON.parse(localStorage.getItem('kv_master_db')) || [];
-            if(data.length === 0) return alert('Chưa có dữ liệu MasterDB để tạo báo cáo!');
-
-            document.getElementById('slide-year').innerText = new Date().getFullYear();
-
-            let totalHV = 0, totalPass = 0;
-            let groupStats = {};
-
-            data.forEach(d => {
-                let g = d.groupName || 'Other';
-                if(!groupStats[g]) groupStats[g] = { classes: 0, hv: 0, pass: 0 };
-                groupStats[g].classes++;
-                groupStats[g].hv += parseInt(d.totalTrainees) || 0;
-                groupStats[g].pass += parseInt(d.passedTrainees) || 0;
-                
-                totalHV += parseInt(d.totalTrainees) || 0;
-                totalPass += parseInt(d.passedTrainees) || 0;
-            });
-
-            document.getElementById('sl-total-class').innerText = data.length;
-            document.getElementById('sl-total-hv').innerText = totalHV;
-            document.getElementById('sl-pass-rate').innerText = totalHV > 0 ? Math.round((totalPass/totalHV)*100) + '%' : '0%';
-
-            let taughtHtml = '', selfHtml = '';
-            for(let key in groupStats) {
-                let s = groupStats[key];
-                let pRate = s.hv > 0 ? Math.round((s.pass/s.hv)*100) : 0;
-                let html = `<div class="flex justify-between items-center bg-slate-800 p-3 rounded">
-                                <span class="font-bold">${key}</span>
-                                <span class="text-sm">${s.classes} Lớp | ${s.hv} HV | <span class="${pRate>=80?'text-emerald-400':'text-rose-400'}">Pass: ${pRate}%</span></span>
-                            </div>`;
-                if(key === 'SPCB' || key === 'TAX') taughtHtml += html;
-                else selfHtml += html;
-            }
-            document.getElementById('sl-taught-detail').innerHTML = taughtHtml || '<p class="italic">Chưa có dữ liệu</p>';
-            document.getElementById('sl-self-detail').innerHTML = selfHtml || '<p class="italic">Chưa có dữ liệu</p>';
-
-            const sSpcb = document.getElementById('survey-spcb').value.toLowerCase();
-            const sTax = document.getElementById('survey-tax').value.toLowerCase();
-            let surveyInsights = '';
-            
-            if(!sSpcb && !sTax) {
-                surveyInsights = `<div class="insight-box warning">Chưa nạp dữ liệu Khảo sát. Vui lòng dán data vào Trạm Khảo Sát để AI đọc ý kiến học viên.</div>`;
-            } else {
-                let combinedText = sSpcb + " " + sTax;
-                if(combinedText.includes("hay") || combinedText.includes("dễ hiểu") || combinedText.includes("nhiệt tình")) {
-                    surveyInsights += `<div class="insight-box"><strong><i class="fas fa-check-circle"></i> Điểm Sáng:</strong> Học viên phản hồi rất tích cực về phong cách truyền đạt và sự nhiệt tình của Giảng viên.</div>`;
-                }
-                if(combinedText.includes("khó") || combinedText.includes("nhanh") || combinedText.includes("thực hành")) {
-                    surveyInsights += `<div class="insight-box warning"><strong><i class="fas fa-exclamation-triangle"></i> Cần Cải Thiện:</strong> Một số ý kiến cho rằng tốc độ bài giảng hơi nhanh và cần thêm thời lượng thực hành (Đặc biệt phần Thuế).</div>`;
-                }
-                if(combinedText.includes("lms") || combinedText.includes("github")) {
-                    surveyInsights += `<div class="insight-box"><strong><i class="fas fa-laptop-code"></i> Hệ thống E-Learning:</strong> Nền tảng Github và LMS được học viên đón nhận và đánh giá cao sự tiện lợi.</div>`;
-                }
-            }
-            document.getElementById('sl-survey-insights').innerHTML = surveyInsights || `<div class="insight-box">Data khảo sát ở mức trung lập. Không phát hiện bất thường.</div>`;
-
-            let aiEval = '';
-            let totalPassRate = totalHV > 0 ? (totalPass/totalHV)*100 : 0;
-            
-            if(totalPassRate >= 90) {
-                aiEval += `<div class="insight-box"><strong>🔥 Tối ưu hóa tuyệt vời:</strong> Tỷ lệ đỗ đạt ${Math.round(totalPassRate)}%. Việc chuyển dịch đào tạo lý thuyết lên LMS kết hợp thực hành đang đem lại hiệu suất cao vượt trội.</div>`;
-            } else if (totalPassRate >= 80) {
-                aiEval += `<div class="insight-box warning"><strong>⚖️ Hiệu suất ổn định:</strong> Tỷ lệ đỗ đạt ${Math.round(totalPassRate)}%. Hệ thống vận hành tốt nhưng cần kiểm tra lại các Module Chuyên ngành vì có dấu hiệu chững lại.</div>`;
-            } else {
-                aiEval += `<div class="insight-box danger"><strong>🚨 Rủi ro cảnh báo:</strong> Tỷ lệ đỗ quá thấp. Cần review lại đề thi trên LMS và tổ chức thêm các buổi Support Q&A.</div>`;
-            }
-
-            aiEval += `<div class="insight-box"><strong>💡 Next Steps (2026):</strong><br>- Tách biệt rạch ròi lý thuyết (tự học) và Case-study (dạy trực tiếp).<br>- Áp dụng AI Point-scoring cho các lớp tự học để giảm tải vận hành.<br>- Nâng cấp tài liệu Khóa Thuế & FNB.</div>`;
-            
-            document.getElementById('sl-ai-evaluation').innerHTML = aiEval;
-
-            curSlide = 1;
-            document.querySelectorAll('.tech-slide').forEach(el => el.classList.remove('active'));
-            document.getElementById('tslide-1').classList.add('active');
-            document.getElementById('presentation-overlay').classList.add('active');
-        }
-
-        window.onload = () => {
-            const prof = JSON.parse(localStorage.getItem('kv_trainer_profile'));
-            if(prof) {
-                document.getElementById('display-prof-name').innerText = prof.name;
-                document.getElementById('display-prof-title').innerText = prof.title;
-                document.getElementById('display-prof-ava').innerText = prof.name.charAt(0).toUpperCase();
-            }
-            
-            globalMasterDB = JSON.parse(localStorage.getItem('kv_master_db')) || [];
-            if(!Array.isArray(globalMasterDB)) globalMasterDB = [];
-            switchTab('tong-quan');
-
-            fetchDatabase().then(() => {
-                if(document.getElementById('statusChart')) switchTab('tong-quan');
-            });
-        };
 
         // Bật/tắt Profile Menu giống KiotViet
         function toggleProfileMenu(e) {
