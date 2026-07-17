@@ -14,20 +14,22 @@
     <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
 
     <style>
-        /* === KIOTVIET SAAS MINIMALIST DESIGN === */
+        /* === KIOTVIET SAAS MINIMALIST DESIGN (CLEANED) === */
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #1e293b; overflow: hidden; }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+
         /* --- HIỆU ỨNG ĐỘNG (DYNAMIC FLOATING & SKELETON) --- */
-        /* 1. Kịch bản lướt hiện (Fade Up) */
-        @keyframes fadeUpIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeUpIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-up { animation: fadeUpIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
         .delay-100 { animation-delay: 0.1s; }
         .delay-200 { animation-delay: 0.2s; }
         .delay-300 { animation-delay: 0.3s; }
         .delay-400 { animation-delay: 0.4s; }
 
-        /* 2. Khung xương phát sáng (Skeleton Loading) */
         @keyframes shimmer { 100% { transform: translateX(100%); } }
         .skeleton { position: relative; overflow: hidden; background-color: #e5e7eb; }
         .skeleton::after {
@@ -36,7 +38,8 @@
             animation: shimmer 1.5s infinite;
         }
 
-        /* 3. Tinh chỉnh Thẻ Card (Bay lơ lửng 3D) */
+        /* --- BỐ CỤC THẺ CARD & FLOATING 3D --- */
+        .content-area { height: calc(100vh - 64px); overflow-y: auto; overflow-x: hidden; padding: 24px 32px; }
         .saas-card { 
             background: #ffffff; border-radius: 16px; 
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03); 
@@ -48,19 +51,12 @@
             border-color: #d1d5db; 
             transform: translateY(-6px); /* Bay lên */
         }
-        html { scroll-behavior: smooth; }
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #1e293b; overflow: hidden; }
-        
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 
-        /* Bố cục Sidebar "Pill" Style */
+        /* --- BỐ CỤC SIDEBAR PILL STYLE --- */
         .sidebar-saas { background-color: #ffffff; border-right: 1px solid #e5e7eb; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-x: hidden; }
         .sidebar-logo { height: 64px; display: flex; align-items: center; padding: 0 24px; border-bottom: 1px solid #e5e7eb; }
         .nav-group-title { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; padding: 0 24px; margin-top: 20px; margin-bottom: 8px; transition: opacity 0.2s; }
         
-        /* Hiệu ứng Nút Sidebar Bo góc (Pill) */
         .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; margin: 2px 12px; font-size: 13.5px; font-weight: 500; color: #4b5563; cursor: pointer; transition: all 0.2s; border-radius: 8px; white-space: nowrap; }
         .nav-item:hover { background-color: #f3f4f6; color: #1f2937; }
         .nav-item.active { background-color: #eff6ff; color: #2563eb; font-weight: 600; }
@@ -78,7 +74,6 @@
         .sidebar-collapsed .nav-item i.fa-chevron-right { display: none; }
         .sidebar-collapsed .pulse-dot { display: none; }
         
-        /* Ép buộc Icon thành hình vuông bo góc hoàn hảo 44x44 */
         .sidebar-collapsed .nav-item { 
             justify-content: center !important; 
             padding: 0 !important; 
@@ -89,27 +84,21 @@
         }
         .sidebar-collapsed .nav-item i { margin: 0 !important; font-size: 18px !important; }
 
-        /* Ép buộc Avatar nằm chính giữa */
         .sidebar-collapsed .user-profile-area { justify-content: center !important; padding: 16px 0 !important; gap: 0 !important; }
         .sidebar-collapsed .user-profile-area .flex-grow { display: none !important; }
 
-        /* Khối Nội dung & Thẻ Card chuẩn (Sạch sẽ, viền xám, shadow mềm) */
-        .content-area { height: calc(100vh - 64px); overflow-y: auto; overflow-x: hidden; padding: 24px 32px; }
-        .saas-card { background: #ffffff; border-radius: 12px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03); border: 1px solid #e5e7eb; transition: all 0.2s ease-in-out; }
-        .saas-card:hover { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04); border-color: #d1d5db; transform: translateY(-2px); }
-        
+        /* --- FORM, BUTTONS & TABLES --- */
         .saas-input { width: 100%; background: #ffffff; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; transition: all 0.2s; }
         .saas-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        
         .btn-outline { background: white; color: #374151; border: 1px solid #d1d5db; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;}
         .btn-outline:hover { background-color: #f3f4f6; }
         .btn-primary { background-color: #2563eb; color: white; border: 1px solid #1d4ed8; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;}
-
+        
         table { width: 100%; border-collapse: collapse; }
         table th { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; background: #f9fafb; text-align: left; }
         table td { font-size: 13px; padding: 12px 16px; border-bottom: 1px solid #f3f4f6; }
 
-        /* Widgets & Present Mode (Giữ nguyên) */
+        /* --- WIDGETS --- */
         .widget-panel { position: fixed; bottom: 80px; right: 30px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; z-index: 1000; transform: translateY(10px); opacity: 0; pointer-events: none; transition: all 0.3s; display: flex; flex-direction: column; overflow: hidden; }
         .widget-panel.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
         #notesWidget { width: 450px; height: 600px; }
@@ -121,13 +110,13 @@
         input[type="color"] { -webkit-appearance: none; border: none; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; padding: 0; }
         input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
         input[type="color"]::-webkit-color-swatch { border: 1px solid #cbd5e1; border-radius: 4px; }
+
         .progress-bar-container { background-color: #f1f5f9; border-radius: 9999px; height: 20px; position: relative; overflow: hidden; margin-top: 4px;}
         .progress-bar-fill { height: 100%; border-radius: 9999px; transition: width 1s ease-in-out; }
         .tooltip-box { display: none; position: absolute; top: 110%; left: 0; background: #1e293b; color: white; padding: 12px; border-radius: 8px; font-size: 12px; z-index: 9999; width: max-content; box-shadow: 0 10px 25px rgba(0,0,0,0.2); white-space: pre-line; line-height: 1.6;}
         .group:hover > .tooltip-box { display: block; animation: fadeUp 0.2s ease forwards; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Modern Report Presentation Mode */
+        /* --- MODERN REPORT PRESENTATION MODE --- */
         #presentation-overlay { position: fixed; inset: 0; background: #f8fafc; z-index: 99999; display: none; font-family: 'Inter', sans-serif; overflow: hidden; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 30px 30px;}
         #presentation-overlay.active { display: block; }
         .tech-slide { position: absolute; inset: 0; padding: 60px 80px; opacity: 0; transform: translateY(30px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; pointer-events: none; }
@@ -212,7 +201,7 @@
         <div class="flex-1 flex flex-col overflow-hidden relative">
             <!-- HEADER CHUẨN KIOTVIET -->
             <header class="h-16 bg-white flex items-center justify-between px-6 z-40 shrink-0 shadow-sm border-b border-slate-200">
-                <!-- Nút Hamburger được gán hàm toggleSidebar() -->
+                <!-- Nút Hamburger -->
                 <button onclick="toggleSidebar()" class="w-8 h-8 rounded bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-blue-50 hover:text-blue-600 transition border border-slate-200">
                     <i class="fas fa-bars"></i>
                 </button>
@@ -339,9 +328,7 @@
         </button>
     </div>
 
-    <!-- ============================================== -->
-    <!-- MODAL NẠP DỮ LIỆU KHẢO SÁT (SURVEY STATION) -->
-    <!-- ============================================== -->
+    <!-- MODAL NẠP DỮ LIỆU KHẢO SÁT -->
     <div id="surveyModal" class="modal fixed inset-0 items-center justify-center p-4 bg-slate-900/60 z-[99999] hidden">
         <div class="modal-content bg-white w-full max-w-4xl rounded-2xl shadow-2xl flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 flex justify-between bg-slate-50"><h3 class="font-bold text-slate-800">Nạp Dữ liệu Khảo sát</h3><button onclick="closeSurveyInput()" class="text-slate-500"><i class="fas fa-times"></i></button></div>
@@ -359,9 +346,7 @@
         </div>
     </div>
 
-    <!-- ============================================== -->
-    <!-- TRÌNH CHIẾU SLIDE BÁO CÁO (ENTERPRISE EDITION) -->
-    <!-- ============================================== -->
+    <!-- TRÌNH CHIẾU SLIDE BÁO CÁO -->
     <div id="presentation-overlay">
         <button onclick="closePresentation()" class="fixed top-8 right-8 w-10 h-10 bg-white rounded-full text-slate-400 hover:text-rose-500 shadow-md text-xl z-[100000] flex items-center justify-center transition"><i class="fas fa-times"></i></button>
         <div class="fixed top-8 left-8 z-[100000] font-bold text-slate-800 tracking-widest bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-100"><i class="fas fa-layer-group text-blue-600 mr-2"></i> TRAINER OS REPORT</div>
@@ -422,6 +407,13 @@
             <button onclick="changeSlide(-1)"><i class="fas fa-chevron-left"></i></button>
             <button onclick="changeSlide(1)"><i class="fas fa-chevron-right"></i></button>
         </div>
+    </div>
+
+    <!-- Global Tooltip đè lên mọi Layer -->
+    <div id="global-tooltip" class="fixed bg-slate-800 text-white text-[12px] font-medium px-3 py-1.5 rounded-lg shadow-xl pointer-events-none opacity-0 transition-opacity duration-200 z-[100000] whitespace-nowrap flex items-center">
+        <!-- Mũi tên nhỏ bên trái -->
+        <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
+        <span id="tooltip-text" class="relative z-10"></span>
     </div>
 
     <!-- SCRIPTS LÕI -->
@@ -1236,6 +1228,7 @@
                 if(document.getElementById('statusChart')) switchTab('tong-quan');
             });
         };
+
         // Bật/tắt Profile Menu giống KiotViet
         function toggleProfileMenu(e) {
             e.stopPropagation();
@@ -1259,32 +1252,12 @@
                 profMenu.classList.add('hidden');
             }
         });
+
         // Bật/tắt chế độ Thu gọn Sidebar
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('sidebar-collapsed');
         }
-        // --- LOGIC HOẠT ĐỘNG CỦA GLOBAL TOOLTIP ---
-        const tooltip = document.getElementById('global-tooltip');
-        const tooltipText = document.getElementById('tooltip-text');
-        
-        document.querySelectorAll('.nav-item[data-title]').forEach(item => {
-            item.addEventListener('mouseenter', (e) => {
-                // Chỉ hiện Tooltip khi Sidebar đang bị thu gọn
-                if (document.getElementById('sidebar').classList.contains('sidebar-collapsed')) {
-                    const rect = item.getBoundingClientRect();
-                    tooltipText.innerText = item.getAttribute('data-title');
-                    
-                    // Tính toán tọa độ Y (Căn giữa Icon) và tọa độ X (Nằm bên phải Sidebar)
-                    tooltip.style.top = (rect.top + (rect.height / 2) - 14) + 'px'; 
-                    tooltip.style.left = (rect.right + 12) + 'px'; 
-                    tooltip.style.opacity = '1';
-                }
-            });
-            
-            item.addEventListener('mouseleave', () => {
-                tooltip.style.opacity = '0'; // Ẩn mượt mà khi đưa chuột ra
-            });
-        });
+
         // Bật tắt Accordion (Menu con)
         function toggleAccordion(menuId, iconId) {
             const menu = document.getElementById(menuId);
@@ -1326,12 +1299,29 @@
 
             } catch(e) { console.warn("Lỗi load Profile:", e); }
         });
-        <!-- Global Tooltip đè lên mọi Layer -->
-    <div id="global-tooltip" class="fixed bg-slate-800 text-white text-[12px] font-medium px-3 py-1.5 rounded-lg shadow-xl pointer-events-none opacity-0 transition-opacity duration-200 z-[100000] whitespace-nowrap flex items-center">
-        <!-- Mũi tên nhỏ bên trái -->
-        <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
-        <span id="tooltip-text" class="relative z-10"></span>
-    </div>
+
+        // --- LOGIC HOẠT ĐỘNG CỦA GLOBAL TOOLTIP ---
+        const tooltip = document.getElementById('global-tooltip');
+        const tooltipText = document.getElementById('tooltip-text');
+        
+        document.querySelectorAll('.nav-item[data-title]').forEach(item => {
+            item.addEventListener('mouseenter', (e) => {
+                // Chỉ hiện Tooltip khi Sidebar đang bị thu gọn
+                if (document.getElementById('sidebar').classList.contains('sidebar-collapsed')) {
+                    const rect = item.getBoundingClientRect();
+                    tooltipText.innerText = item.getAttribute('data-title');
+                    
+                    // Tính toán tọa độ Y (Căn giữa Icon) và tọa độ X (Nằm bên phải Sidebar)
+                    tooltip.style.top = (rect.top + (rect.height / 2) - 14) + 'px'; 
+                    tooltip.style.left = (rect.right + 12) + 'px'; 
+                    tooltip.style.opacity = '1';
+                }
+            });
+            
+            item.addEventListener('mouseleave', () => {
+                tooltip.style.opacity = '0'; // Ẩn mượt mà khi đưa chuột ra
+            });
+        });
     </script>
 </body>
 </html>
