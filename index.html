@@ -15,6 +15,39 @@
 
     <style>
         /* === KIOTVIET SAAS MINIMALIST DESIGN === */
+        /* --- HIỆU ỨNG ĐỘNG (DYNAMIC FLOATING & SKELETON) --- */
+        /* 1. Kịch bản lướt hiện (Fade Up) */
+        @keyframes fadeUpIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up { animation: fadeUpIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+
+        /* 2. Khung xương phát sáng (Skeleton Loading) */
+        @keyframes shimmer { 100% { transform: translateX(100%); } }
+        .skeleton { position: relative; overflow: hidden; background-color: #e5e7eb; }
+        .skeleton::after {
+            content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0; transform: translateX(-100%);
+            background-image: linear-gradient(90deg, rgba(255,255,255, 0) 0, rgba(255,255,255, 0.5) 20%, rgba(255,255,255, 0.8) 60%, rgba(255,255,255, 0));
+            animation: shimmer 1.5s infinite;
+        }
+
+        /* 3. Tinh chỉnh Thẻ Card (Bay lơ lửng 3D) */
+        .saas-card { 
+            background: #ffffff; border-radius: 16px; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03); 
+            border: 1px solid #e5e7eb; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1); /* Vật lý lò xo */
+        }
+        .saas-card:hover { 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05); 
+            border-color: #d1d5db; 
+            transform: translateY(-6px); /* Bay lên */
+        }
         html { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #1e293b; overflow: hidden; }
         
@@ -206,7 +239,17 @@
             </header>
 
             <main class="content-area" id="main-tab-container">
-                <div class="w-full h-full flex items-center justify-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-3xl"></i></div>
+                <!-- Khung Skeleton xuất hiện khi đang chờ API Load Data -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="saas-card p-5 flex items-center gap-4 animate-fade-up"><div class="w-14 h-14 rounded-2xl skeleton shrink-0"></div><div class="w-full"><div class="h-6 skeleton w-1/2 rounded mb-2"></div><div class="h-3 skeleton w-3/4 rounded"></div></div></div>
+                    <div class="saas-card p-5 flex items-center gap-4 animate-fade-up delay-100"><div class="w-14 h-14 rounded-2xl skeleton shrink-0"></div><div class="w-full"><div class="h-6 skeleton w-1/2 rounded mb-2"></div><div class="h-3 skeleton w-3/4 rounded"></div></div></div>
+                    <div class="saas-card p-5 flex items-center gap-4 animate-fade-up delay-200"><div class="w-14 h-14 rounded-2xl skeleton shrink-0"></div><div class="w-full"><div class="h-6 skeleton w-1/2 rounded mb-2"></div><div class="h-3 skeleton w-3/4 rounded"></div></div></div>
+                    <div class="saas-card p-5 flex items-center gap-4 animate-fade-up delay-300"><div class="w-14 h-14 rounded-2xl skeleton shrink-0"></div><div class="w-full"><div class="h-6 skeleton w-1/2 rounded mb-2"></div><div class="h-3 skeleton w-3/4 rounded"></div></div></div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 saas-card p-6 h-[400px] skeleton animate-fade-up delay-200"></div>
+                    <div class="saas-card p-6 h-[400px] skeleton animate-fade-up delay-300"></div>
+                </div>
             </main>
         </div>
     </div>
@@ -553,8 +596,8 @@
 
                 container.innerHTML = `
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                        <!-- KPI Card 1 -->
-                        <div class="saas-card p-5 flex items-center justify-between cursor-pointer group">
+                        <!-- KPI Card 1: Bay lên đầu tiên -->
+                        <div class="saas-card p-5 flex items-center justify-between cursor-pointer group animate-fade-up">
                             <div class="flex items-center gap-4">
                                 <div class="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-2xl group-hover:scale-110 transition"><i class="fas fa-users"></i></div>
                                 <div>
@@ -562,11 +605,11 @@
                                     <p class="text-[13px] font-medium text-slate-600 mt-0.5">Tổng số học viên</p>
                                 </div>
                             </div>
-                            <i class="fas fa-chevron-right text-slate-300"></i>
+                            <i class="fas fa-chevron-right text-slate-300 transition group-hover:translate-x-1"></i>
                         </div>
                         
-                        <!-- KPI Card 2 -->
-                        <div class="saas-card p-5 flex items-center justify-between cursor-pointer group">
+                        <!-- KPI Card 2: Delay 0.1s -->
+                        <div class="saas-card p-5 flex items-center justify-between cursor-pointer group animate-fade-up delay-100">
                             <div class="flex items-center gap-4">
                                 <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-2xl group-hover:scale-110 transition"><i class="fas fa-chalkboard-teacher"></i></div>
                                 <div>
@@ -574,11 +617,11 @@
                                     <p class="text-[13px] font-medium text-slate-600 mt-0.5">Tổng số giảng viên</p>
                                 </div>
                             </div>
-                            <i class="fas fa-chevron-right text-slate-300"></i>
+                            <i class="fas fa-chevron-right text-slate-300 transition group-hover:translate-x-1"></i>
                         </div>
 
-                        <!-- KPI Card 3 -->
-                        <div class="saas-card p-5 flex items-center justify-between cursor-pointer group">
+                        <!-- KPI Card 3: Delay 0.2s -->
+                        <div class="saas-card p-5 flex items-center justify-between cursor-pointer group animate-fade-up delay-200">
                             <div class="flex items-center gap-4">
                                 <div class="w-14 h-14 rounded-2xl bg-pink-50 text-pink-500 flex items-center justify-center text-2xl group-hover:scale-110 transition"><i class="fab fa-youtube"></i></div>
                                 <div>
@@ -588,8 +631,8 @@
                             </div>
                         </div>
 
-                        <!-- KPI Card 4 -->
-                        <div class="saas-card p-5 flex items-center justify-between cursor-pointer group relative overflow-hidden">
+                        <!-- KPI Card 4: Delay 0.3s -->
+                        <div class="saas-card p-5 flex items-center justify-between cursor-pointer group relative overflow-hidden animate-fade-up delay-300">
                             <div class="flex items-center gap-4">
                                 <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center text-2xl group-hover:scale-110 transition"><i class="fas fa-calendar-check"></i></div>
                                 <div class="z-10">
@@ -597,15 +640,14 @@
                                     <p class="text-[13px] font-medium text-slate-600 mt-0.5">Tỷ lệ hoàn thành (Pass)</p>
                                 </div>
                             </div>
-                            <!-- Trang trí vạch chéo góc giống KiotViet -->
-                            <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-purple-50 rounded-full opacity-50 pointer-events-none"></div>
+                            <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-purple-50 rounded-full opacity-50 pointer-events-none transition group-hover:scale-150 duration-500"></div>
                         </div>
                     </div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2">
-                            <!-- Box Biểu đồ -->
-                            <div class="saas-card p-6 h-[400px] flex flex-col relative mb-6">
+                            <!-- Box Biểu đồ: Delay 0.3s -->
+                            <div class="saas-card p-6 h-[400px] flex flex-col relative mb-6 animate-fade-up delay-300">
                                 <div class="flex justify-between items-center mb-6">
                                     <div class="flex items-center gap-3">
                                         <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="fas fa-chart-area"></i></div>
@@ -614,33 +656,33 @@
                                             <p class="text-[12px] text-blue-500 font-medium">Học viên hoạt động nhiều nhất lúc 09:00</p>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-2 border border-slate-200 rounded-md px-3 py-1.5 text-[12px] font-medium text-slate-600">
+                                    <div class="flex items-center gap-2 border border-slate-200 rounded-md px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:bg-slate-50 cursor-pointer transition">
                                         <span>01-01-2026</span> <i class="fas fa-arrow-right text-slate-300 text-[10px] mx-1"></i> <span>31-12-2026</span> <i class="far fa-calendar-alt text-slate-400 ml-2"></i>
                                     </div>
                                 </div>
                                 <div class="flex-grow relative w-full h-full"><canvas id="performanceChart"></canvas></div>
                             </div>
 
-                            <h3 class="text-[15px] font-bold text-slate-800 mb-3">Lịch sử cập nhật hệ thống</h3>
-                            <div class="saas-card p-6">${renderHistory()}</div>
+                            <!-- Lịch sử: Delay 0.4s -->
+                            <div class="animate-fade-up delay-400">
+                                <h3 class="text-[15px] font-bold text-slate-800 mb-3">Lịch sử cập nhật hệ thống</h3>
+                                <div class="saas-card p-6">${renderHistory()}</div>
+                            </div>
                         </div>
 
-                        <!-- Cột phải: Lịch sắp tới -->
-                        <div>
+                        <!-- Cột phải: Lịch sắp tới & Tồn kho -->
+                        <div class="animate-fade-up delay-400">
                             <div class="saas-card p-0 overflow-hidden mb-6">
                                 <div class="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
                                     <div class="flex items-center gap-2"><i class="fas fa-comments text-blue-500"></i> <span class="font-bold text-sm text-slate-800">Lịch trình đào tạo</span></div>
                                     <div class="text-xs border border-slate-200 px-2 py-1 rounded bg-white"><i class="far fa-calendar-alt text-slate-400 mr-1"></i> Tháng này</div>
                                 </div>
-                                <div class="p-2">
-                                    ${alerts}
-                                </div>
+                                <div class="p-2">${alerts}</div>
                                 <div class="p-3 border-t border-slate-100 text-center bg-slate-50/50">
                                     <a href="settings.html" class="text-[13px] font-semibold text-slate-600 hover:text-blue-600 transition">Xem thêm cấu hình <i class="fas fa-angle-double-right text-[10px] ml-1"></i></a>
                                 </div>
                             </div>
                             
-                            <!-- Box Tồn kho quà (Thu nhỏ xuống góc) -->
                             <div class="saas-card p-5 h-72 flex flex-col relative">
                                 <div class="flex justify-between items-start mb-3">
                                     <p class="text-[13px] font-bold text-slate-800">Tồn Kho Quà Tặng</p>
