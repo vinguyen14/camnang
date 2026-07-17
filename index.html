@@ -67,19 +67,65 @@
         .nav-item.active i { color: #2563eb; }
         .nav-item i { width: 20px; text-align: center; color: #9ca3af; font-size: 16px; transition: color 0.2s; flex-shrink: 0; }
 
-        /* --- TRẠNG THÁI SIDEBAR THU GỌN (COLLAPSED) --- */
+        /* --- TRẠNG THÁI SIDEBAR THU GỌN (COLLAPSED) CHUẨN UX --- */
         .sidebar-collapsed { width: 80px; }
         .sidebar-collapsed .logo-full { display: none; }
-        .sidebar-collapsed .logo-icon { display: block !important; margin: 0 auto; }
+        .sidebar-collapsed .logo-icon { display: block !important; margin: 0 auto; text-align: center; }
         .sidebar-collapsed .sidebar-logo { justify-content: center; padding: 0; }
-        .sidebar-collapsed .nav-group-title { opacity: 0; height: 0; margin: 0; padding: 0; overflow: hidden; }
-        .sidebar-collapsed .nav-item span { opacity: 0; width: 0; display: none; }
+        
+        .sidebar-collapsed .nav-group-title { display: none; }
+        .sidebar-collapsed .nav-item span:not(.tooltip-text) { display: none; }
         .sidebar-collapsed .nav-item i.fa-chevron-right { display: none; }
-        .sidebar-collapsed .nav-item { justify-content: center; padding: 12px; margin: 6px 12px; }
-        .sidebar-collapsed .nav-item i { margin: 0; font-size: 18px; }
+        .sidebar-collapsed .pulse-dot { display: none; } /* Ẩn chấm đỏ nhấp nháy */
+        
+        /* Căn chỉnh lại Icon thành ô vuông bo góc chuẩn KiotViet */
+        .sidebar-collapsed .nav-item { 
+            justify-content: center; 
+            padding: 0; 
+            margin: 6px auto; 
+            width: 44px; 
+            height: 44px; 
+            border-radius: 12px; 
+            position: relative; /* Dùng làm điểm tựa cho Tooltip */
+        }
+        .sidebar-collapsed .nav-item i { margin: 0; width: auto; font-size: 18px; }
+
+        /* Căn chỉnh Avatar dưới cùng */
         .sidebar-collapsed #display-prof-name, .sidebar-collapsed #display-prof-title { display: none; }
-        .sidebar-collapsed .border-t.bg-slate-50 { justify-content: center; padding: 16px 0; }
-        .sidebar-collapsed .border-t.bg-slate-50 .flex-grow { display: none; }
+        .sidebar-collapsed .user-profile-area { justify-content: center; padding: 16px 0; }
+
+        /* --- HIỆU ỨNG TOOLTIP KHI RÊ CHUỘT (CHỈ HIỆN KHI THU GỌN) --- */
+        .nav-item::after {
+            content: attr(data-title);
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%) translateX(10px);
+            background: #1e293b; /* Màu đen xám */
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        /* Mũi tên nhỏ của Tooltip */
+        .nav-item::before {
+            content: ''; position: absolute; left: 100%; top: 50%;
+            transform: translateY(-50%) translateX(6px);
+            border-width: 5px; border-style: solid;
+            border-color: transparent #1e293b transparent transparent;
+            opacity: 0; visibility: hidden; transition: all 0.2s; z-index: 1000;
+        }
+        /* Kích hoạt Tooltip khi Hover */
+        .sidebar-collapsed .nav-item:hover::after { opacity: 1; visibility: visible; transform: translateY(-50%) translateX(16px); }
+        .sidebar-collapsed .nav-item:hover::before { opacity: 1; visibility: visible; transform: translateY(-50%) translateX(6px); }
 
         /* Khối Nội dung & Thẻ Card chuẩn (Sạch sẽ, viền xám, shadow mềm) */
         .content-area { height: calc(100vh - 64px); overflow-y: auto; overflow-x: hidden; padding: 24px 32px; }
@@ -143,22 +189,23 @@
             <!-- Logo Area -->
             <div class="sidebar-logo">
                 <img src="https://cdn-kvweb-website.kiotviet.vn/images/v2/giai-phap/logos/kiotviet-logo-horizontal.svg" alt="KiotViet" class="h-[28px] logo-full">
+                <!-- Icon chiếc lá sẽ hiện lên khi Sidebar bị thu gọn -->
                 <i class="fas fa-leaf text-2xl text-blue-600 logo-icon hidden"></i>
             </div>
 
-            <!-- Navigation Menu -->
+            <!-- Navigation Menu (Đã gắn data-title cho Tooltip) -->
             <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4 custom-scrollbar">
                 
                 <div class="nav-group-title">Tổng quan</div>
-                <div onclick="switchTab('tong-quan')" class="nav-item active"><i class="fas fa-chart-line"></i> <span>Bảng điều khiển</span></div>
+                <div onclick="switchTab('tong-quan')" class="nav-item active" data-title="Bảng điều khiển"><i class="fas fa-chart-line"></i> <span>Bảng điều khiển</span></div>
 
                 <div class="nav-group-title">Quản trị Khóa học</div>
-                <a href="spcb.html" class="nav-item"><i class="fas fa-box"></i> <span>Cơ bản (TS-DS)</span></a>
-                <a href="thuehkd.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i> <span>Chuyên đề Thuế</span></a>
+                <a href="spcb.html" class="nav-item" data-title="Cơ bản (TS-DS)"><i class="fas fa-box"></i> <span>Cơ bản (TS-DS)</span></a>
+                <a href="thuehkd.html" class="nav-item" data-title="Chuyên đề Thuế"><i class="fas fa-file-invoice-dollar"></i> <span>Chuyên đề Thuế</span></a>
                 
                 <!-- Accordion Menu: Chuyên ngành -->
                 <div class="flex flex-col">
-                    <div class="nav-item group justify-between" onclick="toggleAccordion('submenu-cn', 'icon-cn')">
+                    <div class="nav-item group justify-between" onclick="toggleAccordion('submenu-cn', 'icon-cn')" data-title="Chuyên ngành">
                         <div class="flex items-center gap-3"><i class="fas fa-laptop-code"></i> <span>Chuyên ngành</span></div>
                         <i id="icon-cn" class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform duration-300"></i>
                     </div>
@@ -170,23 +217,23 @@
                         <a href="industry.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-emerald-500 transition-colors">KV Hotel</a>
                     </div>
                 </div>
-                <div onclick="switchTab('khoa-hoc')" class="nav-item"><i class="fas fa-th-large"></i> <span>Tất cả khóa học</span></div>
+                <div onclick="switchTab('khoa-hoc')" class="nav-item" data-title="Tất cả khóa học"><i class="fas fa-th-large"></i> <span>Tất cả khóa học</span></div>
 
                 <div class="nav-group-title">Công cụ & Tài nguyên</div>
-                <a href="knowledge.html" class="nav-item relative">
+                <a href="knowledge.html" class="nav-item relative" data-title="Sơ đồ Vận hành">
                     <i class="fas fa-project-diagram"></i> <span>Sơ đồ Vận hành</span>
-                    <span class="absolute right-4 w-2 h-2 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.6)]"></span>
+                    <span class="pulse-dot absolute right-4 w-2 h-2 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.6)]"></span>
                 </a>
-                <a href="vault.html" class="nav-item"><i class="fas fa-box-open"></i> <span>Kho Lưu Trữ Vault</span></a>
-                <a href="tools.html" class="nav-item"><i class="fas fa-bolt"></i> <span>Runner Tools</span></a>
+                <a href="vault.html" class="nav-item" data-title="Kho Lưu Trữ Vault"><i class="fas fa-box-open"></i> <span>Kho Lưu Trữ Vault</span></a>
+                <a href="tools.html" class="nav-item" data-title="Runner Tools"><i class="fas fa-bolt"></i> <span>Runner Tools</span></a>
                 
                 <div class="nav-group-title">Dữ liệu & Hệ thống</div>
-                <div onclick="switchTab('phan-tich')" class="nav-item"><i class="fas fa-database"></i> <span>Master Data API</span></div>
-                <a href="settings.html" class="nav-item"><i class="fas fa-cog"></i> <span>Cài đặt hệ thống</span></a>
+                <div onclick="switchTab('phan-tich')" class="nav-item" data-title="Master Data API"><i class="fas fa-database"></i> <span>Master Data API</span></div>
+                <a href="settings.html" class="nav-item" data-title="Cài đặt hệ thống"><i class="fas fa-cog"></i> <span>Cài đặt hệ thống</span></a>
             </nav>
 
-            <!-- User Profile Area (Fix lỗi undefined & Thanh cuộn ngang) -->
-            <div class="p-4 border-t border-slate-200 shrink-0 flex items-center gap-3 bg-slate-50/50 hover:bg-slate-100 transition cursor-pointer" onclick="toggleProfileMenu(event)" title="Click để xem Tùy chọn">
+            <!-- User Profile Area (Căn giữa khi thu gọn) -->
+            <div class="user-profile-area p-4 border-t border-slate-200 shrink-0 flex items-center gap-3 bg-slate-50/50 hover:bg-slate-100 transition cursor-pointer" onclick="toggleProfileMenu(event)" title="Click để xem Tùy chọn">
                 <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0 border border-blue-200" id="display-prof-ava">A</div>
                 <div class="overflow-hidden flex-grow">
                     <p id="display-prof-name" class="text-[13px] font-bold text-slate-800 truncate">Admin User</p>
