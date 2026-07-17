@@ -14,88 +14,75 @@
     <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
 
     <style>
-        /* === KIOTVIET x TRAINER OS PREMIUM DESIGN === */
+        /* === KIOTVIET SAAS MINIMALIST DESIGN === */
         html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #1e293b; overflow: hidden; }
         
-        /* Hiệu ứng Nền (Background Effect): Lưới chấm (Dot-Grid) + Phát sáng (Glow) */
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f8fafc; 
-            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-            background-size: 24px 24px;
-            color: #1e293b; 
-            overflow: hidden; 
-            position: relative;
-        }
-        
-        /* Quả cầu phát sáng mờ ảo ở góc */
-        body::before {
-            content: ''; position: fixed; top: -150px; right: -100px; width: 600px; height: 600px;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, rgba(147, 51, 234, 0.05) 50%, rgba(0,0,0,0) 70%);
-            border-radius: 50%; z-index: -1; pointer-events: none;
-        }
-
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 
         /* Bố cục Sidebar "Pill" Style */
-        .sidebar-saas { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-right: 1px solid rgba(229, 231, 235, 0.8); transition: width 0.3s; }
-        .sidebar-logo { height: 64px; display: flex; align-items: center; padding: 0 24px; border-bottom: 1px solid rgba(229, 231, 235, 0.8); }
-        .nav-group-title { font-size: 10px; font-weight: 800; color: #9ca3af; text-transform: uppercase; padding: 0 24px; margin-top: 24px; margin-bottom: 8px; letter-spacing: 0.05em; }
+        .sidebar-saas { background-color: #ffffff; border-right: 1px solid #e5e7eb; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-x: hidden; }
+        .sidebar-logo { height: 64px; display: flex; align-items: center; padding: 0 24px; border-bottom: 1px solid #e5e7eb; }
+        .nav-group-title { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; padding: 0 24px; margin-top: 20px; margin-bottom: 8px; transition: opacity 0.2s; }
         
-        /* Hiệu ứng Nút Sidebar */
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; margin: 2px 12px; font-size: 13.5px; font-weight: 500; color: #4b5563; cursor: pointer; transition: all 0.2s; border-radius: 8px; }
-        .nav-item:hover { background-color: rgba(243, 244, 246, 0.8); color: #1f2937; transform: translateX(2px); }
-        .nav-item.active { background-color: #eff6ff; color: #2563eb; font-weight: 600; box-shadow: inset 2px 0 0 0 #2563eb; }
+        /* Hiệu ứng Nút Sidebar Bo góc (Pill) */
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; margin: 2px 12px; font-size: 13.5px; font-weight: 500; color: #4b5563; cursor: pointer; transition: all 0.2s; border-radius: 8px; white-space: nowrap; }
+        .nav-item:hover { background-color: #f3f4f6; color: #1f2937; }
+        .nav-item.active { background-color: #eff6ff; color: #2563eb; font-weight: 600; }
         .nav-item.active i { color: #2563eb; }
-        .nav-item i { width: 20px; text-align: center; color: #9ca3af; font-size: 15px; transition: color 0.2s; }
+        .nav-item i { width: 20px; text-align: center; color: #9ca3af; font-size: 16px; transition: color 0.2s; flex-shrink: 0; }
 
-        /* Khối Nội dung & Thẻ Card Glassmorphism (Kính mờ) */
+        /* --- TRẠNG THÁI SIDEBAR THU GỌN (COLLAPSED) --- */
+        .sidebar-collapsed { width: 80px; }
+        .sidebar-collapsed .logo-full { display: none; }
+        .sidebar-collapsed .logo-icon { display: block !important; margin: 0 auto; }
+        .sidebar-collapsed .sidebar-logo { justify-content: center; padding: 0; }
+        .sidebar-collapsed .nav-group-title { opacity: 0; height: 0; margin: 0; padding: 0; overflow: hidden; }
+        .sidebar-collapsed .nav-item span { opacity: 0; width: 0; display: none; }
+        .sidebar-collapsed .nav-item i.fa-chevron-right { display: none; }
+        .sidebar-collapsed .nav-item { justify-content: center; padding: 12px; margin: 6px 12px; }
+        .sidebar-collapsed .nav-item i { margin: 0; font-size: 18px; }
+        .sidebar-collapsed #display-prof-name, .sidebar-collapsed #display-prof-title { display: none; }
+        .sidebar-collapsed .border-t.bg-slate-50 { justify-content: center; padding: 16px 0; }
+        .sidebar-collapsed .border-t.bg-slate-50 .flex-grow { display: none; }
+
+        /* Khối Nội dung & Thẻ Card chuẩn (Sạch sẽ, viền xám, shadow mềm) */
         .content-area { height: calc(100vh - 64px); overflow-y: auto; overflow-x: hidden; padding: 24px 32px; }
-        .saas-card { 
-            background: rgba(255, 255, 255, 0.85); 
-            backdrop-filter: blur(12px); 
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.6); 
-            border-radius: 16px; 
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03), 0 8px 10px -6px rgba(0, 0, 0, 0.01); 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-        }
-        .saas-card:hover { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02); transform: translateY(-2px); border-color: rgba(255, 255, 255, 0.9); }
+        .saas-card { background: #ffffff; border-radius: 12px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03); border: 1px solid #e5e7eb; transition: all 0.2s ease-in-out; }
+        .saas-card:hover { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04); border-color: #d1d5db; transform: translateY(-2px); }
         
-        .saas-input { width: 100%; background: rgba(255, 255, 255, 0.9); border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; transition: all 0.2s; }
-        .saas-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); background: #ffffff; }
+        .saas-input { width: 100%; background: #ffffff; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; transition: all 0.2s; }
+        .saas-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
         
-        .btn-outline { background: rgba(255, 255, 255, 0.8); color: #374151; border: 1px solid #d1d5db; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;}
+        .btn-outline { background: white; color: #374151; border: 1px solid #d1d5db; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;}
         .btn-outline:hover { background-color: #f3f4f6; }
-        .btn-primary { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);}
-        .btn-primary:hover { box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3); transform: translateY(-1px); }
+        .btn-primary { background-color: #2563eb; color: white; border: 1px solid #1d4ed8; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;}
 
         table { width: 100%; border-collapse: collapse; }
-        table th { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; background: rgba(249, 250, 251, 0.5); text-align: left; }
-        table td { font-size: 13px; padding: 12px 16px; border-bottom: 1px solid rgba(243, 244, 246, 0.5); }
+        table th { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; background: #f9fafb; text-align: left; }
+        table td { font-size: 13px; padding: 12px 16px; border-bottom: 1px solid #f3f4f6; }
 
-        /* Widgets & Khác (Giữ nguyên) */
-        .widget-panel { position: fixed; bottom: 80px; right: 30px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 16px; box-shadow: 0 10px 35px -5px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.5); z-index: 1000; transform: translateY(10px); opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; overflow: hidden; }
+        /* Widgets & Present Mode (Giữ nguyên) */
+        .widget-panel { position: fixed; bottom: 80px; right: 30px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; z-index: 1000; transform: translateY(10px); opacity: 0; pointer-events: none; transition: all 0.3s; display: flex; flex-direction: column; overflow: hidden; }
         .widget-panel.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
         #notesWidget { width: 450px; height: 600px; }
         #chatWidget { width: 340px; height: 450px; }
         .floating-tool { bottom: 20px; right: 30px; z-index: 100; }
-        .wb-tool-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #4b5563; transition: all 0.2s; background: transparent; border: 1px solid transparent; cursor: pointer; }
-        .wb-tool-btn:hover { background-color: #f3f4f6; color: #2563eb; }
+        .wb-tool-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #4b5563; transition: all 0.2s; background: #f9fafb; border: 1px solid #e5e7eb; cursor: pointer; }
+        .wb-tool-btn:hover { background-color: #e5e7eb; color: #2563eb; }
         .wb-tool-btn.active { background-color: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
         input[type="color"] { -webkit-appearance: none; border: none; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; padding: 0; }
         input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
         input[type="color"]::-webkit-color-swatch { border: 1px solid #cbd5e1; border-radius: 4px; }
-
         .progress-bar-container { background-color: #f1f5f9; border-radius: 9999px; height: 20px; position: relative; overflow: hidden; margin-top: 4px;}
         .progress-bar-fill { height: 100%; border-radius: 9999px; transition: width 1s ease-in-out; }
         .tooltip-box { display: none; position: absolute; top: 110%; left: 0; background: #1e293b; color: white; padding: 12px; border-radius: 8px; font-size: 12px; z-index: 9999; width: max-content; box-shadow: 0 10px 25px rgba(0,0,0,0.2); white-space: pre-line; line-height: 1.6;}
         .group:hover > .tooltip-box { display: block; animation: fadeUp 0.2s ease forwards; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Present Mode */
+        /* Modern Report Presentation Mode */
         #presentation-overlay { position: fixed; inset: 0; background: #f8fafc; z-index: 99999; display: none; font-family: 'Inter', sans-serif; overflow: hidden; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 30px 30px;}
         #presentation-overlay.active { display: block; }
         .tech-slide { position: absolute; inset: 0; padding: 60px 80px; opacity: 0; transform: translateY(30px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; pointer-events: none; }
@@ -120,12 +107,11 @@
     <div class="flex h-screen">
         <!-- SIDEBAR CHUẨN KIOTVIET L&D -->
         <aside id="sidebar" class="sidebar-saas w-64 flex flex-col z-50 shrink-0">
-            <!-- Logo Area -->
+            <!-- Logo Area (Cập nhật Logo xịn) -->
             <div class="sidebar-logo">
-                <div class="flex items-center gap-2 text-slate-800 font-bold text-xl tracking-tight">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shadow-md"><i class="fas fa-layer-group text-sm"></i></div>
-                    Trainer OS
-                </div>
+                <img src="https://cdn-kvweb-website.kiotviet.vn/images/v2/giai-phap/logos/kiotviet-logo-horizontal.svg" alt="KiotViet" class="h-[28px] logo-full">
+                <!-- Icon chiếc lá sẽ hiện lên khi Sidebar bị thu gọn -->
+                <i class="fas fa-leaf text-2xl text-blue-600 logo-icon hidden"></i>
             </div>
 
             <!-- Navigation đúng nghiệp vụ của bạn -->
@@ -138,7 +124,7 @@
                 <a href="thuehkd.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i> <span>Chuyên đề Thuế</span></a>
                 
                 <div class="nav-item group relative">
-                    <i class="fas fa-laptop-code"></i> <span class="flex-grow">Chuyên ngành</span><i class="fas fa-chevron-right text-[10px]"></i>
+                    <i class="fas fa-laptop-code"></i> <span>Chuyên ngành</span><i class="fas fa-chevron-right text-[10px] ml-auto mr-0"></i>
                     <div class="absolute left-full top-0 ml-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all z-10 py-1 overflow-hidden">
                         <a href="kv1.html" class="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-600 border-l-2 border-transparent hover:border-blue-600">Sản phẩm KV1</a>
                         <a href="industry.html" class="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-orange-50 hover:text-orange-600 border-l-2 border-transparent hover:border-orange-500">KiotViet FNB</a>
@@ -163,14 +149,22 @@
                 <div class="nav-group-title mt-6 border-t border-slate-100 pt-4">Hệ thống</div>
                 <a href="settings.html" class="nav-item"><i class="fas fa-cog"></i> <span>Thiết lập</span></a>
             </nav>
+
+            <div class="p-4 border-t border-slate-100 shrink-0 flex items-center gap-3 bg-slate-50">
+                <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0" id="display-prof-ava">V</div>
+                <div class="overflow-hidden flex-grow">
+                    <p id="display-prof-name" class="text-[13px] font-semibold text-slate-700 truncate">Admin User</p>
+                    <p id="display-prof-title" class="text-[10px] text-slate-500 truncate">admin@kiotviet.com</p>
+                </div>
+            </div>
         </aside>
 
         <!-- MAIN LAYOUT -->
         <div class="flex-1 flex flex-col overflow-hidden relative">
             <!-- HEADER CHUẨN KIOTVIET -->
-            <header class="h-16 bg-white flex items-center justify-between px-6 z-40 shrink-0 shadow-sm">
-                <!-- Hamburger Icon -->
-                <button class="w-8 h-8 rounded bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-blue-50 hover:text-blue-600 transition">
+            <header class="h-16 bg-white flex items-center justify-between px-6 z-40 shrink-0 shadow-sm border-b border-slate-200">
+                <!-- Nút Hamburger được gán hàm toggleSidebar() -->
+                <button onclick="toggleSidebar()" class="w-8 h-8 rounded bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-blue-50 hover:text-blue-600 transition border border-slate-200">
                     <i class="fas fa-bars"></i>
                 </button>
 
@@ -190,14 +184,14 @@
                         </div>
                     </div>
 
-                    <!-- Profile Dropdown (Sửa giống hình ảnh) -->
+                    <!-- Profile Dropdown -->
                     <div class="relative cursor-pointer" onclick="toggleProfileMenu(event)" id="profileDropdownBtn">
                         <div class="flex items-center gap-3 pl-4 border-l border-slate-200">
                             <div class="text-right hidden md:block">
-                                <p id="display-prof-name" class="text-sm font-bold text-slate-800 leading-tight">daotao kiotviet</p>
-                                <p id="display-prof-title" class="text-[11px] text-slate-500">Administrators</p>
+                                <p class="text-sm font-bold text-slate-800 leading-tight">L&D KiotViet</p>
+                                <p class="text-[11px] text-slate-500">Administrator</p>
                             </div>
-                            <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-lg border border-slate-200" id="display-prof-ava"><i class="far fa-user"></i></div>
+                            <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-lg border border-slate-200"><i class="far fa-user"></i></div>
                         </div>
                         
                         <!-- Menu đổ xuống -->
@@ -1207,6 +1201,10 @@
                 profMenu.classList.add('hidden');
             }
         });
+        // Bật/tắt chế độ Thu gọn Sidebar
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('sidebar-collapsed');
+        }
     </script>
 </body>
 </html>
