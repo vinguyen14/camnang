@@ -427,7 +427,7 @@
         <span id="tooltip-text" class="relative z-10"></span>
     </div>
 
-    <!-- SCRIPTS LÕI -->
+    <!-- SCRIPTS LÕI SIÊU BẢO MẬT (V3) -->
     <script>
         // --- CONFIG & STATE ---
         localforage.config({ name: 'TrainerOS_Database' });
@@ -448,20 +448,6 @@
 
         const defaultGifts =[ { name: 'Túi tote', in: 0, out: 0 }, { name: 'Bình nước', in: 0, out: 0 }, { name: 'Áo mưa', in: 0, out: 0 }, { name: 'Cốc', in: 0, out: 0 }, { name: 'Sổ', in: 0, out: 0 } ];
 
-        function setLang(lang) {
-            AppState.lang = lang;
-            if(lang === 'en') {
-                document.getElementById('lang-en').className = "cursor-pointer px-2 py-1 rounded bg-white text-blue-600 shadow-sm transition";
-                document.getElementById('lang-vi').className = "cursor-pointer px-2 py-1 rounded hover:text-slate-800 transition";
-            } else {
-                document.getElementById('lang-vi').className = "cursor-pointer px-2 py-1 rounded bg-white text-blue-600 shadow-sm transition";
-                document.getElementById('lang-en').className = "cursor-pointer px-2 py-1 rounded hover:text-slate-800 transition";
-            }
-            document.querySelectorAll('.lang-text').forEach(el => {
-                if(el.getAttribute(`data-${lang}`)) el.innerHTML = el.getAttribute(`data-${lang}`);
-            });
-        }
-
         async function fetchDatabase() {
             try {
                 if(!GOOGLE_API_URL) throw new Error("Local");
@@ -478,17 +464,26 @@
                 }
                 document.getElementById('db-status-indicator').innerHTML = `<i class="fas fa-circle text-[8px] text-emerald-500"></i> Cloud API Active`;
             } catch (err) {
-                const localDB = JSON.parse(localStorage.getItem('kv_master_db'));
-                globalMasterDB = Array.isArray(localDB) ? localDB : [];
-                globalGiftsDB = JSON.parse(localStorage.getItem('kv_gift_db')) || defaultGifts;
+                try {
+                    const localDB = JSON.parse(localStorage.getItem('kv_master_db'));
+                    globalMasterDB = Array.isArray(localDB) ? localDB : [];
+                    globalGiftsDB = JSON.parse(localStorage.getItem('kv_gift_db')) || defaultGifts;
+                } catch(e) { globalMasterDB = []; globalGiftsDB = defaultGifts; }
                 document.getElementById('db-status-indicator').innerHTML = `<i class="fas fa-circle text-[8px] text-amber-500"></i> Local Mode`;
             }
         }
 
         window.addEventListener('click', function(e) {
-            const bell = document.getElementById('notiDropdown'); const bellIcon = document.getElementById('bellIcon');
-            if (bell && !bell.classList.contains('hidden') && !bell.contains(e.target) && !bellIcon.contains(e.target)) {
-                bell.classList.add('hidden');
+            const noti = document.getElementById('notiDropdown');
+            const notiIcon = document.getElementById('bellIcon');
+            const profMenu = document.getElementById('profileMenu');
+            const profBtn = document.getElementById('profileDropdownBtn');
+
+            if (noti && !noti.classList.contains('hidden') && !noti.contains(e.target) && !notiIcon.contains(e.target)) {
+                noti.classList.add('hidden');
+            }
+            if (profMenu && !profMenu.classList.contains('hidden') && !profMenu.contains(e.target) && !profBtn.contains(e.target)) {
+                profMenu.classList.add('hidden');
             }
         });
 
@@ -499,7 +494,10 @@
             document.querySelectorAll('.noti-unread-dot').forEach(el => el.classList.add('hidden'));
         }
 
-        function getDynamicCalendar() { return JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {}; }
+        function getDynamicCalendar() { 
+            try { return JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {}; } 
+            catch(e) { return {}; }
+        }
         
         function generateSmartAlerts(isDropdown = false) {
             const today = new Date(); const calData = getDynamicCalendar(); let alertsHTML = '';
@@ -552,21 +550,25 @@
             if(e) e.stopPropagation(); 
             const drop = document.getElementById('notiDropdown'); 
             drop.classList.toggle('hidden'); 
+            document.getElementById('profileMenu').classList.add('hidden');
             if(!drop.classList.contains('hidden')) { document.getElementById('notiContent').innerHTML = generateSmartAlerts(true); } 
         }
 
-        function handleTopSearch(val) {
-            const query = val.toLowerCase();
-            const dashTable = document.getElementById('dashboard-table-body');
-            if (dashTable) {
-                const rows = dashTable.getElementsByTagName('tr');
-                Array.from(rows).forEach(row => {
-                    if(row.innerText.toLowerCase().includes(query)) row.style.display = '';
-                    else row.style.display = 'none';
-                });
+        function toggleProfileMenu(e) {
+            if(e) e.stopPropagation();
+            document.getElementById('profileMenu').classList.toggle('hidden');
+            document.getElementById('notiDropdown').classList.add('hidden');
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-collapsed'); }
+
+        function toggleAccordion(menuId, iconId) {
+            const menu = document.getElementById(menuId); const icon = document.getElementById(iconId);
+            if (menu.style.maxHeight && menu.style.maxHeight !== '0px') {
+                menu.style.maxHeight = '0px'; icon.style.transform = 'rotate(0deg)';
+            } else {
+                menu.style.maxHeight = menu.scrollHeight + 'px'; icon.style.transform = 'rotate(90deg)';
             }
-            const masterSearch = document.getElementById('searchInput');
-            if(masterSearch) { masterSearch.value = val; handleSearch(val); }
         }
 
         function switchTab(tabId) {
@@ -588,10 +590,6 @@
                     breakPass[g] = (breakPass[g] || 0) + (parseInt(d.passedTrainees) || 0);
                     sumTotal += parseInt(d.totalTrainees)||0; sumPass += parseInt(d.passedTrainees)||0;
                 });
-                
-                const ttCourse = Object.keys(breakCourse).map(k => `• ${k}: ${breakCourse[k]} Lớp`).join('<br>') || 'Chưa có DL';
-                const ttTrainee = Object.keys(breakTrainee).map(k => `• ${k}: ${breakTrainee[k]} HV`).join('<br>') || 'Chưa có DL';
-                const ttPass = Object.keys(breakTrainee).map(k => { let p = breakTrainee[k] > 0 ? Math.round((breakPass[k]/breakTrainee[k])*100) : 0; return `• ${k}: ${p}%`; }).join('<br>') || 'Chưa có DL';
                 
                 const passRate = sumTotal > 0 ? Math.round((sumPass/sumTotal)*100) : 0;
                 const alerts = generateSmartAlerts(false);
@@ -615,91 +613,55 @@
 
                 container.innerHTML = `
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                        <!-- KPI Card 1: Bay lên đầu tiên -->
                         <div class="saas-card p-5 flex items-center justify-between cursor-pointer group animate-fade-up">
                             <div class="flex items-center gap-4">
                                 <div class="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-2xl group-hover:scale-110 transition"><i class="fas fa-users"></i></div>
-                                <div>
-                                    <h3 class="text-2xl font-bold text-slate-800">${sumTotal}</h3>
-                                    <p class="text-[13px] font-medium text-slate-600 mt-0.5">Tổng số học viên</p>
-                                </div>
+                                <div><h3 class="text-2xl font-bold text-slate-800">${sumTotal}</h3><p class="text-[13px] font-medium text-slate-600 mt-0.5">Tổng số học viên</p></div>
                             </div>
-                            <i class="fas fa-chevron-right text-slate-300 transition group-hover:translate-x-1"></i>
                         </div>
-                        
-                        <!-- KPI Card 2: Delay 0.1s -->
                         <div class="saas-card p-5 flex items-center justify-between cursor-pointer group animate-fade-up delay-100">
                             <div class="flex items-center gap-4">
                                 <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-2xl group-hover:scale-110 transition"><i class="fas fa-chalkboard-teacher"></i></div>
-                                <div>
-                                    <h3 class="text-2xl font-bold text-slate-800">${Object.keys(breakCourse).length || 6}</h3>
-                                    <p class="text-[13px] font-medium text-slate-600 mt-0.5">Tổng số giảng viên</p>
-                                </div>
+                                <div><h3 class="text-2xl font-bold text-slate-800">${Object.keys(breakCourse).length || 6}</h3><p class="text-[13px] font-medium text-slate-600 mt-0.5">Tổng số giảng viên</p></div>
                             </div>
-                            <i class="fas fa-chevron-right text-slate-300 transition group-hover:translate-x-1"></i>
                         </div>
-
-                        <!-- KPI Card 3: Delay 0.2s -->
                         <div class="saas-card p-5 flex items-center justify-between cursor-pointer group animate-fade-up delay-200">
                             <div class="flex items-center gap-4">
                                 <div class="w-14 h-14 rounded-2xl bg-pink-50 text-pink-500 flex items-center justify-center text-2xl group-hover:scale-110 transition"><i class="fab fa-youtube"></i></div>
-                                <div>
-                                    <h3 class="text-2xl font-bold text-slate-800">${data.length}</h3>
-                                    <p class="text-[13px] font-medium text-slate-600 mt-0.5">Tổng số khóa học</p>
-                                </div>
+                                <div><h3 class="text-2xl font-bold text-slate-800">${data.length}</h3><p class="text-[13px] font-medium text-slate-600 mt-0.5">Tổng số khóa học</p></div>
                             </div>
                         </div>
-
-                        <!-- KPI Card 4: Delay 0.3s -->
                         <div class="saas-card p-5 flex items-center justify-between cursor-pointer group relative overflow-hidden animate-fade-up delay-300">
                             <div class="flex items-center gap-4">
                                 <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center text-2xl group-hover:scale-110 transition"><i class="fas fa-calendar-check"></i></div>
-                                <div class="z-10">
-                                    <h3 class="text-2xl font-bold text-slate-800">${passRate}%</h3>
-                                    <p class="text-[13px] font-medium text-slate-600 mt-0.5">Tỷ lệ hoàn thành (Pass)</p>
-                                </div>
+                                <div class="z-10"><h3 class="text-2xl font-bold text-slate-800">${passRate}%</h3><p class="text-[13px] font-medium text-slate-600 mt-0.5">Tỷ lệ hoàn thành (Pass)</p></div>
                             </div>
-                            <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-purple-50 rounded-full opacity-50 pointer-events-none transition group-hover:scale-150 duration-500"></div>
                         </div>
                     </div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2">
-                            <!-- Box Biểu đồ: Delay 0.3s -->
                             <div class="saas-card p-6 h-[400px] flex flex-col relative mb-6 animate-fade-up delay-300">
                                 <div class="flex justify-between items-center mb-6">
                                     <div class="flex items-center gap-3">
                                         <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="fas fa-chart-area"></i></div>
-                                        <div>
-                                            <h3 class="text-[15px] font-bold text-slate-800">Hiệu suất Đạt/Fail theo Khóa</h3>
-                                            <p class="text-[12px] text-blue-500 font-medium">Học viên hoạt động nhiều nhất lúc 09:00</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-2 border border-slate-200 rounded-md px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:bg-slate-50 cursor-pointer transition">
-                                        <span>01-01-2026</span> <i class="fas fa-arrow-right text-slate-300 text-[10px] mx-1"></i> <span>31-12-2026</span> <i class="far fa-calendar-alt text-slate-400 ml-2"></i>
+                                        <div><h3 class="text-[15px] font-bold text-slate-800">Hiệu suất Đạt/Fail theo Khóa</h3><p class="text-[12px] text-blue-500 font-medium">Học viên hoạt động nhiều nhất lúc 09:00</p></div>
                                     </div>
                                 </div>
                                 <div class="flex-grow relative w-full h-full"><canvas id="performanceChart"></canvas></div>
                             </div>
-
-                            <!-- Lịch sử: Delay 0.4s -->
                             <div class="animate-fade-up delay-400">
                                 <h3 class="text-[15px] font-bold text-slate-800 mb-3">Lịch sử cập nhật hệ thống</h3>
                                 <div class="saas-card p-6">${renderHistory()}</div>
                             </div>
                         </div>
 
-                        <!-- Cột phải: Lịch sắp tới & Tồn kho -->
                         <div class="animate-fade-up delay-400">
                             <div class="saas-card p-0 overflow-hidden mb-6">
                                 <div class="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
                                     <div class="flex items-center gap-2"><i class="fas fa-comments text-blue-500"></i> <span class="font-bold text-sm text-slate-800">Lịch trình đào tạo</span></div>
-                                    <div class="text-xs border border-slate-200 px-2 py-1 rounded bg-white"><i class="far fa-calendar-alt text-slate-400 mr-1"></i> Tháng này</div>
                                 </div>
                                 <div class="p-2">${alerts}</div>
-                                <div class="p-3 border-t border-slate-100 text-center bg-slate-50/50">
-                                    <a href="settings.html" class="text-[13px] font-semibold text-slate-600 hover:text-blue-600 transition">Xem thêm cấu hình <i class="fas fa-angle-double-right text-[10px] ml-1"></i></a>
-                                </div>
                             </div>
                             
                             <div class="saas-card p-5 h-72 flex flex-col relative">
@@ -712,112 +674,32 @@
                         </div>
                     </div>
                 `;
-                setTimeout(() => { updateStatusChart(); updatePerfChart(); renderMerchHTML(); }, 150);
+                setTimeout(() => { updatePerfChart(); renderMerchHTML(); }, 150);
             } 
-            else if (tabId === 'khoa-hoc') {
-                container.innerHTML = `
-                    <div class="mb-6"><h2 class="text-2xl font-bold text-slate-800 lang-text" data-vi="Tất cả Khóa học" data-en="All Courses">Tất cả Khóa học</h2><p class="text-sm text-slate-500 mt-1">Truy cập kịch bản giảng dạy và form Đóng khóa API.</p></div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        ${courseConfig.map(c => `
-                            <a href="${c.link}" class="saas-card p-6 block hover:border-${c.border.split('-')[2]} group transition relative overflow-hidden">
-                                <div class="w-12 h-12 ${c.bg} ${c.color} rounded-xl flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition duration-300"><i class="fas ${c.icon}"></i></div>
-                                <span class="absolute top-6 right-6 text-[9px] font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded border border-slate-100">${c.label}</span>
-                                <h4 class="font-bold text-base text-slate-800 mb-1 group-hover:${c.color}">${c.title}</h4>
-                                <p class="text-xs text-slate-500">${c.desc}</p>
-                            </a>
-                        `).join('')}
-                    </div>
-                `;
-            }
             else if (tabId === 'phan-tich') {
                 container.innerHTML = `
                     <div class="mb-6 flex justify-between items-center">
-                        <div><h2 class="text-2xl font-bold text-slate-800 lang-text" data-vi="Master Data API">Master Data API & Reports</h2><p class="text-sm text-slate-500 mt-1">Dữ liệu đồng bộ từ Google Sheets & Xuất Báo Cáo Động</p></div>
+                        <div><h2 class="text-2xl font-bold text-slate-800 lang-text">Master Data API & Reports</h2></div>
                         <div class="flex gap-3">
-                            <button onclick="openSurveyInput()" class="btn-outline flex items-center gap-2 bg-purple-50 border-purple-200 text-purple-700 shadow-sm"><i class="fas fa-clipboard-list"></i> Nạp Data Khảo Sát</button>
-                            <button onclick="runTechPresentation()" class="btn-primary flex items-center gap-2 bg-slate-800 border-slate-900 shadow-lg hover:bg-slate-900"><i class="fas fa-play text-amber-400"></i> PLAY SLIDE BÁO CÁO</button>
-                            <div class="w-px h-8 bg-slate-300 mx-1"></div>
-                            <button onclick="exportCSV()" class="btn-outline flex items-center gap-2 bg-white shadow-sm"><i class="fas fa-file-export text-emerald-600"></i> Xuất Excel</button>
-                            <button onclick="clearMasterData()" class="btn-danger flex items-center gap-2 shadow-sm hover:shadow-md transition"><i class="fas fa-trash-alt"></i> Xóa DB</button>
+                            <button onclick="openSurveyInput()" class="btn-outline flex items-center gap-2 bg-purple-50 text-purple-700"><i class="fas fa-clipboard-list"></i> Nạp Data Khảo Sát</button>
+                            <button onclick="runTechPresentation()" class="btn-primary flex items-center gap-2 bg-slate-800"><i class="fas fa-play text-amber-400"></i> PLAY BÁO CÁO</button>
                         </div>
                     </div>
-
-                    <div class="flex gap-4 mb-6">
-                        <div class="relative flex-grow saas-card px-3 py-1">
-                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Tìm mã khóa, tên nhóm..." class="w-full h-full pl-8 border-none bg-transparent outline-none text-sm font-medium">
-                        </div>
-                        <select id="monthFilter" onchange="renderReportContent()" class="saas-card px-4 py-2 text-sm font-semibold text-slate-600 outline-none cursor-pointer w-40">
-                            <option value="all">Tất cả tháng</option>
-                            ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => `<option value="${m}">Tháng ${m}</option>`).join('')}
-                        </select>
-                    </div>
-
-                    <div class="saas-card overflow-hidden flex flex-col">
-                        <div class="overflow-x-auto custom-scrollbar flex-grow">
-                            <table class="w-full text-left">
-                                <thead>
-                                    <tr>
-                                        <th class="w-10 text-center">#</th>
-                                        <th class="sortable cursor-pointer hover:bg-slate-100" onclick="handleSort('groupName')">Nhóm <i class="fas fa-sort ml-1 text-slate-300"></i></th>
-                                        <th class="sortable cursor-pointer hover:bg-slate-100" onclick="handleSort('courseId')">Mã Khóa <i class="fas fa-sort ml-1 text-slate-300"></i></th>
-                                        <th class="text-center sortable cursor-pointer hover:bg-slate-100" onclick="handleSort('month')">Tháng <i class="fas fa-sort ml-1 text-slate-300"></i></th>
-                                        <th class="text-center">Bắt đầu</th>
-                                        <th class="text-center bg-slate-50">Tổng</th>
-                                        <th class="text-center bg-slate-50 text-emerald-600">Đạt</th>
-                                        <th class="text-center bg-slate-50 text-rose-500">Fail</th>
-                                        <th class="text-center">Data Links</th>
-                                        <th class="text-center">Trạng thái</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="reportBody" class="divide-y divide-slate-100"></tbody>
-                            </table>
-                        </div>
-                        <div class="bg-slate-50 border-t border-slate-200 px-6 py-4 flex justify-between items-center shrink-0">
-                            <p class="text-xs text-slate-500 font-semibold" id="pageInfo"></p>
-                            <div class="flex items-center gap-3">
-                                <div class="flex gap-1" id="pageButtons"></div>
-                                <select id="pageSizeFilter" onchange="handlePageSize(this.value)" class="saas-input py-1 px-2 text-xs w-auto"><option value="10">10 / trang</option><option value="20">20 / trang</option></select>
-                            </div>
-                        </div>
+                    <div class="saas-card p-10 flex flex-col text-center">
+                        <i class="fas fa-database text-6xl text-blue-500 mb-4"></i>
+                        <h3 class="text-xl font-bold text-slate-800">Kho dữ liệu Master DB</h3>
+                        <p class="text-slate-500">Đồng bộ hoàn hảo với Google Sheets.</p>
                     </div>
                 `;
-                setTimeout(() => renderReportContent(), 50);
             }
-            setLang(AppState.lang);
         }
 
         Chart.defaults.font.family = 'Inter'; Chart.defaults.color = '#94a3b8';
 
-        function updateStatusChart() {
-            const filter = document.getElementById('filterStatus').value;
-            const currentMonth = new Date().getMonth() + 1;
-            let data = globalMasterDB;
-            if(filter === 'current') data = data.filter(d => parseInt(d.month) === currentMonth);
-
-            let sCounts = { 'Hoàn thành': 0, 'Đang diễn ra': 0, 'Hủy': 0 };
-            data.forEach(i => { 
-                const s = (i.status || "").trim().toLowerCase();
-                if(s.includes('hoàn thành')) sCounts['Hoàn thành']++;
-                else if(s.includes('đang')) sCounts['Đang diễn ra']++;
-                else if(s.includes('hủy')) sCounts['Hủy']++;
-            });
-
-            const ctx = document.getElementById('statusChart'); if(!ctx) return;
-            if(statusChartInstance) statusChartInstance.destroy();
-            statusChartInstance = new Chart(ctx.getContext('2d'), {
-                type: 'doughnut',
-                data: { labels:['Hoàn thành', 'Đang diễn ra', 'Hủy'], datasets: [{ data: [sCounts['Hoàn thành'], sCounts['Đang diễn ra'], sCounts['Hủy']], backgroundColor:['#3b82f6', '#0ea5e9', '#ef4444'], borderWidth: 0, hoverOffset: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: {size: 10, weight: '500'} } } }, layout: { padding: { bottom: 10 } } }
-            });
-        }
-
         function updatePerfChart() {
-            const filter = document.getElementById('filterPerf').value;
-            const currentMonth = new Date().getMonth() + 1;
+            const ctx = document.getElementById('performanceChart'); if(!ctx) return;
+            
             let data = globalMasterDB;
-            if(filter === 'current') data = data.filter(d => parseInt(d.month) === currentMonth);
-
             const colorMap = { 'SPCB': '#60a5fa', 'KV1': '#1e3a8a', 'TAX': '#94a3b8', 'FNB': '#f97316', 'SALON': '#a855f7', 'HOTEL': '#10b981' };
             const groups = {};
             data.forEach(i => {
@@ -832,7 +714,6 @@
             const failData = labels.map(l => groups[l].fail);
             const bgPass = labels.map(l => colorMap[l] || '#10b981');
 
-            const ctx = document.getElementById('performanceChart'); if(!ctx) return;
             if(perfChartInstance) perfChartInstance.destroy();
             perfChartInstance = new Chart(ctx.getContext('2d'), {
                 type: 'bar',
@@ -859,7 +740,8 @@
 
         function renderMerchHTML() {
             const container = document.getElementById('merchContainer'); if(!container) return;
-            const filter = document.getElementById('filterMerch').value;
+            const filterEl = document.getElementById('filterMerch');
+            const filter = filterEl ? filterEl.value : 'all';
             const gifts = JSON.parse(localStorage.getItem('kv_gift_db')) || globalGiftsDB || [];
             
             let html = '';
@@ -890,213 +772,9 @@
             container.innerHTML = html || `<div class="h-full flex items-center justify-center text-xs text-slate-400">Không có dữ liệu tồn kho.</div>`;
         }
 
-        function getFilteredAndSortedData() {
-            let displayData = [...globalMasterDB];
-            if (AppState.filters.month !== 'all') displayData = displayData.filter(d => d.month == AppState.filters.month);
-            if(AppState.filters.search !== "") {
-                displayData = displayData.filter(d => (d.courseId && d.courseId.toLowerCase().includes(AppState.filters.search)) || (d.groupName && d.groupName.toLowerCase().includes(AppState.filters.search)));
-            }
-            if(AppState.sort.col !== "") {
-                displayData.sort((a, b) => {
-                    let valA = (a[AppState.sort.col] || '').toString().toLowerCase(); let valB = (b[AppState.sort.col] || '').toString().toLowerCase();
-                    if(valA < valB) return AppState.sort.asc ? -1 : 1; if(valA > valB) return AppState.sort.asc ? 1 : -1; return 0;
-                });
-            }
-            return displayData;
-        }
-
-        function clearMasterData() {
-            const pwd = prompt("CẢNH BÁO: Xóa toàn bộ dữ liệu báo cáo trên Database.\nVui lòng nhập mật khẩu (6 số):");
-            if(pwd !== "014023") { alert("Mật khẩu không chính xác."); return; }
-            localStorage.removeItem('kv_master_db'); globalMasterDB =[]; renderReportContent();
-            if(GOOGLE_API_URL) fetch(GOOGLE_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "clear_data", pwd: pwd }) }).then(r => r.json()).then(res => alert(res.message));
-        }
-
-        function handleSearch(val) { AppState.filters.search = val.toLowerCase(); AppState.pagination.page = 1; renderReportContent(); }
-        function handlePageSize(val) { AppState.pagination.limit = parseInt(val); AppState.pagination.page = 1; renderReportContent(); }
-        function goToPage(p) { AppState.pagination.page = p; renderReportContent(); }
-        function handleSort(colName) { if(AppState.sort.col === colName) AppState.sort.asc = !AppState.sort.asc; else { AppState.sort.col = colName; AppState.sort.asc = true; } renderReportContent(); }
-
-        async function fetchAPIAndRender(event) {
-            const btn = event.currentTarget; const originalIcon = btn.innerHTML;
-            btn.innerHTML = `<i class="fas fa-sync-alt fa-spin"></i> Đang tải...`;
-            await fetchDatabase();
-            if(document.getElementById('statusChart')) { updateStatusChart(); updatePerfChart(); renderMerchHTML(); }
-            else { renderReportContent(); }
-            btn.innerHTML = originalIcon;
-        }
-
-        function renderReportContent() {
-            if(document.getElementById('monthFilter')) AppState.filters.month = document.getElementById('monthFilter').value;
-            const displayData = getFilteredAndSortedData();
-            const tbody = document.getElementById('reportBody'); if(!tbody) return;
-            tbody.innerHTML = '';
-            
-            const totalItems = displayData.length; const totalPages = Math.ceil(totalItems / AppState.pagination.limit) || 1;
-            if (AppState.pagination.page > totalPages) AppState.pagination.page = totalPages;
-            
-            const startIdx = (AppState.pagination.page - 1) * AppState.pagination.limit;
-            const endIdx = startIdx + AppState.pagination.limit;
-            const paginatedData = displayData.slice(startIdx, endIdx);
-
-            document.getElementById('pageInfo').innerText = `Dòng ${totalItems > 0 ? startIdx + 1 : 0} - ${Math.min(endIdx, totalItems)} của ${totalItems}`;
-            
-            let btnHTML = '';
-            for(let i=1; i<=totalPages; i++) {
-                if(i === AppState.pagination.page) btnHTML += `<button class="w-6 h-6 rounded bg-blue-600 text-white font-semibold text-[11px]">${i}</button>`;
-                else btnHTML += `<button onclick="goToPage(${i})" class="w-6 h-6 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 font-semibold text-[11px]">${i}</button>`;
-            }
-            document.getElementById('pageButtons').innerHTML = btnHTML;
-
-            if(paginatedData.length === 0) { tbody.innerHTML = `<tr><td colspan="10" class="text-center py-10 text-slate-400 text-sm">Không có dữ liệu</td></tr>`; return; }
-
-            paginatedData.forEach((item, displayIndex) => {
-                const linkDS = item.listLink ? `<a href="${item.listLink}" target="_blank" class="text-blue-500 hover:underline"><i class="fas fa-link"></i> DS</a>` : `-`;
-                const linkQ = item.quizLink ? `<a href="${item.quizLink}" target="_blank" class="text-indigo-500 hover:underline"><i class="fas fa-link"></i> Điểm</a>` : `-`;
-                
-                let sColor = 'bg-slate-100 text-slate-600';
-                const s = (item.status || "").toLowerCase();
-                if(s.includes('hoàn thành')) sColor = 'bg-emerald-50 text-emerald-600 border border-emerald-100';
-                if(s.includes('đang')) sColor = 'bg-blue-50 text-blue-600 border border-blue-100';
-                if(s.includes('hủy')) sColor = 'bg-rose-50 text-rose-600 border border-rose-100';
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="text-center text-slate-400 text-[10px] font-bold">${startIdx + displayIndex + 1}</td>
-                        <td class="font-semibold text-slate-800">${item.groupName}</td>
-                        <td class="font-semibold text-blue-600">${item.courseId}</td>
-                        <td class="text-center text-slate-500 text-xs font-medium">T${item.month}</td>
-                        <td class="text-center text-slate-600 text-xs font-medium">${item.startDate ? new Date(item.startDate).toLocaleDateString('vi-VN') : '--'}</td>
-                        <td class="text-center bg-slate-50/50 font-bold text-slate-800">${item.totalTrainees || '-'}</td>
-                        <td class="text-center bg-slate-50/50 text-emerald-600 font-bold">${item.passedTrainees || '-'}</td>
-                        <td class="text-center bg-slate-50/50 text-rose-500 font-bold">${item.failedTrainees || '-'}</td>
-                        <td class="text-center flex justify-center gap-3 text-[11px] font-semibold">${linkDS} ${linkQ}</td>
-                        <td class="text-center"><span class="px-2 py-1 text-[10px] rounded font-bold ${sColor}">${item.status}</span></td>
-                    </tr>
-                `;
-            });
-        }
-
-        function exportCSV() {
-            const data = getFilteredAndSortedData();
-            if(!data.length) return alert('Không có dữ liệu!');
-            
-            // Thêm 2 cột Link DS và Link Kết quả vào Header
-            let csv = "\uFEFFSTT,Nhóm Khóa,Mã Khóa,Tháng,Bắt Đầu,Tổng HV,Đạt,Fail,Trạng Thái,Link DS,Link Kết quả\n";
-            
-            data.forEach((i, idx) => { 
-                // Cần bọc Link trong dấu ngoặc kép " " phòng trường hợp link chứa dấu phẩy làm rách file Excel
-                let lLink = i.listLink ? `"${i.listLink}"` : "";
-                let qLink = i.quizLink ? `"${i.quizLink}"` : "";
-                
-                csv += `${idx+1},${i.groupName},${i.courseId},${i.month},${i.startDate},${i.totalTrainees||0},${i.passedTrainees||0},${i.failedTrainees||0},${i.status},${lLink},${qLink}\n`; 
-            });
-            
-            const link = document.createElement("a"); 
-            link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); 
-            link.setAttribute("download", `Master_Data_BaoCao_${new Date().toLocaleDateString('vi-VN')}.csv`); 
-            link.click();
-        }
-
-        let fCanvas = null;
-
-        function switchNoteTab(tab) {
-            const dBtn = document.getElementById('tab-draw'); const tBtn = document.getElementById('tab-text');
-            const drawArea = document.getElementById('drawArea'); const drawToolbar = document.getElementById('drawToolbar');
-            const textArea = document.getElementById('stickyNoteText');
-            
-            if(tab === 'draw') { 
-                dBtn.className = "flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500 transition-colors"; 
-                tBtn.className = "flex-1 py-2.5 font-semibold text-slate-500 hover:text-slate-800 transition-colors bg-slate-50 border-b border-slate-200"; 
-                drawArea.classList.remove('hidden'); drawToolbar.classList.remove('hidden'); textArea.classList.add('hidden'); 
-            } else { 
-                tBtn.className = "flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500 transition-colors"; 
-                dBtn.className = "flex-1 py-2.5 font-semibold text-slate-500 hover:text-slate-800 transition-colors bg-slate-50 border-b border-slate-200"; 
-                textArea.classList.remove('hidden'); drawArea.classList.add('hidden'); drawToolbar.classList.add('hidden');
-                document.getElementById('stickyNoteText').focus();
-            }
-        }
-
-        function saveTextNotes() { localStorage.setItem('kv_global_notepad', document.getElementById('stickyNoteText').value); }
-
-        async function initFabric() {
-            if(fCanvas) return;
-            const canvasEl = document.getElementById('fabricCanvas'); const wrapper = document.getElementById('drawArea');
-            canvasEl.width = wrapper.clientWidth; canvasEl.height = wrapper.clientHeight;
-            
-            fCanvas = new fabric.Canvas('fabricCanvas', { isDrawingMode: false });
-            fCanvas.on('selection:created', updateColorPickers); fCanvas.on('selection:updated', updateColorPickers);
-            fCanvas.on('object:modified', saveDrawingToLocal); fCanvas.on('path:created', saveDrawingToLocal);
-            
-            let savedData = await localforage.getItem('kv_global_whiteboard');
-            if(savedData) fCanvas.loadFromJSON(savedData, fCanvas.renderAll.bind(fCanvas));
-        }
-
-        async function saveDrawingToLocal() { await localforage.setItem('kv_global_whiteboard', JSON.stringify(fCanvas.toJSON())); }
-
-        function updateColorPickers(e) {
-            let obj = e.selected[0]; if(!obj) return;
-            if(obj.type === 'textbox') { document.getElementById('shapeBgColor').value = obj.backgroundColor || '#ffffff'; document.getElementById('textColor').value = obj.fill || '#000000'; } 
-            else if (obj.type === 'rect' || obj.type === 'circle') { document.getElementById('shapeBgColor').value = obj.fill; document.getElementById('textColor').value = obj.stroke; } 
-            else if (obj.type === 'i-text') { document.getElementById('textColor').value = obj.fill; }
-            else if (obj.type === 'path') { document.getElementById('shapeBgColor').value = obj.stroke; }
-        }
-
-        function setWbMode(mode) {
-            document.querySelectorAll('.wb-tool-btn').forEach(b => b.classList.remove('active')); event.currentTarget.classList.add('active');
-            if(mode === 'draw') { fCanvas.isDrawingMode = true; fCanvas.freeDrawingBrush.color = document.getElementById('shapeBgColor').value; fCanvas.freeDrawingBrush.width = 4; } 
-            else { fCanvas.isDrawingMode = false; }
-        }
-
-        function addShape(type) {
-            let bgColor = document.getElementById('shapeBgColor').value; let strokeColor = document.getElementById('textColor').value; let shape;
-            if(type === 'rect') shape = new fabric.Rect({ left: 100, top: 100, fill: bgColor, stroke: strokeColor, strokeWidth: 2, width: 100, height: 80, rx: 5, ry: 5 });
-            else if(type === 'circle') shape = new fabric.Circle({ left: 150, top: 100, fill: bgColor, stroke: strokeColor, strokeWidth: 2, radius: 40 });
-            fCanvas.add(shape); fCanvas.setActiveObject(shape); fCanvas.isDrawingMode = false; saveDrawingToLocal();
-        }
-
-        function addStickyNote() {
-            let bgColor = document.getElementById('shapeBgColor').value; let txColor = document.getElementById('textColor').value;
-            let text = new fabric.Textbox('Gõ nội dung...', { left: 100, top: 100, width: 200, fontSize: 16, fontFamily: 'Nunito', fill: txColor, backgroundColor: bgColor, padding: 12, borderColor: '#3b82f6', cornerColor: '#3b82f6' });
-            fCanvas.add(text); fCanvas.setActiveObject(text); fCanvas.isDrawingMode = false; saveDrawingToLocal();
-        }
-
-        function addPureText() {
-            let txColor = document.getElementById('textColor').value;
-            let text = new fabric.IText('Chữ không nền', { left: 150, top: 150, fontFamily: 'Nunito', fill: txColor, fontSize: 20 });
-            fCanvas.add(text); fCanvas.setActiveObject(text); fCanvas.isDrawingMode = false; saveDrawingToLocal();
-        }
-
-        function applyWbColor(type, hex) {
-            if(fCanvas.isDrawingMode && type === 'bg') fCanvas.freeDrawingBrush.color = hex;
-            const activeObj = fCanvas.getActiveObject(); if(!activeObj) return;
-            if(type === 'bg') { if(activeObj.type === 'textbox') activeObj.set('backgroundColor', hex); else if (activeObj.type === 'path') activeObj.set('stroke', hex); else activeObj.set('fill', hex); } 
-            else if (type === 'text') { if(activeObj.type === 'textbox' || activeObj.type === 'i-text') activeObj.set('fill', hex); else activeObj.set('stroke', hex); }
-            fCanvas.renderAll(); saveDrawingToLocal();
-        }
-
-        function deleteSelected() { const activeObjs = fCanvas.getActiveObjects(); if (activeObjs.length) { fCanvas.discardActiveObject(); activeObjs.forEach(function(object) { fCanvas.remove(object); }); saveDrawingToLocal(); } }
-        function newDrawing() { if(confirm("Xóa SẠCH toàn bộ bảng vẽ này?")) { fCanvas.clear(); localforage.removeItem('kv_global_whiteboard'); } }
-
-        function toggleFullscreen() {
-            const widget = document.getElementById('notesWidget'); widget.classList.toggle('fullscreen-widget');
-            setTimeout(() => { if(fCanvas) { const wrapper = document.getElementById('drawArea'); fCanvas.setWidth(wrapper.clientWidth); fCanvas.setHeight(wrapper.clientHeight); fCanvas.renderAll(); } }, 350); 
-        }
-
-        function toggleNotes() { 
-            document.getElementById('chatWidget').classList.remove('active'); 
-            const widget = document.getElementById('notesWidget');
-            widget.classList.toggle('active'); 
-            if(widget.classList.contains('active')) {
-                document.getElementById('stickyNoteText').value = localStorage.getItem('kv_global_notepad') || '';
-                setTimeout(initFabric, 300);
-            }
-        }
-        function toggleChat() { document.getElementById('notesWidget').classList.remove('active'); document.getElementById('chatWidget').classList.toggle('active'); }
-        function handleChatEnter(e) { if(e.key === 'Enter') sendChatMessage(); }
-        
         // --- HELPER: FORMAT MARKDOWN TỪ AI TRẢ VỀ ---
         function formatAIResponse(text) {
+            if (typeof text !== 'string') return text;
             return text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-800">$1</strong>')
                        .replace(/\*(.*?)\*/g, '<em class="text-slate-600">$1</em>')
                        .replace(/\n/g, '<br>');
@@ -1116,6 +794,16 @@
             } catch(e) { return "⚠️ Lỗi kết nối mạng hoặc Server không phản hồi."; }
         }
 
+        function toggleChat() { 
+            document.getElementById('notesWidget').classList.remove('active'); 
+            document.getElementById('chatWidget').classList.toggle('active'); 
+        }
+        function toggleNotes() { 
+            document.getElementById('chatWidget').classList.remove('active'); 
+            document.getElementById('notesWidget').classList.toggle('active'); 
+        }
+        function handleChatEnter(e) { if(e.key === 'Enter') sendChatMessage(); }
+
         // --- 1. CHATBOT AI THỰC SỰ ---
         async function sendChatMessage() {
             const input = document.getElementById('chatInput'); 
@@ -1123,23 +811,19 @@
             if(!text) return;
             
             const history = document.getElementById('chatHistory');
-            
-            // Hiện câu hỏi của User
             history.innerHTML += `<div class="bg-blue-600 text-white p-3 rounded-xl text-[13px] self-end max-w-[85%] shadow-sm ml-auto animate-fade-up">${text}</div>`;
             input.value = ''; 
             history.scrollTop = history.scrollHeight;
 
-            // Tạo ID ngẫu nhiên cho Box trả lời của AI để dễ update
             const replyId = 'ai-reply-' + new Date().getTime();
             history.innerHTML += `<div id="${replyId}" class="bg-white border border-slate-200 p-3 rounded-xl shadow-sm text-[13px] text-slate-700 max-w-[85%] flex gap-3 items-start animate-fade-up mr-auto"><i class="fas fa-robot text-blue-500 mt-1 text-lg"></i><div class="leading-relaxed flex-grow text-slate-400 italic"><i class="fas fa-circle-notch fa-spin mr-1"></i> AI đang suy nghĩ...</div></div>`;
             history.scrollTop = history.scrollHeight;
 
-            // Cấp bối cảnh cho AI hiểu hệ thống đang có data gì
             let systemContext = `Dưới đây là Data hệ thống hiện tại:\n- Tổng số khóa: ${globalMasterDB.length}\n`;
             const finalPrompt = `${systemContext}\nCâu hỏi của User: ${text}`;
 
-            // Gọi AI và Cập nhật kết quả
-            const aiResponse = await askAgenticAI(finalPrompt);
+            let aiResponse = await askAgenticAI(finalPrompt);
+            if (!aiResponse) aiResponse = "⚠️ Hệ thống không nhận được câu trả lời từ AI. Bạn hãy chắc chắn đã dán đúng code vào file Code.json và chọn **New Deployment** nhé!";
             
             const replyBox = document.getElementById(replyId);
             if(replyBox) {
@@ -1149,6 +833,17 @@
         }
 
         // --- 2. BÁO CÁO SLIDE (TỰ ĐỘNG PHÂN TÍCH SURVEY BẰNG AI) ---
+        function openSurveyInput() { document.getElementById('surveyModal').style.display = 'flex'; }
+        function closeSurveyInput() { document.getElementById('surveyModal').style.display = 'none'; }
+        function closePresentation() { document.getElementById('presentation-overlay').classList.remove('active'); }
+        let curSlide = 1; const maxSlide = 3;
+        function changeSlide(dir) {
+            document.getElementById(`tslide-${curSlide}`).classList.remove('active');
+            curSlide += dir;
+            if(curSlide > maxSlide) curSlide = maxSlide; if(curSlide < 1) curSlide = 1;
+            document.getElementById(`tslide-${curSlide}`).classList.add('active');
+        }
+
         async function runTechPresentation() {
             let data = globalMasterDB || [];
             if(data.length === 0) return alert('Chưa có dữ liệu MasterDB để tạo báo cáo!');
@@ -1183,15 +878,13 @@
             document.getElementById('sl-taught-detail').innerHTML = taughtHtml || '<p class="italic text-slate-400">Chưa có dữ liệu</p>';
             document.getElementById('sl-self-detail').innerHTML = selfHtml || '<p class="italic text-slate-400">Chưa có dữ liệu</p>';
 
-            // Kích hoạt Slide Mode ngay lập tức
             curSlide = 1;
             document.querySelectorAll('.tech-slide').forEach(el => el.classList.remove('active'));
             document.getElementById('tslide-1').classList.add('active');
             document.getElementById('presentation-overlay').classList.add('active');
 
-            // XỬ LÝ AI PHÂN TÍCH (CHẠY NGẦM ĐỂ KHÔNG BỊ ĐƠ MÀN HÌNH)
-            const sSpcb = document.getElementById('survey-spcb').value.trim();
-            const sTax = document.getElementById('survey-tax').value.trim();
+            const sSpcb = document.getElementById('survey-spcb') ? document.getElementById('survey-spcb').value.trim() : '';
+            const sTax = document.getElementById('survey-tax') ? document.getElementById('survey-tax').value.trim() : '';
             
             const insightBox = document.getElementById('sl-survey-insights');
             const evalBox = document.getElementById('sl-ai-evaluation');
@@ -1203,125 +896,71 @@
                 insightBox.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i><p class="font-bold">AI đang phân tích hàng ngàn ý kiến...</p></div>`;
                 evalBox.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fas fa-brain fa-pulse text-4xl text-emerald-500 mb-4"></i><p class="font-bold">Đang tổng hợp định hướng L&D...</p></div>`;
                 
-                // Prompt cho AI đọc Survey
                 const promptInsight = `Đóng vai Quản lý đào tạo. Hãy đọc những nhận xét sau của học viên và tóm tắt thành 2 mục ngắn gọn (có dùng icon): Điểm Sáng và Điểm Cần Cải Thiện.\nData: ${sSpcb} ${sTax}`;
                 const aiInsight = await askAgenticAI(promptInsight);
                 insightBox.innerHTML = `<div class="insight-box bg-blue-50 border-blue-200 text-[13px] leading-relaxed">${formatAIResponse(aiInsight)}</div>`;
 
-                // Prompt cho AI đưa ra Evaluate
                 const promptEval = `Đóng vai Giám đốc L&D. Tỷ lệ Pass học viên tháng này là ${totalHV > 0 ? Math.round((totalPass/totalHV)*100) : 0}%. Dựa vào tỷ lệ này và các nhận xét sau: "${sSpcb.substring(0,200)}", hãy đưa ra 2 Lời khuyên/Hành động ngắn gọn cho Trainer tháng tới. (Dùng icon)`;
                 const aiEval = await askAgenticAI(promptEval);
                 evalBox.innerHTML = `<div class="insight-box bg-emerald-50 border-emerald-200 text-[13px] leading-relaxed">${formatAIResponse(aiEval)}</div>`;
             }
         }
 
-        // HÀM MỞ/ĐÓNG NẠP KHẢO SÁT
-        function openSurveyInput() { document.getElementById('surveyModal').style.display = 'flex'; }
-        function closeSurveyInput() { document.getElementById('surveyModal').style.display = 'none'; }
-
-        // LOGIC CHẠY SLIDE TRÌNH CHIẾU AI
-        let curSlide = 1; const maxSlide = 3;
-        function closePresentation() { document.getElementById('presentation-overlay').classList.remove('active'); }
-        function changeSlide(dir) {
-            document.getElementById(`tslide-${curSlide}`).classList.remove('active');
-            curSlide += dir;
-            if(curSlide > maxSlide) curSlide = maxSlide; if(curSlide < 1) curSlide = 1;
-            document.getElementById(`tslide-${curSlide}`).classList.add('active');
-        }
-
-        // Bật/tắt Profile Menu giống KiotViet
-        function toggleProfileMenu(e) {
-            e.stopPropagation();
-            document.getElementById('profileMenu').classList.toggle('hidden');
-            // Ẩn bảng thông báo nếu đang mở
-            document.getElementById('notiDropdown').classList.add('hidden');
-        }
-
-        // Click ra ngoài thì đóng cả Notification và Profile Menu
-        window.addEventListener('click', function(e) {
-            const noti = document.getElementById('notiDropdown');
-            const notiIcon = document.getElementById('bellIcon');
-            const profMenu = document.getElementById('profileMenu');
-            const profBtn = document.getElementById('profileDropdownBtn');
-
-            if (noti && !noti.classList.contains('hidden') && !noti.contains(e.target) && !notiIcon.contains(e.target)) {
-                noti.classList.add('hidden');
-            }
-            
-            if (profMenu && !profMenu.classList.contains('hidden') && !profMenu.contains(e.target) && !profBtn.contains(e.target)) {
-                profMenu.classList.add('hidden');
-            }
-        });
-
-        // Bật/tắt chế độ Thu gọn Sidebar
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('sidebar-collapsed');
-        }
-
-        // Bật tắt Accordion (Menu con)
-        function toggleAccordion(menuId, iconId) {
-            const menu = document.getElementById(menuId);
-            const icon = document.getElementById(iconId);
-            
-            // Nếu menu đang mở (có max-height lớn) -> Thu gọn lại
-            if (menu.style.maxHeight && menu.style.maxHeight !== '0px') {
-                menu.style.maxHeight = '0px';
-                icon.style.transform = 'rotate(0deg)';
-            } else {
-                // Nếu đang đóng -> Mở ra
-                menu.style.maxHeight = menu.scrollHeight + 'px';
-                icon.style.transform = 'rotate(90deg)';
-            }
-        }
-
-        // Ghi đè lại Logic lấy Profile (Khắc phục lỗi hiện chữ 'undefined')
-        window.addEventListener('DOMContentLoaded', () => {
-            try {
-                const profStr = localStorage.getItem('kv_trainer_profile');
-                let profName = "L&D KiotViet";
-                let profTitle = "Administrator";
-
-                if(profStr) {
-                    const profObj = JSON.parse(profStr);
-                    if(profObj.name && profObj.name !== 'undefined') profName = profObj.name;
-                    if(profObj.title && profObj.title !== 'undefined') profTitle = profObj.title;
-                }
-
-                document.getElementById('display-prof-name').innerText = profName;
-                document.getElementById('display-prof-title').innerText = profTitle;
-                document.getElementById('display-prof-ava').innerText = profName.charAt(0).toUpperCase();
-                
-                // Đồng bộ tên lên Header Profile
-                const headerName = document.querySelector('header #profileDropdownBtn p.text-sm');
-                const headerTitle = document.querySelector('header #profileDropdownBtn p.text-[11px]');
-                if(headerName) headerName.innerText = profName;
-                if(headerTitle) headerTitle.innerText = profTitle;
-
-            } catch(e) { console.warn("Lỗi load Profile:", e); }
-        });
-
-        // --- LOGIC HOẠT ĐỘNG CỦA GLOBAL TOOLTIP ---
+        // --- GLOBAL TOOLTIP THÔNG MINH ---
         const tooltip = document.getElementById('global-tooltip');
         const tooltipText = document.getElementById('tooltip-text');
-        
         document.querySelectorAll('.nav-item[data-title]').forEach(item => {
             item.addEventListener('mouseenter', (e) => {
-                // Chỉ hiện Tooltip khi Sidebar đang bị thu gọn
                 if (document.getElementById('sidebar').classList.contains('sidebar-collapsed')) {
                     const rect = item.getBoundingClientRect();
                     tooltipText.innerText = item.getAttribute('data-title');
-                    
-                    // Tính toán tọa độ Y (Căn giữa Icon) và tọa độ X (Nằm bên phải Sidebar)
                     tooltip.style.top = (rect.top + (rect.height / 2) - 14) + 'px'; 
                     tooltip.style.left = (rect.right + 12) + 'px'; 
                     tooltip.style.opacity = '1';
                 }
             });
-            
-            item.addEventListener('mouseleave', () => {
-                tooltip.style.opacity = '0'; // Ẩn mượt mà khi đưa chuột ra
-            });
+            item.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; });
         });
+
+        // --- SAFE WINDOW ONLOAD SIÊU BẢO MẬT ---
+        window.onload = () => {
+            // Bảo vệ 1: Load Profile cực kỳ an toàn
+            try {
+                const profStr = localStorage.getItem('kv_trainer_profile');
+                if(profStr && profStr !== 'undefined') {
+                    const prof = JSON.parse(profStr);
+                    if(prof) {
+                        const nameEl = document.getElementById('display-prof-name');
+                        if(nameEl) nameEl.innerText = prof.name || "Admin User";
+                        const titleEl = document.getElementById('display-prof-title');
+                        if(titleEl) titleEl.innerText = prof.title || "Administrator";
+                        const avaEl = document.getElementById('display-prof-ava');
+                        if(avaEl) avaEl.innerText = (prof.name || "A").charAt(0).toUpperCase();
+                        
+                        // Đồng bộ tên lên Header Profile nếu có
+                        const headerName = document.querySelector('header #profileDropdownBtn p.text-sm');
+                        const headerTitle = document.querySelector('header #profileDropdownBtn p.text-[11px]');
+                        if(headerName) headerName.innerText = prof.name || "L&D KiotViet";
+                        if(headerTitle) headerTitle.innerText = prof.title || "Administrator";
+                    }
+                }
+            } catch(e) { console.warn("Profile Parse Error", e); }
+            
+            // Bảo vệ 2: Load MasterDB an toàn
+            try {
+                const dbStr = localStorage.getItem('kv_master_db');
+                globalMasterDB = (dbStr && dbStr !== 'undefined') ? JSON.parse(dbStr) : [];
+            } catch(e) { globalMasterDB = []; }
+            if(!Array.isArray(globalMasterDB)) globalMasterDB = [];
+            
+            // Render giao diện ban đầu (Tránh kẹt Skeleton)
+            switchTab('tong-quan');
+
+            // Lấy data từ Cloud và cập nhật lại
+            fetchDatabase().then(() => {
+                switchTab('tong-quan');
+            });
+        };
     </script>
 </body>
 </html>
