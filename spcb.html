@@ -60,6 +60,27 @@
         .step-wrap.completed .step-circle { background: #2563eb; border-color: #2563eb; color: white; }
         .step-wrap.completed .step-label { color: #334155; }
         .step-wrap.skipped .step-circle { background: #cbd5e1; border-color: #cbd5e1; color: white; }
+        /* --- TÙY CHỈNH BẢNG (TABLE CONFIG & DRAG DROP) --- */
+        .col-drag-handle { cursor: grab; display: inline-block; padding: 0 4px; color: #94a3b8; }
+        .col-drag-handle:active { cursor: grabbing; }
+        th.dragging-col { opacity: 0.5; background: #e2e8f0; }
+        th.drag-over-col { border-left: 2px solid #2563eb; }
+
+        .row-checkbox { width: 14px; height: 14px; cursor: pointer; accent-color: #2563eb; }
+        tr.selected-row { background-color: #eff6ff !important; }
+        
+        /* Dropdown Tùy chỉnh cột giống KiotViet */
+        .col-config-dropdown {
+            position: absolute; right: 0; top: calc(100% + 8px); width: 340px;
+            background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05);
+            z-index: 100; padding: 16px; opacity: 0; pointer-events: none;
+            transform: translateY(-10px); transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .col-config-dropdown.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .col-config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .col-config-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #374151; cursor: pointer; user-select: none; }
+        .col-config-item input { width: 16px; height: 16px; accent-color: #2563eb; cursor: pointer; }
     </style>
 </head>
 <body class="antialiased">
@@ -862,51 +883,118 @@
             else { warnBox.classList.remove('flex'); warnBox.classList.add('hidden'); }
         }
 
-        // HÀM RENDER HTML TABLE TỪ ARRAY
+        // --- 4. HỆ THỐNG BẢNG ĐA NĂNG (TÙY CHỈNH & KÉO THẢ) ---
+
+        // State quản lý Cột
+        let globalColConfig = [
+            { id: 'stt', label: 'STT', visible: true, locked: true },
+            { id: 'name', label: 'Họ và tên', visible: true, locked: true },
+            { id: 'dept', label: 'Phòng ban', visible: true, locked: false },
+            { id: 'track', label: 'Lộ trình', visible: true, locked: false },
+            { id: 'score', label: 'Câu đúng', visible: true, locked: false },
+            { id: 'pct', label: 'Tỷ lệ (%)', visible: true, locked: false },
+            { id: 'region', label: 'Khu vực', visible: false, locked: false },
+            { id: 'location', label: 'Địa điểm', visible: false, locked: false }
+        ];
+
+        // State quản lý Checkbox (Nhiều dòng)
+        let globalSelectedRows = { tue: new Set(), wed: new Set(), thu: new Set() };
+
+        // Toggle hiển thị Dropdown tùy chỉnh cột
+        function toggleColConfig(dayKey) {
+            const dropdown = document.getElementById(`col-config-dropdown-${dayKey}`);
+            document.querySelectorAll('.col-config-dropdown').forEach(el => {
+                if(el.id !== `col-config-dropdown-${dayKey}`) el.classList.remove('active');
+            });
+            dropdown.classList.toggle('active');
+        }
+
+        // Bật/tắt cột
+        function toggleColumn(colId, dayKey) {
+            const col = globalColConfig.find(c => c.id === colId);
+            if(col && !col.locked) {
+                col.visible = !col.visible;
+                renderDailyTable(dayKey); // Render lại để áp dụng
+            }
+        }
+
+        // Cập nhật lại Hàm Render Table (Hỗ trợ cấu hình Cột & Đa chọn)
         function renderDailyTable(dayKey) {
             const arr = currentDailyData[dayKey];
             const regFilter = document.getElementById(`filter-reg-${dayKey}`).value;
             
-            let htmlMain = `<thead><tr><th>STT</th><th>Họ và tên</th><th>Phòng ban</th><th>Lộ trình</th><th>Câu đúng</th><th>Tỷ lệ (%)</th><th>Khu vực</th><th>Địa điểm</th><th class="w-8"></th></tr></thead><tbody>`;
+            // 1. Dựng Toolbar Tùy chỉnh (Giao diện giống KiotViet)
+            let colCheckboxesHtml = globalColConfig.map(c => `
+                <label class="col-config-item ${c.locked ? 'opacity-50 cursor-not-allowed' : ''}">
+                    <input type="checkbox" ${c.visible ? 'checked' : ''} ${c.locked ? 'disabled' : ''} onchange="toggleColumn('${c.id}', '${dayKey}')">
+                    <span>${c.label}</span>
+                </label>
+            `).join('');
+
+            // Đẩy nút tùy chỉnh vào cạnh nút Copy Excel
+            const toolbarContainer = document.getElementById(`daily-res-${dayKey}`).querySelector('.flex.justify-between');
+            if(!toolbarContainer.querySelector('.col-config-btn')) {
+                const btnHtml = `
+                    <div class="relative ml-2 col-config-btn">
+                        <button onclick="toggleColConfig('${dayKey}')" class="btn-outline bg-white border-slate-200 text-slate-600 !py-1.5 hover:bg-slate-50 shadow-sm"><i class="fas fa-sliders-h mr-1"></i> Tùy chỉnh</button>
+                        <div id="col-config-dropdown-${dayKey}" class="col-config-dropdown">
+                            <p class="text-xs font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">Tùy chỉnh trường thông tin</p>
+                            <div class="col-config-grid">${colCheckboxesHtml}</div>
+                        </div>
+                    </div>
+                `;
+                toolbarContainer.insertAdjacentHTML('beforeend', btnHtml);
+            }
+
+            // 2. Dựng Header Bảng (Hỗ trợ kéo thả cột)
+            let thHtml = `<th class="w-10 text-center"><input type="checkbox" onchange="toggleSelectAllRows(this, '${dayKey}')" class="row-checkbox"></th>`;
+            globalColConfig.filter(c => c.visible).forEach(c => {
+                let dragAttr = !c.locked ? `draggable="true" ondragstart="colDragStart(event, '${c.id}')" ondragover="colDragOver(event)" ondrop="colDrop(event, '${c.id}', '${dayKey}')"` : '';
+                let icon = !c.locked ? `<i class="fas fa-grip-vertical col-drag-handle mr-1"></i>` : '';
+                thHtml += `<th ${dragAttr} class="${!c.locked ? 'cursor-grab' : ''}">${icon}${c.label}</th>`;
+            });
+            thHtml += `<th class="w-8"></th>`;
+
+            let htmlMain = `<thead><tr>${thHtml}</tr></thead><tbody>`;
             let htmlStranger = `<thead><tr><th>Họ và tên Lạ</th><th>Email LMS</th><th>Câu đúng</th><th>Tỷ lệ (%)</th><th>Hành động</th></tr></thead><tbody>`;
             
             let stt = 1;
             arr.forEach((item, index) => {
                 if(item.isStranger) {
-                    let rowId = `row-${dayKey}-${index}`;
-                    htmlStranger += `<tr id="${rowId}" class="stranger-row bg-rose-50 border-rose-200">
-                        <td class="font-semibold text-rose-700">${item.name} <span class="text-[9px] bg-rose-500 text-white px-1 rounded ml-1">LẠ</span></td>
-                        <td class="text-rose-500 text-xs">${item.email}</td>
-                        <td class="text-center font-bold text-rose-700">${item.ans} / ${item.tq}</td>
-                        <td class="text-center font-bold text-rose-700">${item.pct}%</td>
-                        <td class="text-center"><button onclick="removeStrangerRow('${dayKey}', ${index})" class="w-6 h-6 bg-white border border-rose-300 text-rose-500 hover:bg-rose-500 hover:text-white rounded transition"><i class="fas fa-trash-alt"></i></button></td>
-                    </tr>`;
+                    htmlStranger += `<tr class="stranger-row bg-rose-50 border-rose-200"><td class="font-semibold text-rose-700">${item.name} <span class="text-[9px] bg-rose-500 text-white px-1 rounded ml-1">LẠ</span></td><td class="text-rose-500 text-xs">${item.email}</td><td class="text-center font-bold text-rose-700">${item.ans} / ${item.tq}</td><td class="text-center font-bold text-rose-700">${item.pct}%</td><td class="text-center"><button onclick="removeStrangerRow('${dayKey}', ${index})" class="w-6 h-6 bg-white border border-rose-300 text-rose-500 hover:bg-rose-500 hover:text-white rounded transition"><i class="fas fa-trash-alt"></i></button></td></tr>`;
                 } else {
                     if(regFilter !== 'ALL' && item.region !== regFilter) return;
 
-                    let trackColor = item.track === 'FNB' ? 'bg-orange-100 text-orange-700' : (item.track === 'Booking' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700');
-                    let trackBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold ${trackColor}">${item.track}</span>`;
+                    const isChecked = globalSelectedRows[dayKey].has(index);
+                    let rowCls = isChecked ? 'selected-row' : 'bg-white hover:bg-slate-50';
 
-                    let scoreText = item.isTaken ? `<span class="font-bold text-slate-700">${item.ans} / ${item.tq}</span>` : `<span class="font-bold text-rose-500">Vắng</span>`;
-                    let pctText = item.isTaken ? `<span class="font-bold text-blue-600">${item.pct}%</span>` : `<span class="font-bold text-rose-500">Vắng</span>`;
+                    let tdHtml = `<td class="text-center"><input type="checkbox" class="row-checkbox row-cb-${dayKey}" value="${index}" ${isChecked ? 'checked' : ''} onchange="updateSelectedRow(this, ${index}, '${dayKey}')"></td>`;
                     
-                    htmlMain += `<tr class="draggable-row bg-white hover:bg-slate-50 transition" draggable="true" ondragstart="dragStart(event, ${index}, '${dayKey}')" ondragover="dragOver(event)" ondrop="drop(event, ${index}, '${dayKey}')" ondragend="dragEnd(event)">
-                        <td class="text-center text-slate-400 font-bold">${stt++}</td>
-                        <td class="font-semibold">${item.name}</td>
-                        <td>${item.dept}</td>
-                        <td class="text-center">${trackBadge}</td>
-                        <td class="text-center">${scoreText}</td>
-                        <td class="text-center">${pctText}</td>
-                        <td>${item.region}</td>
-                        <td>${item.location}</td>
-                        <td class="text-center text-slate-300"><i class="fas fa-grip-vertical"></i></td>
-                    </tr>`;
+                    globalColConfig.filter(c => c.visible).forEach(c => {
+                        let val = '';
+                        if(c.id === 'stt') val = `<div class="text-center text-slate-400 font-bold">${stt++}</div>`;
+                        else if(c.id === 'name') val = `<div class="font-semibold">${item.name}</div>`;
+                        else if(c.id === 'dept') val = `<div>${item.dept}</div>`;
+                        else if(c.id === 'track') {
+                            let clr = item.track === 'FNB' ? 'bg-orange-100 text-orange-700' : (item.track === 'Booking' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700');
+                            val = `<div class="text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${clr}">${item.track}</span></div>`;
+                        }
+                        else if(c.id === 'score') val = `<div class="text-center">${item.isTaken ? `<span class="font-bold text-slate-700">${item.ans} / ${item.tq}</span>` : `<span class="font-bold text-rose-500">Vắng</span>`}</div>`;
+                        else if(c.id === 'pct') val = `<div class="text-center">${item.isTaken ? `<span class="font-bold text-blue-600">${item.pct}%</span>` : `<span class="font-bold text-rose-500">Vắng</span>`}</div>`;
+                        else if(c.id === 'region') val = `<div>${item.region}</div>`;
+                        else if(c.id === 'location') val = `<div>${item.location}</div>`;
+                        
+                        tdHtml += `<td>${val}</td>`;
+                    });
+
+                    tdHtml += `<td class="text-center text-slate-300"><i class="fas fa-grip-vertical"></i></td>`;
+
+                    htmlMain += `<tr class="draggable-row transition ${rowCls}" draggable="true" ondragstart="rowDragStart(event, ${index}, '${dayKey}')" ondragover="rowDragOver(event)" ondrop="rowDrop(event, ${index}, '${dayKey}')" ondragend="rowDragEnd(event)">${tdHtml}</tr>`;
                 }
             });
 
-            htmlMain += `</tbody>`; htmlStranger += `</tbody>`;
-            document.getElementById(`table-${dayKey}`).innerHTML = htmlMain;
-            document.getElementById(`table-stranger-${dayKey}`).innerHTML = htmlStranger;
+            document.getElementById(`table-${dayKey}`).innerHTML = htmlMain + `</tbody>`;
+            document.getElementById(`table-stranger-${dayKey}`).innerHTML = htmlStranger + `</tbody>`;
             document.getElementById(`daily-res-${dayKey}`).classList.remove('hidden');
         }
 
@@ -919,19 +1007,91 @@
             renderDailyTable(dayKey);
         }
 
-        // CÁC HÀM DRAG & DROP HTML5
-        let dragSourceIdx = null;
-        function dragStart(e, idx, dayKey) { dragSourceIdx = idx; e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", idx); setTimeout(() => e.target.classList.add('dragging'), 0); }
-        function dragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; e.currentTarget.classList.add('drag-over'); }
-        function drop(e, targetIdx, dayKey) {
-            e.preventDefault(); e.currentTarget.classList.remove('drag-over');
-            if(dragSourceIdx === targetIdx || dragSourceIdx === null) return;
-            const arr = currentDailyData[dayKey];
-            const item = arr.splice(dragSourceIdx, 1)[0];
-            arr.splice(targetIdx, 0, item);
+        // --- HỆ THỐNG CHECKBOX MULTI-SELECT ---
+        function updateSelectedRow(cb, index, dayKey) {
+            if(cb.checked) globalSelectedRows[dayKey].add(index);
+            else globalSelectedRows[dayKey].delete(index);
+            // Render nhanh lại dòng đó màu xanh thay vì render cả bảng
+            cb.closest('tr').classList.toggle('selected-row', cb.checked);
+        }
+        function toggleSelectAllRows(masterCb, dayKey) {
+            document.querySelectorAll(`.row-cb-${dayKey}`).forEach(cb => {
+                cb.checked = masterCb.checked;
+                updateSelectedRow(cb, parseInt(cb.value), dayKey);
+            });
+        }
+
+        // --- KÉO THẢ CỘT (DRAG DROP COLUMNS) ---
+        let dragColId = null;
+        function colDragStart(e, colId) { dragColId = colId; e.target.classList.add('dragging-col'); e.dataTransfer.effectAllowed = "move"; }
+        function colDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over-col'); }
+        function colDrop(e, targetColId, dayKey) {
+            e.preventDefault(); e.currentTarget.classList.remove('drag-over-col');
+            if(dragColId === targetColId || !dragColId) return;
+
+            let srcIdx = globalColConfig.findIndex(c => c.id === dragColId);
+            let tgtIdx = globalColConfig.findIndex(c => c.id === targetColId);
+            
+            // Không cho chèn vào các cột khóa (STT, Tên)
+            if(globalColConfig[tgtIdx].locked) return;
+
+            let item = globalColConfig.splice(srcIdx, 1)[0];
+            globalColConfig.splice(tgtIdx, 0, item);
+            
+            // Cập nhật giao diện cho tất cả các bảng
+            ['tue','wed','thu'].forEach(d => { if(!document.getElementById(`daily-res-${d}`).classList.contains('hidden')) renderDailyTable(d); });
+        }
+
+        // --- KÉO THẢ DÒNG ĐA CHỌN (MULTI-ROW DRAG DROP) ---
+        let dragSourceRowIdx = null;
+        function rowDragStart(e, idx, dayKey) { 
+            dragSourceRowIdx = idx; 
+            e.dataTransfer.effectAllowed = "move"; 
+            setTimeout(() => e.target.classList.add('opacity-50'), 0); 
+            
+            // Nếu kéo một dòng đang được chọn, thay đổi icon chuột thành số lượng
+            if(globalSelectedRows[dayKey].has(idx) && globalSelectedRows[dayKey].size > 1) {
+                const badge = document.createElement('div');
+                badge.innerText = `Đang di chuyển ${globalSelectedRows[dayKey].size} dòng`;
+                badge.style.position = "absolute"; badge.style.top = "-1000px"; badge.style.background = "#2563eb"; badge.style.color = "white"; badge.style.padding = "4px 10px"; badge.style.borderRadius = "8px"; badge.style.fontWeight = "bold";
+                document.body.appendChild(badge);
+                e.dataTransfer.setDragImage(badge, 0, 0);
+                setTimeout(() => document.body.removeChild(badge), 100);
+            }
+        }
+        function rowDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('border-t-2', 'border-blue-500'); }
+        function rowDragEnd(e) { e.target.classList.remove('opacity-50'); document.querySelectorAll('.draggable-row').forEach(el => el.classList.remove('border-t-2', 'border-blue-500')); }
+        
+        function rowDrop(e, targetIdx, dayKey) {
+            e.preventDefault(); e.currentTarget.classList.remove('border-t-2', 'border-blue-500');
+            if(dragSourceRowIdx === null) return;
+
+            let arr = currentDailyData[dayKey];
+            
+            // Xác định danh sách các dòng cần di chuyển
+            let indicesToMove = globalSelectedRows[dayKey].has(dragSourceRowIdx) 
+                ? Array.from(globalSelectedRows[dayKey]).sort((a,b) => a-b) 
+                : [dragSourceRowIdx];
+
+            if(indicesToMove.includes(targetIdx)) return; // Không thả vào chính nó
+
+            // Rút các dòng ra khỏi mảng
+            let itemsToMove = indicesToMove.map(i => arr[i]);
+            for (let i = indicesToMove.length - 1; i >= 0; i--) {
+                arr.splice(indicesToMove[i], 1);
+            }
+
+            // Tính toán vị trí thả mới do mảng đã bị rút ngắn
+            let shiftCount = indicesToMove.filter(i => i < targetIdx).length;
+            let finalTarget = targetIdx - shiftCount;
+
+            // Chèn lại vào vị trí đích
+            arr.splice(finalTarget, 0, ...itemsToMove);
+            
+            // Xóa state chọn & render lại
+            globalSelectedRows[dayKey].clear();
             renderDailyTable(dayKey);
         }
-        function dragEnd(e) { e.target.classList.remove('dragging'); document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); }
 
         function removeStrangerRow(dayKey, index) {
             currentDailyData[dayKey].splice(index, 1);
@@ -941,6 +1101,13 @@
                 warnBox.classList.remove('flex'); warnBox.classList.add('hidden');
             }
         }
+
+        // Tự động đóng dropdown khi click ra ngoài
+        window.addEventListener('click', function(e) {
+            if (!e.target.closest('.col-config-btn')) {
+                document.querySelectorAll('.col-config-dropdown').forEach(el => el.classList.remove('active'));
+            }
+        });
 
         // HÀM B: Chấm điểm Bài Thi (30 Câu - 80% Pass) - GIỮ NGUYÊN
         function runFinalGrader(round) {
