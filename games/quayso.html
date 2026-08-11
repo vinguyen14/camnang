@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>THE CHOSEN ONE V7.5 - PROBLEM SOLVING</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@300;400;600;800;italic&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary: #00d2ff; --secondary: #3a7bd5; --accent: #00ff88;
+            --bg: #0b0e14; --panel: rgba(23, 28, 40, 0.95); --border: rgba(0, 210, 255, 0.2);
+            --danger: #ff4757; --glass: rgba(255, 255, 255, 0.05);
+            --warning: #fbc531; --purple: #9c88ff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif; background: var(--bg); color: #fff;
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #1a202c 0%, #0b0e14 100%);
+        }
+        header { padding: 15px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(11, 14, 20, 0.98); }
+        .logo { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; color: var(--primary); }
+        .session-tabs { display: flex; background: var(--glass); padding: 5px; border-radius: 12px; border: 1px solid var(--border); }
+        .tab { padding: 10px 25px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 800; color: #64748b; border: none; background: none; transition: 0.3s; }
+        .tab.active { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
+        .main-grid { display: grid; grid-template-columns: 320px 1fr 450px; gap: 20px; padding: 20px; flex: 1; overflow: hidden; }
+        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 25px; display: flex; flex-direction: column; overflow: hidden; }
+        textarea { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; color: var(--accent); padding: 15px; font-size: 14px; outline: none; margin-bottom: 15px; }
+        
+        /* Hiệu ứng Slot Machine cho Chữ */
+        .winner-display { font-family: 'Orbitron', sans-serif; font-size: 40px; font-weight: 900; text-align: center; margin-bottom: 20px; min-height: 60px; color: #fff; text-shadow: 0 0 20px var(--primary); transition: transform 0.1s, filter 0.1s; }
+        .spin-btn { width: 150px; height: 150px; border-radius: 50%; border: 8px solid var(--glass); background: linear-gradient(135deg, var(--secondary), var(--primary)); color: white; font-family: 'Orbitron'; font-size: 16px; font-weight: 900; cursor: pointer; align-self: center; transition: 0.3s; box-shadow: 0 0 20px rgba(0, 210, 255, 0.3); }
+        .spin-btn:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(0, 210, 255, 0.6); }
+        .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: scale(1); box-shadow: none; }
+        #actionArea { margin-top: 15px; display: none; }
+        .comment-box { width: 100%; height: 80px; background: rgba(255,255,255,0.08); border: 1px solid var(--primary); border-radius: 12px; color: #fff; padding: 15px; font-size: 14px; margin-bottom: 10px; outline: none; resize: none; }
+        .sc-card { background: rgba(255,255,255,0.02); border-radius: 16px; padding: 20px; flex: 1; overflow-y: auto; border: 1px solid rgba(255,255,255,0.05); }
+        
+        /* Tag Style Mới */
+        .sc-tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-weight: 900; font-size: 11px; margin-right: 8px; margin-bottom: 8px; vertical-align: middle; text-transform: uppercase; letter-spacing: 0.5px;}
+        .tag-roadmap { background: var(--primary); color: #000; }
+        .tag-type { background: var(--purple); color: #fff; }
+        
+        .sc-biz { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 10px; line-height: 1.4; }
+        .sc-goal { font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 15px; border-bottom: 1px dashed var(--border); padding-bottom: 12px; line-height: 1.5; }
+        
+        /* Styles cho Customer Voice & Trainer */
+        .sc-customer-voice { background: rgba(255, 255, 255, 0.05); border-left: 4px solid var(--primary); padding: 15px; font-size: 14px; color: #e2e8f0; margin-bottom: 15px; line-height: 1.6; font-style: italic; border-radius: 0 8px 8px 0; }
+        .sc-customer-voice b { color: var(--primary); font-style: normal; display: block; margin-bottom: 5px; font-size: 12px; text-transform: uppercase;}
+        
+        .trainer-toggle { background: rgba(251, 197, 49, 0.1); border: 1px dashed var(--warning); color: var(--warning); padding: 10px 15px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; width: 100%; text-align: left; margin-top: 10px; transition: 0.3s; display: flex; justify-content: space-between; align-items: center; }
+        .trainer-toggle:hover { background: rgba(251, 197, 49, 0.2); }
+        .trainer-notes { display: none; background: rgba(0,0,0,0.5); border: 1px solid var(--warning); padding: 15px; border-radius: 8px; margin-top: 10px; font-size: 14px; line-height: 1.6; color: #dcdde1; white-space: pre-line; }
+        .trainer-notes b { color: var(--warning); font-size: 12px; text-transform: uppercase;}
+
+        .history-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; border-radius: 8px; margin-bottom: 5px; }
+        .history-item:hover { background: rgba(0,210,255,0.1); }
+        
+        /* Modals Standard */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        .modal-content { background: #171c28; width: 550px; max-height: 85vh; border-radius: 24px; border: 1px solid var(--primary); padding: 30px; position: relative; overflow-y: auto; }
+        
+        /* GAME LẬT THẺ BÀI 3D (CARD FLIP) */
+        #gameModal { flex-direction: column; z-index: 10000; perspective: 1000px; }
+        .card-scene { width: 450px; height: 580px; perspective: 1200px; margin-top: 20px; }
+        .game-card { width: 100%; height: 100%; position: relative; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; cursor: pointer; }
+        .game-card.is-flipped { transform: rotateY(180deg); }
+        .game-card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 20px; display: flex; flex-direction: column; overflow-y: auto; border: 2px solid var(--primary); box-shadow: 0 10px 40px rgba(0,210,255,0.3); }
+        
+        .game-card-front { background: linear-gradient(145deg, #171c28 0%, #0b0e14 100%); align-items: center; justify-content: center; text-align: center; }
+        .game-card-front .card-icon { font-size: 100px; filter: drop-shadow(0 0 20px var(--primary)); margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
+        .game-card-front h2 { font-family: 'Orbitron', sans-serif; font-size: 28px; color: var(--primary); text-shadow: 0 0 15px var(--primary); margin-bottom: 10px; }
+        .game-card-front p { color: #64748b; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; animation: pulse 1.5s infinite; }
+        
+        .game-card-back { background: var(--panel); transform: rotateY(180deg); padding: 30px; display: block; }
+        .game-card-back::-webkit-scrollbar { width: 6px; }
+        .game-card-back::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+        
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+
+        .btn-group { display: flex; gap: 10px; }
+        .btn { padding: 10px 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--glass); color: #fff; cursor: pointer; font-size: 11px; font-weight: 700; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: #000; border: none; font-weight: 900; }
+        .btn-primary:hover { box-shadow: 0 0 15px var(--primary); }
+        .btn-accent { border-color: var(--accent); color: var(--accent); }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">THE CHOSEN ONE V8.0</div>
+        <div class="session-tabs">
+            <button id="t1" class="tab active" onclick="setSess(1)">BUỔI 1: CƠ BẢN</button>
+            <button id="t2" class="tab" onclick="setSess(2)">BUỔI 2: NÂNG CAO</button>
+        </div>
+        <div class="btn-group">
+            <button class="btn" onclick="fetchDataFromSheet()" style="color:var(--primary)">🔄 ĐỒNG BỘ DỮ LIỆU</button>
+            <button class="btn" onclick="toggleApiModal()">⚙️ CÀI ĐẶT API</button>
+            <button class="btn" onclick="exportExcel()" style="color:var(--accent)">📥 EXCEL</button>
+        </div>
+    </header>
+
+    <div class="main-grid">
+        <!-- Cột 1: Học viên -->
+        <div class="panel">
+            <h3 style="color:var(--primary); font-size:11px; margin-bottom:10px">HỌC VIÊN (<span id="c">0</span>)</h3>
+            <textarea id="names" placeholder="Dán danh sách học viên..."></textarea>
+            <button class="btn btn-primary" onclick="save()">LƯU DANH SÁCH GỐC</button>
+        </div>
+
+        <!-- Cột 2: Sân Khấu (Slot Machine) -->
+        <div class="panel" style="justify-content:center">
+            <div id="winner" class="winner-display">READY?</div>
+            <div style="display:flex; flex-direction:column; gap:15px; align-items:center">
+                <button id="spin" class="spin-btn" onclick="start('full')">TRIỆU HỒI</button>
+                <div id="quickBtns" style="display:none; gap:10px">
+                    <button class="btn btn-accent" onclick="start('script')">♻️ ĐỔI TÌNH HUỐNG</button>
+                    <button class="btn btn-accent" onclick="start('user')">👥 GỌI NGƯỜI KHÁC</button>
+                </div>
+            </div>
+            <div id="actionArea">
+                <textarea id="cmt" class="comment-box" placeholder="Nhận xét cách học viên phân tích và xử lý luồng..."></textarea>
+                <div class="btn-group">
+                    <button class="btn" style="background:var(--danger); flex:1" onclick="done('Vắng')">VẮNG</button>
+                    <button class="btn btn-primary" style="flex:2" onclick="done('Hoàn thành')">XÁC NHẬN</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột 3: Đề bài & Lịch sử -->
+        <div class="panel">
+            <h3 style="color:var(--accent); font-size:11px; margin-bottom:10px">ĐỀ BÀI</h3>
+            <div id="scBox" class="sc-card">
+                <div style="text-align:center; color:#64748b; margin-top:50px">Sẵn sàng đồng bộ dữ liệu...</div>
+            </div>
+            <h3 style="color:var(--primary); font-size:11px; margin-top:15px; margin-bottom:5px">LỊCH SỬ</h3>
+            <div id="histList" style="flex:0.8; overflow-y:auto; border-top:1px solid #333; padding-top:10px"></div>
+        </div>
+    </div>
+
+    <!-- MỚI: Modal Game Lật Thẻ Bài -->
+    <div id="gameModal" class="modal">
+        <h2 id="gameWinnerName" style="font-family:'Orbitron'; color:#fff; font-size:35px; text-shadow: 0 0 20px var(--primary); letter-spacing: 2px;">TÊN HỌC VIÊN</h2>
+        <div class="card-scene">
+            <div class="game-card" id="theGameCard" onclick="flipCard()">
+                <div class="game-card-face game-card-front">
+                    <div class="card-icon">🎴</div>
+                    <h2>THẺ TÌNH HUỐNG</h2>
+                    <p>Nhấn vào để lật thẻ</p>
+                </div>
+                <div class="game-card-face game-card-back" id="cardBackContent">
+                    <!-- Nội dung kịch bản sẽ được đẩy vào đây -->
+                </div>
+            </div>
+        </div>
+        <button id="closeGameBtn" class="btn btn-primary" style="margin-top: 30px; padding: 15px 40px; font-size: 14px; opacity: 0; pointer-events: none; transition: 0.5s;" onclick="closeGameModal()">BẮT ĐẦU</button>
+    </div>
+
+    <!-- Modals API & History -->
+    <div id="apiModal" class="modal">
+        <div class="modal-content" style="width: 600px;">
+            <h2 style="margin-bottom: 15px; color: var(--primary);">⚙️ CÀI ĐẶT API GOOGLE SHEETS</h2>
+            <p style="font-size:12px; color:#64748b; margin-bottom:15px">Dán link Web App URL Google Apps Script của bạn vào đây.</p>
+            <input type="text" id="apiUrlInput" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--border); border-radius: 8px; color: #fff; padding: 12px; font-size: 14px; outline: none; margin-bottom: 20px;" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
+            <div class="btn-group" style="justify-content: flex-end;">
+                <button class="btn" onclick="toggleApiModal()">HỦY</button>
+                <button class="btn btn-primary" onclick="saveApiUrl()">LƯU VÀ ĐỒNG BỘ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <span style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:24px" onclick="closeModal()">×</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // Dữ liệu mẫu (Phòng hờ nếu chưa có API)
+        let scripts = {
+            buoi1: [
+                { Roadmap: "Retail", Type: "morning", Day: "day1", Title: "Tình huống 02 - Bán hàng và tra cứu", Goal: "Bộ giải pháp Tra cứu & Bán hàng toàn diện", Question: "Khách hàng là chủ shop thời trang đang dùng sổ sách, ngần ngại mua mới: Anh thấy ghi sổ hơi cực nhưng nhân viên nhà anh toàn sinh viên làm part-time...", Answer: "Gợi ý giải pháp: Đưa ra hệ sinh thái Bán hàng toàn diện (Tìm bằng hình ảnh/thuộc tính, Check tồn kho liên chi nhánh...)" }
+            ],
+            buoi2: []
+        };
+
+        let state = { sess: 1, ptr: 0, names: [], logs: [], curW: "", curT: null, spinning: false };
+
+        window.onload = () => {
+            const savedNames = localStorage.getItem('bk_names_v75_problem');
+            if(savedNames) {
+                document.getElementById('names').value = savedNames;
+                updateCount();
+            }
+            // Auto fetch if API exists
+            if(localStorage.getItem('kv_api_url')) {
+                fetchDataFromSheet();
+            } else {
+                document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:#fbc531; margin-top:50px">Vui lòng CÀI ĐẶT API để lấy dữ liệu.</div>';
+            }
+        };
+
+        function updateCount() {
+            if(state.spinning) return;
+            let n = document.getElementById('names').value.split('\n').filter(x=>x.trim()!=="");
+            document.getElementById('c').innerText = n.length;
+            state.names = n;
+        }
+
+        setInterval(updateCount, 1000);
+
+        function toggleApiModal() {
+            const m = document.getElementById('apiModal');
+            if(m.style.display === 'flex') {
+                m.style.display = 'none';
+            } else {
+                document.getElementById('apiUrlInput').value = localStorage.getItem('kv_api_url') || "";
+                m.style.display = 'flex';
+            }
+        }
+
+        function saveApiUrl() {
+            const url = document.getElementById('apiUrlInput').value.trim();
+            if(!url) return alert("Vui lòng nhập Link API!");
+            localStorage.setItem('kv_api_url', url);
+            toggleApiModal();
+            fetchDataFromSheet();
+        }
+
+        async function fetchDataFromSheet() {
+            let apiUrl = localStorage.getItem('kv_api_url');
+            if (!apiUrl) { alert("Chưa cấu hình API URL!"); return; }
+            
+            document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:#00d2ff; margin-top:50px; animation: pulse 1s infinite">Đang kết nối Google Sheets... ⏳</div>';
+            
+            try {
+                // Yêu cầu bắt buộc dùng POST & body JSON.stringify để gửi payload
+                let res = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: "GET_DATA" })
+                });
+                
+                let result = await res.json();
+                
+                if (result.status === 'success') {
+                    // Phân tách dữ liệu
+                    scripts.buoi1 = [];
+                    scripts.buoi2 = [];
+                    
+                    result.data.forEach(item => {
+                        if (item.Day.toLowerCase() === 'day1') scripts.buoi1.push(item);
+                        else scripts.buoi2.push(item);
+                    });
+                    
+                    document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:#00ff88; margin-top:50px">✅ Dữ liệu đã đồng bộ sẵn sàng!</div>';
+                    // Reset pointer
+                    state.ptr = 0;
+                } else {
+                    alert("Lỗi từ Sheet: " + result.message);
+                }
+            } catch (e) {
+                document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:#ff4757; margin-top:50px">❌ Lỗi kết nối API! Vui lòng thử lại.</div>';
+                console.error(e);
+            }
+        }
+
+        function setSess(n) {
+            state.sess = n; 
+            state.ptr = 0; 
+            document.getElementById('t1').className = n==1?'tab active':'tab';
+            document.getElementById('t2').className = n==2?'tab active':'tab';
+        }
+
+        function start(mode) {
+            if(state.names.length===0 && mode !== 'script') return alert("Nhập danh sách học viên!");
+            
+            // Validate data
+            let currentDataset = state.sess == 1 ? scripts.buoi1 : scripts.buoi2;
+            if(currentDataset.length === 0 && (mode === 'full' || mode === 'script')) {
+                return alert("Chưa có dữ liệu kịch bản cho Buổi " + state.sess + "! Hãy kiểm tra Google Sheet.");
+            }
+
+            state.spinning = true;
+            document.getElementById('cmt').value = "";
+            document.getElementById('spin').disabled = true;
+            document.getElementById('actionArea').style.display = 'none';
+            document.getElementById('quickBtns').style.display = 'none';
+
+            let winnerEl = document.getElementById('winner');
+            let i = 0;
+            
+            // Hiệu ứng Slot Machine mượt mà
+            let slotInterval = setInterval(() => {
+                winnerEl.style.filter = 'blur(1px)';
+                winnerEl.style.transform = 'scale(1.05)';
+                if(mode !== 'script') {
+                    winnerEl.innerText = state.names[Math.floor(Math.random()*state.names.length)];
+                }
+                if(++i > 20) { 
+                    clearInterval(slotInterval); 
+                    winnerEl.style.filter = 'blur(0)';
+                    winnerEl.style.transform = 'scale(1)';
+                    finalize(mode, currentDataset); 
+                }
+            }, 50);
+        }
+
+        function finalize(mode, currentDataset) {
+            if(mode === 'full' || mode === 'user') {
+                let idx = Math.floor(Math.random()*state.names.length);
+                state.curW = state.names[idx];
+                state.names.splice(idx, 1);
+                document.getElementById('names').value = state.names.join('\n');
+                document.getElementById('c').innerText = state.names.length;
+            }
+
+            if(mode === 'full' || mode === 'script') {
+                state.curT = currentDataset[state.ptr];
+                state.ptr = (state.ptr + 1) % currentDataset.length;
+            }
+
+            document.getElementById('winner').innerText = state.curW;
+            
+            if (mode === 'full' || mode === 'script') {
+                const card = document.getElementById('theGameCard');
+                card.classList.remove('is-flipped');
+                const btn = document.getElementById('closeGameBtn');
+                btn.style.opacity = '0';
+                btn.style.pointerEvents = 'none';
+
+                document.getElementById('gameWinnerName').innerText = "HỌC VIÊN: " + state.curW;
+                
+                renderScript(state.curT, 'cardBackContent');
+                renderScript(state.curT, 'scBox');
+                
+                document.getElementById('gameModal').style.display = 'flex';
+            } else {
+                confetti({ particleCount:100, spread:70, origin: { y: 0.6 } });
+            }
+            
+            document.getElementById('spin').disabled = false;
+            document.getElementById('actionArea').style.display = 'block';
+            document.getElementById('quickBtns').style.display = 'flex';
+            state.spinning = false;
+        }
+
+        function flipCard() {
+            const card = document.getElementById('theGameCard');
+            if (!card.classList.contains('is-flipped')) {
+                card.classList.add('is-flipped');
+                confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 }, zIndex: 10001 });
+                setTimeout(() => {
+                    const btn = document.getElementById('closeGameBtn');
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                }, 800);
+            }
+        }
+
+        function closeGameModal() {
+            document.getElementById('gameModal').style.display = 'none';
+        }
+
+        function toggleTrainerNotes(id) {
+            const el = document.getElementById(id);
+            if(el) { el.style.display = (el.style.display === "none" || el.style.display === "") ? "block" : "none"; }
+        }
+
+        // Render dựa trên Data Model mới
+        function renderScript(obj, containerId) {
+            if(!obj) return;
+            let uniqueId = `tnote_${Math.floor(Math.random()*10000)}_${containerId}`;
+            
+            let html = `
+                <div style="margin-bottom:10px;">
+                    ${obj.Roadmap ? `<span class="sc-tag tag-roadmap">${obj.Roadmap}</span>` : ''}
+                    ${obj.Type ? `<span class="sc-tag tag-type">${obj.Type}</span>` : ''}
+                </div>
+                <div class="sc-biz">${obj.Title}</div>
+                <div class="sc-goal">${obj.Goal}</div>
+                
+                <div class="sc-customer-voice">
+                    <b>👤 Khách hàng than phiền:</b>
+                    "${obj.Question}"
+                </div>
+
+                <button class="trainer-toggle" onclick="toggleTrainerNotes('${uniqueId}')">
+                    <span>👁️ ĐÁP ÁN (GÓC TRAINER)</span>
+                    <span>▼</span>
+                </button>
+                
+                <div id="${uniqueId}" class="trainer-notes">
+                    <b>💡 GỢI Ý GIẢI QUYẾT:</b><br>
+                    ${obj.Answer}
+                </div>
+            `;
+            document.getElementById(containerId).innerHTML = html;
+        }
+
+        function done(res) {
+            const entry = { 
+                id: Date.now(), time: new Date().toLocaleTimeString('vi-VN'), 
+                name: state.curW, taskObj: JSON.parse(JSON.stringify(state.curT)), 
+                res: res, note: document.getElementById('cmt').value || "Không có nhận xét" 
+            };
+            state.logs.unshift(entry);
+            renderHistory();
+            document.getElementById('actionArea').style.display = 'none';
+            document.getElementById('quickBtns').style.display = 'none';
+            document.getElementById('winner').innerText = "XONG!";
+            document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:#64748b; margin-top:50px">Sẵn sàng ca tiếp theo...</div>';
+        }
+
+        function renderHistory() { 
+            document.getElementById('histList').innerHTML = state.logs.map(l => `
+                <div class="history-item" onclick="openModal(${l.id})">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <b style="color:${l.res=='Vắng'?'#ff4757':'#00ff88'}">${l.name}</b>
+                        <span style="font-size:10px; color:var(--primary); font-weight:800; background:rgba(0,210,255,0.1); padding: 3px 8px; border-radius: 4px;">${l.taskObj.Roadmap || l.taskObj.Type || 'KỊCH BẢN'}</span>
+                    </div>
+                    <div style="font-size:11px; color:#64748b; margin-top:3px">${l.taskObj.Title}</div>
+                </div>`).join(''); 
+        }
+
+        function openModal(id) {
+            const item = state.logs.find(l => l.id === id);
+            if(!item) return;
+            document.getElementById('modalBody').innerHTML = `
+                <h2 style="color:var(--primary); font-family:'Orbitron'">${item.name}</h2>
+                <div style="color:#64748b; font-size:12px; margin-bottom:15px">${item.time} | Kết quả: <b style="color:${item.res=='Vắng'?'#ff4757':'#00ff88'}">${item.res}</b></div>
+                <div id="modalScript"></div>
+                <div style="margin-top:15px; padding:15px; background:rgba(255,255,255,0.05); border-radius:12px; border:1px solid var(--border)">
+                    <b style="color:var(--accent); font-size:12px">NHẬN XÉT:</b>
+                    <p style="font-size:13px; color:#cbd5e1; margin-top:5px">${item.note}</p>
+                </div>`;
+            renderScript(item.taskObj, 'modalScript');
+            document.getElementById('historyModal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
+        
+        function exportExcel() {
+            if(state.logs.length === 0) return alert("Chưa có dữ liệu!");
+            let csv = "\uFEFFGiờ,Học viên,Lộ trình,Loại,Kịch bản,Kết quả,Nhận xét\n";
+            state.logs.forEach(l => { 
+                let n = l.note.replace(/(\r\n|\n|\r)/gm, " ").replace(/,/g, ";"); 
+                let titleSafe = (l.taskObj.Title || "").replace(/,/g, ";");
+                csv += `${l.time},${l.name},${l.taskObj.Roadmap || ''},${l.taskObj.Type || ''},${titleSafe},${l.res},${n}\n`; 
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `Bao_cao_Game_V8.csv`; a.click();
+        }
+
+        function save() { 
+            localStorage.setItem('bk_names_v75_problem', document.getElementById('names').value); 
+            alert("Đã lưu danh sách học viên!"); 
+        }
+    </script>
+</body>
+</html>
