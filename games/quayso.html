@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>THE CHOSEN ONE V8.2 - ULTIMATE HUD</title>
+    <title>THE CHOSEN ONE V8.3 - STABLE HUD</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800;italic&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -13,13 +13,16 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
+        /* FIX LỖI FONT: ÉP TOÀN BỘ HỆ THỐNG PHẢI DÙNG FONT INTER */
+        body, input, textarea, button, select { font-family: 'Inter', sans-serif; }
+        
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.5); border-radius: 4px; box-shadow: 0 0 10px rgba(0, 240, 255, 0.3); }
         ::-webkit-scrollbar-thumb:hover { background: var(--primary); box-shadow: 0 0 15px var(--primary); }
 
         body {
-            font-family: 'Inter', sans-serif; background-color: var(--bg); color: #fff;
+            background-color: var(--bg); color: #fff;
             height: 100vh; display: flex; flex-direction: column; overflow: hidden;
             background-image: linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
             background-size: 40px 40px; animation: panBg 20s linear infinite;
@@ -36,7 +39,7 @@
         .main-grid { display: grid; grid-template-columns: 320px 1fr 450px; gap: 20px; padding: 20px; flex: 1; overflow: hidden; position: relative; z-index: 1;}
         
         .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 25px; display: flex; flex-direction: column; overflow: hidden; backdrop-filter: blur(10px); box-shadow: 0 0 15px rgba(0, 240, 255, 0.05), inset 0 0 20px rgba(0, 240, 255, 0.05); }
-        textarea { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 8px; color: var(--accent); padding: 15px; font-size: 14px; outline: none; margin-bottom: 15px; font-family: 'Inter', sans-serif; transition: 0.3s; }
+        textarea { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 8px; color: var(--accent); padding: 15px; font-size: 14px; outline: none; margin-bottom: 15px; transition: 0.3s; line-height: 1.5; }
         textarea:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(0, 240, 255, 0.3); }
 
         .winner-display { font-family: 'Orbitron', sans-serif; font-size: 42px; font-weight: 900; text-align: center; margin-bottom: 20px; min-height: 60px; color: #fff; text-shadow: 0 0 20px var(--primary); letter-spacing: 3px; word-break: break-word; }
@@ -45,7 +48,7 @@
         .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: scale(1); box-shadow: none; filter: grayscale(1); }
         
         #actionArea { margin-top: 15px; display: none; width: 100%; max-width: 400px; align-self: center;}
-        .comment-box { width: 100%; height: 80px; background: rgba(0,0,0,0.5); border: 1px solid var(--primary); border-radius: 8px; color: #fff; padding: 15px; font-size: 14px; margin-bottom: 10px; outline: none; resize: none; font-family: 'Inter', sans-serif; }
+        .comment-box { width: 100%; height: 80px; background: rgba(0,0,0,0.5); border: 1px solid var(--primary); border-radius: 8px; color: #fff; padding: 15px; font-size: 14px; margin-bottom: 10px; outline: none; resize: none; }
         
         .sc-card { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 20px; flex: 1; overflow-y: auto; border: 1px solid rgba(0, 240, 255, 0.2); position: relative; }
         .sc-tag { display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: 900; font-size: 10px; margin-right: 8px; margin-bottom: 8px; vertical-align: middle; text-transform: uppercase; letter-spacing: 1px;}
@@ -54,8 +57,7 @@
         .sc-biz { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 10px; line-height: 1.4; text-shadow: 0 0 5px rgba(255,255,255,0.3); }
         .sc-goal { font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 15px; border-bottom: 1px dashed var(--border); padding-bottom: 12px; line-height: 1.5; }
         
-        /* Thay thế toàn bộ HTML cũ bằng class tự động */
-        .formatted-list { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.6; color: #e2e8f0; }
+        .formatted-list { font-size: 14px; line-height: 1.6; color: #e2e8f0; }
         .formatted-list .bullet { margin-bottom: 10px; padding-left: 15px; border-left: 2px solid var(--primary); position: relative;}
         .formatted-list .bullet.hint { border-left-color: var(--accent); }
         .highlight-word { color: var(--primary); font-weight: bold; background: rgba(0, 240, 255, 0.1); padding: 0 4px; border-radius: 4px;}
@@ -67,7 +69,6 @@
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-content { background: var(--bg); width: 550px; max-height: 85vh; border-radius: 12px; border: 1px solid var(--primary); padding: 30px; position: relative; overflow-y: auto; box-shadow: 0 0 30px rgba(0,240,255,0.2); }
         
-        /* ---------------- MỚI: HACKER HUD (ĐÃ SỬA FONT VÀ TỐI ƯU UX) ---------------- */
         #hackerModal { z-index: 10000; flex-direction: column; }
         .hud-wrapper { width: 850px; max-width: 95vw; height: 85vh; background: rgba(5, 8, 15, 0.95); border: 2px solid var(--primary); position: relative; box-shadow: 0 0 50px rgba(0, 240, 255, 0.2), inset 0 0 30px rgba(0, 240, 255, 0.1); display: flex; flex-direction: column; }
         .hud-wrapper::before, .hud-wrapper::after { content: ''; position: absolute; width: 30px; height: 30px; border: 3px solid var(--primary); pointer-events: none; z-index: 2;}
@@ -78,8 +79,7 @@
         .hud-header { color: var(--danger); font-family: 'Orbitron'; font-weight: 900; font-size: 16px; margin-bottom: 20px; letter-spacing: 2px; animation: glitch-blink 2s infinite; text-shadow: 0 0 10px var(--danger);}
         .hud-target-name { font-family: 'Orbitron'; font-size: 40px; color: #fff; text-shadow: 0 0 20px var(--primary); margin-bottom: 30px; letter-spacing: 4px; text-transform: uppercase;}
         
-        /* Font chữ dòng data đã đổi sang Inter cho dễ đọc */
-        .hud-data-row { font-family: 'Inter', sans-serif; font-size: 15px; color: var(--primary); margin-bottom: 12px; opacity: 0; transform: translateX(-20px); transition: 0.5s; font-weight: 600;}
+        .hud-data-row { font-size: 15px; color: var(--primary); margin-bottom: 12px; opacity: 0; transform: translateX(-20px); transition: 0.5s; font-weight: 600;}
         .hud-data-row b { color: #fff; font-weight: normal; margin-left: 10px;}
         
         .hud-comms-box { margin-top: 30px; padding: 20px; background: rgba(0, 240, 255, 0.03); border: 1px solid rgba(0, 240, 255, 0.1); border-radius: 8px;}
@@ -87,23 +87,20 @@
         @keyframes glitch-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .show-element { opacity: 1 !important; transform: translateX(0) !important; }
 
-        /* ---------------- BÓNG ĐÈN GỢI Ý (MỚI) ---------------- */
         .lightbulb-btn {
             position: absolute; top: 30px; right: 30px; font-size: 28px; cursor: pointer; z-index: 10;
             background: rgba(252, 238, 9, 0.1); border: 1px solid var(--warning); border-radius: 50%;
             width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
             box-shadow: 0 0 15px rgba(252, 238, 9, 0.4); animation: pulse-bulb 2s infinite; transition: 0.3s;
-            opacity: 0; /* Ẩn lúc đầu, hiện sau khi render xong */ pointer-events: none;
+            opacity: 0; pointer-events: none;
         }
         .lightbulb-btn:hover { background: rgba(252, 238, 9, 0.3); transform: scale(1.1); box-shadow: 0 0 25px rgba(252, 238, 9, 0.8); }
         @keyframes pulse-bulb { 0% { box-shadow: 0 0 10px rgba(252, 238, 9, 0.2); } 50% { box-shadow: 0 0 25px rgba(252, 238, 9, 0.8); text-shadow: 0 0 10px #fff; } 100% { box-shadow: 0 0 10px rgba(252, 238, 9, 0.2); } }
         
-        /* Tooltip chữ "Gợi ý" */
         .lightbulb-btn::after {
             content: "XEM GỢI Ý"; position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%);
             background: #000; border: 1px solid var(--warning); color: var(--warning); padding: 4px 8px;
-            border-radius: 4px; font-size: 11px; font-family: 'Inter', sans-serif; font-weight: bold;
-            white-space: nowrap; opacity: 0; transition: 0.3s; pointer-events: none;
+            border-radius: 4px; font-size: 11px; font-weight: bold; white-space: nowrap; opacity: 0; transition: 0.3s; pointer-events: none;
         }
         .lightbulb-btn:hover::after { opacity: 1; bottom: -35px; }
 
@@ -122,7 +119,7 @@
     <div class="scanlines"></div>
 
     <header>
-        <div class="logo">THE CHOSEN ONE V8.2</div>
+        <div class="logo">THE CHOSEN ONE V8.3</div>
         <div class="session-tabs">
             <button id="t1" class="tab active" onclick="setSess(1)">BUỔI 1: CƠ BẢN</button>
             <button id="t2" class="tab" onclick="setSess(2)">BUỔI 2: NÂNG CAO</button>
@@ -169,10 +166,9 @@
         </div>
     </div>
 
-    <!-- HACKER HUD MỚI NHẤT -->
+    <!-- HACKER HUD -->
     <div id="hackerModal" class="modal">
         <div class="hud-wrapper">
-            <!-- NÚT BÓNG ĐÈN Ở GÓC -->
             <div id="hudLightbulb" class="lightbulb-btn" onclick="openHintModal()">💡</div>
 
             <div class="hud-scrollable-content">
@@ -185,7 +181,6 @@
                 
                 <div class="hud-comms-box">
                     <div style="color: var(--primary); font-size: 11px; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">// DỮ LIỆU ĐÃ ĐƯỢC PHÂN TÁCH:</div>
-                    <!-- Nội dung đoạn văn đã format sẽ render vào đây -->
                     <div id="hudFormattedText" class="formatted-list"></div>
                 </div>
 
@@ -202,6 +197,27 @@
             <span style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:24px; color: var(--warning);" onclick="closeHintModal()">×</span>
             <h2 style="color:var(--warning); font-family:'Orbitron'; font-size: 18px; margin-bottom: 20px;">⚠️ HỆ THỐNG GỢI Ý</h2>
             <div id="hintFormattedText" class="formatted-list"></div>
+        </div>
+    </div>
+
+    <!-- FIX LỖI: MODAL LỊCH SỬ -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content" style="width: 650px;">
+            <span style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:24px; color: var(--primary);" onclick="closeModal()">×</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Modals API -->
+    <div id="apiModal" class="modal">
+        <div class="modal-content" style="width: 600px;">
+            <h2 style="margin-bottom: 15px; color: var(--primary); font-family: 'Orbitron';">⚙️ CÀI ĐẶT API GOOGLE SHEETS</h2>
+            <p style="font-size:12px; color:#64748b; margin-bottom:15px">Dán link Web App URL Google Apps Script của bạn vào đây.</p>
+            <input type="text" id="apiUrlInput" style="width: 100%; background: rgba(0,0,0,0.8); border: 1px solid var(--border); border-radius: 6px; color: #fff; padding: 12px; font-size: 14px; outline: none; margin-bottom: 20px; font-family: monospace;" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
+            <div class="btn-group" style="justify-content: flex-end;">
+                <button class="btn" onclick="toggleApiModal()">HỦY</button>
+                <button class="btn btn-primary" onclick="saveApiUrl()">LƯU VÀ ĐỒNG BỘ</button>
+            </div>
         </div>
     </div>
 
@@ -261,29 +277,23 @@
             document.getElementById('t2').className = n==2?'tab active':'tab';
         }
 
-        // ---------- HÀM AUTO FORMAT TEXT (TÁCH CÂU & BÔI ĐẬM) ---------- //
+        // Tối ưu thuật toán Format chữ tránh lỗi regex trên các trình duyệt cũ
         function formatSmartText(text, isHint = false) {
-            if(!text) return "";
-            
-            // 1. Tìm các từ khóa chuyên ngành để Highlight
+            if(!text) return [];
             const keywords = /(KiotViet|phần mềm|tồn kho|chuyển khoản|tiền mặt|sổ sách|thất thoát|hóa đơn|mã vạch|offline|online|đồng bộ|trả hàng|công nợ|nhà cung cấp|đại lý|thu ngân|nhân viên)/gi;
             
-            // 2. Tách đoạn văn thành từng câu (dựa vào dấu chấm hoặc hỏi chấm)
-            // Lọc bỏ khoảng trắng thừa để không tạo ra các bullet rỗng
-            let sentences = text.split(/(?<=[.?!])\s+/).filter(s => s.trim().length > 0);
+            let normalized = text.replace(/([.?!])\s+/g, "$1\n");
+            let sentences = normalized.split('\n').filter(s => s.trim().length > 0);
             
-            // 3. Render HTML
             let hlClass = isHint ? "highlight-word hint-word" : "highlight-word";
             let bulletClass = isHint ? "bullet hint" : "bullet";
 
             return sentences.map(sentence => {
                 let formatted = sentence.replace(keywords, `<span class="${hlClass}">$1</span>`);
-                // Bôi đậm luôn các con số cho dễ nhìn
                 formatted = formatted.replace(/\b(\d+[kKmM]?|\d{1,3}([,.]\d{3})*)\b/g, `<b style="color: #fff">$1</b>`);
                 return `<div class="${bulletClass}" style="opacity:0; transform: translateY(10px); transition: 0.5s;">${formatted}</div>`;
             });
         }
-        // ------------------------------------------------------------- //
 
         function start(mode) {
             if(state.names.length===0 && mode !== 'script') return alert("Nhập danh sách học viên!");
@@ -333,7 +343,7 @@
         function triggerPostFinalize(mode) {
             if (mode === 'full' || mode === 'script') {
                 openHackerModal(state.curT);
-                renderMainScreenCard(state.curT); // Render bản thu gọn ra màn hình ngoài
+                renderMainScreenCard(state.curT, 'scBox'); 
             } else {
                 confetti({ particleCount:150, spread:80, origin: { y: 0.6 }, colors: ['#00f0ff', '#ff003c', '#fcee09'] });
             }
@@ -351,7 +361,6 @@
             document.getElementById('hudRow3').classList.remove('show-element');
             document.getElementById('hudActionArea').style.opacity = '0';
             
-            // Ẩn bóng đèn lúc mới tải
             let bulb = document.getElementById('hudLightbulb');
             bulb.style.opacity = '0';
             bulb.style.pointerEvents = 'none';
@@ -363,7 +372,6 @@
             document.getElementById('hudMission').innerText = obj.Title || 'BẢO MẬT';
             document.getElementById('hudDirective').innerText = obj.Goal || 'BẢO MẬT';
             
-            // Xử lý Render HTML mảng các câu
             let sentencesArray = formatSmartText(obj.Question, false);
             let container = document.getElementById('hudFormattedText');
             container.innerHTML = sentencesArray.join('');
@@ -375,17 +383,15 @@
             setTimeout(() => document.getElementById('hudRow2').classList.add('show-element'), 800);
             setTimeout(() => document.getElementById('hudRow3').classList.add('show-element'), 1100);
 
-            // Hiện dần từng Bullet point (thay vì gõ phím)
             let bullets = container.getElementsByClassName('bullet');
             let index = 0;
             function showNextBullet() {
                 if (index < bullets.length) {
                     bullets[index].classList.add('show-element');
                     index++;
-                    decodeBlocksTimeout = setTimeout(showNextBullet, 600); // Mỗi câu hiện cách nhau 0.6s
+                    decodeBlocksTimeout = setTimeout(showNextBullet, 600); 
                 } else {
                     document.getElementById('hudActionArea').style.opacity = '1'; 
-                    // Bật bóng đèn Gợi ý
                     bulb.style.opacity = '1';
                     bulb.style.pointerEvents = 'auto';
                 }
@@ -398,7 +404,6 @@
             clearTimeout(decodeBlocksTimeout);
         }
 
-        // Mở Modal Bóng đèn
         function openHintModal() {
             if(!state.curT) return;
             let hintsHTML = formatSmartText(state.curT.Answer, true).join('');
@@ -407,7 +412,6 @@
             container.innerHTML = hintsHTML;
             document.getElementById('hintModal').style.display = 'flex';
 
-            // Fade in các ý của Gợi ý
             setTimeout(() => {
                 let bullets = container.getElementsByClassName('bullet');
                 for(let i=0; i<bullets.length; i++) {
@@ -417,8 +421,8 @@
         }
         function closeHintModal() { document.getElementById('hintModal').style.display = 'none'; }
 
-        // Render ra Cột 3 (Màn hình gốc)
-        function renderMainScreenCard(obj) {
+        // FIX LỖI: Hàm render dùng chung được cả cho Màn hình chính & Lịch sử
+        function renderMainScreenCard(obj, containerId) {
             if(!obj) return;
             let formattedQ = formatSmartText(obj.Question, false).map(html => html.replace('opacity:0; transform: translateY(10px);', 'opacity:1; transform: translateY(0);')).join('');
             let html = `
@@ -428,12 +432,12 @@
                 </div>
                 <div class="sc-biz">${obj.Title}</div>
                 <div class="sc-goal">${obj.Goal}</div>
-                <div class="formatted-list" style="background: rgba(0,240,255,0.05); padding: 15px; border-radius: 8px;">
+                <div class="formatted-list" style="background: rgba(0,240,255,0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(0,240,255,0.1);">
                     <b style="color:var(--primary); font-size:11px; display:block; margin-bottom:10px;">LỜI KHÁCH HÀNG:</b>
                     ${formattedQ}
                 </div>
             `;
-            document.getElementById('scBox').innerHTML = html;
+            document.getElementById(containerId).innerHTML = html;
         }
 
         function done(res) {
@@ -448,7 +452,7 @@
 
         function renderHistory() { 
             document.getElementById('histList').innerHTML = state.logs.map(l => `
-                <div class="history-item">
+                <div class="history-item" onclick="openModal(${l.id})">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <b style="color:${l.res=='Vắng'?'#ff003c':'#00ff88'}">${l.name}</b>
                         <span style="font-size:10px; color:var(--primary); font-weight:800; background:rgba(0,240,255,0.1); padding: 3px 8px; border-radius: 4px;">${l.taskObj.Roadmap || l.taskObj.Type || 'KỊCH BẢN'}</span>
@@ -457,11 +461,31 @@
                 </div>`).join(''); 
         }
 
+        // FIX LỖI: Sửa cấu trúc gọi hàm khi bấm vào Lịch sử
+        function openModal(id) {
+            const item = state.logs.find(l => l.id === id);
+            if(!item) return;
+            document.getElementById('modalBody').innerHTML = `
+                <h2 style="color:var(--primary); font-family:'Orbitron'; margin-bottom: 5px;">HỌC VIÊN: ${item.name}</h2>
+                <div style="color:#64748b; font-size:12px; margin-bottom:15px">${item.time} | Kết quả: <b style="color:${item.res=='Vắng'?'#ff003c':'#00ff88'}">${item.res}</b></div>
+                <div id="modalScript"></div>
+                <div style="margin-top:15px; padding:15px; background:rgba(0,0,0,0.5); border-radius:8px; border:1px solid var(--border)">
+                    <b style="color:var(--accent); font-size:12px">NHẬN XÉT TỪ TRAINER:</b>
+                    <!-- FIX LỖI: white-space: pre-line giúp hiển thị đúng dấu xuống dòng của ô Comment -->
+                    <p style="font-size:14px; color:#cbd5e1; margin-top:10px; white-space: pre-line; line-height: 1.6;">${item.note}</p>
+                </div>`;
+            renderMainScreenCard(item.taskObj, 'modalScript');
+            document.getElementById('historyModal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
+        
         function exportExcel() {
             if(state.logs.length === 0) return alert("Chưa có dữ liệu!");
             let csv = "\uFEFFGiờ,Học viên,Lộ trình,Loại,Kịch bản,Kết quả,Nhận xét\n";
             state.logs.forEach(l => { 
-                let n = l.note.replace(/(\r\n|\n|\r)/gm, " ").replace(/,/g, ";"); 
+                // Xóa dấu Enter trong ô Nhận xét khi xuất Excel để tránh lỗi gãy dòng CSV
+                let n = l.note.replace(/(\r\n|\n|\r)/gm, " | ").replace(/,/g, ";"); 
                 let titleSafe = (l.taskObj.Title || "").replace(/,/g, ";");
                 csv += `${l.time},${l.name},${l.taskObj.Roadmap || ''},${l.taskObj.Type || ''},${titleSafe},${l.res},${n}\n`; 
             });
