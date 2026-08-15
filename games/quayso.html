@@ -2,91 +2,149 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>THE CHOSEN ONE V7.5 - PROBLEM SOLVING</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@300;400;600;800;italic&display=swap" rel="stylesheet">
+    <title>THE CHOSEN ONE V8.0 - CYBERPUNK EDITION</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800;italic&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
-            --primary: #00d2ff; --secondary: #3a7bd5; --accent: #00ff88;
-            --bg: #0b0e14; --panel: rgba(23, 28, 40, 0.95); --border: rgba(0, 210, 255, 0.2);
-            --danger: #ff4757; --glass: rgba(255, 255, 255, 0.05);
-            --warning: #fbc531; --purple: #9c88ff;
+            --primary: #00f0ff;    /* Cyber Cyan */
+            --secondary: #ff003c;  /* Cyber Magenta */
+            --accent: #fcee09;     /* Cyber Yellow */
+            --bg: #050508; 
+            --panel: rgba(10, 15, 25, 0.75); 
+            --border: rgba(0, 240, 255, 0.3);
+            --danger: #ff003c; 
+            --glass: rgba(0, 240, 255, 0.05);
+            --warning: #fcee09; 
+            --purple: #b500ff;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* Moving Cyber Grid Background */
         body {
-            font-family: 'Inter', sans-serif; background: var(--bg); color: #fff;
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg); 
+            color: #fff;
             height: 100vh; display: flex; flex-direction: column; overflow: hidden;
-            background-image: radial-gradient(circle at 50% 50%, #1a202c 0%, #0b0e14 100%);
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: panBg 20s linear infinite;
         }
-        header { padding: 15px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(11, 14, 20, 0.98); }
-        .logo { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; color: var(--primary); }
-        .session-tabs { display: flex; background: var(--glass); padding: 5px; border-radius: 12px; border: 1px solid var(--border); }
-        .tab { padding: 10px 25px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 800; color: #64748b; border: none; background: none; transition: 0.3s; }
+        @keyframes panBg {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 40px; }
+        }
+
+        /* Scanline Overlay */
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+            background-size: 100% 4px; z-index: 9998; pointer-events: none; opacity: 0.6;
+        }
+
+        header { padding: 15px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(5, 5, 8, 0.9); box-shadow: 0 5px 20px rgba(0, 240, 255, 0.1); }
+        .logo { font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 0 10px var(--primary), 2px 2px 0px var(--secondary); letter-spacing: 2px;}
+        .session-tabs { display: flex; background: var(--glass); padding: 5px; border-radius: 8px; border: 1px solid var(--border); }
+        .tab { padding: 10px 25px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 800; color: #64748b; border: none; background: none; transition: 0.3s; text-transform: uppercase; }
         .tab.active { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
-        .main-grid { display: grid; grid-template-columns: 320px 1fr 450px; gap: 20px; padding: 20px; flex: 1; overflow: hidden; }
-        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 25px; display: flex; flex-direction: column; overflow: hidden; }
-        textarea { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; color: var(--accent); padding: 15px; font-size: 14px; outline: none; margin-bottom: 15px; }
+        .main-grid { display: grid; grid-template-columns: 320px 1fr 450px; gap: 20px; padding: 20px; flex: 1; overflow: hidden; position: relative; z-index: 1;}
         
-        /* Hiệu ứng Slot Machine cho Chữ */
-        .winner-display { font-family: 'Orbitron', sans-serif; font-size: 40px; font-weight: 900; text-align: center; margin-bottom: 20px; min-height: 60px; color: #fff; text-shadow: 0 0 20px var(--primary); transition: transform 0.1s, filter 0.1s; }
-        .spin-btn { width: 150px; height: 150px; border-radius: 50%; border: 8px solid var(--glass); background: linear-gradient(135deg, var(--secondary), var(--primary)); color: white; font-family: 'Orbitron'; font-size: 16px; font-weight: 900; cursor: pointer; align-self: center; transition: 0.3s; box-shadow: 0 0 20px rgba(0, 210, 255, 0.3); }
-        .spin-btn:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(0, 210, 255, 0.6); }
-        .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: scale(1); box-shadow: none; }
-        #actionArea { margin-top: 15px; display: none; }
-        .comment-box { width: 100%; height: 80px; background: rgba(255,255,255,0.08); border: 1px solid var(--primary); border-radius: 12px; color: #fff; padding: 15px; font-size: 14px; margin-bottom: 10px; outline: none; resize: none; }
-        .sc-card { background: rgba(255,255,255,0.02); border-radius: 16px; padding: 20px; flex: 1; overflow-y: auto; border: 1px solid rgba(255,255,255,0.05); }
+        .panel { 
+            background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 25px; display: flex; flex-direction: column; overflow: hidden; 
+            backdrop-filter: blur(10px); box-shadow: 0 0 15px rgba(0, 240, 255, 0.05), inset 0 0 20px rgba(0, 240, 255, 0.05);
+        }
         
-        /* Tag Style Mới */
-        .sc-tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-weight: 900; font-size: 11px; margin-right: 8px; margin-bottom: 8px; vertical-align: middle; text-transform: uppercase; letter-spacing: 0.5px;}
-        .tag-roadmap { background: var(--primary); color: #000; }
-        .tag-type { background: var(--purple); color: #fff; }
+        textarea { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 8px; color: var(--accent); padding: 15px; font-size: 14px; outline: none; margin-bottom: 15px; font-family: monospace; transition: 0.3s; }
+        textarea:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(0, 240, 255, 0.3); }
+
+        /* Hacker / Cyberpunk Text Effect */
+        .winner-display { font-family: 'Orbitron', sans-serif; font-size: 42px; font-weight: 900; text-align: center; margin-bottom: 20px; min-height: 60px; color: #fff; text-shadow: 0 0 20px var(--primary); letter-spacing: 3px; word-break: break-word; }
         
-        .sc-biz { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 10px; line-height: 1.4; }
+        /* Cyberpunk Button */
+        .spin-btn { 
+            width: 170px; height: 170px; border-radius: 50%; 
+            border: 4px solid var(--primary); 
+            background: radial-gradient(circle at center, rgba(0,240,255,0.1) 0%, rgba(0,0,0,0.8) 100%); 
+            color: var(--primary); font-family: 'Orbitron'; font-size: 18px; font-weight: 900; 
+            cursor: pointer; align-self: center; transition: 0.3s; 
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4), inset 0 0 20px rgba(0, 240, 255, 0.2); 
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+        .spin-btn:hover { 
+            transform: scale(1.05); 
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.7), inset 0 0 40px rgba(0, 240, 255, 0.5); 
+            background: rgba(0, 240, 255, 0.15); text-shadow: 0 0 10px var(--primary);
+        }
+        .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: scale(1); box-shadow: none; filter: grayscale(1); }
+        
+        #actionArea { margin-top: 15px; display: none; width: 100%; max-width: 400px; align-self: center;}
+        .comment-box { width: 100%; height: 80px; background: rgba(0,0,0,0.5); border: 1px solid var(--primary); border-radius: 8px; color: #fff; padding: 15px; font-size: 14px; margin-bottom: 10px; outline: none; resize: none; font-family: 'Inter'; }
+        
+        .sc-card { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 20px; flex: 1; overflow-y: auto; border: 1px solid rgba(0, 240, 255, 0.2); position: relative; }
+        
+        .sc-tag { display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: 900; font-size: 10px; margin-right: 8px; margin-bottom: 8px; vertical-align: middle; text-transform: uppercase; letter-spacing: 1px;}
+        .tag-roadmap { background: var(--primary); color: #000; box-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .tag-type { background: var(--purple); color: #fff; box-shadow: 0 0 10px rgba(181, 0, 255, 0.5); }
+        
+        .sc-biz { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 10px; line-height: 1.4; text-shadow: 0 0 5px rgba(255,255,255,0.3); }
         .sc-goal { font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 15px; border-bottom: 1px dashed var(--border); padding-bottom: 12px; line-height: 1.5; }
         
-        /* Styles cho Customer Voice & Trainer */
-        .sc-customer-voice { background: rgba(255, 255, 255, 0.05); border-left: 4px solid var(--primary); padding: 15px; font-size: 14px; color: #e2e8f0; margin-bottom: 15px; line-height: 1.6; font-style: italic; border-radius: 0 8px 8px 0; }
-        .sc-customer-voice b { color: var(--primary); font-style: normal; display: block; margin-bottom: 5px; font-size: 12px; text-transform: uppercase;}
+        .sc-customer-voice { background: linear-gradient(90deg, rgba(0, 240, 255, 0.1) 0%, transparent 100%); border-left: 4px solid var(--primary); padding: 15px; font-size: 14px; color: #e2e8f0; margin-bottom: 15px; line-height: 1.6; font-style: italic; }
+        .sc-customer-voice b { color: var(--primary); font-style: normal; display: block; margin-bottom: 5px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;}
         
-        .trainer-toggle { background: rgba(251, 197, 49, 0.1); border: 1px dashed var(--warning); color: var(--warning); padding: 10px 15px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; width: 100%; text-align: left; margin-top: 10px; transition: 0.3s; display: flex; justify-content: space-between; align-items: center; }
-        .trainer-toggle:hover { background: rgba(251, 197, 49, 0.2); }
-        .trainer-notes { display: none; background: rgba(0,0,0,0.5); border: 1px solid var(--warning); padding: 15px; border-radius: 8px; margin-top: 10px; font-size: 14px; line-height: 1.6; color: #dcdde1; white-space: pre-line; }
+        .trainer-toggle { background: rgba(252, 238, 9, 0.1); border: 1px solid var(--warning); color: var(--warning); padding: 10px 15px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; width: 100%; text-align: left; margin-top: 10px; transition: 0.3s; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 1px;}
+        .trainer-toggle:hover { background: rgba(252, 238, 9, 0.2); box-shadow: 0 0 10px rgba(252, 238, 9, 0.3); }
+        .trainer-notes { display: none; background: rgba(0,0,0,0.8); border: 1px solid var(--warning); padding: 15px; border-radius: 6px; margin-top: 10px; font-size: 14px; line-height: 1.6; color: #dcdde1; white-space: pre-line; box-shadow: inset 0 0 15px rgba(252, 238, 9, 0.1);}
         .trainer-notes b { color: var(--warning); font-size: 12px; text-transform: uppercase;}
 
-        .history-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; border-radius: 8px; margin-bottom: 5px; }
-        .history-item:hover { background: rgba(0,210,255,0.1); }
+        .history-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; border-radius: 6px; margin-bottom: 5px; transition: 0.2s;}
+        .history-item:hover { background: rgba(0, 240, 255, 0.1); border-color: var(--primary); padding-left: 15px;}
         
-        /* Modals Standard */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        .modal-content { background: #171c28; width: 550px; max-height: 85vh; border-radius: 24px; border: 1px solid var(--primary); padding: 30px; position: relative; overflow-y: auto; }
+        /* Modals */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        .modal-content { background: var(--bg); width: 550px; max-height: 85vh; border-radius: 12px; border: 1px solid var(--primary); padding: 30px; position: relative; overflow-y: auto; box-shadow: 0 0 30px rgba(0,240,255,0.2); }
         
-        /* GAME LẬT THẺ BÀI 3D (CARD FLIP) */
-        #gameModal { flex-direction: column; z-index: 10000; perspective: 1000px; }
-        .card-scene { width: 450px; height: 580px; perspective: 1200px; margin-top: 20px; }
-        .game-card { width: 100%; height: 100%; position: relative; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; cursor: pointer; }
+        /* GAME LẬT THẺ BÀI 3D (HOLOGRAPHIC CYBERPUNK) */
+        #gameModal { flex-direction: column; z-index: 10000; perspective: 1200px; }
+        .card-scene { width: 450px; height: 580px; perspective: 1500px; margin-top: 20px; }
+        .game-card { width: 100%; height: 100%; position: relative; transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; cursor: pointer; }
         .game-card.is-flipped { transform: rotateY(180deg); }
-        .game-card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 20px; display: flex; flex-direction: column; overflow-y: auto; border: 2px solid var(--primary); box-shadow: 0 10px 40px rgba(0,210,255,0.3); }
+        .game-card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 12px; display: flex; flex-direction: column; overflow-y: auto; border: 2px solid var(--primary); box-shadow: 0 0 30px rgba(0,240,255,0.3); }
         
-        .game-card-front { background: linear-gradient(145deg, #171c28 0%, #0b0e14 100%); align-items: center; justify-content: center; text-align: center; }
+        .game-card-front { background: linear-gradient(135deg, #09090b 0%, #000 100%); align-items: center; justify-content: center; text-align: center; position: relative; overflow: hidden; }
+        /* Holographic Effect */
+        .game-card-front::after {
+            content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent 40%, rgba(0, 240, 255, 0.1) 45%, rgba(255, 0, 60, 0.2) 50%, rgba(0, 240, 255, 0.1) 55%, transparent 60%);
+            animation: holo 3s infinite linear; pointer-events: none;
+        }
+        @keyframes holo { 0% { transform: translateY(-50%) translateX(-50%) rotate(45deg); } 100% { transform: translateY(50%) translateX(50%) rotate(45deg); } }
+
         .game-card-front .card-icon { font-size: 100px; filter: drop-shadow(0 0 20px var(--primary)); margin-bottom: 25px; animation: float 3s ease-in-out infinite; }
-        .game-card-front h2 { font-family: 'Orbitron', sans-serif; font-size: 28px; color: var(--primary); text-shadow: 0 0 15px var(--primary); margin-bottom: 10px; }
-        .game-card-front p { color: #64748b; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; animation: pulse 1.5s infinite; }
+        .game-card-front h2 { font-family: 'Orbitron', sans-serif; font-size: 28px; color: var(--primary); text-shadow: 0 0 15px var(--primary); margin-bottom: 10px; letter-spacing: 2px;}
+        .game-card-front p { color: #64748b; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 3px; animation: pulse 1.5s infinite; }
         
-        .game-card-back { background: var(--panel); transform: rotateY(180deg); padding: 30px; display: block; }
+        .game-card-back { background: rgba(10, 15, 25, 0.95); transform: rotateY(180deg); padding: 30px; display: block; }
         .game-card-back::-webkit-scrollbar { width: 6px; }
         .game-card-back::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
         
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        @keyframes pulse { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
 
         .btn-group { display: flex; gap: 10px; }
-        .btn { padding: 10px 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--glass); color: #fff; cursor: pointer; font-size: 11px; font-weight: 700; transition: 0.2s; }
-        .btn-primary { background: var(--primary); color: #000; border: none; font-weight: 900; }
-        .btn-primary:hover { box-shadow: 0 0 15px var(--primary); }
+        .btn { padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border); background: rgba(0,0,0,0.5); color: #fff; cursor: pointer; font-size: 11px; font-weight: 700; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px; }
+        .btn:hover { background: rgba(0, 240, 255, 0.1); border-color: var(--primary); }
+        .btn-primary { background: var(--primary); color: #000; border: none; font-weight: 900; box-shadow: 0 0 10px rgba(0,240,255,0.5); }
+        .btn-primary:hover { box-shadow: 0 0 20px var(--primary), inset 0 0 10px #fff; background: #fff; color: #000; }
         .btn-accent { border-color: var(--accent); color: var(--accent); }
+        .btn-accent:hover { box-shadow: 0 0 10px var(--accent); background: rgba(252, 238, 9, 0.1); }
     </style>
 </head>
 <body>
+    <div class="scanlines"></div>
+
     <header>
         <div class="logo">THE CHOSEN ONE V8.0</div>
         <div class="session-tabs">
@@ -94,26 +152,24 @@
             <button id="t2" class="tab" onclick="setSess(2)">BUỔI 2: NÂNG CAO</button>
         </div>
         <div class="btn-group">
-            <button class="btn" onclick="fetchDataFromSheet()" style="color:var(--primary)">🔄 ĐỒNG BỘ DỮ LIỆU</button>
+            <button class="btn" onclick="fetchDataFromSheet()" style="color:var(--primary); border-color: var(--primary)">🔄 ĐỒNG BỘ DỮ LIỆU</button>
             <button class="btn" onclick="toggleApiModal()">⚙️ CÀI ĐẶT API</button>
-            <button class="btn" onclick="exportExcel()" style="color:var(--accent)">📥 EXCEL</button>
+            <button class="btn" onclick="exportExcel()" style="color:var(--accent); border-color: var(--accent)">📥 EXCEL</button>
         </div>
     </header>
 
     <div class="main-grid">
-        <!-- Cột 1: Học viên -->
         <div class="panel">
-            <h3 style="color:var(--primary); font-size:11px; margin-bottom:10px">HỌC VIÊN (<span id="c">0</span>)</h3>
+            <h3 style="color:var(--primary); font-size:11px; margin-bottom:10px; letter-spacing: 1px;">HỌC VIÊN (<span id="c">0</span>)</h3>
             <textarea id="names" placeholder="Dán danh sách học viên..."></textarea>
             <button class="btn btn-primary" onclick="save()">LƯU DANH SÁCH GỐC</button>
         </div>
 
-        <!-- Cột 2: Sân Khấu (Slot Machine) -->
         <div class="panel" style="justify-content:center">
             <div id="winner" class="winner-display">READY?</div>
             <div style="display:flex; flex-direction:column; gap:15px; align-items:center">
                 <button id="spin" class="spin-btn" onclick="start('full')">TRIỆU HỒI</button>
-                <div id="quickBtns" style="display:none; gap:10px">
+                <div id="quickBtns" style="display:none; gap:10px; width: 100%; justify-content: center;">
                     <button class="btn btn-accent" onclick="start('script')">♻️ ĐỔI TÌNH HUỐNG</button>
                     <button class="btn btn-accent" onclick="start('user')">👥 GỌI NGƯỜI KHÁC</button>
                 </div>
@@ -121,26 +177,25 @@
             <div id="actionArea">
                 <textarea id="cmt" class="comment-box" placeholder="Nhận xét cách học viên phân tích và xử lý luồng..."></textarea>
                 <div class="btn-group">
-                    <button class="btn" style="background:var(--danger); flex:1" onclick="done('Vắng')">VẮNG</button>
+                    <button class="btn" style="background:transparent; border-color: var(--danger); color: var(--danger); flex:1" onclick="done('Vắng')">VẮNG</button>
                     <button class="btn btn-primary" style="flex:2" onclick="done('Hoàn thành')">XÁC NHẬN</button>
                 </div>
             </div>
         </div>
 
-        <!-- Cột 3: Đề bài & Lịch sử -->
         <div class="panel">
-            <h3 style="color:var(--accent); font-size:11px; margin-bottom:10px">ĐỀ BÀI</h3>
+            <h3 style="color:var(--accent); font-size:11px; margin-bottom:10px; letter-spacing: 1px;">ĐỀ BÀI</h3>
             <div id="scBox" class="sc-card">
                 <div style="text-align:center; color:#64748b; margin-top:50px">Sẵn sàng đồng bộ dữ liệu...</div>
             </div>
-            <h3 style="color:var(--primary); font-size:11px; margin-top:15px; margin-bottom:5px">LỊCH SỬ</h3>
-            <div id="histList" style="flex:0.8; overflow-y:auto; border-top:1px solid #333; padding-top:10px"></div>
+            <h3 style="color:var(--primary); font-size:11px; margin-top:15px; margin-bottom:5px; letter-spacing: 1px;">LỊCH SỬ</h3>
+            <div id="histList" style="flex:0.8; overflow-y:auto; border-top:1px dashed var(--border); padding-top:10px"></div>
         </div>
     </div>
 
     <!-- MỚI: Modal Game Lật Thẻ Bài -->
     <div id="gameModal" class="modal">
-        <h2 id="gameWinnerName" style="font-family:'Orbitron'; color:#fff; font-size:35px; text-shadow: 0 0 20px var(--primary); letter-spacing: 2px;">TÊN HỌC VIÊN</h2>
+        <h2 id="gameWinnerName" style="font-family:'Orbitron'; color:#fff; font-size:38px; text-shadow: 0 0 20px var(--primary); letter-spacing: 4px; margin-bottom: 10px;">TÊN HỌC VIÊN</h2>
         <div class="card-scene">
             <div class="game-card" id="theGameCard" onclick="flipCard()">
                 <div class="game-card-face game-card-front">
@@ -149,7 +204,6 @@
                     <p>Nhấn vào để lật thẻ</p>
                 </div>
                 <div class="game-card-face game-card-back" id="cardBackContent">
-                    <!-- Nội dung kịch bản sẽ được đẩy vào đây -->
                 </div>
             </div>
         </div>
@@ -159,9 +213,9 @@
     <!-- Modals API & History -->
     <div id="apiModal" class="modal">
         <div class="modal-content" style="width: 600px;">
-            <h2 style="margin-bottom: 15px; color: var(--primary);">⚙️ CÀI ĐẶT API GOOGLE SHEETS</h2>
+            <h2 style="margin-bottom: 15px; color: var(--primary); font-family: 'Orbitron';">⚙️ CÀI ĐẶT API GOOGLE SHEETS</h2>
             <p style="font-size:12px; color:#64748b; margin-bottom:15px">Dán link Web App URL Google Apps Script của bạn vào đây.</p>
-            <input type="text" id="apiUrlInput" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--border); border-radius: 8px; color: #fff; padding: 12px; font-size: 14px; outline: none; margin-bottom: 20px;" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
+            <input type="text" id="apiUrlInput" style="width: 100%; background: rgba(0,0,0,0.8); border: 1px solid var(--border); border-radius: 6px; color: #fff; padding: 12px; font-size: 14px; outline: none; margin-bottom: 20px; font-family: monospace;" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
             <div class="btn-group" style="justify-content: flex-end;">
                 <button class="btn" onclick="toggleApiModal()">HỦY</button>
                 <button class="btn btn-primary" onclick="saveApiUrl()">LƯU VÀ ĐỒNG BỘ</button>
@@ -171,34 +225,20 @@
 
     <div id="historyModal" class="modal">
         <div class="modal-content">
-            <span style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:24px" onclick="closeModal()">×</span>
+            <span style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:24px; color: var(--primary);" onclick="closeModal()">×</span>
             <div id="modalBody"></div>
         </div>
     </div>
 
     <script>
-        // Dữ liệu mẫu (Phòng hờ nếu chưa có API)
-        let scripts = {
-            buoi1: [
-                { Roadmap: "Retail", Type: "morning", Day: "day1", Title: "Tình huống 02 - Bán hàng và tra cứu", Goal: "Bộ giải pháp Tra cứu & Bán hàng toàn diện", Question: "Khách hàng là chủ shop thời trang đang dùng sổ sách, ngần ngại mua mới: Anh thấy ghi sổ hơi cực nhưng nhân viên nhà anh toàn sinh viên làm part-time...", Answer: "Gợi ý giải pháp: Đưa ra hệ sinh thái Bán hàng toàn diện (Tìm bằng hình ảnh/thuộc tính, Check tồn kho liên chi nhánh...)" }
-            ],
-            buoi2: []
-        };
-
+        let scripts = { buoi1: [], buoi2: [] };
         let state = { sess: 1, ptr: 0, names: [], logs: [], curW: "", curT: null, spinning: false };
 
         window.onload = () => {
             const savedNames = localStorage.getItem('bk_names_v75_problem');
-            if(savedNames) {
-                document.getElementById('names').value = savedNames;
-                updateCount();
-            }
-            // Auto fetch if API exists
-            if(localStorage.getItem('kv_api_url')) {
-                fetchDataFromSheet();
-            } else {
-                document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:#fbc531; margin-top:50px">Vui lòng CÀI ĐẶT API để lấy dữ liệu.</div>';
-            }
+            if(savedNames) { document.getElementById('names').value = savedNames; updateCount(); }
+            if(localStorage.getItem('kv_api_url')) { fetchDataFromSheet(); } 
+            else { document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:var(--warning); margin-top:50px">Vui lòng CÀI ĐẶT API để lấy dữ liệu.</div>'; }
         };
 
         function updateCount() {
@@ -212,63 +252,44 @@
 
         function toggleApiModal() {
             const m = document.getElementById('apiModal');
-            if(m.style.display === 'flex') {
-                m.style.display = 'none';
-            } else {
-                document.getElementById('apiUrlInput').value = localStorage.getItem('kv_api_url') || "";
-                m.style.display = 'flex';
-            }
+            if(m.style.display === 'flex') m.style.display = 'none';
+            else { document.getElementById('apiUrlInput').value = localStorage.getItem('kv_api_url') || ""; m.style.display = 'flex'; }
         }
 
         function saveApiUrl() {
             const url = document.getElementById('apiUrlInput').value.trim();
             if(!url) return alert("Vui lòng nhập Link API!");
-            localStorage.setItem('kv_api_url', url);
-            toggleApiModal();
-            fetchDataFromSheet();
+            localStorage.setItem('kv_api_url', url); toggleApiModal(); fetchDataFromSheet();
         }
 
         async function fetchDataFromSheet() {
             let apiUrl = localStorage.getItem('kv_api_url');
             if (!apiUrl) { alert("Chưa cấu hình API URL!"); return; }
             
-            document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:#00d2ff; margin-top:50px; animation: pulse 1s infinite">Đang kết nối Google Sheets... ⏳</div>';
+            document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:var(--primary); margin-top:50px; animation: pulse 1s infinite">Đang kết nối Google Sheets... ⏳</div>';
             
             try {
-                // Yêu cầu bắt buộc dùng POST & body JSON.stringify để gửi payload
-                let res = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: "GET_DATA" })
-                });
-                
+                let res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "GET_DATA" }) });
                 let result = await res.json();
                 
                 if (result.status === 'success') {
-                    // Phân tách dữ liệu
-                    scripts.buoi1 = [];
-                    scripts.buoi2 = [];
-                    
+                    scripts.buoi1 = []; scripts.buoi2 = [];
                     result.data.forEach(item => {
-                        if (item.Day.toLowerCase() === 'day1') scripts.buoi1.push(item);
+                        // Nhận diện linh hoạt: Nếu có chứa số '1' (day1, buổi 1) -> vào Buổi 1
+                        if (item.Day.includes('1')) scripts.buoi1.push(item);
                         else scripts.buoi2.push(item);
                     });
-                    
                     document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:#00ff88; margin-top:50px">✅ Dữ liệu đã đồng bộ sẵn sàng!</div>';
-                    // Reset pointer
                     state.ptr = 0;
-                } else {
-                    alert("Lỗi từ Sheet: " + result.message);
-                }
+                } else { alert("Lỗi từ Sheet: " + result.message); }
             } catch (e) {
-                document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:#ff4757; margin-top:50px">❌ Lỗi kết nối API! Vui lòng thử lại.</div>';
+                document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:var(--danger); margin-top:50px">❌ Lỗi kết nối API! Vui lòng thử lại.</div>';
                 console.error(e);
             }
         }
 
         function setSess(n) {
-            state.sess = n; 
-            state.ptr = 0; 
+            state.sess = n; state.ptr = 0; 
             document.getElementById('t1').className = n==1?'tab active':'tab';
             document.getElementById('t2').className = n==2?'tab active':'tab';
         }
@@ -276,7 +297,6 @@
         function start(mode) {
             if(state.names.length===0 && mode !== 'script') return alert("Nhập danh sách học viên!");
             
-            // Validate data
             let currentDataset = state.sess == 1 ? scripts.buoi1 : scripts.buoi2;
             if(currentDataset.length === 0 && (mode === 'full' || mode === 'script')) {
                 return alert("Chưa có dữ liệu kịch bản cho Buổi " + state.sess + "! Hãy kiểm tra Google Sheet.");
@@ -289,22 +309,27 @@
             document.getElementById('quickBtns').style.display = 'none';
 
             let winnerEl = document.getElementById('winner');
-            let i = 0;
+            let iterations = 0;
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
             
-            // Hiệu ứng Slot Machine mượt mà
-            let slotInterval = setInterval(() => {
-                winnerEl.style.filter = 'blur(1px)';
-                winnerEl.style.transform = 'scale(1.05)';
+            // Giai đoạn 1: Matrix Glitch Spin
+            let glitchInterval = setInterval(() => {
                 if(mode !== 'script') {
-                    winnerEl.innerText = state.names[Math.floor(Math.random()*state.names.length)];
+                    let randomName = state.names[Math.floor(Math.random()*state.names.length)];
+                    winnerEl.innerText = randomName.split('').map(() => chars[Math.floor(Math.random()*chars.length)]).join('');
+                } else {
+                    winnerEl.innerText = "UPDATING...".split('').map(() => chars[Math.floor(Math.random()*chars.length)]).join('');
                 }
-                if(++i > 20) { 
-                    clearInterval(slotInterval); 
-                    winnerEl.style.filter = 'blur(0)';
-                    winnerEl.style.transform = 'scale(1)';
+                
+                // Hiệu ứng giật màu Neon
+                winnerEl.style.textShadow = `${Math.random()*6-3}px ${Math.random()*6-3}px 0px var(--primary), ${Math.random()*6-3}px ${Math.random()*6-3}px 0px var(--secondary)`;
+
+                if(++iterations > 20) { 
+                    clearInterval(glitchInterval); 
+                    winnerEl.style.textShadow = '0 0 20px var(--primary)';
                     finalize(mode, currentDataset); 
                 }
-            }, 50);
+            }, 60);
         }
 
         function finalize(mode, currentDataset) {
@@ -321,27 +346,48 @@
                 state.ptr = (state.ptr + 1) % currentDataset.length;
             }
 
-            document.getElementById('winner').innerText = state.curW;
+            // Giai đoạn 2: Hacker Decode Text (Giải mã dần dần)
+            let winnerEl = document.getElementById('winner');
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            let finalStr = state.curW || "READY?";
             
+            let decodeI = 0;
+            let decodeInterval = setInterval(() => {
+                winnerEl.innerText = finalStr.split('').map((char, index) => {
+                    if(index < Math.floor(decodeI)) return char; // Ký tự đã giải mã
+                    if(char === ' ') return ' '; // Bỏ qua khoảng trắng
+                    return chars[Math.floor(Math.random() * chars.length)];
+                }).join('');
+                
+                decodeI += 0.4; // Tốc độ giải mã
+                if(decodeI >= finalStr.length) {
+                    clearInterval(decodeInterval);
+                    winnerEl.innerText = finalStr;
+                    triggerPostFinalize(mode); // Mở thẻ bài
+                }
+            }, 30);
+        }
+
+        function triggerPostFinalize(mode) {
             if (mode === 'full' || mode === 'script') {
                 const card = document.getElementById('theGameCard');
                 card.classList.remove('is-flipped');
                 const btn = document.getElementById('closeGameBtn');
-                btn.style.opacity = '0';
-                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0'; btn.style.pointerEvents = 'none';
 
-                document.getElementById('gameWinnerName').innerText = "HỌC VIÊN: " + state.curW;
+                document.getElementById('gameWinnerName').innerText = state.curW;
                 
                 renderScript(state.curT, 'cardBackContent');
                 renderScript(state.curT, 'scBox');
                 
                 document.getElementById('gameModal').style.display = 'flex';
             } else {
-                confetti({ particleCount:100, spread:70, origin: { y: 0.6 } });
+                confetti({ particleCount:150, spread:80, origin: { y: 0.6 }, colors: ['#00f0ff', '#ff003c', '#fcee09'] });
             }
             
             document.getElementById('spin').disabled = false;
-            document.getElementById('actionArea').style.display = 'block';
+            document.getElementById('actionArea').style.display = 'flex';
+            document.getElementById('actionArea').style.flexDirection = 'column';
             document.getElementById('quickBtns').style.display = 'flex';
             state.spinning = false;
         }
@@ -350,31 +396,26 @@
             const card = document.getElementById('theGameCard');
             if (!card.classList.contains('is-flipped')) {
                 card.classList.add('is-flipped');
-                confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 }, zIndex: 10001 });
+                confetti({ particleCount: 200, spread: 120, origin: { y: 0.5 }, zIndex: 10001, colors: ['#00f0ff', '#ff003c', '#fcee09'] });
                 setTimeout(() => {
                     const btn = document.getElementById('closeGameBtn');
-                    btn.style.opacity = '1';
-                    btn.style.pointerEvents = 'auto';
-                }, 800);
+                    btn.style.opacity = '1'; btn.style.pointerEvents = 'auto';
+                }, 1000);
             }
         }
 
-        function closeGameModal() {
-            document.getElementById('gameModal').style.display = 'none';
-        }
+        function closeGameModal() { document.getElementById('gameModal').style.display = 'none'; }
 
         function toggleTrainerNotes(id) {
             const el = document.getElementById(id);
             if(el) { el.style.display = (el.style.display === "none" || el.style.display === "") ? "block" : "none"; }
         }
 
-        // Render dựa trên Data Model mới
         function renderScript(obj, containerId) {
             if(!obj) return;
             let uniqueId = `tnote_${Math.floor(Math.random()*10000)}_${containerId}`;
-            
             let html = `
-                <div style="margin-bottom:10px;">
+                <div style="margin-bottom:12px;">
                     ${obj.Roadmap ? `<span class="sc-tag tag-roadmap">${obj.Roadmap}</span>` : ''}
                     ${obj.Type ? `<span class="sc-tag tag-type">${obj.Type}</span>` : ''}
                 </div>
@@ -410,6 +451,7 @@
             document.getElementById('actionArea').style.display = 'none';
             document.getElementById('quickBtns').style.display = 'none';
             document.getElementById('winner').innerText = "XONG!";
+            document.getElementById('winner').style.textShadow = '0 0 20px var(--primary)';
             document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:#64748b; margin-top:50px">Sẵn sàng ca tiếp theo...</div>';
         }
 
@@ -417,8 +459,8 @@
             document.getElementById('histList').innerHTML = state.logs.map(l => `
                 <div class="history-item" onclick="openModal(${l.id})">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <b style="color:${l.res=='Vắng'?'#ff4757':'#00ff88'}">${l.name}</b>
-                        <span style="font-size:10px; color:var(--primary); font-weight:800; background:rgba(0,210,255,0.1); padding: 3px 8px; border-radius: 4px;">${l.taskObj.Roadmap || l.taskObj.Type || 'KỊCH BẢN'}</span>
+                        <b style="color:${l.res=='Vắng'?'#ff003c':'#00ff88'}">${l.name}</b>
+                        <span style="font-size:10px; color:var(--primary); font-weight:800; background:rgba(0,240,255,0.1); padding: 3px 8px; border-radius: 4px;">${l.taskObj.Roadmap || l.taskObj.Type || 'KỊCH BẢN'}</span>
                     </div>
                     <div style="font-size:11px; color:#64748b; margin-top:3px">${l.taskObj.Title}</div>
                 </div>`).join(''); 
@@ -429,9 +471,9 @@
             if(!item) return;
             document.getElementById('modalBody').innerHTML = `
                 <h2 style="color:var(--primary); font-family:'Orbitron'">${item.name}</h2>
-                <div style="color:#64748b; font-size:12px; margin-bottom:15px">${item.time} | Kết quả: <b style="color:${item.res=='Vắng'?'#ff4757':'#00ff88'}">${item.res}</b></div>
+                <div style="color:#64748b; font-size:12px; margin-bottom:15px">${item.time} | Kết quả: <b style="color:${item.res=='Vắng'?'#ff003c':'#00ff88'}">${item.res}</b></div>
                 <div id="modalScript"></div>
-                <div style="margin-top:15px; padding:15px; background:rgba(255,255,255,0.05); border-radius:12px; border:1px solid var(--border)">
+                <div style="margin-top:15px; padding:15px; background:rgba(0,0,0,0.5); border-radius:8px; border:1px solid var(--border)">
                     <b style="color:var(--accent); font-size:12px">NHẬN XÉT:</b>
                     <p style="font-size:13px; color:#cbd5e1; margin-top:5px">${item.note}</p>
                 </div>`;
