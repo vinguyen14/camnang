@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>THE CHOSEN ONE V8.0 - HACKER HUD EDITION</title>
+    <title>THE CHOSEN ONE V8.1 - HACKER HUD (VIETSUB)</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800;italic&family=VT323&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -20,6 +20,12 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
+        /* TÙY CHỈNH THANH CUỘN (SCROLLBAR NEON) */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.5); border-radius: 4px; box-shadow: 0 0 10px rgba(0, 240, 255, 0.3); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); box-shadow: 0 0 15px var(--primary); }
+
         body {
             font-family: 'Inter', sans-serif; background-color: var(--bg); color: #fff;
             height: 100vh; display: flex; flex-direction: column; overflow: hidden;
@@ -84,25 +90,33 @@
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
         .modal-content { background: var(--bg); width: 550px; max-height: 85vh; border-radius: 12px; border: 1px solid var(--primary); padding: 30px; position: relative; overflow-y: auto; box-shadow: 0 0 30px rgba(0,240,255,0.2); }
         
-        /* ---------------- MỚI: HACKER HUD STYLES ---------------- */
-        #hackerModal { z-index: 10000; flex-direction: column; perspective: none; } /* Bỏ perspective 3D */
-        .hud-container {
-            width: 800px; max-width: 90vw; max-height: 85vh;
+        /* ---------------- MỚI: HACKER HUD STYLES ĐÃ FIX GÓC & THANH CUỘN ---------------- */
+        #hackerModal { z-index: 10000; flex-direction: column; }
+        
+        .hud-wrapper {
+            width: 800px; max-width: 90vw; height: 85vh;
             background: rgba(5, 8, 15, 0.95);
             border: 2px solid var(--primary);
-            padding: 40px; position: relative; overflow-y: auto;
+            position: relative; 
             box-shadow: 0 0 50px rgba(0, 240, 255, 0.2), inset 0 0 30px rgba(0, 240, 255, 0.1);
+            display: flex; flex-direction: column;
         }
-        /* Góc viền UI Sci-Fi */
-        .hud-container::before, .hud-container::after { content: ''; position: absolute; width: 30px; height: 30px; border: 3px solid var(--primary); }
-        .hud-container::before { top: 0; left: 0; border-right: none; border-bottom: none; }
-        .hud-container::after { bottom: 0; right: 0; border-left: none; border-top: none; }
+        /* Góc viền UI Sci-Fi FIX CHẾT VÀO VỎ NGOÀI */
+        .hud-wrapper::before, .hud-wrapper::after { content: ''; position: absolute; width: 30px; height: 30px; border: 3px solid var(--primary); pointer-events: none; z-index: 2;}
+        .hud-wrapper::before { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+        .hud-wrapper::after { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+        
+        .hud-scrollable-content {
+            padding: 40px;
+            overflow-y: auto; /* Phần cuộn được chuyển vào bên trong lõi */
+            flex: 1;
+        }
         
         .hud-header { color: var(--danger); font-family: 'Orbitron'; font-weight: 900; font-size: 18px; margin-bottom: 20px; letter-spacing: 3px; animation: glitch-blink 1.5s infinite; text-shadow: 0 0 10px var(--danger);}
         .hud-target-name { font-family: 'Orbitron'; font-size: 45px; color: #fff; text-shadow: 0 0 20px var(--primary); margin-bottom: 30px; letter-spacing: 5px; text-transform: uppercase;}
         
         .hud-data-row { font-family: 'VT323', monospace; font-size: 20px; color: var(--primary); margin-bottom: 10px; opacity: 0; transform: translateX(-20px); transition: 0.5s;}
-        .hud-data-row b { color: #fff; }
+        .hud-data-row b { color: #fff; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: bold; letter-spacing: 1px;}
         
         .hud-comms-box { 
             margin-top: 30px; border-left: 4px solid var(--accent); padding-left: 20px; min-height: 120px;
@@ -128,7 +142,7 @@
     <div class="scanlines"></div>
 
     <header>
-        <div class="logo">THE CHOSEN ONE V8.0</div>
+        <div class="logo">THE CHOSEN ONE V8.1</div>
         <div class="session-tabs">
             <button id="t1" class="tab active" onclick="setSess(1)">BUỔI 1: CƠ BẢN</button>
             <button id="t2" class="tab" onclick="setSess(2)">BUỔI 2: NÂNG CAO</button>
@@ -175,30 +189,31 @@
         </div>
     </div>
 
-    <!-- MỚI: Modal HACKER HUD (Thay thế Lật Thẻ Bài) -->
+    <!-- MỚI: Modal HACKER HUD ĐÃ ĐƯỢC FIX LỖI VIỀN -->
     <div id="hackerModal" class="modal">
-        <div class="hud-container">
-            <div class="hud-header">>>> [ INCOMING TRANSMISSION ] _</div>
-            <div id="hudTargetName" class="hud-target-name">TÊN HỌC VIÊN</div>
-            
-            <div id="hudRow1" class="hud-data-row">CLASS_ID: <b id="hudClass">---</b></div>
-            <div id="hudRow2" class="hud-data-row">MISSION: <b id="hudMission">---</b></div>
-            <div id="hudRow3" class="hud-data-row">DIRECTIVE: <b id="hudDirective">---</b></div>
-            
-            <div class="hud-comms-box">
-                <div style="color: var(--accent); font-size: 12px; font-family: 'Orbitron'; margin-bottom: 10px; text-transform: uppercase;">// DECRYPTING INTERCEPTED COMMS...</div>
-                <span id="hudTypingText"></span><span id="hudCursor" class="hud-typing-cursor"></span>
-            </div>
+        <div class="hud-wrapper">
+            <div class="hud-scrollable-content">
+                <div class="hud-header">>>> [ ĐANG THU TÍN HIỆU TỪ CỬA HÀNG ] _</div>
+                <div id="hudTargetName" class="hud-target-name">TÊN HỌC VIÊN</div>
+                
+                <div id="hudRow1" class="hud-data-row">PHÂN_LOẠI: <b id="hudClass">---</b></div>
+                <div id="hudRow2" class="hud-data-row">TÌNH HUỐNG: <b id="hudMission">---</b></div>
+                <div id="hudRow3" class="hud-data-row">MỤC TIÊU: <b id="hudDirective">---</b></div>
+                
+                <div class="hud-comms-box">
+                    <div style="color: var(--accent); font-size: 12px; font-family: 'Orbitron'; margin-bottom: 10px; text-transform: uppercase;">// ĐANG GIẢI MÃ LỜI KHÁCH HÀNG...</div>
+                    <span id="hudTypingText"></span><span id="hudCursor" class="hud-typing-cursor"></span>
+                </div>
 
-            <!-- Nút ẩn chứa đáp án, hiện ra sau khi gõ chữ xong -->
-            <div id="hudActionArea" style="opacity: 0; transition: 1s; margin-top: 30px; border-top: 1px solid rgba(0,240,255,0.2); padding-top: 20px;">
-                <button class="trainer-toggle" onclick="toggleTrainerNotes('hudTrainerAnswer')">
-                    <span>⚠️ SYSTEM OVERRIDE: XEM ĐÁP ÁN</span>
-                    <span>▼</span>
-                </button>
-                <div id="hudTrainerAnswer" class="trainer-notes"></div>
-                <div style="text-align: right; margin-top: 20px;">
-                    <button class="btn btn-primary" style="padding: 15px 40px; font-size: 14px;" onclick="closeHackerModal()">TIẾP NHẬN NHIỆM VỤ</button>
+                <div id="hudActionArea" style="opacity: 0; transition: 1s; margin-top: 30px; border-top: 1px solid rgba(0,240,255,0.2); padding-top: 20px;">
+                    <button class="trainer-toggle" onclick="toggleTrainerNotes('hudTrainerAnswer')">
+                        <span>⚠️ MỞ KHÓA BẢO MẬT: XEM GỢI Ý</span>
+                        <span>▼</span>
+                    </button>
+                    <div id="hudTrainerAnswer" class="trainer-notes"></div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button class="btn btn-primary" style="padding: 15px 40px; font-size: 14px;" onclick="closeHackerModal()">TIẾP NHẬN NHIỆM VỤ</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -227,7 +242,7 @@
     <script>
         let scripts = { buoi1: [], buoi2: [] };
         let state = { sess: 1, ptr: 0, names: [], logs: [], curW: "", curT: null, spinning: false };
-        let typingTimeout; // Biến lưu timeout để reset khi cần
+        let typingTimeout; 
 
         window.onload = () => {
             const savedNames = localStorage.getItem('bk_names_v75_problem');
@@ -304,19 +319,20 @@
 
             let winnerEl = document.getElementById('winner');
             let iterations = 0;
-            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
             
+            // ĐÃ FIX: Chạy chớp nháy tên thật từ danh sách
             let glitchInterval = setInterval(() => {
                 if(mode !== 'script') {
-                    let randomName = state.names[Math.floor(Math.random()*state.names.length)];
-                    winnerEl.innerText = randomName.split('').map(() => chars[Math.floor(Math.random()*chars.length)]).join('');
+                    // Random 1 tên thật từ danh sách state.names
+                    let randomName = state.names[Math.floor(Math.random() * state.names.length)];
+                    winnerEl.innerText = randomName;
                 } else {
-                    winnerEl.innerText = "UPDATING...".split('').map(() => chars[Math.floor(Math.random()*chars.length)]).join('');
+                    winnerEl.innerText = "ĐANG TẢI DỮ LIỆU...";
                 }
                 
                 winnerEl.style.textShadow = `${Math.random()*6-3}px ${Math.random()*6-3}px 0px var(--primary), ${Math.random()*6-3}px ${Math.random()*6-3}px 0px var(--secondary)`;
 
-                if(++iterations > 20) { 
+                if(++iterations > 25) { 
                     clearInterval(glitchInterval); 
                     winnerEl.style.textShadow = '0 0 20px var(--primary)';
                     finalize(mode, currentDataset); 
@@ -342,6 +358,7 @@
             const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
             let finalStr = state.curW || "READY?";
             
+            // Hiệu ứng dịch mã tốc độ cao lúc chốt
             let decodeI = 0;
             let decodeInterval = setInterval(() => {
                 winnerEl.innerText = finalStr.split('').map((char, index) => {
@@ -350,7 +367,7 @@
                     return chars[Math.floor(Math.random() * chars.length)];
                 }).join('');
                 
-                decodeI += 0.4;
+                decodeI += 0.5;
                 if(decodeI >= finalStr.length) {
                     clearInterval(decodeInterval);
                     winnerEl.innerText = finalStr;
@@ -361,10 +378,7 @@
 
         function triggerPostFinalize(mode) {
             if (mode === 'full' || mode === 'script') {
-                // Gọi Màn Hình Hacker HUD
                 openHackerModal(state.curT);
-                
-                // Vẫn render nội dung ra màn hình scBox để lát tắt Modal là có sẵn
                 renderScript(state.curT, 'scBox');
             } else {
                 confetti({ particleCount:150, spread:80, origin: { y: 0.6 }, colors: ['#00f0ff', '#ff003c', '#fcee09'] });
@@ -377,10 +391,8 @@
             state.spinning = false;
         }
 
-        // --- CÁC HÀM XỬ LÝ MÀN HÌNH HACKER HUD ---
         function openHackerModal(obj) {
             if(!obj) return;
-            // Reset các hiệu ứng
             document.getElementById('hudRow1').classList.remove('show-element');
             document.getElementById('hudRow2').classList.remove('show-element');
             document.getElementById('hudRow3').classList.remove('show-element');
@@ -390,24 +402,20 @@
             
             clearTimeout(typingTimeout);
             
-            // Đổ Data
             document.getElementById('hudTargetName').innerText = state.curW;
-            document.getElementById('hudClass').innerText = `${obj.Roadmap || 'UNKNOWN'} - ${obj.Type || 'UNKNOWN'}`;
-            document.getElementById('hudMission').innerText = obj.Title || 'CLASSIFIED';
-            document.getElementById('hudDirective').innerText = obj.Goal || 'CLASSIFIED';
-            document.getElementById('hudTrainerAnswer').innerHTML = `<b>💡 GỢI Ý GIẢI QUYẾT:</b><br>${obj.Answer}`;
+            document.getElementById('hudClass').innerText = `${obj.Roadmap || 'TRỐNG'} - ${obj.Type || 'TRỐNG'}`;
+            document.getElementById('hudMission').innerText = obj.Title || 'BẢO MẬT';
+            document.getElementById('hudDirective').innerText = obj.Goal || 'BẢO MẬT';
+            document.getElementById('hudTrainerAnswer').innerHTML = `<b>💡 GỢI Ý TỪ HỆ THỐNG:</b><br>${obj.Answer}`;
             
             document.getElementById('hackerModal').style.display = 'flex';
             
-            // Bắn pháo hoa lúc HUD hiện lên
             confetti({ particleCount: 150, spread: 100, origin: { y: 0.3 }, zIndex: 10001, colors: ['#00f0ff', '#ff003c'] });
 
-            // Hiệu ứng Fade in từng dòng
             setTimeout(() => document.getElementById('hudRow1').classList.add('show-element'), 500);
             setTimeout(() => document.getElementById('hudRow2').classList.add('show-element'), 1000);
             setTimeout(() => document.getElementById('hudRow3').classList.add('show-element'), 1500);
 
-            // Hiệu ứng Gõ chữ (Typing) cho Lời khách hàng
             document.getElementById('hudTypingText').innerText = '';
             let textToType = `"${obj.Question}"`;
             let i = 0;
@@ -416,14 +424,14 @@
                 if (i < textToType.length) {
                     document.getElementById('hudTypingText').innerHTML += textToType.charAt(i);
                     i++;
-                    typingTimeout = setTimeout(typeWriter, 15); // Tốc độ gõ 15ms/ký tự
+                    typingTimeout = setTimeout(typeWriter, 15);
                 } else {
-                    document.getElementById('hudCursor').style.display = 'none'; // Tắt con trỏ
-                    document.getElementById('hudActionArea').style.opacity = '1'; // Hiện nút
+                    document.getElementById('hudCursor').style.display = 'none'; 
+                    document.getElementById('hudActionArea').style.opacity = '1'; 
                 }
             }
             
-            setTimeout(typeWriter, 2000); // Đợi 3 dòng kia fade in xong mới bắt đầu gõ
+            setTimeout(typeWriter, 2000); 
         }
 
         function closeHackerModal() {
@@ -436,7 +444,6 @@
             if(el) { el.style.display = (el.style.display === "none" || el.style.display === "") ? "block" : "none"; }
         }
 
-        // Render bản chuẩn ra Màn hình chính (Cột 3)
         function renderScript(obj, containerId) {
             if(!obj) return;
             let uniqueId = `tnote_${Math.floor(Math.random()*10000)}_${containerId}`;
@@ -454,12 +461,12 @@
                 </div>
 
                 <button class="trainer-toggle" onclick="toggleTrainerNotes('${uniqueId}')">
-                    <span>👁️ ĐÁP ÁN (GÓC TRAINER)</span>
+                    <span>⚠️ MỞ KHÓA BẢO MẬT: XEM GỢI Ý</span>
                     <span>▼</span>
                 </button>
                 
                 <div id="${uniqueId}" class="trainer-notes">
-                    <b>💡 GỢI Ý GIẢI QUYẾT:</b><br>
+                    <b>💡 GỢI Ý TỪ HỆ THỐNG:</b><br>
                     ${obj.Answer}
                 </div>
             `;
