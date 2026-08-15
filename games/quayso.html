@@ -2,25 +2,17 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>THE CHOSEN ONE V8.1 - HACKER HUD (VIETSUB)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800;italic&family=VT323&display=swap" rel="stylesheet">
+    <title>THE CHOSEN ONE V8.2 - ULTIMATE HUD</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800;italic&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
-            --primary: #00f0ff;    /* Cyber Cyan */
-            --secondary: #ff003c;  /* Cyber Magenta */
-            --accent: #fcee09;     /* Cyber Yellow */
-            --bg: #050508; 
-            --panel: rgba(10, 15, 25, 0.75); 
-            --border: rgba(0, 240, 255, 0.3);
-            --danger: #ff003c; 
-            --glass: rgba(0, 240, 255, 0.05);
-            --warning: #fcee09; 
-            --purple: #b500ff;
+            --primary: #00f0ff; --secondary: #ff003c; --accent: #fcee09;
+            --bg: #050508; --panel: rgba(10, 15, 25, 0.75); --border: rgba(0, 240, 255, 0.3);
+            --danger: #ff003c; --glass: rgba(0, 240, 255, 0.05); --warning: #fcee09; --purple: #b500ff;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        /* TÙY CHỈNH THANH CUỘN (SCROLLBAR NEON) */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.5); border-radius: 4px; box-shadow: 0 0 10px rgba(0, 240, 255, 0.3); }
@@ -34,11 +26,7 @@
         }
         @keyframes panBg { 0% { background-position: 0 0; } 100% { background-position: 40px 40px; } }
 
-        .scanlines {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
-            background-size: 100% 4px; z-index: 9998; pointer-events: none; opacity: 0.6;
-        }
+        .scanlines { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2)); background-size: 100% 4px; z-index: 9998; pointer-events: none; opacity: 0.6; }
 
         header { padding: 15px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(5, 5, 8, 0.9); box-shadow: 0 5px 20px rgba(0, 240, 255, 0.1); }
         .logo { font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 0 10px var(--primary), 2px 2px 0px var(--secondary); letter-spacing: 2px;}
@@ -47,27 +35,17 @@
         .tab.active { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
         .main-grid { display: grid; grid-template-columns: 320px 1fr 450px; gap: 20px; padding: 20px; flex: 1; overflow: hidden; position: relative; z-index: 1;}
         
-        .panel { 
-            background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 25px; display: flex; flex-direction: column; overflow: hidden; 
-            backdrop-filter: blur(10px); box-shadow: 0 0 15px rgba(0, 240, 255, 0.05), inset 0 0 20px rgba(0, 240, 255, 0.05);
-        }
-        
-        textarea { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 8px; color: var(--accent); padding: 15px; font-size: 14px; outline: none; margin-bottom: 15px; font-family: monospace; transition: 0.3s; }
+        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 25px; display: flex; flex-direction: column; overflow: hidden; backdrop-filter: blur(10px); box-shadow: 0 0 15px rgba(0, 240, 255, 0.05), inset 0 0 20px rgba(0, 240, 255, 0.05); }
+        textarea { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 8px; color: var(--accent); padding: 15px; font-size: 14px; outline: none; margin-bottom: 15px; font-family: 'Inter', sans-serif; transition: 0.3s; }
         textarea:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(0, 240, 255, 0.3); }
 
         .winner-display { font-family: 'Orbitron', sans-serif; font-size: 42px; font-weight: 900; text-align: center; margin-bottom: 20px; min-height: 60px; color: #fff; text-shadow: 0 0 20px var(--primary); letter-spacing: 3px; word-break: break-word; }
-        
-        .spin-btn { 
-            width: 170px; height: 170px; border-radius: 50%; border: 4px solid var(--primary); 
-            background: radial-gradient(circle at center, rgba(0,240,255,0.1) 0%, rgba(0,0,0,0.8) 100%); 
-            color: var(--primary); font-family: 'Orbitron'; font-size: 18px; font-weight: 900; cursor: pointer; align-self: center; transition: 0.3s; 
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4), inset 0 0 20px rgba(0, 240, 255, 0.2); text-transform: uppercase; letter-spacing: 2px;
-        }
+        .spin-btn { width: 170px; height: 170px; border-radius: 50%; border: 4px solid var(--primary); background: radial-gradient(circle at center, rgba(0,240,255,0.1) 0%, rgba(0,0,0,0.8) 100%); color: var(--primary); font-family: 'Orbitron'; font-size: 18px; font-weight: 900; cursor: pointer; align-self: center; transition: 0.3s; box-shadow: 0 0 20px rgba(0, 240, 255, 0.4), inset 0 0 20px rgba(0, 240, 255, 0.2); text-transform: uppercase; letter-spacing: 2px; }
         .spin-btn:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(0, 240, 255, 0.7), inset 0 0 40px rgba(0, 240, 255, 0.5); background: rgba(0, 240, 255, 0.15); text-shadow: 0 0 10px var(--primary); }
         .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: scale(1); box-shadow: none; filter: grayscale(1); }
         
         #actionArea { margin-top: 15px; display: none; width: 100%; max-width: 400px; align-self: center;}
-        .comment-box { width: 100%; height: 80px; background: rgba(0,0,0,0.5); border: 1px solid var(--primary); border-radius: 8px; color: #fff; padding: 15px; font-size: 14px; margin-bottom: 10px; outline: none; resize: none; font-family: 'Inter'; }
+        .comment-box { width: 100%; height: 80px; background: rgba(0,0,0,0.5); border: 1px solid var(--primary); border-radius: 8px; color: #fff; padding: 15px; font-size: 14px; margin-bottom: 10px; outline: none; resize: none; font-family: 'Inter', sans-serif; }
         
         .sc-card { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 20px; flex: 1; overflow-y: auto; border: 1px solid rgba(0, 240, 255, 0.2); position: relative; }
         .sc-tag { display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: 900; font-size: 10px; margin-right: 8px; margin-bottom: 8px; vertical-align: middle; text-transform: uppercase; letter-spacing: 1px;}
@@ -76,58 +54,61 @@
         .sc-biz { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 10px; line-height: 1.4; text-shadow: 0 0 5px rgba(255,255,255,0.3); }
         .sc-goal { font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 15px; border-bottom: 1px dashed var(--border); padding-bottom: 12px; line-height: 1.5; }
         
-        .sc-customer-voice { background: linear-gradient(90deg, rgba(0, 240, 255, 0.1) 0%, transparent 100%); border-left: 4px solid var(--primary); padding: 15px; font-size: 14px; color: #e2e8f0; margin-bottom: 15px; line-height: 1.6; font-style: italic; }
-        .sc-customer-voice b { color: var(--primary); font-style: normal; display: block; margin-bottom: 5px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;}
-        
-        .trainer-toggle { background: rgba(252, 238, 9, 0.1); border: 1px solid var(--warning); color: var(--warning); padding: 10px 15px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; width: 100%; text-align: left; margin-top: 10px; transition: 0.3s; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 1px;}
-        .trainer-toggle:hover { background: rgba(252, 238, 9, 0.2); box-shadow: 0 0 10px rgba(252, 238, 9, 0.3); }
-        .trainer-notes { display: none; background: rgba(0,0,0,0.8); border: 1px solid var(--warning); padding: 15px; border-radius: 6px; margin-top: 10px; font-size: 14px; line-height: 1.6; color: #dcdde1; white-space: pre-line; box-shadow: inset 0 0 15px rgba(252, 238, 9, 0.1);}
-        .trainer-notes b { color: var(--warning); font-size: 12px; text-transform: uppercase;}
+        /* Thay thế toàn bộ HTML cũ bằng class tự động */
+        .formatted-list { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.6; color: #e2e8f0; }
+        .formatted-list .bullet { margin-bottom: 10px; padding-left: 15px; border-left: 2px solid var(--primary); position: relative;}
+        .formatted-list .bullet.hint { border-left-color: var(--accent); }
+        .highlight-word { color: var(--primary); font-weight: bold; background: rgba(0, 240, 255, 0.1); padding: 0 4px; border-radius: 4px;}
+        .highlight-word.hint-word { color: var(--accent); background: rgba(252, 238, 9, 0.1); }
 
         .history-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; border-radius: 6px; margin-bottom: 5px; transition: 0.2s;}
         .history-item:hover { background: rgba(0, 240, 255, 0.1); border-color: var(--primary); padding-left: 15px;}
         
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-content { background: var(--bg); width: 550px; max-height: 85vh; border-radius: 12px; border: 1px solid var(--primary); padding: 30px; position: relative; overflow-y: auto; box-shadow: 0 0 30px rgba(0,240,255,0.2); }
         
-        /* ---------------- MỚI: HACKER HUD STYLES ĐÃ FIX GÓC & THANH CUỘN ---------------- */
+        /* ---------------- MỚI: HACKER HUD (ĐÃ SỬA FONT VÀ TỐI ƯU UX) ---------------- */
         #hackerModal { z-index: 10000; flex-direction: column; }
-        
-        .hud-wrapper {
-            width: 800px; max-width: 90vw; height: 85vh;
-            background: rgba(5, 8, 15, 0.95);
-            border: 2px solid var(--primary);
-            position: relative; 
-            box-shadow: 0 0 50px rgba(0, 240, 255, 0.2), inset 0 0 30px rgba(0, 240, 255, 0.1);
-            display: flex; flex-direction: column;
-        }
-        /* Góc viền UI Sci-Fi FIX CHẾT VÀO VỎ NGOÀI */
+        .hud-wrapper { width: 850px; max-width: 95vw; height: 85vh; background: rgba(5, 8, 15, 0.95); border: 2px solid var(--primary); position: relative; box-shadow: 0 0 50px rgba(0, 240, 255, 0.2), inset 0 0 30px rgba(0, 240, 255, 0.1); display: flex; flex-direction: column; }
         .hud-wrapper::before, .hud-wrapper::after { content: ''; position: absolute; width: 30px; height: 30px; border: 3px solid var(--primary); pointer-events: none; z-index: 2;}
         .hud-wrapper::before { top: -2px; left: -2px; border-right: none; border-bottom: none; }
         .hud-wrapper::after { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+        .hud-scrollable-content { padding: 40px; overflow-y: auto; flex: 1; }
         
-        .hud-scrollable-content {
-            padding: 40px;
-            overflow-y: auto; /* Phần cuộn được chuyển vào bên trong lõi */
-            flex: 1;
-        }
+        .hud-header { color: var(--danger); font-family: 'Orbitron'; font-weight: 900; font-size: 16px; margin-bottom: 20px; letter-spacing: 2px; animation: glitch-blink 2s infinite; text-shadow: 0 0 10px var(--danger);}
+        .hud-target-name { font-family: 'Orbitron'; font-size: 40px; color: #fff; text-shadow: 0 0 20px var(--primary); margin-bottom: 30px; letter-spacing: 4px; text-transform: uppercase;}
         
-        .hud-header { color: var(--danger); font-family: 'Orbitron'; font-weight: 900; font-size: 18px; margin-bottom: 20px; letter-spacing: 3px; animation: glitch-blink 1.5s infinite; text-shadow: 0 0 10px var(--danger);}
-        .hud-target-name { font-family: 'Orbitron'; font-size: 45px; color: #fff; text-shadow: 0 0 20px var(--primary); margin-bottom: 30px; letter-spacing: 5px; text-transform: uppercase;}
+        /* Font chữ dòng data đã đổi sang Inter cho dễ đọc */
+        .hud-data-row { font-family: 'Inter', sans-serif; font-size: 15px; color: var(--primary); margin-bottom: 12px; opacity: 0; transform: translateX(-20px); transition: 0.5s; font-weight: 600;}
+        .hud-data-row b { color: #fff; font-weight: normal; margin-left: 10px;}
         
-        .hud-data-row { font-family: 'VT323', monospace; font-size: 20px; color: var(--primary); margin-bottom: 10px; opacity: 0; transform: translateX(-20px); transition: 0.5s;}
-        .hud-data-row b { color: #fff; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: bold; letter-spacing: 1px;}
+        .hud-comms-box { margin-top: 30px; padding: 20px; background: rgba(0, 240, 255, 0.03); border: 1px solid rgba(0, 240, 255, 0.1); border-radius: 8px;}
         
-        .hud-comms-box { 
-            margin-top: 30px; border-left: 4px solid var(--accent); padding-left: 20px; min-height: 120px;
-            font-family: 'Inter', sans-serif; font-size: 15px; color: #e2e8f0; line-height: 1.8; font-style: italic;
-        }
-        .hud-typing-cursor { border-right: 10px solid var(--accent); animation: blink-caret 0.8s step-end infinite; }
-        
-        @keyframes glitch-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } 80% { opacity: 1; transform: translateX(2px); } 85% { transform: translateX(-2px); } }
-        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--accent); } }
+        @keyframes glitch-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .show-element { opacity: 1 !important; transform: translateX(0) !important; }
-        /* -------------------------------------------------------- */
+
+        /* ---------------- BÓNG ĐÈN GỢI Ý (MỚI) ---------------- */
+        .lightbulb-btn {
+            position: absolute; top: 30px; right: 30px; font-size: 28px; cursor: pointer; z-index: 10;
+            background: rgba(252, 238, 9, 0.1); border: 1px solid var(--warning); border-radius: 50%;
+            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 15px rgba(252, 238, 9, 0.4); animation: pulse-bulb 2s infinite; transition: 0.3s;
+            opacity: 0; /* Ẩn lúc đầu, hiện sau khi render xong */ pointer-events: none;
+        }
+        .lightbulb-btn:hover { background: rgba(252, 238, 9, 0.3); transform: scale(1.1); box-shadow: 0 0 25px rgba(252, 238, 9, 0.8); }
+        @keyframes pulse-bulb { 0% { box-shadow: 0 0 10px rgba(252, 238, 9, 0.2); } 50% { box-shadow: 0 0 25px rgba(252, 238, 9, 0.8); text-shadow: 0 0 10px #fff; } 100% { box-shadow: 0 0 10px rgba(252, 238, 9, 0.2); } }
+        
+        /* Tooltip chữ "Gợi ý" */
+        .lightbulb-btn::after {
+            content: "XEM GỢI Ý"; position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%);
+            background: #000; border: 1px solid var(--warning); color: var(--warning); padding: 4px 8px;
+            border-radius: 4px; font-size: 11px; font-family: 'Inter', sans-serif; font-weight: bold;
+            white-space: nowrap; opacity: 0; transition: 0.3s; pointer-events: none;
+        }
+        .lightbulb-btn:hover::after { opacity: 1; bottom: -35px; }
+
+        #hintModal { z-index: 10001; }
+        .hint-modal-content { background: #111; width: 600px; border: 2px solid var(--warning); border-radius: 12px; padding: 30px; box-shadow: 0 0 40px rgba(252, 238, 9, 0.3); position: relative;}
 
         .btn-group { display: flex; gap: 10px; }
         .btn { padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border); background: rgba(0,0,0,0.5); color: #fff; cursor: pointer; font-size: 11px; font-weight: 700; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px; }
@@ -135,14 +116,13 @@
         .btn-primary { background: var(--primary); color: #000; border: none; font-weight: 900; box-shadow: 0 0 10px rgba(0,240,255,0.5); }
         .btn-primary:hover { box-shadow: 0 0 20px var(--primary), inset 0 0 10px #fff; background: #fff; color: #000; }
         .btn-accent { border-color: var(--accent); color: var(--accent); }
-        .btn-accent:hover { box-shadow: 0 0 10px var(--accent); background: rgba(252, 238, 9, 0.1); }
     </style>
 </head>
 <body>
     <div class="scanlines"></div>
 
     <header>
-        <div class="logo">THE CHOSEN ONE V8.1</div>
+        <div class="logo">THE CHOSEN ONE V8.2</div>
         <div class="session-tabs">
             <button id="t1" class="tab active" onclick="setSess(1)">BUỔI 1: CƠ BẢN</button>
             <button id="t2" class="tab" onclick="setSess(2)">BUỔI 2: NÂNG CAO</button>
@@ -189,66 +169,51 @@
         </div>
     </div>
 
-    <!-- MỚI: Modal HACKER HUD ĐÃ ĐƯỢC FIX LỖI VIỀN -->
+    <!-- HACKER HUD MỚI NHẤT -->
     <div id="hackerModal" class="modal">
         <div class="hud-wrapper">
+            <!-- NÚT BÓNG ĐÈN Ở GÓC -->
+            <div id="hudLightbulb" class="lightbulb-btn" onclick="openHintModal()">💡</div>
+
             <div class="hud-scrollable-content">
                 <div class="hud-header">>>> [ ĐANG THU TÍN HIỆU TỪ CỬA HÀNG ] _</div>
                 <div id="hudTargetName" class="hud-target-name">TÊN HỌC VIÊN</div>
                 
-                <div id="hudRow1" class="hud-data-row">PHÂN_LOẠI: <b id="hudClass">---</b></div>
-                <div id="hudRow2" class="hud-data-row">TÌNH HUỐNG: <b id="hudMission">---</b></div>
-                <div id="hudRow3" class="hud-data-row">MỤC TIÊU: <b id="hudDirective">---</b></div>
+                <div id="hudRow1" class="hud-data-row">PHÂN_LOẠI:<b id="hudClass">---</b></div>
+                <div id="hudRow2" class="hud-data-row">TÌNH HUỐNG:<b id="hudMission">---</b></div>
+                <div id="hudRow3" class="hud-data-row">MỤC TIÊU:<b id="hudDirective">---</b></div>
                 
                 <div class="hud-comms-box">
-                    <div style="color: var(--accent); font-size: 12px; font-family: 'Orbitron'; margin-bottom: 10px; text-transform: uppercase;">// ĐANG GIẢI MÃ LỜI KHÁCH HÀNG...</div>
-                    <span id="hudTypingText"></span><span id="hudCursor" class="hud-typing-cursor"></span>
+                    <div style="color: var(--primary); font-size: 11px; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">// DỮ LIỆU ĐÃ ĐƯỢC PHÂN TÁCH:</div>
+                    <!-- Nội dung đoạn văn đã format sẽ render vào đây -->
+                    <div id="hudFormattedText" class="formatted-list"></div>
                 </div>
 
-                <div id="hudActionArea" style="opacity: 0; transition: 1s; margin-top: 30px; border-top: 1px solid rgba(0,240,255,0.2); padding-top: 20px;">
-                    <button class="trainer-toggle" onclick="toggleTrainerNotes('hudTrainerAnswer')">
-                        <span>⚠️ MỞ KHÓA BẢO MẬT: XEM GỢI Ý</span>
-                        <span>▼</span>
-                    </button>
-                    <div id="hudTrainerAnswer" class="trainer-notes"></div>
-                    <div style="text-align: right; margin-top: 20px;">
-                        <button class="btn btn-primary" style="padding: 15px 40px; font-size: 14px;" onclick="closeHackerModal()">TIẾP NHẬN NHIỆM VỤ</button>
-                    </div>
+                <div id="hudActionArea" style="opacity: 0; transition: 1s; margin-top: 30px; text-align: right;">
+                    <button class="btn btn-primary" style="padding: 15px 40px; font-size: 14px;" onclick="closeHackerModal()">TIẾP NHẬN NHIỆM VỤ</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modals API & History -->
-    <div id="apiModal" class="modal">
-        <div class="modal-content" style="width: 600px;">
-            <h2 style="margin-bottom: 15px; color: var(--primary); font-family: 'Orbitron';">⚙️ CÀI ĐẶT API GOOGLE SHEETS</h2>
-            <p style="font-size:12px; color:#64748b; margin-bottom:15px">Dán link Web App URL Google Apps Script của bạn vào đây.</p>
-            <input type="text" id="apiUrlInput" style="width: 100%; background: rgba(0,0,0,0.8); border: 1px solid var(--border); border-radius: 6px; color: #fff; padding: 12px; font-size: 14px; outline: none; margin-bottom: 20px; font-family: monospace;" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
-            <div class="btn-group" style="justify-content: flex-end;">
-                <button class="btn" onclick="toggleApiModal()">HỦY</button>
-                <button class="btn btn-primary" onclick="saveApiUrl()">LƯU VÀ ĐỒNG BỘ</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="historyModal" class="modal">
-        <div class="modal-content">
-            <span style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:24px; color: var(--primary);" onclick="closeModal()">×</span>
-            <div id="modalBody"></div>
+    <!-- POPUP XEM GỢI Ý BÊN TRÊN HUD -->
+    <div id="hintModal" class="modal">
+        <div class="hint-modal-content">
+            <span style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:24px; color: var(--warning);" onclick="closeHintModal()">×</span>
+            <h2 style="color:var(--warning); font-family:'Orbitron'; font-size: 18px; margin-bottom: 20px;">⚠️ HỆ THỐNG GỢI Ý</h2>
+            <div id="hintFormattedText" class="formatted-list"></div>
         </div>
     </div>
 
     <script>
         let scripts = { buoi1: [], buoi2: [] };
         let state = { sess: 1, ptr: 0, names: [], logs: [], curW: "", curT: null, spinning: false };
-        let typingTimeout; 
+        let decodeBlocksTimeout; 
 
         window.onload = () => {
             const savedNames = localStorage.getItem('bk_names_v75_problem');
             if(savedNames) { document.getElementById('names').value = savedNames; updateCount(); }
             if(localStorage.getItem('kv_api_url')) { fetchDataFromSheet(); } 
-            else { document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:var(--warning); margin-top:50px">Vui lòng CÀI ĐẶT API để lấy dữ liệu.</div>'; }
         };
 
         function updateCount() {
@@ -257,7 +222,6 @@
             document.getElementById('c').innerText = n.length;
             state.names = n;
         }
-
         setInterval(updateCount, 1000);
 
         function toggleApiModal() {
@@ -274,14 +238,11 @@
 
         async function fetchDataFromSheet() {
             let apiUrl = localStorage.getItem('kv_api_url');
-            if (!apiUrl) { alert("Chưa cấu hình API URL!"); return; }
-            
-            document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:var(--primary); margin-top:50px; animation: pulse 1s infinite">Đang kết nối Google Sheets... ⏳</div>';
-            
+            if (!apiUrl) return;
+            document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:var(--primary); margin-top:50px;">Đang kết nối Google Sheets... ⏳</div>';
             try {
                 let res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "GET_DATA" }) });
                 let result = await res.json();
-                
                 if (result.status === 'success') {
                     scripts.buoi1 = []; scripts.buoi2 = [];
                     result.data.forEach(item => {
@@ -290,11 +251,8 @@
                     });
                     document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:#00ff88; margin-top:50px">✅ Dữ liệu đã đồng bộ sẵn sàng!</div>';
                     state.ptr = 0;
-                } else { alert("Lỗi từ Sheet: " + result.message); }
-            } catch (e) {
-                document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:var(--danger); margin-top:50px">❌ Lỗi kết nối API! Vui lòng thử lại.</div>';
-                console.error(e);
-            }
+                }
+            } catch (e) { console.error(e); }
         }
 
         function setSess(n) {
@@ -303,13 +261,34 @@
             document.getElementById('t2').className = n==2?'tab active':'tab';
         }
 
+        // ---------- HÀM AUTO FORMAT TEXT (TÁCH CÂU & BÔI ĐẬM) ---------- //
+        function formatSmartText(text, isHint = false) {
+            if(!text) return "";
+            
+            // 1. Tìm các từ khóa chuyên ngành để Highlight
+            const keywords = /(KiotViet|phần mềm|tồn kho|chuyển khoản|tiền mặt|sổ sách|thất thoát|hóa đơn|mã vạch|offline|online|đồng bộ|trả hàng|công nợ|nhà cung cấp|đại lý|thu ngân|nhân viên)/gi;
+            
+            // 2. Tách đoạn văn thành từng câu (dựa vào dấu chấm hoặc hỏi chấm)
+            // Lọc bỏ khoảng trắng thừa để không tạo ra các bullet rỗng
+            let sentences = text.split(/(?<=[.?!])\s+/).filter(s => s.trim().length > 0);
+            
+            // 3. Render HTML
+            let hlClass = isHint ? "highlight-word hint-word" : "highlight-word";
+            let bulletClass = isHint ? "bullet hint" : "bullet";
+
+            return sentences.map(sentence => {
+                let formatted = sentence.replace(keywords, `<span class="${hlClass}">$1</span>`);
+                // Bôi đậm luôn các con số cho dễ nhìn
+                formatted = formatted.replace(/\b(\d+[kKmM]?|\d{1,3}([,.]\d{3})*)\b/g, `<b style="color: #fff">$1</b>`);
+                return `<div class="${bulletClass}" style="opacity:0; transform: translateY(10px); transition: 0.5s;">${formatted}</div>`;
+            });
+        }
+        // ------------------------------------------------------------- //
+
         function start(mode) {
             if(state.names.length===0 && mode !== 'script') return alert("Nhập danh sách học viên!");
-            
             let currentDataset = state.sess == 1 ? scripts.buoi1 : scripts.buoi2;
-            if(currentDataset.length === 0 && (mode === 'full' || mode === 'script')) {
-                return alert("Chưa có dữ liệu kịch bản cho Buổi " + state.sess + "! Hãy kiểm tra Google Sheet.");
-            }
+            if(currentDataset.length === 0 && (mode === 'full' || mode === 'script')) return alert("Chưa có dữ liệu!");
 
             state.spinning = true;
             document.getElementById('cmt').value = "";
@@ -320,18 +299,11 @@
             let winnerEl = document.getElementById('winner');
             let iterations = 0;
             
-            // ĐÃ FIX: Chạy chớp nháy tên thật từ danh sách
             let glitchInterval = setInterval(() => {
-                if(mode !== 'script') {
-                    // Random 1 tên thật từ danh sách state.names
-                    let randomName = state.names[Math.floor(Math.random() * state.names.length)];
-                    winnerEl.innerText = randomName;
-                } else {
-                    winnerEl.innerText = "ĐANG TẢI DỮ LIỆU...";
-                }
+                if(mode !== 'script') winnerEl.innerText = state.names[Math.floor(Math.random() * state.names.length)];
+                else winnerEl.innerText = "ĐANG TẢI DỮ LIỆU...";
                 
-                winnerEl.style.textShadow = `${Math.random()*6-3}px ${Math.random()*6-3}px 0px var(--primary), ${Math.random()*6-3}px ${Math.random()*6-3}px 0px var(--secondary)`;
-
+                winnerEl.style.textShadow = `${Math.random()*6-3}px ${Math.random()*6-3}px 0px var(--primary)`;
                 if(++iterations > 25) { 
                     clearInterval(glitchInterval); 
                     winnerEl.style.textShadow = '0 0 20px var(--primary)';
@@ -348,42 +320,23 @@
                 document.getElementById('names').value = state.names.join('\n');
                 document.getElementById('c').innerText = state.names.length;
             }
-
             if(mode === 'full' || mode === 'script') {
                 state.curT = currentDataset[state.ptr];
                 state.ptr = (state.ptr + 1) % currentDataset.length;
             }
 
             let winnerEl = document.getElementById('winner');
-            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            let finalStr = state.curW || "READY?";
-            
-            // Hiệu ứng dịch mã tốc độ cao lúc chốt
-            let decodeI = 0;
-            let decodeInterval = setInterval(() => {
-                winnerEl.innerText = finalStr.split('').map((char, index) => {
-                    if(index < Math.floor(decodeI)) return char;
-                    if(char === ' ') return ' ';
-                    return chars[Math.floor(Math.random() * chars.length)];
-                }).join('');
-                
-                decodeI += 0.5;
-                if(decodeI >= finalStr.length) {
-                    clearInterval(decodeInterval);
-                    winnerEl.innerText = finalStr;
-                    triggerPostFinalize(mode); 
-                }
-            }, 30);
+            winnerEl.innerText = state.curW || "READY?";
+            triggerPostFinalize(mode);
         }
 
         function triggerPostFinalize(mode) {
             if (mode === 'full' || mode === 'script') {
                 openHackerModal(state.curT);
-                renderScript(state.curT, 'scBox');
+                renderMainScreenCard(state.curT); // Render bản thu gọn ra màn hình ngoài
             } else {
                 confetti({ particleCount:150, spread:80, origin: { y: 0.6 }, colors: ['#00f0ff', '#ff003c', '#fcee09'] });
             }
-            
             document.getElementById('spin').disabled = false;
             document.getElementById('actionArea').style.display = 'flex';
             document.getElementById('actionArea').style.flexDirection = 'column';
@@ -397,56 +350,77 @@
             document.getElementById('hudRow2').classList.remove('show-element');
             document.getElementById('hudRow3').classList.remove('show-element');
             document.getElementById('hudActionArea').style.opacity = '0';
-            document.getElementById('hudTrainerAnswer').style.display = 'none';
-            document.getElementById('hudCursor').style.display = 'inline-block';
             
-            clearTimeout(typingTimeout);
+            // Ẩn bóng đèn lúc mới tải
+            let bulb = document.getElementById('hudLightbulb');
+            bulb.style.opacity = '0';
+            bulb.style.pointerEvents = 'none';
+            
+            clearTimeout(decodeBlocksTimeout);
             
             document.getElementById('hudTargetName').innerText = state.curW;
             document.getElementById('hudClass').innerText = `${obj.Roadmap || 'TRỐNG'} - ${obj.Type || 'TRỐNG'}`;
             document.getElementById('hudMission').innerText = obj.Title || 'BẢO MẬT';
             document.getElementById('hudDirective').innerText = obj.Goal || 'BẢO MẬT';
-            document.getElementById('hudTrainerAnswer').innerHTML = `<b>💡 GỢI Ý TỪ HỆ THỐNG:</b><br>${obj.Answer}`;
+            
+            // Xử lý Render HTML mảng các câu
+            let sentencesArray = formatSmartText(obj.Question, false);
+            let container = document.getElementById('hudFormattedText');
+            container.innerHTML = sentencesArray.join('');
             
             document.getElementById('hackerModal').style.display = 'flex';
-            
             confetti({ particleCount: 150, spread: 100, origin: { y: 0.3 }, zIndex: 10001, colors: ['#00f0ff', '#ff003c'] });
 
             setTimeout(() => document.getElementById('hudRow1').classList.add('show-element'), 500);
-            setTimeout(() => document.getElementById('hudRow2').classList.add('show-element'), 1000);
-            setTimeout(() => document.getElementById('hudRow3').classList.add('show-element'), 1500);
+            setTimeout(() => document.getElementById('hudRow2').classList.add('show-element'), 800);
+            setTimeout(() => document.getElementById('hudRow3').classList.add('show-element'), 1100);
 
-            document.getElementById('hudTypingText').innerText = '';
-            let textToType = `"${obj.Question}"`;
-            let i = 0;
-            
-            function typeWriter() {
-                if (i < textToType.length) {
-                    document.getElementById('hudTypingText').innerHTML += textToType.charAt(i);
-                    i++;
-                    typingTimeout = setTimeout(typeWriter, 15);
+            // Hiện dần từng Bullet point (thay vì gõ phím)
+            let bullets = container.getElementsByClassName('bullet');
+            let index = 0;
+            function showNextBullet() {
+                if (index < bullets.length) {
+                    bullets[index].classList.add('show-element');
+                    index++;
+                    decodeBlocksTimeout = setTimeout(showNextBullet, 600); // Mỗi câu hiện cách nhau 0.6s
                 } else {
-                    document.getElementById('hudCursor').style.display = 'none'; 
                     document.getElementById('hudActionArea').style.opacity = '1'; 
+                    // Bật bóng đèn Gợi ý
+                    bulb.style.opacity = '1';
+                    bulb.style.pointerEvents = 'auto';
                 }
             }
-            
-            setTimeout(typeWriter, 2000); 
+            setTimeout(showNextBullet, 1500); 
         }
 
         function closeHackerModal() {
             document.getElementById('hackerModal').style.display = 'none';
-            clearTimeout(typingTimeout);
+            clearTimeout(decodeBlocksTimeout);
         }
 
-        function toggleTrainerNotes(id) {
-            const el = document.getElementById(id);
-            if(el) { el.style.display = (el.style.display === "none" || el.style.display === "") ? "block" : "none"; }
-        }
+        // Mở Modal Bóng đèn
+        function openHintModal() {
+            if(!state.curT) return;
+            let hintsHTML = formatSmartText(state.curT.Answer, true).join('');
+            
+            let container = document.getElementById('hintFormattedText');
+            container.innerHTML = hintsHTML;
+            document.getElementById('hintModal').style.display = 'flex';
 
-        function renderScript(obj, containerId) {
+            // Fade in các ý của Gợi ý
+            setTimeout(() => {
+                let bullets = container.getElementsByClassName('bullet');
+                for(let i=0; i<bullets.length; i++) {
+                    setTimeout(() => bullets[i].classList.add('show-element'), i * 200);
+                }
+            }, 100);
+        }
+        function closeHintModal() { document.getElementById('hintModal').style.display = 'none'; }
+
+        // Render ra Cột 3 (Màn hình gốc)
+        function renderMainScreenCard(obj) {
             if(!obj) return;
-            let uniqueId = `tnote_${Math.floor(Math.random()*10000)}_${containerId}`;
+            let formattedQ = formatSmartText(obj.Question, false).map(html => html.replace('opacity:0; transform: translateY(10px);', 'opacity:1; transform: translateY(0);')).join('');
             let html = `
                 <div style="margin-bottom:12px;">
                     ${obj.Roadmap ? `<span class="sc-tag tag-roadmap">${obj.Roadmap}</span>` : ''}
@@ -454,43 +428,27 @@
                 </div>
                 <div class="sc-biz">${obj.Title}</div>
                 <div class="sc-goal">${obj.Goal}</div>
-                
-                <div class="sc-customer-voice">
-                    <b>👤 Khách hàng than phiền:</b>
-                    "${obj.Question}"
-                </div>
-
-                <button class="trainer-toggle" onclick="toggleTrainerNotes('${uniqueId}')">
-                    <span>⚠️ MỞ KHÓA BẢO MẬT: XEM GỢI Ý</span>
-                    <span>▼</span>
-                </button>
-                
-                <div id="${uniqueId}" class="trainer-notes">
-                    <b>💡 GỢI Ý TỪ HỆ THỐNG:</b><br>
-                    ${obj.Answer}
+                <div class="formatted-list" style="background: rgba(0,240,255,0.05); padding: 15px; border-radius: 8px;">
+                    <b style="color:var(--primary); font-size:11px; display:block; margin-bottom:10px;">LỜI KHÁCH HÀNG:</b>
+                    ${formattedQ}
                 </div>
             `;
-            document.getElementById(containerId).innerHTML = html;
+            document.getElementById('scBox').innerHTML = html;
         }
 
         function done(res) {
-            const entry = { 
-                id: Date.now(), time: new Date().toLocaleTimeString('vi-VN'), 
-                name: state.curW, taskObj: JSON.parse(JSON.stringify(state.curT)), 
-                res: res, note: document.getElementById('cmt').value || "Không có nhận xét" 
-            };
+            const entry = { id: Date.now(), time: new Date().toLocaleTimeString('vi-VN'), name: state.curW, taskObj: JSON.parse(JSON.stringify(state.curT)), res: res, note: document.getElementById('cmt').value || "Không có nhận xét" };
             state.logs.unshift(entry);
             renderHistory();
             document.getElementById('actionArea').style.display = 'none';
             document.getElementById('quickBtns').style.display = 'none';
             document.getElementById('winner').innerText = "XONG!";
-            document.getElementById('winner').style.textShadow = '0 0 20px var(--primary)';
             document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:#64748b; margin-top:50px">Sẵn sàng ca tiếp theo...</div>';
         }
 
         function renderHistory() { 
             document.getElementById('histList').innerHTML = state.logs.map(l => `
-                <div class="history-item" onclick="openModal(${l.id})">
+                <div class="history-item">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <b style="color:${l.res=='Vắng'?'#ff003c':'#00ff88'}">${l.name}</b>
                         <span style="font-size:10px; color:var(--primary); font-weight:800; background:rgba(0,240,255,0.1); padding: 3px 8px; border-radius: 4px;">${l.taskObj.Roadmap || l.taskObj.Type || 'KỊCH BẢN'}</span>
@@ -499,23 +457,6 @@
                 </div>`).join(''); 
         }
 
-        function openModal(id) {
-            const item = state.logs.find(l => l.id === id);
-            if(!item) return;
-            document.getElementById('modalBody').innerHTML = `
-                <h2 style="color:var(--primary); font-family:'Orbitron'">${item.name}</h2>
-                <div style="color:#64748b; font-size:12px; margin-bottom:15px">${item.time} | Kết quả: <b style="color:${item.res=='Vắng'?'#ff003c':'#00ff88'}">${item.res}</b></div>
-                <div id="modalScript"></div>
-                <div style="margin-top:15px; padding:15px; background:rgba(0,0,0,0.5); border-radius:8px; border:1px solid var(--border)">
-                    <b style="color:var(--accent); font-size:12px">NHẬN XÉT:</b>
-                    <p style="font-size:13px; color:#cbd5e1; margin-top:5px">${item.note}</p>
-                </div>`;
-            renderScript(item.taskObj, 'modalScript');
-            document.getElementById('historyModal').style.display = 'flex';
-        }
-
-        function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
-        
         function exportExcel() {
             if(state.logs.length === 0) return alert("Chưa có dữ liệu!");
             let csv = "\uFEFFGiờ,Học viên,Lộ trình,Loại,Kịch bản,Kết quả,Nhận xét\n";
@@ -528,10 +469,7 @@
             const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `Bao_cao_Game_V8.csv`; a.click();
         }
 
-        function save() { 
-            localStorage.setItem('bk_names_v75_problem', document.getElementById('names').value); 
-            alert("Đã lưu danh sách học viên!"); 
-        }
+        function save() { localStorage.setItem('bk_names_v75_problem', document.getElementById('names').value); alert("Đã lưu danh sách học viên!"); }
     </script>
 </body>
 </html>
