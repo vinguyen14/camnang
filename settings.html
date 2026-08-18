@@ -54,6 +54,11 @@
             <div class="saas-card p-2 sticky top-24">
                 <div onclick="switchSetTab('tab-profile')" id="btn-tab-profile" class="set-menu active"><i class="fas fa-user-circle"></i> Cá nhân & API</div>
                 <div onclick="switchSetTab('tab-dynamic-cal')" id="btn-tab-dynamic-cal" class="set-menu"><i class="far fa-calendar-alt"></i> Quản trị Lịch Năm</div>
+                
+                <!-- Menu Đồng bộ Cloud mới -->
+                <div class="h-px bg-slate-100 my-2 mx-2"></div>
+                <div onclick="switchSetTab('tab-cloud')" id="btn-tab-cloud" class="set-menu text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"><i class="fas fa-cloud-upload-alt"></i> Đồng bộ Đám mây</div>
+                
                 <div class="h-px bg-slate-100 my-2 mx-2"></div>
                 <div onclick="switchSetTab('tab-data')" id="btn-tab-data" class="set-menu text-rose-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-trash-alt"></i> Xóa Dữ liệu Local</div>
             </div>
@@ -111,6 +116,31 @@
                     </div>
                 </div>
             </div>
+            <!-- TAB 3: ĐỒNG BỘ CLOUD (MỚI) -->
+            <div id="tab-cloud" class="setting-content hidden space-y-6">
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-xl font-bold text-emerald-700"><i class="fas fa-cloud mr-2"></i>Đồng bộ Dữ liệu Đám mây</h2>
+                    <p class="text-[12px] text-slate-500 mt-1">Lưu trữ an toàn Vault, Lịch, Data Nhân sự... lên Google Sheets để không bao giờ mất dữ liệu.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Khối Backup -->
+                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-200 text-center shadow-inner flex flex-col items-center">
+                        <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mb-4 shadow-sm"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <h4 class="font-bold text-blue-800 mb-2">Đẩy lên Cloud (Backup)</h4>
+                        <p class="text-xs text-blue-600 mb-6 px-4">Gói toàn bộ dữ liệu trên trình duyệt hiện tại và sao lưu an toàn lên Google Sheets.</p>
+                        <button id="btnBackup" onclick="backupToCloud()" class="btn-primary w-full max-w-[200px] mt-auto py-3 bg-blue-600 border-blue-700 hover:bg-blue-700 shadow-md">Thực hiện Backup</button>
+                    </div>
+
+                    <!-- Khối Restore -->
+                    <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-200 text-center shadow-inner flex flex-col items-center">
+                        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mb-4 shadow-sm"><i class="fas fa-cloud-download-alt"></i></div>
+                        <h4 class="font-bold text-emerald-800 mb-2">Tải về Máy (Restore)</h4>
+                        <p class="text-xs text-emerald-600 mb-6 px-4">Kéo dữ liệu từ lần Backup gần nhất trên Cloud xuống và ghi đè vào trình duyệt này.</p>
+                        <button id="btnRestore" onclick="restoreFromCloud()" class="btn-primary w-full max-w-[200px] mt-auto py-3 bg-emerald-600 border-emerald-700 hover:bg-emerald-700 shadow-md">Tải Data Về Máy</button>
+                    </div>
+                </div>
+            </div>
 
             <!-- TAB 3: DATA LOCAL -->
             <div id="tab-data" class="setting-content hidden space-y-8">
@@ -160,6 +190,101 @@
             showToast('Đã lưu toàn bộ Thiết lập!');
         }
         function executeWipe() { if(confirm("Xóa Local Storage?")) { localStorage.clear(); location.reload(); } }
+        // --- LOGIC ĐỒNG BỘ CLOUD ---
+        const KEYS_TO_SYNC = [
+            'kv_api_url', 'kv_trainer_profile', 'kv_dynamic_calendar', 
+            'kv_global_notepad', 'kv_employee_db', 'kv_employee_trash', 
+            'kv_vault_folders', 'kv_vault_items', 'kv_vault_trash'
+        ];
+
+        async function backupToCloud() {
+            const GOOGLE_API_URL = document.getElementById('api-url').value.trim();
+            if(!GOOGLE_API_URL) return alert("⚠️ Lỗi: Chưa có Link API. Vui lòng dán Link ở Tab Cá Nhân & API.");
+
+            const btn = document.getElementById('btnBackup');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang nén Data...';
+            btn.classList.add('opacity-70', 'pointer-events-none');
+
+            try {
+                // 1. Thu thập toàn bộ Data từ LocalStorage
+                let backupData = {};
+                KEYS_TO_SYNC.forEach(k => {
+                    backupData[k] = localStorage.getItem(k) || null;
+                });
+                const payloadString = JSON.stringify(backupData);
+
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang tải lên...';
+
+                // 2. Bắn API đẩy lên Sheet CloudBackup
+                const res = await fetch(GOOGLE_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: "sync_up", payload: payloadString })
+                });
+                const data = await res.json();
+                
+                if(data.status === 'success') {
+                    btn.innerHTML = '<i class="fas fa-check mr-2"></i> Backup thành công!';
+                    btn.classList.replace('bg-blue-600', 'bg-emerald-500');
+                    btn.classList.replace('border-blue-700', 'border-emerald-600');
+                    showToast("☁️ Đã sao lưu toàn bộ hệ thống lên Cloud!");
+                } else throw new Error(data.message);
+
+            } catch(e) {
+                alert("⚠️ Lỗi đồng bộ: " + e.message);
+            }
+            
+            setTimeout(() => { 
+                btn.innerHTML = originalHTML; 
+                btn.classList.remove('opacity-70', 'pointer-events-none', 'bg-emerald-500', 'border-emerald-600'); 
+            }, 3000);
+        }
+
+        async function restoreFromCloud() {
+            const GOOGLE_API_URL = document.getElementById('api-url').value.trim();
+            if(!GOOGLE_API_URL) return alert("⚠️ Lỗi: Chưa có Link API. Vui lòng dán Link ở Tab Cá Nhân & API.");
+
+            if(!confirm("CẢNH BÁO: Việc tải Data từ Cloud sẽ GHI ĐÈ và XÓA SẠCH toàn bộ dữ liệu hiện tại trên trình duyệt này. Bạn có chắc chắn muốn thực hiện?")) return;
+
+            const btn = document.getElementById('btnRestore');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang tải về...';
+            btn.classList.add('opacity-70', 'pointer-events-none');
+
+            try {
+                const res = await fetch(GOOGLE_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: "sync_down" })
+                });
+                const data = await res.json();
+                
+                if(data.status === 'success' && data.payload !== "{}") {
+                    // Cắt bung gói Data và nhét lại vào LocalStorage
+                    const cloudData = JSON.parse(data.payload);
+                    for (let key in cloudData) {
+                        if(cloudData[key]) localStorage.setItem(key, cloudData[key]);
+                    }
+                    
+                    btn.innerHTML = '<i class="fas fa-check mr-2"></i> Restore thành công!';
+                    showToast("Khôi phục thành công! Đang tải lại hệ thống...");
+                    
+                    // F5 lại trang để áp dụng Data mới
+                    setTimeout(() => location.reload(), 1500);
+
+                } else {
+                    alert("☁️ Cloud hiện tại đang trống, chưa có bản Backup nào!");
+                }
+            } catch(e) {
+                alert("⚠️ Lỗi tải dữ liệu: " + e.message);
+            }
+
+            setTimeout(() => { 
+                btn.innerHTML = originalHTML; 
+                btn.classList.remove('opacity-70', 'pointer-events-none'); 
+            }, 3000);
+        }
     </script>
 </body>
 </html>
