@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trainer OS - Trung Tâm Quản Trị Tài Liệu & Tri Thức L&D</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        },
+                        kiot: {
+                            blue: '#0066cc',
+                            navy: '#004c99',
+                            orange: '#f37021',
+                            green: '#28a745',
+                            dark: '#1e293b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar Enterprise Standard */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* SaaS Card & Button Standard */
+        .saas-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease-in-out;
+        }
+        .saas-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+        }
+        .btn-primary {
+            background-color: #0066cc;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.15s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-primary:hover {
+            background-color: #004c99;
+        }
+        .saas-input {
+            border: 1px solid #cbd5e1;
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            outline: none;
+            transition: all 0.15s ease-in-out;
+        }
+        .saas-input:focus {
+            border-color: #0066cc;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+        }
+        
+        /* Tab Styling */
+        .workspace-tab {
+            position: relative;
+            user-select: none;
+        }
+        .workspace-tab.active {
+            background: #ffffff;
+            color: #0066cc;
+            border-bottom: 2px solid #0066cc;
+            font-weight: 600;
+        }
+        .workspace-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #ffffff;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans h-screen flex overflow-hidden">
+
+    <!-- ==================== SIDEBAR (TRÁI) ==================== -->
+    <aside class="w-80 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-30 border-r border-slate-800 select-none">
+        <!-- Logo & Header -->
+        <div class="h-16 flex items-center justify-between px-5 bg-slate-950 border-b border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-kiot-blue flex items-center justify-center text-white font-bold text-lg shadow-md">
+                    <i class="fa-solid fa-folder-tree"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-white text-sm tracking-wide">TRAINER OS</h1>
+                    <p class="text-[11px] text-slate-400 font-medium">Knowledge & Doc Hub</p>
+                </div>
+            </div>
+            <span class="px-2 py-0.5 text-[10px] bg-kiot-blue/20 text-kiot-blue font-semibold rounded border border-kiot-blue/30">Enterprise</span>
+        </div>
+
+        <!-- Search in Sidebar -->
+        <div class="p-3 border-b border-slate-800">
+            <button onclick="openGlobalSearch()" class="w-full flex items-center justify-between px-3 py-2 text-xs bg-slate-800/80 hover:bg-slate-800 text-slate-400 rounded-lg border border-slate-700/60 transition-all">
+                <span class="flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass text-slate-500"></i>
+                    <span>Tìm nhanh tài liệu...</span>
+                </span>
+                <kbd class="px-1.5 py-0.5 text-[10px] bg-slate-900 text-slate-400 rounded border border-slate-700 font-mono">Ctrl K</kbd>
+            </button>
+        </div>
+
+        <!-- Navigation Menu Hierarchy -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4">
+            <!-- Group 1: Live Apps & Portals -->
+            <div>
+                <p class="px-2 mb-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>1. Cổng Ứng Dụng & Portal</span>
+                    <i class="fa-solid fa-cloud text-xs text-kiot-blue"></i>
+                </p>
+                <div class="space-y-0.5">
+                    <button onclick="navigateCategory('apps-review')" id="nav-apps-review" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-md hover:bg-slate-800 hover:text-white transition-all text-left">
+                        <i class="fa-solid fa-rotate-left text-amber-400 w-4 text-center"></i>
+                        <span class="flex-1 truncate">Review Tái Ký (Trainer/Mgr)</span>
+                    </button>
+                    <button onclick="navigateCategory('apps-practice')" id="nav-apps-practice" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-md hover:bg-slate-800 hover:text-white transition-all text-left">
+                        <i class="fa-solid fa-laptop-code text-emerald-400 w-4 text-center"></i>
+                        <span class="flex-1 truncate">Thực Hành Tái Ký (HV/GV)</span>
+                    </button>
+                    <button onclick="navigateCategory('apps-spcb')" id="nav-apps-spcb" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-md hover:bg-slate-800 hover:text-white transition-all text-left">
+                        <i class="fa-solid fa-cube text-sky-400 w-4 text-center"></i>
+                        <span class="flex-1 truncate">Thực Hành SPCB (3 Ngành)</span>
+                    </button>
+                    <button onclick="navigateCategory('apps-tools')" id="nav-apps-tools" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-md hover:bg-slate-800 hover:text-white transition-all text-left">
+                        <i class="fa-solid fa-screwdriver-wrench text-purple-400 w-4 text-center"></i>
+                        <span class="flex-1 truncate">Công Cụ L&D (Noova Hub)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Group 2: Masterdata E-Learning -->
+            <div>
+                <p class="px-2 mb-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>2. Kho E-Learning & Media</span>
+                    <i class="fa-solid fa-graduation-cap text-xs text-kiot-orange"></i>
+                </p>
+                <div class="space-y-0.5">
+                    <button onclick="navigateCategory('elearning-retail')" id="nav-elearning-retail" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-md hover:bg-slate-800 hover:text-white transition-all text-left">
+                        <i class="fa-solid fa-shop text-blue-400 w-4 text-center"></i>
+                        <span class="flex-1 truncate">Retail 01 & 02 (Bán lẻ)</span>
+                        <span class="text-[10px] bg-slate-800 px-1.5 py-0.2 rounded text-slate-400" id="badge-retail">50+</span>
+                    </button>
+                    <button onclick="navigateCategory('elearning-fnb')" id="nav-elearning-fnb" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-md hover:bg-slate-800 hover:text-white transition-all text-left">
+                        <i class="fa-solid fa-utensils text-orange-400 w-4 text-center"></i>
+                        <span class="flex-1 truncate">FNB 01 & 02 (Ẩm thực)</span>
+                        <span class="text-[10px] bg-slate-800 px-1.5 py-0.2 rounded text-slate-400" id="badge-fnb">50+</span>
+                    </button>
+                    <button onclick="navigateCategory('elearning-salon')" id="nav-elearning-salon" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-md hover:bg-slate-800 hover:text-white transition-all text-left">
+                        <i class="fa-solid fa-spa text-pink-400 w-4 text-center"></i>
+                        <span class="flex-1 truncate">Salon 01 & 02 (Làm đẹp)</span>
+                        <span class="text-[10px] bg-slate-800 px-1.5 py-0.2 rounded text-slate-400" id="badge-salon">40+</span>
+                    </button>
+                    <button onclick="navigateCategory('elearning-hotel')" id="nav-elearning-hotel" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-md hover:bg-slate-800 hover:text-white transition-all text-left">
+                        <i class="fa-solid fa-hotel text-indigo-400 w-4 text-center"></i>
+                        <span class="flex-1 truncate">Hotel 01 & 02 (Khách sạn)</span>
+                        <span class="text-[10px] bg-slate-800 px-1.5 py-0.2 rounded text-slate-400" id="badge-hotel">40+</span>
+                    </button>
+                    <button onclick="navigateCategory('elearning-ketoan')" id="nav-elearning-ketoan" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-md hover:bg-slate-800 hover:text-white transition-all text-left">
+                        <i class="fa-solid fa-calculator text-teal-400 w-4 text-center"></i>
+                        <span class="flex-1 truncate">Thuế & Kế Toán 01 & 02</span>
+                        <span class="text-[10px] bg-slate-800 px-1.5 py-0.2 rounded text-slate-400" id="badge-ketoan">40+</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Group 3: MCQ Bank -->
+            <div>
+                <p class="px-2 mb-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>3. Ngân Hàng Trắc Nghiệm</span>
+                    <i class="fa-solid fa-list-check text-xs text-emerald-400"></i>
+                </p>
+                <div class="space-y-0.5">
+                    <button onclick="navigateCategory('mcq-bank')" id="nav-mcq-bank" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-md hover:bg-slate-800 hover:text-white transition-all text-left">
+                        <i class="fa-solid fa-circle-question text-emerald-400 w-4 text-center"></i>
+                        <span class="flex-1 truncate">MCQ Master KiotViet</span>
+                        <span class="text-[10px] bg-emerald-950 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-800">Chuẩn</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Group 4: Case Studies Tái Ký -->
+            <div>
+                <p class="px-2 mb-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>4. Case Study Tái Ký</span>
+                    <i class="fa-solid fa-briefcase text-xs text-cyan-400"></i>
+                </p>
+                <div class="space-y-0.5">
+                    <button onclick="navigateCategory('cases-retail')" id="nav-cases-retail" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-md hover:bg-slate-800 hover:text-white transition-all text-left">
+                        <i class="fa-solid fa-comments-dollar text-blue-400 w-4 text-center"></i>
+                        <span class="flex-1 truncate">Tình Huống Retail (Bán lẻ)</span>
+                    </button>
+                    <button onclick="navigateCategory('cases-fnb')" id="nav-cases-fnb" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-md hover:bg-slate-800 hover:text-white transition-all text-left">
+                        <i class="fa-solid fa-comments-dollar text-orange-400 w-4 text-center"></i>
+                        <span class="flex-1 truncate">Tình Huống FNB (Ẩm thực)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Group 5: Bài tập & Kịch bản Video -->
+            <div>
+                <p class="px-2 mb-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>5. Bài Tập & Kịch Bản</span>
+                    <i class="fa-solid fa-book-open text-xs text-yellow-400"></i>
+                </p>
+                <div class="space-y-0.5">
+                    <button onclick="navigateCategory('exercises-master')" id="nav-exercises-master" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-md hover:bg-slate-800 hover:text-white transition-all text-left">
+                        <i class="fa-solid fa-tasks text-yellow-400 w-4 text-center"></i>
+                        <span class="flex-1 truncate">MasterExercises (Đề bài tập)</span>
+                    </button>
+                    <button onclick="navigateCategory('video-scripts')" id="nav-video-scripts" class="nav-btn w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-md hover:bg-slate-800 hover:text-white transition-all text-left">
+                        <i class="fa-brands fa-youtube text-red-400 w-4 text-center"></i>
+                        <span class="flex-1 truncate">Kịch Bản Videos Retail</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Footer Status -->
+        <div class="p-3 bg-slate-950 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Workspace Ready</span>
+            </div>
+            <span class="text-slate-400 font-mono">v3.5 LTS</span>
+        </div>
+    </aside>
+
+    <!-- ==================== MAIN WORKSPACE AREA ==================== -->
+    <main class="flex-1 flex flex-col min-w-0 bg-slate-100 overflow-hidden">
+        
+        <!-- Top Workspace Bar -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 flex-shrink-0">
+            <!-- Breadcrumbs / Active Section Title -->
+            <div class="flex items-center gap-3 min-w-0">
+                <div id="section-icon" class="w-8 h-8 rounded-lg bg-blue-50 text-kiot-blue flex items-center justify-center font-bold text-sm">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 text-xs text-slate-400">
+                        <span>Kho Tri Thức</span>
+                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        <span id="breadcrumb-category" class="font-medium text-slate-600">Tất cả tài liệu</span>
+                    </div>
+                    <h2 id="section-title" class="text-sm font-bold text-slate-900 truncate">Tổng quan Kho Tài Liệu & Ứng Dụng</h2>
+                </div>
+            </div>
+
+            <!-- Workspace Actions & Split Screen Controls -->
+            <div class="flex items-center gap-3">
+                <!-- Search Input Local -->
+                <div class="relative w-64">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="local-search-input" oninput="handleLocalSearch(this.value)" placeholder="Lọc trong mục này..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-kiot-blue focus:outline-none transition-all">
+                </div>
+
+                <!-- View Switchers -->
+                <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs">
+                    <button onclick="switchViewMode('grid')" id="view-mode-grid" class="px-2.5 py-1 rounded text-slate-600 bg-white shadow-sm font-medium transition-all" title="Chế độ Lưới">
+                        <i class="fa-solid fa-grip"></i>
+                    </button>
+                    <button onclick="switchViewMode('table')" id="view-mode-table" class="px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all" title="Chế độ Bảng">
+                        <i class="fa-solid fa-table-list"></i>
+                    </button>
+                    <button onclick="toggleSplitScreen()" id="view-mode-split" class="px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all flex items-center gap-1.5" title="Bật/Tắt Chia Đôi Màn Hình">
+                        <i class="fa-solid fa-columns"></i>
+                        <span class="text-[11px] font-medium hidden sm:inline">Chia màn hình</span>
+                    </button>
+                </div>
+
+                <!-- Refresh / Reset -->
+                <button onclick="refreshCurrentCategory()" class="w-8 h-8 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 flex items-center justify-center transition-all" title="Làm mới dữ liệu">
+                    <i class="fa-solid fa-arrow-rotate-right text-xs"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Chrome-Style Tab Bar for Open Documents -->
+        <div id="workspace-tab-bar" class="h-10 bg-slate-200/80 border-b border-slate-300/80 flex items-center px-2 gap-1 overflow-x-auto custom-scrollbar select-none z-10 flex-shrink-0">
+            <!-- Default Home Tab -->
+            <div onclick="activateTab('tab-home')" id="tab-home" class="workspace-tab active h-9 px-3.5 rounded-t-lg bg-white flex items-center gap-2 text-xs text-slate-700 cursor-pointer border-t border-x border-slate-300">
+                <i class="fa-solid fa-house text-kiot-blue text-[11px]"></i>
+                <span class="font-medium">Trang Quản Trị</span>
+            </div>
+            <!-- Dynamic tabs will be injected here by JS -->
+        </div>
+
+        <!-- Main Content Area: Supports Single or Split-View -->
+        <div id="workspace-container" class="flex-1 flex overflow-hidden relative">
+            
+            <!-- LEFT PANE: Document Cards / Table / Details -->
+            <div id="pane-primary" class="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-white">
+                <!-- Filter Pills Bar -->
+                <div id="sub-filter-bar" class="px-6 py-2.5 bg-slate-50/70 border-b border-slate-200 flex items-center gap-2 overflow-x-auto custom-scrollbar flex-shrink-0">
+                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">Bộ lọc:</span>
+                    <button onclick="applySubFilter('all')" class="filter-pill active px-3 py-1 rounded-full text-xs font-medium bg-kiot-blue text-white shadow-sm transition-all">Tất cả</button>
+                    <!-- Sub-filters dynamically generated -->
+                </div>
+
+                <!-- Dynamic Item Container -->
+                <div id="items-scroll-container" class="flex-1 overflow-y-auto custom-scrollbar p-6">
+                    <!-- Cards Grid or Table rendered here -->
+                    <div id="items-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Dynamic items loaded here -->
+                    </div>
+
+                    <div id="items-table-container" class="hidden overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-100 text-slate-700 uppercase font-semibold border-b border-slate-200" id="table-head">
+                                <!-- Dynamic table headers -->
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 bg-white" id="table-body">
+                                <!-- Dynamic table rows -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Empty State Standard -->
+                    <div id="empty-state" class="hidden py-16 flex flex-col items-center justify-center text-center">
+                        <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mb-3 shadow-inner">
+                            <i class="fa-solid fa-folder-open"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-700 mb-1">Không tìm thấy tài liệu phù hợp</h4>
+                        <p class="text-xs text-slate-400 max-w-sm mb-4">Vui lòng kiểm tra lại từ khóa tìm kiếm hoặc chọn bộ lọc danh mục khác.</p>
+                        <button onclick="resetFilters()" class="px-3 py-1.5 text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium rounded-md transition-all">
+                            Xóa bộ lọc
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT PANE (SPLIT-SCREEN): Live Viewer / Iframe Previewer -->
+            <div id="pane-secondary" class="w-1/2 flex flex-col border-l border-slate-300 bg-slate-900 hidden transition-all duration-200">
+                <!-- Split Pane Header -->
+                <div class="h-10 bg-slate-950 border-b border-slate-800 flex items-center justify-between px-4 text-xs text-slate-300 select-none flex-shrink-0">
+                    <div class="flex items-center gap-2 truncate">
+                        <i id="split-type-icon" class="fa-solid fa-window-maximize text-kiot-blue"></i>
+                        <span id="split-pane-title" class="font-medium text-white truncate">Live Interactive Window</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a id="split-external-link" href="#" target="_blank" class="p-1 hover:text-white text-slate-400 transition-all" title="Mở trong tab trình duyệt mới">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </a>
+                        <button onclick="toggleSplitScreen()" class="p-1 hover:text-white text-slate-400 transition-all" title="Đóng màn hình phụ">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Split Pane Body -->
+                <div id="split-pane-content" class="flex-1 overflow-hidden relative bg-slate-950 flex flex-col">
+                    <iframe id="split-iframe" src="" class="w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    
+                    <!-- Fallback if iframe is blocked -->
+                    <div id="split-iframe-fallback" class="hidden absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-slate-900 text-slate-200">
+                        <div class="w-16 h-16 rounded-2xl bg-slate-800 text-amber-400 flex items-center justify-center text-3xl mb-4 border border-slate-700 shadow-xl">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-white mb-2">Trang web bảo vệ không cho phép nhúng trực tiếp</h3>
+                        <p class="text-xs text-slate-400 max-w-md mb-6">Trang web này (Google Sheets / Sites / Portal bảo mật) sử dụng chính sách X-Frame-Options để ngăn chặn hiển thị trong khung iframe.</p>
+                        <div class="flex items-center gap-3">
+                            <button onclick="openPopupCurrentSplit()" class="btn-primary text-xs">
+                                <i class="fa-solid fa-window-restore mr-1.5"></i> Mở Cửa Sổ Popup Độc Lập
+                            </button>
+                            <a id="fallback-open-tab" href="#" target="_blank" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-medium border border-slate-700 transition-all">
+                                <i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i> Mở Tab Mới
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ==================== FLOATING DRAGGABLE / RESIZABLE MODAL ==================== -->
+    <div id="floating-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4 sm:p-8">
+        <div class="w-full max-w-6xl h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <!-- Modal Header -->
+            <div class="h-12 bg-slate-900 text-white px-5 flex items-center justify-between flex-shrink-0 select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span id="modal-badge" class="px-2 py-0.5 text-[10px] font-bold rounded bg-kiot-blue text-white uppercase tracking-wider">PORTAL</span>
+                    <h3 id="modal-title" class="font-bold text-sm truncate">Chi tiết tài liệu</h3>
+                </div>
+                <div class="flex items-center gap-3 text-slate-400">
+                    <a id="modal-external-link" href="#" target="_blank" class="hover:text-white transition-all text-xs flex items-center gap-1">
+                        <span>Mở tab mới</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </a>
+                    <div class="h-4 w-px bg-slate-700"></div>
+                    <button onclick="closeFloatingModal()" class="hover:text-white transition-all text-sm p-1">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Content (Iframe / Markdown / Details) -->
+            <div id="modal-body-container" class="flex-1 bg-slate-100 overflow-hidden relative flex flex-col">
+                <iframe id="modal-iframe" src="" class="w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                
+                <!-- Fallback Box -->
+                <div id="modal-fallback" class="hidden absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-slate-900 text-white">
+                    <div class="w-16 h-16 rounded-2xl bg-slate-800 text-amber-400 flex items-center justify-center text-3xl mb-4 border border-slate-700 shadow-xl">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h3 class="text-base font-bold mb-2">Trang web yêu cầu mở ở cửa sổ độc lập</h3>
+                    <p class="text-xs text-slate-400 max-w-md mb-6">Trang này áp dụng quy định bảo mật tên miền nên không thể render trực tiếp trong iframe nội bộ của hệ thống.</p>
+                    <div class="flex gap-3">
+                        <a id="modal-fallback-btn" href="#" target="_blank" class="btn-primary text-xs">
+                            <i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i> Mở Ngay Trong Tab Mới
+                        </a>
+                        <button onclick="closeFloatingModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-medium border border-slate-700 transition-all">
+                            Đóng cửa sổ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Rich Details Container (For Cases, Exercises, MCQs) -->
+                <div id="modal-rich-details" class="hidden absolute inset-0 bg-white p-8 overflow-y-auto custom-scrollbar">
+                    <!-- Dynamic rich content loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== GLOBAL COMMAND PALETTE (CTRL + K) ==================== -->
+    <div id="global-search-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 hidden flex items-start justify-center pt-20 p-4" onclick="closeGlobalSearchOnBackdrop(event)">
+        <div class="w-full max-w-2xl bg-white rounded-xl shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150" onclick="event.stopPropagation()">
+            <!-- Search Input Header -->
+            <div class="p-4 border-b border-slate-200 flex items-center gap-3 bg-slate-50">
+                <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm"></i>
+                <input type="text" id="global-search-input" oninput="handleGlobalSearch(this.value)" placeholder="Tìm kiếm tài liệu, MCQ, case study, bài tập, link thực hành..." class="flex-1 bg-transparent border-0 text-sm font-medium text-slate-800 focus:outline-none placeholder:text-slate-400">
+                <kbd class="px-2 py-0.5 text-[10px] bg-slate-200 text-slate-600 rounded border border-slate-300 font-mono font-medium">ESC</kbd>
+            </div>
+
+            <!-- Quick Filter Chips -->
+            <div class="px-4 py-2 bg-white border-b border-slate-100 flex items-center gap-2 overflow-x-auto text-[11px]">
+                <span class="text-slate-400 font-semibold uppercase">Lọc:</span>
+                <button onclick="setGlobalFilter('all')" class="global-chip active px-2.5 py-0.5 rounded-full bg-slate-900 text-white font-medium">Tất cả</button>
+                <button onclick="setGlobalFilter('app')" class="global-chip px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium">Ứng dụng</button>
+                <button onclick="setGlobalFilter('elearning')" class="global-chip px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium">E-Learning</button>
+                <button onclick="setGlobalFilter('mcq')" class="global-chip px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium">MCQ</button>
+                <button onclick="setGlobalFilter('case')" class="global-chip px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium">Tình huống</button>
+                <button onclick="setGlobalFilter('exercise')" class="global-chip px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium">Bài tập</button>
+            </div>
+
+            <!-- Search Results List -->
+            <div id="global-search-results" class="max-h-96 overflow-y-auto custom-scrollbar p-2 divide-y divide-slate-100">
+                <!-- Search Results items rendered here -->
+            </div>
+
+            <!-- Footer Help -->
+            <div class="p-3 bg-slate-50 border-t border-slate-200 text-[11px] text-slate-400 flex items-center justify-between px-4">
+                <span>Dùng phím <kbd class="font-mono bg-white px-1 border rounded">↑</kbd> <kbd class="font-mono bg-white px-1 border rounded">↓</kbd> để duyệt, <kbd class="font-mono bg-white px-1 border rounded">Enter</kbd> để mở</span>
+                <span id="search-total-counter">Hơn 500+ tài nguyên được chỉ mục</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Placeholder: To be connected with Part 2 -->
+    <!-- PHẦN 2 (JAVASCRIPT ENGINE & TOÀN BỘ CƠ SỞ DỮ LIỆU) SẼ NẰM NGAY BÊN DƯỚI -->
+</body>
+</html>
