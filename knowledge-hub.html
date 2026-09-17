@@ -469,16 +469,25 @@
                 return;
             }
 
-            // Tìm cột phân loại chính (cột đầu tiên hoặc cột có tên: Khóa học, Ngành Hàng, Day, Nhóm...)
-            const groupCol = detectGroupingColumn(sheetMeta.headers);
             let filterValues = [];
+            const isMcqSheet = sheetName.toLowerCase().includes('mcq') || sheetMeta.headers.includes('Nhãn');
 
-            if (groupCol) {
-                const rawVals = sheetMeta.items.map(item => item[groupCol]).filter(v => v && v.trim() !== '');
-                filterValues = [...new Set(rawVals)];
+            if (isMcqSheet) {
+                // Với sheet MCQ: Trích xuất tên Khóa học từ tiền tố của Nhãn (Ví dụ: "Kế Toán 01 - ..." -> lấy "Kế Toán 01")
+                const rawCourses = sheetMeta.items.map(item => {
+                    const label = String(item['Nhãn'] || '').trim();
+                    return label.includes('-') ? label.split('-')[0].trim() : label;
+                }).filter(v => v !== '');
+                filterValues = [...new Set(rawCourses)];
+            } else {
+                const groupCol = detectGroupingColumn(sheetMeta.headers);
+                if (groupCol) {
+                    const rawVals = sheetMeta.items.map(item => item[groupCol]).filter(v => v && v.trim() !== '');
+                    filterValues = [...new Set(rawVals)];
+                }
             }
 
-            let html = `<span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">Phân loại:</span>`;
+            let html = `<span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">Khóa học:</span>`;
             html += `<button onclick="applySubFilter('all')" class="px-3 py-1 rounded-full text-xs font-medium ${AppState.currentSubFilter === 'all' ? 'bg-kiot-blue text-white shadow-sm' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">Tất cả</button>`;
 
             filterValues.forEach(val => {
@@ -489,7 +498,6 @@
 
             bar.innerHTML = html;
         }
-
         function detectGroupingColumn(headers) {
             if (!headers || headers.length === 0) return null;
             // Ưu tiên cột 'Nhãn' của Noova LMS và các cột phân loại nghiệp vụ, loại trừ 'loại câu hỏi'
@@ -563,74 +571,108 @@
         }
 
         function renderSmartCardGrid(data, headers, container) {
-            window.currentFilteredData = data; // Lưu bộ nhớ tạm an toàn chống lỗi XSS/ký tự đặc biệt
+            window.currentFilteredData = data;
             let html = '';
 
-            data.forEach((item, idx) => {
-                // Kiểm tra xem đây có phải là Sheet Trắc nghiệm (Noova LMS hoặc MCQ chuẩn) hay không
-                const isNoovaMcq = !!(item['Câu hỏi'] || item['Tiêu đề câu hỏi (*)'] || item['Lựa chọn 1']);
+            const isMcqSheet = AppState.currentSheet.toLowerCase().includes('mcq') || headers.includes('Nhãn') || headers.includes('Câu hỏi');
 
-                if (isNoovaMcq) {
-                    const question = item['Câu hỏi'] || item['Tiêu đề câu hỏi (*)'] || '';
-                    const label = item['Nhãn'] || item['Tên Tính Năng'] || item['Mã Bài Viết'] || 'Trắc nghiệm';
-                    const opt1 = item['Lựa chọn 1'] || item['Đáp án A'] || '';
-                    const opt2 = item['Lựa chọn 2'] || item['Đáp án B'] || '';
-                    const opt3 = item['Lựa chọn 3'] || item['Đáp án C'] || '';
-                    const correctRaw = String(item['Lựa chọn đúng'] || item['Đáp án đúng'] || '').trim();
+            // NẾU LÀ SHEET TRẮC NGHIỆM: TỰ ĐỘNG GOM 1.479 CÂU THÀNH CÁC THẺ BỘ ĐỀ TINH GỌN
+            if (isMcqSheet) {
+                const groups = {};
 
-                    // Xác định đáp án đúng (hỗ trợ cả dạng số 1, 2, 3 hoặc ký tự A, B, C)
-                    const is1Correct = (correctRaw === '1' || correctRaw.toUpperCase() === 'A');
-                    const is2Correct = (correctRaw === '2' || correctRaw.toUpperCase() === 'B');
-                    const is3Correct = (correctRaw === '3' || correctRaw.toUpperCase() === 'C');
-                    const correctLetter = is1Correct ? 'A' : (is2Correct ? 'B' : (is3Correct ? 'C' : correctRaw));
+                data.forEach(item => {
+                    const fullLabel = String(item['Nhãn'] || 'Bộ Đề Chung').trim();
+                    if (!groups[fullLabel]) {
+                        // Tách khóa học và tên bài
+                        const parts = fullLabel.split('-');
+                        const course = parts.length > 1 ? parts[0].trim() : 'MCQ';
+                        const topic = parts.length > 1 ? parts.slice(1).join('-').trim() : fullLabel;
+
+                        // Tự động tìm link Quiz tương ứng từ Tab E-Learning nếu có
+                        let linkedQuizUrl = '';
+                        Object.values(AppState.sheetsData).forEach(s => {
+                            if (s && s.items) {
+                                const found = s.items.find(x => 
+                                    (x['Nội dung'] && topic.toLowerCase().includes(x['Nội dung'].toLowerCase())) ||
+                                    (x['Github'] && x['Github'].toLowerCase().includes(topic.toLowerCase().replace(/\s+/g, '-')))
+                                );
+                                if (found && found['Github']) linkedQuizUrl = found['Github'];
+                            }
+                        });
+
+                        groups[fullLabel] = {
+                            fullLabel: fullLabel,
+                            course: course,
+                            topic: topic,
+                            quizUrl: linkedQuizUrl || 'https://sites.google.com/view/kvlnd-product-hub/noova-mcq-convert',
+                            questions: []
+                        };
+                    }
+                    groups[fullLabel].questions.push(item);
+                });
+
+                window.currentMcqGroups = groups; // Lưu bộ nhớ tạm phục vụ xem chi tiết
+                const groupKeys = Object.keys(groups);
+
+                groupKeys.forEach((key, gIdx) => {
+                    const grp = groups[key];
+                    const firstQ = grp.questions[0] ? (grp.questions[0]['Câu hỏi'] || '') : '';
 
                     html += `
-                    <div class="saas-card p-4 flex flex-col justify-between group border-l-4 border-l-kiot-blue hover:shadow-md transition-all">
+                    <div class="saas-card p-5 flex flex-col justify-between group hover:border-kiot-blue hover:shadow-md transition-all">
                         <div>
-                            <!-- Tag Nhãn bài thi -->
-                            <div class="flex items-center justify-between gap-2 mb-2.5">
-                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-50 text-kiot-blue border border-blue-200 truncate max-w-[200px]" title="${escapeHtml(label)}">
-                                    <i class="fa-solid fa-tag text-[9px] mr-1"></i>${escapeHtml(label)}
+                            <!-- Header Thẻ Bộ Đề -->
+                            <div class="flex items-start justify-between gap-3 mb-3">
+                                <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-blue-50 text-kiot-blue border border-blue-200">
+                                    <i class="fa-solid fa-graduation-cap mr-1"></i>${escapeHtml(grp.course)}
                                 </span>
-                                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 flex-shrink-0">
-                                    Đ/A Đúng: ${correctLetter}
+                                <span class="px-2 py-0.5 text-[11px] font-bold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    ${grp.questions.length} câu hỏi
                                 </span>
                             </div>
 
-                            <!-- Nội dung Câu hỏi -->
-                            <h4 class="text-xs font-bold text-slate-900 leading-snug mb-3">
-                                <span class="text-slate-400 font-mono mr-1">#${idx + 1}</span> ${escapeHtml(question)}
-                            </h4>
+                            <!-- Tên Bài Học / Bộ Đề -->
+                            <h3 class="text-sm font-bold text-slate-900 group-hover:text-kiot-blue transition-colors mb-2 leading-snug">
+                                ${escapeHtml(grp.topic)}
+                            </h3>
 
-                            <!-- 3 Ô Phương Án A - B - C -->
-                            <div class="space-y-1.5 text-xs">
-                                <div class="p-2 rounded-lg border text-[11px] leading-relaxed flex items-start gap-2 ${is1Correct ? 'bg-emerald-50/90 border-emerald-300 font-semibold text-emerald-900' : 'bg-slate-50 border-slate-200/80 text-slate-600'}">
-                                    <span class="font-bold flex-shrink-0 w-4">${is1Correct ? '<i class="fa-solid fa-circle-check text-emerald-600"></i>' : 'A.'}</span>
-                                    <span>${escapeHtml(opt1)}</span>
-                                </div>
-                                <div class="p-2 rounded-lg border text-[11px] leading-relaxed flex items-start gap-2 ${is2Correct ? 'bg-emerald-50/90 border-emerald-300 font-semibold text-emerald-900' : 'bg-slate-50 border-slate-200/80 text-slate-600'}">
-                                    <span class="font-bold flex-shrink-0 w-4">${is2Correct ? '<i class="fa-solid fa-circle-check text-emerald-600"></i>' : 'B.'}</span>
-                                    <span>${escapeHtml(opt2)}</span>
-                                </div>
-                                <div class="p-2 rounded-lg border text-[11px] leading-relaxed flex items-start gap-2 ${is3Correct ? 'bg-emerald-50/90 border-emerald-300 font-semibold text-emerald-900' : 'bg-slate-50 border-slate-200/80 text-slate-600'}">
-                                    <span class="font-bold flex-shrink-0 w-4">${is3Correct ? '<i class="fa-solid fa-circle-check text-emerald-600"></i>' : 'C.'}</span>
-                                    <span>${escapeHtml(opt3)}</span>
-                                </div>
+                            <!-- Preview 1 câu hỏi tiêu biểu -->
+                            <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-lg text-xs text-slate-600 mb-4 line-clamp-2 italic">
+                                <span class="font-semibold text-slate-800 not-italic">Ví dụ:</span> "${escapeHtml(firstQ)}"
                             </div>
                         </div>
 
-                        <!-- Footer Action Bar -->
-                        <div class="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                            <button onclick="copyMcqByIndex(${idx})" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded text-[11px] flex items-center gap-1.5 transition-all">
-                                <i class="fa-regular fa-copy text-slate-500"></i> Sao chép câu hỏi
+                        <!-- Action Bar: Gán Link Làm Quiz & Xem Chi Tiết -->
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                            <!-- Nút Mở Làm Bài Quiz Trực Tiếp -->
+                            <button onclick="openResource('${escapeHtml(grp.quizUrl)}', 'Quiz: ${escapeHtml(grp.topic)}')" class="btn-primary text-xs flex-1 py-1.5" title="Mở làm bài trắc nghiệm">
+                                <i class="fa-solid fa-play text-[10px]"></i> Làm Quiz
                             </button>
-                            <span class="text-[10px] text-slate-400 font-medium">${item['Loại câu hỏi'] || 'Trắc nghiệm'}</span>
+
+                            <!-- Nút Mở Popup Xem Chi Tiết Toàn Bộ Câu Hỏi & Đáp Án -->
+                            <button onclick="openMcqGroupModal('${escapeHtml(grp.fullLabel)}')" class="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all flex items-center gap-1.5" title="Xem danh sách câu hỏi">
+                                <i class="fa-solid fa-list-check text-slate-500"></i> Xem Đề
+                            </button>
+
+                            <!-- Nút Sao Chép Bộ Đề -->
+                            <button onclick="copyMcqGroup('${escapeHtml(grp.fullLabel)}')" class="p-1.5 text-slate-400 hover:text-slate-800 rounded hover:bg-slate-100" title="Sao chép toàn bộ câu hỏi">
+                                <i class="fa-regular fa-copy text-sm"></i>
+                            </button>
+
+                            <!-- Nút Chia Đôi Màn Hình -->
+                            <button onclick="openInSplitMode('${escapeHtml(grp.quizUrl)}', 'Quiz: ${escapeHtml(grp.topic)}')" class="p-1.5 text-slate-400 hover:text-slate-800 rounded hover:bg-slate-100" title="Chia đôi màn hình">
+                                <i class="fa-solid fa-columns"></i>
+                            </button>
                         </div>
                     </div>`;
-                    return;
-                }
+                });
 
-                // Render Thẻ chuẩn cho các Sheet khác (E-Learning, App, Video,...)
+                container.innerHTML = html;
+                return;
+            }
+
+            // RENDER CÁC SHEET KHÁC (Masterdata E-Learning, Apps, Videos...) GIỮ NGUYÊN HOÀN HẢO
+            data.forEach(item => {
                 const title = item['Nội dung'] || item['Tên app'] || item['Title'] || item['TenBuoi'] || item['Tiêu đề'] || Object.values(item)[1] || Object.values(item)[0] || '';
                 const desc = item['Mô tả'] || item['Question'] || item['YeuCau'] || item['Answer'] || '';
                 const hdsdUrl = item['HDSD'] || item['Link app'] || item['Link'] || item['appUrl'] || '';
@@ -675,7 +717,6 @@
 
             container.innerHTML = html;
         }
-
         function renderSmartTable(data, headers) {
             const thead = document.getElementById('table-head');
             const tbody = document.getElementById('table-body');
@@ -976,6 +1017,96 @@
             document.getElementById('view-mode-grid').className = mode === 'grid' ? 'px-2.5 py-1 rounded text-slate-600 bg-white shadow-sm font-medium transition-all' : 'px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all';
             document.getElementById('view-mode-table').className = mode === 'table' ? 'px-2.5 py-1 rounded text-slate-600 bg-white shadow-sm font-medium transition-all' : 'px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all';
             renderItems();
+        }
+        // Mở Modal xem toàn bộ câu hỏi của 1 Bộ Đề
+        function openMcqGroupModal(groupKey) {
+            const grp = window.currentMcqGroups ? window.currentMcqGroups[groupKey] : null;
+            if (!grp) return;
+
+            const modal = document.getElementById('floating-modal');
+            const iframe = document.getElementById('modal-iframe');
+            const fallback = document.getElementById('modal-fallback');
+            const richDetails = document.getElementById('modal-rich-details');
+
+            document.getElementById('modal-title').innerText = `${grp.topic} (${grp.questions.length} câu hỏi)`;
+            document.getElementById('modal-badge').innerText = grp.course;
+            document.getElementById('modal-badge').className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-600 text-white uppercase tracking-wider';
+            document.getElementById('modal-external-link').href = grp.quizUrl;
+
+            // Ẩn iframe, hiện màn hình câu hỏi chi tiết
+            iframe.classList.add('hidden');
+            fallback.classList.add('hidden');
+            richDetails.classList.remove('hidden');
+
+            let html = `
+                <div class="max-w-4xl mx-auto space-y-6">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+                        <div>
+                            <span class="text-xs font-bold text-kiot-blue uppercase tracking-wider">${escapeHtml(grp.course)}</span>
+                            <h2 class="text-base font-bold text-slate-900">${escapeHtml(grp.topic)}</h2>
+                        </div>
+                        <button onclick="copyMcqGroup('${escapeHtml(grp.fullLabel)}')" class="btn-primary text-xs">
+                            <i class="fa-regular fa-copy"></i> Sao Chép Tất Cả ${grp.questions.length} Câu
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+            `;
+
+            grp.questions.forEach((qItem, idx) => {
+                const question = qItem['Câu hỏi'] || '';
+                const opt1 = qItem['Lựa chọn 1'] || '';
+                const opt2 = qItem['Lựa chọn 2'] || '';
+                const opt3 = qItem['Lựa chọn 3'] || '';
+                const correctRaw = String(qItem['Lựa chọn đúng'] || '').trim();
+
+                const is1 = (correctRaw === '1' || correctRaw.toUpperCase() === 'A');
+                const is2 = (correctRaw === '2' || correctRaw.toUpperCase() === 'B');
+                const is3 = (correctRaw === '3' || correctRaw.toUpperCase() === 'C');
+
+                html += `
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <h4 class="text-xs font-bold text-slate-900 mb-2 leading-relaxed">
+                            <span class="text-kiot-blue font-mono font-bold mr-1">Câu ${idx + 1}:</span> ${escapeHtml(question)}
+                        </h4>
+                        <div class="space-y-1.5 text-xs mt-3">
+                            <div class="p-2 rounded-lg border flex items-start gap-2 ${is1 ? 'bg-emerald-50 border-emerald-300 font-semibold text-emerald-900' : 'bg-white border-slate-200 text-slate-600'}">
+                                <span class="font-bold flex-shrink-0 w-4">${is1 ? '<i class="fa-solid fa-circle-check text-emerald-600"></i>' : 'A.'}</span>
+                                <span>${escapeHtml(opt1)}</span>
+                            </div>
+                            <div class="p-2 rounded-lg border flex items-start gap-2 ${is2 ? 'bg-emerald-50 border-emerald-300 font-semibold text-emerald-900' : 'bg-white border-slate-200 text-slate-600'}">
+                                <span class="font-bold flex-shrink-0 w-4">${is2 ? '<i class="fa-solid fa-circle-check text-emerald-600"></i>' : 'B.'}</span>
+                                <span>${escapeHtml(opt2)}</span>
+                            </div>
+                            <div class="p-2 rounded-lg border flex items-start gap-2 ${is3 ? 'bg-emerald-50 border-emerald-300 font-semibold text-emerald-900' : 'bg-white border-slate-200 text-slate-600'}">
+                                <span class="font-bold flex-shrink-0 w-4">${is3 ? '<i class="fa-solid fa-circle-check text-emerald-600"></i>' : 'C.'}</span>
+                                <span>${escapeHtml(opt3)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+            richDetails.innerHTML = html;
+            modal.classList.remove('hidden');
+        }
+
+        // Sao chép toàn bộ câu hỏi của Bộ đề
+        function copyMcqGroup(groupKey) {
+            const grp = window.currentMcqGroups ? window.currentMcqGroups[groupKey] : null;
+            if (!grp) return;
+
+            let text = `=== BỘ ĐỀ TRẮC NGHIỆM: ${grp.fullLabel} (${grp.questions.length} câu) ===\n\n`;
+            grp.questions.forEach((q, idx) => {
+                const c = String(q['Lựa chọn đúng'] || '').trim();
+                const ans = (c === '1' || c === 'A') ? 'A' : ((c === '2' || c === 'B') ? 'B' : 'C');
+                text += `Câu ${idx + 1}: ${q['Câu hỏi']}\nA. ${q['Lựa chọn 1']}\nB. ${q['Lựa chọn 2']}\nC. ${q['Lựa chọn 3']}\n👉 Đáp án đúng: ${ans}\n\n`;
+            });
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert(`Đã sao chép trọn bộ ${grp.questions.length} câu hỏi của bài:\n"${grp.topic}" vào clipboard!`);
+            });
         }
 
         function escapeHtml(str) {
