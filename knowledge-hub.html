@@ -926,5 +926,1081 @@
                 .replace(/'/g, '&#039;');
         }
     </script>
+    <!-- ==================== PHẦN 2A: JAVASCRIPT WORKSPACE ENGINE & DATA MODULE 1 ==================== -->
+    <script>
+        // --- 1. GLOBAL STATE MANAGEMENT ---
+        const AppState = {
+            currentCategory: 'apps-review',
+            currentSubFilter: 'all',
+            viewMode: 'grid', // 'grid' | 'table'
+            isSplitOpen: false,
+            activeTabId: 'tab-home',
+            openTabs: [], // { id, title, type, url, data }
+            splitItem: null,
+            globalFilterType: 'all',
+            searchQuery: ''
+        };
+
+        // --- 2. DATABASE MODULE 1: APPS, E-LEARNING, MCQ, VIDEO SCRIPTS ---
+        window.KNOWLEDGE_BASE = {
+            // [A] CỔNG ỨNG DỤNG & PORTAL THỰC HÀNH
+            apps: [
+                {
+                    id: 'app-review-trainer',
+                    category: 'apps-review',
+                    subCategory: 'Tái ký',
+                    title: 'Review Tái ký - Trainer View',
+                    desc: 'Cổng tổng hợp đánh giá và thẩm định kỹ năng xử lý tình huống tái ký dành riêng cho Giảng viên (Trainer).',
+                    appUrl: 'https://kiotvietlnd.github.io/quiz/review-tai-ky/trainer',
+                    editUrl: 'https://github.com/kiotvietlnd/quiz/blob/main/review-tai-ky/trainer.html',
+                    icon: 'fa-user-tie',
+                    badge: 'Trainer App',
+                    badgeColor: 'bg-amber-100 text-amber-800'
+                },
+                {
+                    id: 'app-review-manager',
+                    category: 'apps-review',
+                    subCategory: 'Tái ký',
+                    title: 'Review Tái ký - Manager View',
+                    desc: 'Giao diện giám sát, đối soát điểm số và theo dõi tiến độ hoàn thành các tình huống tái ký dành cho Quản lý.',
+                    appUrl: 'https://kiotvietlnd.github.io/quiz/review-tai-ky/manager',
+                    editUrl: 'https://github.com/kiotvietlnd/quiz/blob/main/review-tai-ky/manager.html',
+                    icon: 'fa-user-shield',
+                    badge: 'Manager App',
+                    badgeColor: 'bg-indigo-100 text-indigo-800'
+                },
+                {
+                    id: 'app-practice-hv',
+                    category: 'apps-practice',
+                    subCategory: 'Tái ký',
+                    title: 'Thực hành Tái ký - Học viên',
+                    desc: 'Môi trường làm bài tập tình huống thực chiến dành cho nhân viên kinh doanh / CSKH trong chương trình Tái ký.',
+                    appUrl: 'https://kiotvietlnd.github.io/quiz/thuc-hanh/tai-ky/index.html',
+                    editUrl: 'https://github.com/kiotvietlnd/quiz/blob/main/thuc-hanh/tai-ky/index.html',
+                    icon: 'fa-user-graduate',
+                    badge: 'Học Viên',
+                    badgeColor: 'bg-emerald-100 text-emerald-800'
+                },
+                {
+                    id: 'app-practice-gv',
+                    category: 'apps-practice',
+                    subCategory: 'Tái ký',
+                    title: 'Thực hành Tái ký - Giảng viên',
+                    desc: 'Màn hình chấm bài, tra cứu đáp án mẫu và chấm điểm trực tiếp các bài tập thực hành tình huống của học viên.',
+                    appUrl: 'https://kiotvietlnd.github.io/quiz/thuc-hanh/tai-ky/view-giang-vien.html',
+                    editUrl: 'https://github.com/kiotvietlnd/quiz/blob/main/thuc-hanh/tai-ky/view-giang-vien.html',
+                    icon: 'fa-chalkboard-user',
+                    badge: 'Giảng Viên',
+                    badgeColor: 'bg-blue-100 text-blue-800'
+                },
+                {
+                    id: 'app-th-gv-hub',
+                    category: 'apps-practice',
+                    subCategory: 'SPCB',
+                    title: 'Cổng Thực Hành - View Giảng Viên (Tổng)',
+                    desc: 'Hub quản trị tổng quan toàn bộ các phòng thực hành Sản Phẩm Cơ Bản và bài tập tái ký của giảng viên.',
+                    appUrl: 'https://kiotvietlnd.github.io/quiz/thuc-hanh/view-giang-vien',
+                    editUrl: '',
+                    icon: 'fa-layer-group',
+                    badge: 'Master Hub',
+                    badgeColor: 'bg-purple-100 text-purple-800'
+                },
+                {
+                    id: 'app-th-index-hub',
+                    category: 'apps-practice',
+                    subCategory: 'SPCB',
+                    title: 'Cổng Thực Hành - Portal Chung Học Viên',
+                    desc: 'Cổng truy cập trung tâm dành cho học viên tham gia các buổi thực hành nghiệp vụ KiotViet.',
+                    appUrl: 'https://kiotvietlnd.github.io/quiz/thuc-hanh/',
+                    editUrl: '',
+                    icon: 'fa-door-open',
+                    badge: 'Student Portal',
+                    badgeColor: 'bg-teal-100 text-teal-800'
+                },
+                {
+                    id: 'app-spcb-retail-s1',
+                    category: 'apps-spcb',
+                    subCategory: 'Retail',
+                    title: 'SPCB Retail - Buổi 1 (Hàng hóa & Danh mục)',
+                    desc: 'Môi trường thực hành khởi tạo hàng hóa, phân loại combo, dịch vụ, đơn vị tính ngành Bán Lẻ.',
+                    appUrl: 'https://kiotvietlnd.github.io/quiz/thuc-hanh/spcb.html?roadmap=Retail&session=session_1',
+                    editUrl: '',
+                    icon: 'fa-shop',
+                    badge: 'Retail S1',
+                    badgeColor: 'bg-sky-100 text-sky-800'
+                },
+                {
+                    id: 'app-spcb-retail-s2',
+                    category: 'apps-spcb',
+                    subCategory: 'Retail',
+                    title: 'SPCB Retail - Buổi 2 (Giao dịch & Giá bán)',
+                    desc: 'Môi trường thực hành nhập hàng, trả hàng nhập, thiết lập bảng giá, kiểm kho và theo dõi thẻ kho.',
+                    appUrl: 'https://kiotvietlnd.github.io/quiz/thuc-hanh/spcb.html?roadmap=Retail&session=session_2',
+                    editUrl: '',
+                    icon: 'fa-barcode',
+                    badge: 'Retail S2',
+                    badgeColor: 'bg-sky-100 text-sky-800'
+                },
+                {
+                    id: 'app-spcb-retail-s3',
+                    category: 'apps-spcb',
+                    subCategory: 'Retail',
+                    title: 'SPCB Retail - Buổi 3 (Bán hàng, Đơn & Thuế)',
+                    desc: 'Môi trường thực hành bán hàng, đặt hàng, xử lý trả hàng, công nợ khách hàng và kết nối hóa đơn điện tử.',
+                    appUrl: 'https://kiotvietlnd.github.io/quiz/thuc-hanh/spcb.html?roadmap=Retail&session=session_3',
+                    editUrl: '',
+                    icon: 'fa-cash-register',
+                    badge: 'Retail S3',
+                    badgeColor: 'bg-sky-100 text-sky-800'
+                },
+                {
+                    id: 'app-spcb-fnb-s1',
+                    category: 'apps-spcb',
+                    subCategory: 'F&B',
+                    title: 'SPCB FNB - Buổi 1 (Thực đơn & Phòng bàn)',
+                    desc: 'Môi trường thực hành tạo thực đơn, món thường, topping, dịch vụ và combo ngành Ẩm thực.',
+                    appUrl: 'https://kiotvietlnd.github.io/quiz/thuc-hanh/spcb.html?roadmap=FNB&session=session_1',
+                    editUrl: '',
+                    icon: 'fa-utensils',
+                    badge: 'FNB S1',
+                    badgeColor: 'bg-orange-100 text-orange-800'
+                },
+                {
+                    id: 'app-spcb-fnb-s2',
+                    category: 'apps-spcb',
+                    subCategory: 'F&B',
+                    title: 'SPCB FNB - Buổi 2 (Order & Báo bếp)',
+                    desc: 'Môi trường thực hành nhận order, tách bàn, gộp bàn, thông báo bếp và quản lý kho nguyên liệu.',
+                    appUrl: 'https://kiotvietlnd.github.io/quiz/thuc-hanh/spcb.html?roadmap=FNB&session=session_2',
+                    editUrl: '',
+                    icon: 'fa-bell-concierge',
+                    badge: 'FNB S2',
+                    badgeColor: 'bg-orange-100 text-orange-800'
+                },
+                {
+                    id: 'app-spcb-fnb-s3',
+                    category: 'apps-spcb',
+                    subCategory: 'F&B',
+                    title: 'SPCB FNB - Buổi 3 (Thanh toán & Đa kênh)',
+                    desc: 'Môi trường thực hành thanh toán QR, chia bill, kết ca và tích hợp GrabFood/ShopeeFood.',
+                    appUrl: 'https://kiotvietlnd.github.io/quiz/thuc-hanh/spcb.html?roadmap=FNB&session=session_3',
+                    editUrl: '',
+                    icon: 'fa-receipt',
+                    badge: 'FNB S3',
+                    badgeColor: 'bg-orange-100 text-orange-800'
+                },
+                {
+                    id: 'app-spcb-booking-s1',
+                    category: 'apps-spcb',
+                    subCategory: 'Booking',
+                    title: 'SPCB Booking - Buổi 1 (Khởi tạo dữ liệu)',
+                    desc: 'Thực hành thiết lập cấu hình phòng, hạng phòng, giường, thợ và bảng giá ngành Salon & Khách sạn.',
+                    appUrl: 'https://kiotvietlnd.github.io/quiz/thuc-hanh/spcb.html?roadmap=Booking&session=session_1',
+                    editUrl: '',
+                    icon: 'fa-calendar-check',
+                    badge: 'Booking S1',
+                    badgeColor: 'bg-pink-100 text-pink-800'
+                },
+                {
+                    id: 'app-spcb-booking-s2',
+                    category: 'apps-spcb',
+                    subCategory: 'Booking',
+                    title: 'SPCB Booking - Buổi 2 (Đặt phòng & Check-in)',
+                    desc: 'Thực hành đặt lịch hẹn, check-in quét CCCD, quản lý thẻ từ, xếp phòng và buồng phòng.',
+                    appUrl: 'https://kiotvietlnd.github.io/quiz/thuc-hanh/spcb.html?roadmap=Booking&session=session_2',
+                    editUrl: '',
+                    icon: 'fa-key',
+                    badge: 'Booking S2',
+                    badgeColor: 'bg-pink-100 text-pink-800'
+                },
+                {
+                    id: 'app-spcb-booking-s3',
+                    category: 'apps-spcb',
+                    subCategory: 'Booking',
+                    title: 'SPCB Booking - Buổi 3 (Check-out & Kênh bán)',
+                    desc: 'Thực hành trả phòng, tính giờ vắt khung, đồng bộ OTAs iCal và tích hợp Mini App HiKiot.',
+                    appUrl: 'https://kiotvietlnd.github.io/quiz/thuc-hanh/spcb.html?roadmap=Booking&session=session_3',
+                    editUrl: '',
+                    icon: 'fa-hotel',
+                    badge: 'Booking S3',
+                    badgeColor: 'bg-pink-100 text-pink-800'
+                },
+                {
+                    id: 'tool-noova-convert',
+                    category: 'apps-tools',
+                    subCategory: 'Công cụ',
+                    title: 'Noova MCQ Convert Hub (Google Sites)',
+                    desc: 'Tiện ích chuyển đổi bộ câu hỏi trắc nghiệm sang định dạng Noova Quiz phục vụ đào tạo nội bộ.',
+                    appUrl: 'https://sites.google.com/view/kvlnd-product-hub/noova-mcq-convert',
+                    editUrl: '',
+                    icon: 'fa-wand-magic-sparkles',
+                    badge: 'L&D Tool',
+                    badgeColor: 'bg-purple-100 text-purple-800'
+                }
+            ],
+
+            // [B] MASTERDATA E-LEARNING (TỔNG HỢP 10 KHÓA HỌC)
+            elearning: [
+                // RETAIL 01
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Tổng quan các nhóm giải pháp KiotViet', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-lam-quen-voi-kiotviet/tong-quan-cac-nhom-giai-phap-kiotviet/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/06/09092629/RETAIL-0.jpg', youtube: 'https://www.YouTube.com/watch?v=K0tr1tLdNkg', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/tong-quan-cac-nhom-giai-phap', desc: 'Hệ sinh thái toàn diện cho nhà bán lẻ gồm ba trụ cột: Tối ưu Vận hành, Tối ưu Quản lý và Thúc đẩy Doanh thu, giúp kiểm soát hoạt động và ra quyết định chiến lược hiệu quả' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Tổng quan các bước làm quen KiotViet', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-lam-quen-voi-kiotviet/tong-quan-cac-buoc-lam-quen-kiotviet/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/25041819/QUY-TRINH-LAM-QUEN-KIOTVIET.jpg', youtube: 'https://www.youtube.com/watch?v=00AutEZ0lOE', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/quy-trinh-lam-quen', desc: 'Lộ trình 6 bước cơ bản mô phỏng hoạt động hàng ngày tại cửa hàng, giúp chủ kinh doanh làm quen nhanh chóng, quản lý tồn kho, bán hàng, dòng tiền và hiệu quả kinh doanh dễ dàng' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Bước 1 - Thêm mới hàng hóa', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-lam-quen-voi-kiotviet/buoc-1-them-moi-hang-hoa/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/25041201/BUOC-1-THEM-MOI-HANG-HOA.jpg', youtube: 'https://www.YouTube.com/watch?v=ikFz8MHQRVk', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/b1-them-hang-hoa', desc: 'Tạo dữ liệu gốc về sản phẩm với các thông tin cơ bản, phiên bản và đơn vị tính, làm nền tảng quản lý tồn kho, bán hàng, kiểm kho và nhập hàng chính xác ngay từ đầu' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Bước 2 - Nhập hàng', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-lam-quen-voi-kiotviet/buoc-2-nhap-hang/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/25041251/BUOC-2-NHAP-HANG.jpg', youtube: 'https://www.YouTube.com/watch?v=JMsa-XAkXGs', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/b2-nhap-hang', desc: 'Ghi nhận số lượng hàng hóa nhập về từ nhà cung cấp, giúp tự động cập nhật chính xác tồn kho thực tế, lưu trữ lịch sử giao dịch và quản lý công nợ phải trả hiệu quả' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Bước 3 - Bán hàng', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-lam-quen-voi-kiotviet/buoc-3-ban-hang/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/25041335/BUOC-3-BAN-HANG.jpg', youtube: 'https://www.YouTube.com/watch?v=dHTkhW75BP4', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/b3-ban-hang', desc: 'Thao tác trung tâm giúp tạo hóa đơn nhanh chóng, linh hoạt nhiều hình thức thanh toán. Giao dịch thành công sẽ tự động trừ tồn kho và ghi nhận doanh thu, phản ánh đúng tình hình kinh doanh' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Bước 4 - Trả hàng', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-lam-quen-voi-kiotviet/buoc-4-tra-hang/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/25041423/BUOC-4-TRA-HANG.jpg', youtube: 'https://www.YouTube.com/watch?v=FQlkx-sPoRQ', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/b4-tra-hang', desc: 'Xử lý chuyên nghiệp các tình huống khách trả lại sản phẩm, đảm bảo số lượng tồn kho tự động cộng lại và dòng tiền hoàn trả cho khách được cập nhật chính xác, minh bạch' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Bước 5 - Quản lý công nợ', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-lam-quen-voi-kiotviet/buoc-5-quan-ly-cong-no/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/25041533/BUOC-5-CONG-NO.jpg', youtube: 'https://www.YouTube.com/watch?v=MZ7OQJP7ihc', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/b5-cong-no', desc: 'Theo dõi, thanh toán và đối soát tập trung toàn bộ khoản nợ phải thu từ khách hàng và nợ phải trả cho nhà cung cấp, đảm bảo dòng tiền cửa hàng luôn minh bạch và kiểm soát chặt chẽ' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Bước 6 - Theo dõi báo cáo', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-lam-quen-voi-kiotviet/buoc-6-theo-doi-bao-cao/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/25041637/BUOC-6-BAO-CAO.jpg', youtube: 'https://www.YouTube.com/watch?v=AOABhWXRYbY', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/b6-bao-cao', desc: 'Tổng hợp trực quan mọi dữ liệu từ bán hàng, hàng hóa, tài chính thành các báo cáo chi tiết về doanh thu, lợi nhuận, dòng tiền, giúp chủ cửa hàng nắm bắt tình hình và ra quyết định chiến lược' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Tra cứu sản phẩm', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-tra-cuu-san-pham/tra-cuu-san-pham/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07103353/TRA-CUU-SAN-PHAM.jpg', youtube: 'https://www.youtube.com/watch?v=wKZ5Eq6X5Gg', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/tra-cuu-san-pham', desc: 'Tìm kiếm nhanh hàng hóa bằng tên, mã vạch, hình ảnh hoặc bộ lọc thuộc tính ngay trên màn hình bán hàng, giúp tạo hóa đơn chính xác và giảm thời gian chờ đợi của khách' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Bán hàng', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-ban-hang/ban-hang/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07103353/BAN-HANG.jpg', youtube: 'https://www.youtube.com/watch?v=rq3n1lINUXQ', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/ban-hang', desc: 'Giao diện tinh giản hỗ trợ đa dạng chế độ bán nhanh, bán thường, bán giao hàng và linh hoạt phương thức thanh toán, tích hợp khuyến mại, tích điểm giúp tối ưu tốc độ tại quầy' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Trả hàng', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-tra-hang/tra-hang/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07103418/TRA-HANG.jpg', youtube: 'https://www.youtube.com/watch?v=icuBxZ1m4rA', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/tra-hang', desc: 'Hỗ trợ trả hàng theo hóa đơn, trả nhanh hoặc đổi trả sản phẩm trong cùng một giao dịch. Mỗi thao tác tạo một phiếu riêng biệt giúp tự động cập nhật tồn kho và đối soát minh bạch' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Đặt hàng', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-dat-hang/dat-hang/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07103422/DAT-HANG.jpg', youtube: 'https://www.youtube.com/watch?v=hn5eVJAoyJQ', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/dat-hang', desc: 'Ghi nhận và quản lý chuyên nghiệp các đơn đặt trước của khách, cho phép bán hàng ngay cả khi hết tồn kho và linh hoạt xử lý giao hàng nhiều lần cho cùng một đơn' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Thu khác', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-thanh-toan/thu-khac/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07103806/THANH-TOAN-THU-KHAC-1.jpg', youtube: 'https://www.YouTube.com/watch?v=ZPwQAmwRNX0', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/thu-khac', desc: 'Tự động cộng phụ phí (VAT, ship). Ngăn ngừa nhân viên tính thiếu tiền, bảo vệ trọn vẹn doanh thu.' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Thanh toán', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-thanh-toan/thanh-toan/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07103431/THANH-TOAN-1.jpg', youtube: 'https://www.youtube.com/watch?v=pDiFvF0zcqg', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/thanh-toan', desc: 'Hoàn tất giao dịch nhanh chóng với đa dạng phương thức như tiền mặt, thẻ, chuyển khoản, ví điện tử, điểm tích lũy hoặc voucher, tự động tính tiền thừa và quản lý chính xác' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Thanh toán qua QR', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-thanh-toan/thanh-toan-qua-vietqr/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/07/17014607/TTQRR_170726-1.jpg', youtube: 'https://www.youtube.com/watch?v=LUZVd9oEfJI', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/thanh-toan-qua-qr', desc: 'Tạo mã QR động chứa đúng số tiền và thông tin tài khoản cho mỗi giao dịch. Hỗ trợ tự động nhận thông báo thành công từ ngân hàng/ví điện tử ngay trên phần mềm bán hàng' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Ngành Nhà thuốc', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-chuyen-nganh/nganh-nha-thuoc/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/08/29161744/CNT_290826-61-1-1-1.png', youtube: 'https://www.youtube.com/watch?v=aInf1PKh9Tc', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/nganh-nha-thuoc', desc: 'Quản lý chặt chẽ theo Lô và Hạn sử dụng (nguyên tắc FEFO), hỗ trợ quét mã vạch và tự động liên thông dữ liệu đồng bộ lên Cơ sở dữ liệu Dược Quốc gia đúng quy định' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Ngành Điện thoại', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-chuyen-nganh/nganh-dien-thoai-dien-may/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07123046/CHUYEN-NGANH-DIEN-THOAI-DIEN-MAY.jpg', youtube: 'https://www.youtube.com/watch?v=K7gww0ozyuc', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/nganh-dien-thoai', desc: 'Quản lý chính xác sản phẩm theo định danh IMEI/Serial duy nhất, hỗ trợ toàn diện quy trình bán hàng, theo dõi lịch sử bảo hành tự động và quản lý chặt chẽ dịch vụ sửa chữa thiết bị' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Ngành Vật liệu xây dựng', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-chuyen-nganh/nganh-vat-lieu-xay-dung/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07123108/CHUYEN-NGANH-VAT-LIEU-XAY-DUNG.jpg', youtube: 'https://www.YouTube.com/watch?v=7NiyP_xXISs', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/nganh-vat-lieu-xay-dung', desc: 'Tự động quy đổi đơn vị tính phức tạp (từ Thùng/Pallet sang m2/kg), linh hoạt kiểm kho cồng kềnh bằng điện thoại và theo dõi công nợ chi tiết theo từng khách hàng hoặc công trình' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Danh sách hàng hóa', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-hang-hoa/danh-sach-hang-hoa/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07123437/HANG-HOA-DANH-SACH-HANG-HOA.jpg', youtube: 'https://www.youtube.com/watch?v=iRTec0tOhjE', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/danh-sach-hang-hoa', desc: 'Quản lý tập trung chi tiết hàng nghìn sản phẩm, dịch vụ, combo hay hàng sản xuất. Hỗ trợ phân loại khoa học theo nhóm, thuộc tính, thương hiệu và dễ dàng theo dõi tồn kho, thẻ kho' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Hàng hóa thường', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-hang-hoa/hang-hoa-thuong/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07123448/HANG-HOA-HANG-HOA-THUONG-1.jpg', youtube: 'https://www.YouTube.com/watch?v=uTZGaJ5isFw', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/hang-hoa-thuong', desc: 'Quản lý các sản phẩm vật lý đếm được, tự động cập nhật tồn kho khi phát sinh giao dịch. Lưu trữ đầy đủ thuộc tính như mã, giá, màu sắc, giúp tối ưu bán hàng và kiểm soát kho' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Hàng dịch vụ', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-hang-hoa/hang-dich-vu/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07123448/HANG-HOA-HANG-DICH-VU-2.jpg', youtube: 'https://www.youtube.com/watch?v=XPqn9v_S7K4', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/hang-dich-vu', desc: 'Quản lý các sản phẩm phi vật chất như phí sửa chữa, giao hàng mà không cần theo dõi tồn kho. Có thể gộp chung vào hóa đơn bán hàng để theo dõi doanh thu tách biệt, chính xác' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Hàng combo - đóng gói', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-hang-hoa/hang-combo-dong-goi/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07123525/HANG-HOA-HANG-COMBO-DONG-GOI-1.jpg', youtube: 'https://www.youtube.com/watch?v=HYry-AopsM0', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/hang-combo-dong-goi', desc: 'Gộp nhiều sản phẩm lẻ thành một gói chung. Khi bán, hệ thống không trừ tồn kho combo mà tự động trừ tồn kho của từng hàng hóa thành phần, giúp tính giá vốn chính xác' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Hàng hóa Lô-HSD', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-hang-hoa/hang-hoa-lo-han-su-dung', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07123526/HANG-HOA-HANG-LO-HSD.jpg', youtube: 'https://www.youtube.com/watch?v=kpXZiPeh1QE', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/hang-hoa-lo-hsd', desc: 'Quản lý chi tiết tồn kho, giá vốn theo từng lô hàng riêng biệt. Tự động gợi ý xuất bán lô cận date (FEFO) và cảnh báo thông minh, giúp giảm thiểu thất thoát do hàng hết hạn' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Hàng hóa Serial/IMEI', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-hang-hoa/hang-hoa-serial-imei/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07123539/HANG-HOA-HANG-SERIAL-IMEI.jpg', youtube: 'https://www.youtube.com/watch?v=K7gww0ozyuc', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/hang-hoa-serial-imei', desc: 'Quản lý từng sản phẩm bằng một mã Serial/IMEI duy nhất từ khi nhập đến khi bán. Đảm bảo minh bạch giao dịch, chống gian lận và tối ưu hóa quy trình bảo hành, sửa chữa' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Bảo hành, bảo trì', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-hang-hoa/bao-hanh-bao-tri/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07123606/HANG-HOA-BAO-HANH-BAO-TRI.jpg', youtube: 'https://www.youtube.com/watch?v=K7gww0ozyuc', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/bao-hanh-bao-tri', desc: 'Quản lý toàn diện vòng đời sản phẩm sau bán hàng, tự động ghi nhận phiếu bảo hành, nhắc lịch bảo trì định kỳ và theo dõi chuyên nghiệp các yêu cầu sửa chữa của khách' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Thiết lập giá', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-hang-hoa/thiet-lap-gia/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07123554/HANG-HOA-THIET-LAP-GIA-1.jpg', youtube: 'https://www.youtube.com/watch?v=_sbKk9Jkltk', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/thiet-lap-gia', desc: 'Cho phép tạo nhiều bảng giá linh hoạt (giá sỉ, giá VIP, giá theo chi nhánh) bên cạnh giá mặc định. Tự động cập nhật công thức tính giá bán giúp tối ưu hóa chiến lược kinh doanh' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Kiểm kho', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-hang-hoa/kiem-kho/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07123615/HANG-HOA-KIEM-KHO-2.jpg', youtube: 'https://www.youtube.com/watch?v=FAbgwXjI_0U&t=1s', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/kiem-kho', desc: 'Đối chiếu số lượng hàng hóa thực tế tại kho với số liệu trên phần mềm. Giúp phát hiện chênh lệch, cân bằng tồn kho nhanh chóng và hạn chế tối đa thất thoát, gian lận' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Xuất dùng nội bộ', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-hang-hoa/xuat-dung-noi-bo/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/03/05082204/XDNBR_050326-32.png', youtube: '', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/xuat-dung-noi-bo', desc: 'Tạo phiếu xuất kho cho các mục đích nội bộ như dùng văn phòng phẩm, sự kiện, quà tặng. Tự động giảm tồn kho, phân loại và ghi nhận chính xác chi phí vận hành vào báo cáo lãi lỗ' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Xuất hủy', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-hang-hoa/xuat-huy/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07123624/HANG-HOA-XUAT-HUY-1.jpg', youtube: '', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/xuat-huy', desc: 'Loại bỏ hàng hóa hỏng, lỗi hoặc hết hạn sử dụng khỏi kho. Tự động trừ tồn kho thực tế, ghi nhận thành phiếu riêng biệt để dễ truy vết và hỗ trợ hạch toán lãi lỗ chính xác' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Nhập hàng', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-giao-dich/nhap-hang/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07143812/GIAO-DICH-NHAP-HANG-1.jpg', youtube: 'https://www.youtube.com/watch?v=UhQAY9AmgtY', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/nhap-hang', desc: 'Quản lý toàn bộ quy trình nhập sản phẩm từ nhà cung cấp. Ghi nhận chi tiết từng lần nhập, cập nhật tồn kho tức thì và theo dõi công nợ, chi phí nhập hàng minh bạch, chính xác' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Chi phí nhập hàng', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-giao-dich/chi-phi-nhap-hang/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07143920/GIAO-DICH-CHI-PHI-NHAP-HANG-1.jpg', youtube: '', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/chi-phi-nhap-hang', desc: 'Phân bổ phí vận chuyển, bốc vác vào giá vốn. Giúp tính lãi lỗ thực tế, tránh tình trạng "lãi giả lỗ thật".' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Nhà cung cấp', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-nha-cung-cap/nha-cung-cap/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07143953/NHA-CUNG-CAP-1.jpg', youtube: 'https://www.youtube.com/watch?v=rtwRBcaWxMI', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/nha-cung-cap', desc: 'Lưu trữ, phân loại thông tin đối tác cung cấp tập trung. Hỗ trợ theo dõi lịch sử giao dịch nhập/trả hàng và quản lý chi tiết công nợ phải trả, đảm bảo tài chính luôn rõ ràng' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Khách hàng', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-khach-hang/khach-hang/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07144015/KHACH-HANG-1.jpg', youtube: 'https://www.youtube.com/watch?v=Z9JiGWVkXxM&t=4s', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/khach-hang', desc: 'Lưu trữ thông tin, lịch sử giao dịch và công nợ khách hàng. Dễ dàng phân nhóm để áp dụng chính sách giá, tích điểm, khuyến mại và xây dựng chiến lược chăm sóc, gia tăng doanh thu hiệu quả' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Khởi tạo dữ liệu Quản lý Nhân viên', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-nhan-vien/khoi-tao-du-lieu-quan-ly-nhan-vien/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/06/22045152/KTE_220626-1.jpg', youtube: '', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/khoi-tao-du-lieu-nhan-vien', desc: 'Hướng dẫn các bước thiết lập hệ thống quản lý nhân viên trên KiotViet, hỗ trợ chủ cửa hàng cấu hình ca làm, xếp lịch, lựa chọn hình thức chấm công và tính lương tự động nhanh chóng.' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Sổ quỹ', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-so-quy/so-quy', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07144135/SO-QUY-2.jpg', youtube: 'https://www.youtube.com/watch?v=aQKR6TxfOig', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/so-quy', desc: 'Quản lý tập trung mọi khoản thu, chi bằng tiền mặt, chuyển khoản hoặc ví điện tử. Tự động đối soát công nợ, luân chuyển quỹ nội bộ và hạch toán dòng tiền vào kết quả kinh doanh minh bạch' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Báo cáo', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-bao-cao/bao-cao/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07144208/BAO-CAO.jpg', youtube: 'https://www.youtube.com/watch?v=qAIDy8502OE', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/bao-cao', desc: 'Hệ thống cung cấp cái nhìn toàn cảnh đa chiều qua các báo cáo cuối ngày, bán hàng, hàng hóa, khách hàng và tài chính. Dữ liệu trực quan hỗ trợ phân tích và ra quyết định chiến lược kịp thời' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Tổng quan', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-bao-cao/tong-quan', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07144228/BAO-CAO-TONG-QUAN-1.jpg', youtube: '', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/tong-quan', desc: 'Màn hình trung tâm hiển thị toàn cảnh hoạt động kinh doanh. Cung cấp biểu đồ doanh thu, top hàng hóa bán chạy, chỉ số hiệu suất thời gian thực và các thông báo cảnh báo vận hành thông minh' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Quản lý người dùng', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-thiet-lap/quan-ly-nguoi-dung/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07144828/THIET-LAP-QUAN-LY-NGUOI-DUNG-1.jpg', youtube: 'https://www.youtube.com/watch?v=nbZgHEnf-iY', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/quan-ly-nguoi-dung', desc: 'Tạo tài khoản, giới hạn quyền truy cập và kiểm soát hoạt động của nhân viên theo từng vai trò. Đảm bảo an toàn dữ liệu nhạy cảm, tối ưu quy trình làm việc và tăng cường bảo mật hệ thống' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Cửa hàng Online trên Zalo', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-cua-hang-online-tren-zalo/cua-hang-online-tren-zalo/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/06/09082628/CHZR_090626-1.jpg', youtube: 'https://www.youtube.com/watch?v=byYMww3GbWE', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/cua-hang-online-tren-zalo', desc: 'Cung cấp giải pháp tạo gian hàng nhanh chóng trên Zalo Mini App, tự động đồng bộ hàng hóa, đơn hàng và quản lý tập trung' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'KiotViet Web', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-kiotviet-web/kiotviet-web', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07145714/WEBSITE-KIOTVIET-WEB-1.jpg', youtube: 'https://www.YouTube.com/watch?v=OAujCC8U9JA', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/kiotviet-web', desc: 'Cung cấp sẵn một website bán hàng chuyên nghiệp, dễ dàng chia sẻ và tự động đồng bộ hàng hóa, giá bán, tồn kho. Đơn khách đặt trực tuyến sẽ đổ thẳng về phần mềm để quản lý tập trung' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Kết nối Sàn TMĐT', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-ban-online/ket-noi-san-tmdt/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07145737/SAN-TMDT.jpg', youtube: 'https://www.YouTube.com/watch?v=8UM3xOrgfbE', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/ket-noi-san-tmdt', desc: 'Quản lý bán hàng tập trung trên Shopee, TikTok Shop, Lazada, Tiki. Tự động đồng bộ tồn kho, giá bán và kéo đơn hàng từ các sàn về phần mềm KiotViet để xử lý nhanh chóng trên một nền tảng' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Chat đa kênh', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-ban-online/chat-da-kenh/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/01/29074738/CDK_290126-1.png', youtube: '', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/chat-da-kenh', desc: 'Hợp nhất tin nhắn, bình luận từ Facebook, Instagram, Shopee và Zalo OA vào một giao diện. Hỗ trợ gửi tin nhanh, gắn nhãn khách hàng và tạo đơn hàng trực tiếp ngay trong khung chat giúp chốt đơn hiệu quả' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Khuyến mại', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-khuyen-mai/khuyen-mai/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07145945/KHUYEN-MAI-1.jpg', youtube: 'https://www.YouTube.com/watch?v=8EfaN5ZRvr8', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/khuyen-mai', desc: 'Công cụ tạo đa dạng ưu đãi như giảm giá, tặng hàng, tặng voucher theo hóa đơn hoặc sản phẩm. Hệ thống tự động áp dụng khi thỏa mãn điều kiện, giúp tăng tốc bán hàng và kiểm soát chặt chẽ' },
+                { course: 'Retail 01', category: 'elearning-retail', title: 'Tích điểm', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-tich-diem/tich-diem/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07150039/TICH-DIEM-1.jpg', youtube: 'https://www.YouTube.com/watch?v=L2KpDgn9r4Q', quiz: 'https://kiotvietlnd.github.io/elearning/retail/quiz/tich-diem', desc: 'Xây dựng chương trình khách hàng thân thiết bằng cách cộng điểm theo giá trị hóa đơn hoặc hàng hóa. Khách có thể dùng điểm để thanh toán, giúp gia tăng lòng trung thành và phân loại khách hàng hiệu quả' },
+
+                // FNB 01
+                { course: 'FNB 01', category: 'elearning-fnb', title: 'Tổng quan các nhóm giải pháp KiotViet', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/fnb-lam-quen-voi-kiotviet/tong-quan-cac-nhom-giai-phap-kiotviet/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/06/09092646/FNB-0.jpg', youtube: '', quiz: 'https://kiotvietlnd.github.io/elearning/fnb/quiz/tong-quan-cac-nhom-giai-phap', desc: 'Gồm Tối ưu vận hành, Tối ưu quản lý và Thúc đẩy doanh thu. Bộ giải pháp giúp F&B phục vụ nhanh, kiểm soát nguồn lực, chống thất thoát và tăng doanh số' },
+                { course: 'FNB 01', category: 'elearning-fnb', title: 'Tổng quan các bước làm quen KiotViet', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/fnb-lam-quen-voi-kiotviet/tong-quan-cac-buoc-lam-quen-kiotviet', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/03025553/LAM-QUEN-BUOC-0.jpg', youtube: '', quiz: 'https://kiotvietlnd.github.io/elearning/fnb/quiz/quy-trinh-lam-quen', desc: 'Gồm 6 bước cốt lõi mô phỏng luồng phục vụ: Khởi tạo phòng bàn, Thiết lập menu, Thiết lập số tài khoản, Nhận gọi món, Thanh toán và Xem báo cáo cuối ngày' },
+                { course: 'FNB 01', category: 'elearning-fnb', title: 'Bước 1 - Khởi tạo phòng bàn', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/fnb-lam-quen-voi-kiotviet/buoc-1-khoi-tao-phong-ban/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/05014638/PBF_050526-1.jpg', youtube: 'https://www.YouTube.com/watch?v=TRErKf3MB30', quiz: 'https://kiotvietlnd.github.io/elearning/fnb/quiz/b1-khoi-tao-phong-ban', desc: 'Quản lý khoa học, trực quan thông tin vị trí phòng bàn' },
+                { course: 'FNB 01', category: 'elearning-fnb', title: 'Bước 2 - Thiết lập Menu', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/fnb-lam-quen-voi-kiotviet/buoc-2-thiet-lap-menu/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/05020247/TLMF_050526-1.jpg', youtube: 'https://www.YouTube.com/watch?v=ormiziVIjwg', quiz: 'https://kiotvietlnd.github.io/elearning/fnb/quiz/b2-thiet-lap-menu', desc: 'Đưa toàn bộ món ăn, đồ uống, topping lên phần mềm, cài đặt giá bán và tạo sẵn các mẫu ghi chú giúp quy trình order diễn ra nhanh và chính xác' },
+                { course: 'FNB 01', category: 'elearning-fnb', title: 'Bước 3 - Thiết lập Số tài khoản', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/fnb-lam-quen-voi-kiotviet/buoc-3-thiet-lap-so-tai-khoan/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/05021752/TLSTKF_050526-1.jpg', youtube: 'https://www.YouTube.com/watch?v=L7JdZFeh2qE', quiz: 'https://kiotvietlnd.github.io/elearning/fnb/quiz/b3-thiet-lap-stk', desc: 'Cài đặt tài khoản ngân hàng vào hệ thống để tự động tạo mã VietQR động theo từng hóa đơn, giúp tăng tốc độ thanh toán và giảm sai sót' },
+                { course: 'FNB 01', category: 'elearning-fnb', title: 'Bước 4 - Nhận gọi món', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/fnb-lam-quen-voi-kiotviet/buoc-4-nhan-goi-mon/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/05022133/GMF_050526-1.jpg', youtube: 'https://www.YouTube.com/watch?v=32vQI2y_63k', quiz: 'https://kiotvietlnd.github.io/elearning/fnb/quiz/b4-nhan-goi-mon', desc: 'Thao tác order tại bàn, ghi nhận chi tiết yêu cầu (ít đường, topping) và gửi thông báo trực tiếp xuống bếp hoặc quầy pha chế một cách siêu tốc' },
+                { course: 'FNB 01', category: 'elearning-fnb', title: 'Bước 5 - Thanh toán', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/fnb-lam-quen-voi-kiotviet/buoc-5-thanh-toan/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/05023006/TTF_050526-1.jpg', youtube: 'https://www.YouTube.com/watch?v=m_ilgUlzdbw', quiz: 'https://kiotvietlnd.github.io/elearning/fnb/quiz/b5-thanh-toan', desc: 'Hoàn tất đơn hàng với đa dạng phương thức (tiền mặt, thẻ, VietQR), hỗ trợ áp dụng khuyến mại và in phiếu tạm tính chuyên nghiệp cho thực khách' },
+                { course: 'FNB 01', category: 'elearning-fnb', title: 'Bước 6 - Báo cáo cuối ngày', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/fnb-lam-quen-voi-kiotviet/buoc-6-bao-cao-cuoi-ngay/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/03025430/LAM-QUEN-BUOC-6.jpg', youtube: 'https://www.YouTube.com/watch?v=O4UT6O1lpo4', quiz: 'https://kiotvietlnd.github.io/elearning/fnb/quiz/b6-bao-cao', desc: 'Tự động tổng hợp doanh thu, thu chi, số lượng hóa đơn và món bán chạy, giúp chủ quán kiểm soát hiệu quả kinh doanh nhanh chóng trên điện thoại' },
+                { course: 'FNB 01', category: 'elearning-fnb', title: 'Gọi món qua mã QR', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/fnb-thuc-don-dien-tu/goi-mon-qua-ma-qr/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/07/10025455/GMQF_100726-1-2.png', youtube: 'https://www.youtube.com/watch?v=56nc9EyrCR0', quiz: 'https://kiotvietlnd.github.io/elearning/fnb/quiz/goi-mon-qua-ma-qr', desc: 'Khách tự quét mã QR tại bàn để xem menu và order. Yêu cầu tự động gửi về thu ngân và bếp, hỗ trợ thanh toán trước hoặc sau' },
+                { course: 'FNB 01', category: 'elearning-fnb', title: 'Kết nối ShopeeFood', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/fnb-foodapp/ket-noi-shopeefood/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/04/13051019/KIOTVIET-SHOPEEFOOD.jpg', youtube: 'https://www.YouTube.com/watch?v=24d-6hN1fcA', quiz: 'https://kiotvietlnd.github.io/elearning/fnb/quiz/ket-noi-shopeefood', desc: 'Tích hợp trực tiếp hệ thống với ShopeeFood. Tự động đồng bộ menu, nhận đơn về máy thu ngân và ghi nhận doanh thu thực nhận minh bạch' },
+                { course: 'FNB 01', category: 'elearning-fnb', title: 'Kết nối Grabfood', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/fnb-foodapp/ket-noi-grabfood/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/04/13050904/KIOTVIET-GRABFOOD.jpg', youtube: 'https://www.YouTube.com/watch?v=4ZkfaX48RSI', quiz: 'https://kiotvietlnd.github.io/elearning/fnb/quiz/ket-noi-grabfood', desc: 'Tự động đồng bộ thực đơn và đơn hàng với GrabFood. Thu ngân xử lý đơn ngay trên KiotViet, tự động cập nhật doanh thu và chiết khấu sàn' },
+
+                // SALON 01 & 02
+                { course: 'Salon 01', category: 'elearning-salon', title: 'Tổng quan các nhóm giải pháp KiotViet', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/salon-lam-quen-voi-kiotviet/tong-quan-cac-nhom-giai-phap-kiotviet/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/06/12100714/TONG-QUAN-SALON.jpg', youtube: '', quiz: 'https://kiotvietlnd.github.io/elearning/salon/quiz/tong-quan-cac-nhom-giai-phap', desc: 'Gồm Tối ưu vận hành, quản lý và Thúc đẩy doanh thu, giúp tự động hóa phục vụ và kiểm soát nguồn lực.' },
+                { course: 'Salon 01', category: 'elearning-salon', title: 'Bước 1 - Khởi tạo dữ liệu', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/salon-lam-quen-voi-kiotviet/buoc-1-khoi-tao-du-lieu/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/09022746/salonBuoc1_N_-1.png', youtube: 'https://www.YouTube.com/watch?v=dIKjQ2Plg0Y', quiz: 'https://kiotvietlnd.github.io/elearning/salon/quiz/b1-khoi-tao-du-lieu', desc: 'Thiết lập nền tảng cửa hàng, khai báo dịch vụ, gói liệu trình, thẻ tài khoản và sơ đồ giường phòng.' },
+                { course: 'Salon 01', category: 'elearning-salon', title: 'Bước 2 - Quản lý nhân viên', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/salon-lam-quen-voi-kiotviet/buoc-2-quan-ly-nhan-vien/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/09022937/salonBuoc2_N_-1.png', youtube: 'https://www.YouTube.com/watch?v=1cDtqWm4z8s', quiz: 'https://kiotvietlnd.github.io/elearning/salon/quiz/b2-quan-ly-nhan-vien', desc: 'Tạo hồ sơ, phân quyền, thiết lập lương cứng và xây dựng bảng hoa hồng chi tiết cho thợ chính, thợ phụ.' },
+                { course: 'Salon 01', category: 'elearning-salon', title: 'Bước 3 - Thêm mới lịch hẹn', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/salon-lam-quen-voi-kiotviet/buoc-3-them-moi-lich-hen-new/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/25044717/B3S_250526-1.png', youtube: 'https://www.YouTube.com/watch?v=u_b5HFgwZKY', quiz: 'https://kiotvietlnd.github.io/elearning/salon/quiz/b3-them-moi-lich-hen', desc: 'Sắp xếp khách hàng, phân công thợ, chọn giường/phòng và theo dõi trạng thái phục vụ một cách trực quan.' },
+                { course: 'Salon 01', category: 'elearning-salon', title: 'Bước 4 - Tư vấn bán hàng', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/salon-lam-quen-voi-kiotviet/buoc-4-tu-van-ban-hang-new/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/25045249/TVBHS_250526-1.jpg', youtube: 'https://www.YouTube.com/watch?v=er8uCQOUxag', quiz: 'https://kiotvietlnd.github.io/elearning/salon/quiz/b4-tu-van-ban-hang', desc: 'Hỗ trợ thanh toán linh hoạt, bán lẻ mỹ phẩm, trừ buổi liệu trình và chia hoa hồng cho nhiều thợ.' },
+                { course: 'Salon 01', category: 'elearning-salon', title: 'Gói dịch vụ - Liệu trình', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/salon-hang-hoa/goi-dich-vu-lieu-trinh/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/02/06083908/GOI-DICH-VU-LIEU-TRINH.jpg', youtube: 'https://www.YouTube.com/watch?v=2056ueOyI1g', quiz: 'https://kiotvietlnd.github.io/elearning/salon/quiz/goi-dich-vu-lieu-trinh', desc: 'Tập hợp các dịch vụ thành gói trả trước, giúp tăng doanh thu, giữ chân khách và quản lý số buổi sử dụng.' },
+                { course: 'Salon 01', category: 'elearning-salon', title: 'Thẻ tài khoản', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/salon-hang-hoa/the-tai-khoan/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/02/06083921/THE-TAI-KHOAN.jpg', youtube: 'https://www.YouTube.com/watch?v=qj7EzwQ06_I', quiz: 'https://kiotvietlnd.github.io/elearning/salon/quiz/the-tai-khoan', desc: 'Loại thẻ nạp tiền trả trước để trừ dần khi làm dịch vụ, giúp linh hoạt chính sách giá và tăng khách trung thành.' },
+
+                // HOTEL 01 & 02
+                { course: 'Hotel 01', category: 'elearning-hotel', title: 'Tổng quan các nhóm giải pháp KiotViet', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/hotel-lam-quen-voi-kiotviet/tong-quan-cac-nhom-giai-phap-kiotviet/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/06/15033517/TONG-QUAN-HOTEL.jpg', youtube: '', quiz: 'https://kiotvietlnd.github.io/elearning/hotel/quiz/tong-quan-cac-nhom-giai-phap', desc: 'Tối ưu hóa vận hành, quản lý chuyên sâu và thúc đẩy doanh thu với các giải pháp số hóa toàn diện từ quầy lễ tân đến công cụ marketing.' },
+                { course: 'Hotel 01', category: 'elearning-hotel', title: 'Bước 1 - Khởi tạo dữ liệu', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/hotel-lam-quen-voi-kiotviet/buoc-1-khoi-tao-du-lieu/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/30070328/HTB1_N_-19.png', youtube: 'https://www.youtube.com/watch?v=cbUNzysoWgQ', quiz: 'https://kiotvietlnd.github.io/elearning/hotel/quiz/buoc-1-khoi-tao-du-lieu', desc: 'Thiết lập nền tảng hệ thống: cấu hình cách tính tiền, sơ đồ phòng, bảng giá và danh mục dịch vụ để sẵn sàng cho mọi hoạt động kinh doanh.' },
+                { course: 'Hotel 01', category: 'elearning-hotel', title: 'Bước 2 - Đặt phòng', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/hotel-lam-quen-voi-kiotviet/buoc-2-dat-phong/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/29073440/HTbuoc2_N_-1.png', youtube: 'https://www.YouTube.com/watch?v=3JCcneDB54k', quiz: 'https://kiotvietlnd.github.io/elearning/hotel/quiz/buoc-2-dat-phong', desc: 'Quản lý đặt phòng chuyên nghiệp, tính giá tự động, hỗ trợ quét CCCD và đặt đoàn giúp tối ưu công suất phòng hiệu quả.' },
+                { course: 'Hotel 01', category: 'elearning-hotel', title: 'Bước 3 - Nhận phòng', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/hotel-lam-quen-voi-kiotviet/buoc-3-nhan-phong/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/29074431/HTBuoc3_N_-1.png', youtube: 'https://www.YouTube.com/watch?v=4sClOIglFSY', quiz: 'https://kiotvietlnd.github.io/elearning/hotel/quiz/buoc-3-nhan-phong', desc: 'Nghiệp vụ check-in nhanh chóng, tự động điền thông tin qua ảnh chụp giấy tờ, thu tiền cọc và cập nhật trạng thái phòng tức thì.' },
+                { course: 'Hotel 01', category: 'elearning-hotel', title: 'Quản lý thẻ từ', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/hotel-quan-ly-the-tu/quan-ly-the-tu/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/07/08084527/TTH_080726.jpg', youtube: 'https://www.YouTube.com/watch?v=0YrY5XhZkho', quiz: 'https://kiotvietlnd.github.io/elearning/hotel/quiz/quan-ly-the-tu', desc: 'Tích hợp phần mềm khóa thẻ từ, chỉ cấp quyền mở cửa khi có giao dịch check-in trên hệ thống, giúp chống gian lận bán phòng tuyệt đối.' },
+                { course: 'Hotel 01', category: 'elearning-hotel', title: 'Channel Manager', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/hotel-channel-manager/channel-manager/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/07/27072759/HNM_270726-5.jpg', youtube: 'https://www.YouTube.com/watch?v=tV9cC4GZzWw', quiz: 'https://kiotvietlnd.github.io/elearning/hotel/quiz/channel-manager', desc: 'Kết nối trực tiếp với các kênh OTAs (Agoda, Booking...), đồng bộ tự động phòng trống và giá bán theo thời gian thực, tránh đặt trùng phòng (overbooking).' },
+
+                // THUẾ & KẾ TOÁN 01 & 02
+                { course: 'Kế toán 01', category: 'elearning-ketoan', title: 'Thiết lập hồ sơ kê khai thuế', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-thiet-lap-ban-dau-thue-ke-toan/thiet-lap-ho-so-ke-khai-thue/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/28023926/THIET-LAP-HO-SO-KHAI-THUE-1.jpg', youtube: 'https://www.YouTube.com/watch?v=e8s07t1KX84', quiz: 'https://kiotvietlnd.github.io/elearning/thuehkd/quiz/thiet-lap-ho-so-khai-thue', desc: 'Giúp thiết lập hồ sơ thuế ban đầu, tự động xác định nghĩa vụ nộp thuế và gán tỷ lệ thuế phù hợp cho từng mặt hàng.' },
+                { course: 'Kế toán 01', category: 'elearning-ketoan', title: 'Sổ kế toán', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-ke-toan-hkd-so-ke-toan/so-ke-toan/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/28024124/SO-KE-TOAN.jpg', youtube: 'https://www.YouTube.com/watch?v=e8s07t1KX84', quiz: 'https://kiotvietlnd.github.io/elearning/thuehkd/quiz/so-ke-toan-tt152', desc: 'Tự động tạo lập và quản lý các sổ sách (S1a, S2a, S2b, S2c, S2d, S2e) dựa trên quy mô doanh thu, đảm bảo tuân thủ pháp luật.' },
+                { course: 'Kế toán 01', category: 'elearning-ketoan', title: 'Tờ khai Thuế Mẫu 01/CNKD', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-to-khai-thue-hkd/to-khai-thue-mau-01-cnkd/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/08/04152730/CNKDR_040826-1.jpg', youtube: 'https://www.YouTube.com/watch?v=5fqdiPiU-XU', quiz: 'https://kiotvietlnd.github.io/elearning/thuehkd/quiz/to-khai-thue-mau-01cnkd', desc: 'Tự động tổng hợp số liệu từ sổ kế toán để lên tờ khai tháng/quý, xuất file XML/Excel nộp cơ quan Thuế cực kỳ dễ dàng.' },
+                { course: 'Kế toán 01', category: 'elearning-ketoan', title: 'Tờ khai thuế Mẫu 01/TKN-CNKD', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-to-khai-thue-hkd/to-khai-thue-mau-01-tkn-cnkd/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/08/04152440/TCMSTC_040826-7.jpg', youtube: 'https://www.YouTube.com/watch?v=5fqdiPiU-XU', quiz: 'https://kiotvietlnd.github.io/elearning/thuehkd/quiz/to-khai-thue-mau-01tkn-cnkd', desc: 'Tự động tổng hợp doanh thu miễn thuế lên tờ khai cuối năm, dành riêng cho Hộ kinh doanh Nhóm 1 (doanh thu dưới 500 triệu/năm).' },
+                { course: 'Kế toán 01', category: 'elearning-ketoan', title: 'Bảng kê Số Tài Khoản 01/BK-STK', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-to-khai-thue-hkd/bang-ke-01-bk-stk-thong-bao-so-tai-khoan/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/05/28024021/BANG-KE-01-STK.jpg', youtube: 'https://www.YouTube.com/watch?v=5fqdiPiU-XU', quiz: 'https://kiotvietlnd.github.io/elearning/thuehkd/quiz/bang-ke-so-tai-khoan-01bkstk', desc: 'Tự động lấy danh sách tài khoản ngân hàng và ví điện tử từ sổ quỹ để lập bảng kê nộp kèm tờ khai thuế.' },
+                { course: 'Kế toán 01', category: 'elearning-ketoan', title: 'Đăng ký Chữ ký số KiotViet IntrustCA', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-dang-ky-chu-ky-so/dang-ky-chu-ky-so-kiotviet-intrustca/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/07110140/HDDT-BUOC-1.jpg', youtube: 'https://www.YouTube.com/watch?v=IqVICR7gXwU', quiz: 'https://kiotvietlnd.github.io/elearning/thuehkd/quiz/dang-ky-chu-ky-so', desc: 'Hỗ trợ đăng ký chữ ký số từ xa MIỄN PHÍ, xác thực khuôn mặt (eKYC) 100% online trên điện thoại để ký hóa đơn.' },
+                { course: 'Kế toán 01', category: 'elearning-ketoan', title: 'Bắt đầu sử dụng Hóa đơn điện tử KiotViet eInvoice', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-thiet-lap-ban-dau-hddt/bat-dau-su-dung-hoa-don-dien-tu-kiotviet/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2025/12/31094742/SDHDDTKV-1.jpg', youtube: 'https://www.YouTube.com/watch?v=wep3Hi1aobM', quiz: 'https://kiotvietlnd.github.io/elearning/thuehkd/quiz/bat-dau-su-dung-kve', desc: 'Kích hoạt và thiết lập hồ sơ hệ thống hóa đơn điện tử ngay trên phần mềm bán hàng chỉ với vài thao tác cơ bản.' },
+                { course: 'Kế toán 01', category: 'elearning-ketoan', title: 'Lập Tờ khai đăng ký Hóa đơn điện tử trên KiotViet eInvoice', hdsd: 'https://www.kiotviet.vn/huong-dan-su-dung-kiotviet/retail-thiet-lap-ban-dau-hddt/lap-to-khai-dang-ky-hddt-tren-kiotviet-einvoice/', img: 'https://cdn-kvweb.kiotviet.vn/kiotviet-website/wp-content/uploads/2026/04/06033425/TKHDDT_060426-1.jpg', youtube: 'https://www.YouTube.com/watch?v=wep3Hi1aobM', quiz: 'https://kiotvietlnd.github.io/elearning/thuehkd/quiz/lap-to-khai-dang-ky-thay-doi-thong-tin-su-dung-hoa-don-dien-tu', desc: 'Tự động điền dữ liệu lập Mẫu 01/ĐKTĐ-HĐĐT gửi cơ quan Thuế xin phép phát hành hóa đơn, theo dõi trạng thái duyệt theo thời gian thực.' }
+            ],
+
+            // [C] NGÂN HÀNG TRẮC NGHIỆM ĐỀ THI (MCQ MASTER)
+            mcq: [
+                {
+                    category: 'Kế Toán 01',
+                    feature: 'Thiết lập Hồ sơ kê khai thuế',
+                    code: 'AC-TLHSKKT-9P4K',
+                    question: 'Theo quy định phân loại trên phần mềm KiotViet, hộ kinh doanh có mức doanh thu dưới 1 tỷ đồng (Nhóm 1) có nghĩa vụ thuế và chế độ sổ kế toán như thế nào?',
+                    correct: 'A',
+                    optA: 'Được miễn thuế GTGT và TNCN, sử dụng mẫu Sổ doanh thu S1a và kê khai tờ khai theo năm',
+                    optB: 'Phải nộp thuế GTGT theo tỷ lệ % doanh thu, sử dụng Bộ 4 sổ kế toán và kê khai theo quý',
+                    optC: 'Bắt buộc nộp thuế TNCN 15% trên thu nhập tính thuế và sử dụng mẫu Sổ S2a-HKD'
+                },
+                {
+                    category: 'Kế Toán 01',
+                    feature: 'Thiết lập Hồ sơ kê khai thuế',
+                    code: 'AC-TLHSKKT-9P4K',
+                    question: 'Khi thực hiện gán chi nhánh vào mã địa điểm kinh doanh trong quy trình thiết lập hồ sơ thuế, hệ thống KiotViet yêu cầu điều kiện bắt buộc nào để có thể nhấn "Tiếp tục"?',
+                    correct: 'B',
+                    optA: 'Phải kết nối đầy đủ tất cả các chi nhánh với cùng một nhà cung cấp hóa đơn điện tử',
+                    optB: 'Bắt buộc phải xác định và chỉ định chính xác một địa điểm kinh doanh làm Trụ sở chính',
+                    optC: 'Phải hoàn tất việc tải lên chứng thư số điện tử hợp lệ cho từng địa điểm kinh doanh'
+                },
+                {
+                    category: 'Kế Toán 01',
+                    feature: 'Thiết lập Hồ sơ kê khai thuế',
+                    code: 'AC-TLHSKKT-9P4K',
+                    question: 'Trong tính năng Thiết lập Hồ sơ kê khai thuế trên KiotViet, những nhóm hộ kinh doanh nào có nghĩa vụ bắt buộc phải sử dụng Hóa đơn điện tử?',
+                    correct: 'C',
+                    optA: 'Chỉ duy nhất Nhóm 4 gồm các hộ kinh doanh có quy mô doanh thu trên 50 tỷ đồng',
+                    optB: 'Tất cả 4 nhóm hộ kinh doanh bất kể mức doanh thu thực tế phát sinh trong kỳ',
+                    optC: 'Các nhóm hộ kinh doanh có mức doanh thu từ 1 tỷ đồng trở lên gồm Nhóm 2, Nhóm 3 và Nhóm 4'
+                },
+                {
+                    category: 'Kế Toán 01',
+                    feature: 'Sổ kế toán',
+                    code: 'AC-SKTTT152-4M8K',
+                    question: 'Hộ kinh doanh lựa chọn nộp thuế TNCN theo phương pháp lợi nhuận (doanh thu từ 1 tỷ đến 3 tỷ đồng hoặc trên 3 tỷ đồng) bắt buộc phải sử dụng bộ sổ kế toán nào trên KiotViet?',
+                    correct: 'A',
+                    optA: 'Bộ 4 sổ chính gồm S2b-HKD, S2c-HKD, S2d-HKD và S2e-HKD',
+                    optB: 'Duy nhất mẫu Sổ doanh thu bán hàng hóa dịch vụ S2a-HKD',
+                    optC: 'Bộ 2 sổ gồm Sổ doanh thu S1a-HKD và Sổ chi tiết tiền S2e-HKD'
+                },
+                {
+                    category: 'Kế Toán 01',
+                    feature: 'Sổ kế toán',
+                    code: 'AC-SKTTT152-4M8K',
+                    question: 'Trên Sổ chi tiết doanh thu, chi phí (Mẫu S2c-HKD) và Sổ hàng hóa (Mẫu S2d-HKD), cơ chế ghi nhận giá vốn của hàng hóa xuất đi được hệ thống KiotViet xử lý như thế nào?',
+                    correct: 'B',
+                    optA: 'Tự động phân bổ và trừ trực tiếp giá vốn ngay tại thời điểm phát sinh từng hóa đơn bán lẻ',
+                    optB: 'Giá vốn của hàng hóa xuất đi được tính toán và ghi nhận một lần vào thời điểm cuối kỳ',
+                    optC: 'Bắt buộc người dùng phải nhập thủ công đơn giá vốn cho từng mặt hàng trước khi xuất kho'
+                },
+                {
+                    category: 'Kế Toán 01',
+                    feature: 'Sổ kế toán',
+                    code: 'AC-SKTTT152-4M8K',
+                    question: 'Theo quy định về chế độ kế toán Hộ kinh doanh (Thông tư 152), thời gian lưu trữ tối thiểu đối với sổ sách kế toán (sổ giấy hoặc dữ liệu điện tử) là bao lâu?',
+                    correct: 'C',
+                    optA: 'Tối thiểu 02 năm kể từ khi kết thúc kỳ kế toán năm',
+                    optB: 'Tối thiểu 03 năm kể từ khi kết thúc kỳ kế toán năm',
+                    optC: 'Tối thiểu 05 năm kể từ khi kết thúc kỳ kế toán năm'
+                },
+                {
+                    category: 'Kế Toán 01',
+                    feature: 'Cập nhật dữ liệu điều chỉnh trên Sổ kế toán',
+                    code: 'AC-CNDLĐCTSKT-8M2N',
+                    question: 'Trong trường hợp nào hệ thống KiotViet sẽ CHẶN thao tác và không cho phép người dùng loại bỏ giao dịch khỏi Sổ kế toán?',
+                    correct: 'A',
+                    optA: 'Giao dịch thuộc kỳ kế toán đã khóa sổ hoặc giao dịch đã được phát hành Hóa đơn điện tử',
+                    optB: 'Giao dịch được thanh toán bằng hình thức chuyển khoản qua tài khoản ngân hàng',
+                    optC: 'Giao dịch bán lẻ phát sinh trực tiếp tại quầy thu ngân của chi nhánh'
+                },
+                {
+                    category: 'Kế Toán 01',
+                    feature: 'Bảng kê 01/BK-STK - Thông báo Số Tài Khoản',
+                    code: 'AC-BK01STK-6K2M',
+                    question: 'Bảng kê 01/BK-STK trên phần mềm KiotViet được sử dụng nhằm mục đích chính nào theo quy định thuế hiện hành?',
+                    correct: 'A',
+                    optA: 'Thông báo danh sách các số tài khoản ngân hàng và ví điện tử liên quan đến hoạt động kinh doanh lên Cơ quan thuế',
+                    optB: 'Đăng ký tài khoản nhận tiền hoàn thuế thu nhập cá nhân tự động từ Kho bạc Nhà nước',
+                    optC: 'Khai báo hạn mức thấu chi và lịch sử biến động số dư tiền mặt của hộ kinh doanh trong kỳ'
+                },
+                {
+                    category: 'Kế Toán 01',
+                    feature: 'Đăng ký Chữ ký số KiotViet IntrustCA',
+                    code: 'AC-DKCKSVICA-4K9M',
+                    question: 'Dịch vụ Chữ ký số từ xa KiotViet IntrustCA mang lại lợi ích nổi bật nào sau đây cho chủ cơ sở kinh doanh?',
+                    correct: 'A',
+                    optA: 'Được hỗ trợ đăng ký và sử dụng hoàn toàn miễn phí, tích hợp xác thực định danh (eKYC) trực tuyến nhanh chóng',
+                    optB: 'Cho phép phát hành và ký hóa đơn điện tử mà không cần kết nối mạng Internet hoặc xác thực bảo mật',
+                    optC: 'Tự động miễn trừ toàn bộ nghĩa vụ kê khai thuế phát sinh từ hóa đơn điện tử cho hộ kinh doanh'
+                },
+                {
+                    category: 'Kế Toán 01',
+                    feature: 'Bắt đầu sử dụng Hóa đơn điện tử KiotViet',
+                    code: 'RT-BDSUDHDDTKV-9K2L',
+                    question: 'Lợi ích nổi bật khi sử dụng tính năng Hóa đơn điện tử KiotViet tích hợp trên phần mềm Quản lý bán hàng là gì?',
+                    correct: 'A',
+                    optA: 'Cửa hàng không cần tạo tài khoản riêng, hệ thống tự động kết nối và đồng bộ dữ liệu trực tiếp từ phần mềm bán hàng',
+                    optB: 'Hệ thống tự động phát hành hóa đơn và gửi cho cơ quan thuế mà không cần khai báo mã số thuế ban đầu',
+                    optC: 'Hệ thống tự động miễn trừ toàn bộ các nghĩa vụ kê khai thuế định kỳ hàng quý cho hộ kinh doanh'
+                },
+                {
+                    category: 'Kế Toán 01',
+                    feature: 'Phát hành Hóa đơn điện tử trên KiotViet',
+                    code: 'RT-PHHDDTTRKV-6K3M',
+                    question: 'Khi bật tính năng phát hành HĐĐT tự động tại màn hình Bán hàng, hệ thống sẽ tự động gửi dữ liệu sang nhà cung cấp HĐĐT vào thời điểm nào?',
+                    correct: 'A',
+                    optA: 'Ngay sau khi nhân viên thu ngân hoàn tất thao tác thanh toán thành công cho đơn hàng',
+                    optB: 'Vào cuối ngày làm việc khi nhân viên thực hiện thao tác chốt ca bán hàng',
+                    optC: 'Khi khách hàng quét mã QR trên phiếu in và xác nhận nhận hóa đơn qua ứng dụng'
+                }
+            ],
+
+            // [D] KỊCH BẢN VIDEOS TÍNH NĂNG
+            videos: [
+                { title: 'Danh sách hàng hóa (Import)', date: '22/07/2026', youtube: 'https://www.youtube.com/watch?v=iRTec0tOhjE', hasScript: true, sheetUpdated: false, hdsdUpdated: false },
+                { title: 'Hàng dịch vụ', date: '03/08/2026', youtube: '', hasScript: true, sheetUpdated: false, hdsdUpdated: false },
+                { title: 'Hàng combo - đóng gói', date: '05/08/2026', youtube: '', hasScript: true, sheetUpdated: false, hdsdUpdated: false },
+                { title: 'Hàng sản xuất', date: '05/08/2026', youtube: '', hasScript: true, sheetUpdated: false, hdsdUpdated: false },
+                { title: 'Hàng hóa Lô-HSD', date: '05/08/2026', youtube: '', hasScript: true, sheetUpdated: false, hdsdUpdated: false },
+                { title: 'Hàng hóa Serial/IMEI', date: '05/08/2026', youtube: '', hasScript: true, sheetUpdated: false, hdsdUpdated: false },
+                { title: 'Thiết lập giá', date: '22/07/2026', youtube: 'https://www.youtube.com/watch?v=_sbKk9Jkltk', hasScript: true, sheetUpdated: false, hdsdUpdated: false },
+                { title: 'Bán hàng', date: '16/07/2026', youtube: 'https://www.youtube.com/watch?v=rq3n1lINUXQ', hasScript: true, sheetUpdated: true, hdsdUpdated: true },
+                { title: 'Trả hàng', date: '16/07/2026', youtube: 'https://www.youtube.com/watch?v=icuBxZ1m4rA', hasScript: true, sheetUpdated: true, hdsdUpdated: true }
+            ],
+
+            // Placeholder for Part 2B datasets:
+            scenarios: [],
+            exercises: []
+        };
+
+        // --- 3. WORKSPACE CORE ENGINE FUNCTIONS ---
+
+        // Initialize on DOM Ready
+        document.addEventListener('DOMContentLoaded', () => {
+            initWorkspace();
+            setupKeyboardShortcuts();
+        });
+
+        function initWorkspace() {
+            navigateCategory('apps-review');
+            updateBadgeCounters();
+        }
+
+        function updateBadgeCounters() {
+            // Count badges if needed
+            const counter = document.getElementById('search-total-counter');
+            if (counter) {
+                const total = KNOWLEDGE_BASE.apps.length + KNOWLEDGE_BASE.elearning.length + KNOWLEDGE_BASE.mcq.length + KNOWLEDGE_BASE.videos.length;
+                counter.innerText = `${total}+ tài nguyên cốt lõi sẵn sàng`;
+            }
+        }
+
+        // Category Navigation
+        function navigateCategory(catId) {
+            AppState.currentCategory = catId;
+            AppState.currentSubFilter = 'all';
+
+            // Update Active Sidebar Class
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-kiot-blue', 'text-white', 'shadow-sm');
+                btn.classList.add('hover:bg-slate-800', 'text-slate-300');
+            });
+            const activeBtn = document.getElementById(`nav-${catId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-kiot-blue', 'text-white', 'shadow-sm');
+                activeBtn.classList.remove('hover:bg-slate-800', 'text-slate-300');
+            }
+
+            // Update Header & Breadcrumb
+            const meta = getCategoryMeta(catId);
+            document.getElementById('breadcrumb-category').innerText = meta.group;
+            document.getElementById('section-title').innerText = meta.title;
+            document.getElementById('section-icon').innerHTML = `<i class="fa-solid ${meta.icon}"></i>`;
+
+            // Render Sub-filters
+            renderSubFilters(catId);
+
+            // Render Items
+            renderCurrentItems();
+        }
+
+        function getCategoryMeta(catId) {
+            const map = {
+                'apps-review': { group: '1. Cổng Ứng Dụng', title: 'Review Tái Ký (Trainer & Manager View)', icon: 'fa-rotate-left' },
+                'apps-practice': { group: '1. Cổng Ứng Dụng', title: 'Thực Hành Tái Ký (Học Viên & Giảng Viên)', icon: 'fa-laptop-code' },
+                'apps-spcb': { group: '1. Cổng Ứng Dụng', title: 'Thực Hành Sản Phẩm Cơ Bản (Retail, F&B, Booking)', icon: 'fa-cube' },
+                'apps-tools': { group: '1. Cổng Ứng Dụng', title: 'Công Cụ Hỗ Trợ Đào Tạo L&D', icon: 'fa-screwdriver-wrench' },
+                'elearning-retail': { group: '2. E-Learning', title: 'Masterdata E-Learning: Ngành Bán Lẻ (Retail 01 & 02)', icon: 'fa-shop' },
+                'elearning-fnb': { group: '2. E-Learning', title: 'Masterdata E-Learning: Ngành Ẩm Thực (FNB 01 & 02)', icon: 'fa-utensils' },
+                'elearning-salon': { group: '2. E-Learning', title: 'Masterdata E-Learning: Làm Đẹp & Spa (Salon 01 & 02)', icon: 'fa-spa' },
+                'elearning-hotel': { group: '2. E-Learning', title: 'Masterdata E-Learning: Lưu Trú & Khách Sạn (Hotel 01 & 02)', icon: 'fa-hotel' },
+                'elearning-ketoan': { group: '2. E-Learning', title: 'Masterdata E-Learning: Thuế & Kế Toán HKD (01 & 02)', icon: 'fa-calculator' },
+                'mcq-bank': { group: '3. Trắc Nghiệm', title: 'Ngân Hàng Câu Hỏi Trắc Nghiệm MCQ Master KiotViet', icon: 'fa-circle-question' },
+                'cases-retail': { group: '4. Tình Huống', title: 'Case Study Tình Huống Xử Lý Tái Ký - Ngành Retail', icon: 'fa-comments-dollar' },
+                'cases-fnb': { group: '4. Tình Huống', title: 'Case Study Tình Huống Xử Lý Tái Ký - Ngành FNB', icon: 'fa-comments-dollar' },
+                'exercises-master': { group: '5. Bài Tập', title: 'Bộ Đề Bài Tập Thực Hành MasterExercises', icon: 'fa-tasks' },
+                'video-scripts': { group: '5. Kịch Bản', title: 'Kịch Bản Video Tính Năng Cơ Bản (Retail)', icon: 'fa-video' }
+            };
+            return map[catId] || { group: 'Tài liệu', title: 'Danh mục tài liệu', icon: 'fa-folder' };
+        }
+
+        // Sub Filter Rendering
+        function renderSubFilters(catId) {
+            const bar = document.getElementById('sub-filter-bar');
+            let filters = ['Tất cả'];
+
+            if (catId.startsWith('elearning-')) {
+                const items = KNOWLEDGE_BASE.elearning.filter(x => x.category === catId);
+                const courses = [...new Set(items.map(x => x.course))];
+                filters = ['Tất cả', ...courses];
+            } else if (catId === 'apps-spcb') {
+                filters = ['Tất cả', 'Retail', 'F&B', 'Booking'];
+            } else if (catId === 'mcq-bank') {
+                const cats = [...new Set(KNOWLEDGE_BASE.mcq.map(x => x.feature))];
+                filters = ['Tất cả', ...cats.slice(0, 8)];
+            }
+
+            let html = `<span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">Bộ lọc:</span>`;
+            filters.forEach(f => {
+                const isActive = (f === 'Tất cả' && AppState.currentSubFilter === 'all') || (AppState.currentSubFilter === f);
+                const activeClass = isActive ? 'bg-kiot-blue text-white shadow-sm' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200';
+                html += `<button onclick="applySubFilter('${f === 'Tất cả' ? 'all' : f}')" class="px-3 py-1 rounded-full text-xs font-medium ${activeClass} transition-all whitespace-nowrap">${f}</button>`;
+            });
+            bar.innerHTML = html;
+        }
+
+        function applySubFilter(filterVal) {
+            AppState.currentSubFilter = filterVal;
+            renderSubFilters(AppState.currentCategory);
+            renderCurrentItems();
+        }
+
+        // Get Filtered Data
+        function getCurrentDataset() {
+            let data = [];
+            const cat = AppState.currentCategory;
+
+            if (cat.startsWith('apps-')) {
+                data = KNOWLEDGE_BASE.apps.filter(x => x.category === cat);
+            } else if (cat.startsWith('elearning-')) {
+                data = KNOWLEDGE_BASE.elearning.filter(x => x.category === cat);
+            } else if (cat === 'mcq-bank') {
+                data = KNOWLEDGE_BASE.mcq;
+            } else if (cat === 'cases-retail') {
+                data = KNOWLEDGE_BASE.scenarios.filter(x => x.Roadmap === 'Retail');
+            } else if (cat === 'cases-fnb') {
+                data = KNOWLEDGE_BASE.scenarios.filter(x => x.Roadmap === 'FNB');
+            } else if (cat === 'exercises-master') {
+                data = KNOWLEDGE_BASE.exercises;
+            } else if (cat === 'video-scripts') {
+                data = KNOWLEDGE_BASE.videos;
+            }
+
+            // Sub-filter
+            if (AppState.currentSubFilter !== 'all') {
+                if (cat.startsWith('elearning-')) {
+                    data = data.filter(x => x.course === AppState.currentSubFilter);
+                } else if (cat === 'apps-spcb') {
+                    data = data.filter(x => x.subCategory === AppState.currentSubFilter);
+                } else if (cat === 'mcq-bank') {
+                    data = data.filter(x => x.feature === AppState.currentSubFilter);
+                }
+            }
+
+            // Local Search
+            if (AppState.searchQuery.trim() !== '') {
+                const q = AppState.searchQuery.toLowerCase();
+                data = data.filter(item => {
+                    return (item.title && item.title.toLowerCase().includes(q)) ||
+                           (item.desc && item.desc.toLowerCase().includes(q)) ||
+                           (item.question && item.question.toLowerCase().includes(q)) ||
+                           (item.Question && item.Question.toLowerCase().includes(q)) ||
+                           (item.Title && item.Title.toLowerCase().includes(q)) ||
+                           (item.TenBuoi && item.TenBuoi.toLowerCase().includes(q));
+                });
+            }
+
+            return data;
+        }
+
+        // Render Cards / Tables
+        function renderCurrentItems() {
+            const data = getCurrentDataset();
+            const gridContainer = document.getElementById('items-grid');
+            const tableContainer = document.getElementById('items-table-container');
+            const emptyState = document.getElementById('empty-state');
+
+            if (data.length === 0) {
+                gridContainer.innerHTML = '';
+                tableContainer.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            if (AppState.viewMode === 'grid') {
+                gridContainer.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+                renderGridView(data, gridContainer);
+            } else {
+                gridContainer.classList.add('hidden');
+                tableContainer.classList.remove('hidden');
+                renderTableView(data);
+            }
+        }
+
+        function renderGridView(data, container) {
+            const cat = AppState.currentCategory;
+            let html = '';
+
+            data.forEach((item, index) => {
+                if (cat.startsWith('apps-')) {
+                    html += `
+                    <div class="saas-card p-5 flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-start justify-between gap-3 mb-3">
+                                <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full ${item.badgeColor}">${item.badge}</span>
+                                <div class="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500 group-hover:text-kiot-blue group-hover:bg-blue-50 transition-all">
+                                    <i class="fa-solid ${item.icon}"></i>
+                                </div>
+                            </div>
+                            <h3 class="text-sm font-bold text-slate-900 group-hover:text-kiot-blue transition-all mb-1.5 leading-snug">${item.title}</h3>
+                            <p class="text-xs text-slate-500 line-clamp-2 mb-4 leading-relaxed">${item.desc}</p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                            <button onclick='openInWorkspaceTab(${JSON.stringify(item)})' class="btn-primary text-xs flex-1 py-1.5">
+                                <i class="fa-solid fa-window-restore text-[11px]"></i> Mở Tab
+                            </button>
+                            <button onclick='openInSplit(${JSON.stringify(item)})' class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all" title="Chia đôi màn hình">
+                                <i class="fa-solid fa-columns text-slate-600"></i>
+                            </button>
+                            ${item.editUrl ? `
+                            <a href="${item.editUrl}" target="_blank" class="p-1.5 text-xs text-slate-400 hover:text-slate-700 transition-all" title="Xem GitHub Code">
+                                <i class="fa-brands fa-github text-base"></i>
+                            </a>` : ''}
+                        </div>
+                    </div>`;
+                } else if (cat.startsWith('elearning-')) {
+                    html += `
+                    <div class="saas-card overflow-hidden flex flex-col justify-between group">
+                        <div>
+                            <div class="h-36 bg-slate-100 relative overflow-hidden border-b border-slate-100">
+                                <img src="${item.img || 'https://placehold.co/600x400/e2e8f0/475569?text=KiotViet+Doc'}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-300" onerror="this.src='https://placehold.co/600x400/e2e8f0/475569?text=KiotViet'">
+                                <span class="absolute top-2.5 left-2.5 px-2 py-0.5 text-[10px] font-bold rounded bg-slate-900/80 text-white backdrop-blur-sm">${item.course}</span>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-xs font-bold text-slate-900 line-clamp-1 mb-1.5 group-hover:text-kiot-blue transition-all" title="${item.title}">${item.title}</h3>
+                                <p class="text-[11px] text-slate-500 line-clamp-2 leading-relaxed mb-3">${item.desc}</p>
+                            </div>
+                        </div>
+                        <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-1 text-xs">
+                            <div class="flex items-center gap-1.5">
+                                ${item.hdsd ? `<a href="${item.hdsd}" target="_blank" class="px-2 py-1 bg-white border border-slate-200 hover:border-kiot-blue text-slate-700 rounded text-[11px] font-medium" title="Xem HDSD Web"><i class="fa-solid fa-book-open text-blue-600 mr-1"></i>HDSD</a>` : ''}
+                                ${item.youtube ? `<button onclick="openVideoModal('${item.youtube}', '${item.title}')" class="px-2 py-1 bg-white border border-slate-200 hover:border-red-500 text-slate-700 rounded text-[11px] font-medium" title="Xem Video"><i class="fa-brands fa-youtube text-red-600 mr-1"></i>Video</button>` : ''}
+                                ${item.quiz ? `<button onclick="openQuizTab('${item.quiz}', '${item.title}')" class="px-2 py-1 bg-white border border-slate-200 hover:border-emerald-500 text-slate-700 rounded text-[11px] font-medium" title="Làm Quiz"><i class="fa-solid fa-circle-question text-emerald-600 mr-1"></i>Quiz</button>` : ''}
+                            </div>
+                            <button onclick='openInSplit(${JSON.stringify({title: item.title, appUrl: item.hdsd})})' class="p-1.5 text-slate-400 hover:text-slate-700" title="Chia đôi màn hình">
+                                <i class="fa-solid fa-columns"></i>
+                            </button>
+                        </div>
+                    </div>`;
+                } else if (cat === 'mcq-bank') {
+                    html += `
+                    <div class="saas-card p-5 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <span class="px-2 py-0.5 text-[10px] font-mono font-bold bg-slate-100 text-slate-600 rounded border border-slate-200">${item.code}</span>
+                                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Đ/A: ${item.correct}</span>
+                            </div>
+                            <span class="text-[11px] font-semibold text-kiot-blue uppercase tracking-wider block mb-1">${item.feature}</span>
+                            <h4 class="text-xs font-bold text-slate-900 leading-snug mb-3">${item.question}</h4>
+                            <div class="space-y-1.5 text-xs text-slate-600">
+                                <div class="p-2 rounded ${item.correct === 'A' ? 'bg-emerald-50 border border-emerald-200 font-semibold text-emerald-900' : 'bg-slate-50 border border-slate-100'}"><strong>A.</strong> ${item.optA}</div>
+                                <div class="p-2 rounded ${item.correct === 'B' ? 'bg-emerald-50 border border-emerald-200 font-semibold text-emerald-900' : 'bg-slate-50 border border-slate-100'}"><strong>B.</strong> ${item.optB}</div>
+                                <div class="p-2 rounded ${item.correct === 'C' ? 'bg-emerald-50 border border-emerald-200 font-semibold text-emerald-900' : 'bg-slate-50 border border-slate-100'}"><strong>C.</strong> ${item.optC}</div>
+                            </div>
+                        </div>
+                    </div>`;
+                } else if (cat === 'video-scripts') {
+                    html += `
+                    <div class="saas-card p-4 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between text-xs mb-2">
+                                <span class="font-bold text-slate-900">${item.title}</span>
+                                <span class="text-[10px] px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-mono">${item.date || 'Chưa hẹn'}</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-[11px] text-slate-500 mb-3">
+                                <span>Kịch bản: <i class="fa-solid fa-circle-check text-emerald-500"></i></span>
+                                <span>•</span>
+                                <span>HDSD Web: ${item.hdsdUpdated ? '<i class="fa-solid fa-check text-emerald-500"></i>' : '<i class="fa-solid fa-xmark text-slate-300"></i>'}</span>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                            ${item.youtube ? `<a href="${item.youtube}" target="_blank" class="text-xs text-red-600 font-semibold hover:underline flex items-center gap-1.5"><i class="fa-brands fa-youtube"></i> Xem Video</a>` : `<span class="text-[11px] text-slate-400 italic">Chưa có link video</span>`}
+                            <button onclick='openInWorkspaceTab({title: "${item.title}", appUrl: "${item.youtube || 'about:blank'}"})' class="text-xs text-slate-500 hover:text-slate-800">Mở Tab</button>
+                        </div>
+                    </div>`;
+                }
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderTableView(data) {
+            const thead = document.getElementById('table-head');
+            const tbody = document.getElementById('table-body');
+            const cat = AppState.currentCategory;
+
+            if (cat.startsWith('apps-')) {
+                thead.innerHTML = `
+                    <tr>
+                        <th class="px-4 py-2.5">Loại</th>
+                        <th class="px-4 py-2.5">Tên Ứng Dụng / Portal</th>
+                        <th class="px-4 py-2.5">Mô tả tóm tắt</th>
+                        <th class="px-4 py-2.5 text-right">Thao tác</th>
+                    </tr>
+                `;
+                tbody.innerHTML = data.map(item => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-4 py-3 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.badgeColor}">${item.badge}</span></td>
+                        <td class="px-4 py-3 font-semibold text-slate-900">${item.title}</td>
+                        <td class="px-4 py-3 text-slate-500 max-w-md truncate">${item.desc}</td>
+                        <td class="px-4 py-3 text-right whitespace-nowrap space-x-2">
+                            <button onclick='openInWorkspaceTab(${JSON.stringify(item)})' class="text-kiot-blue font-semibold hover:underline">Mở Tab</button>
+                            <button onclick='openInSplit(${JSON.stringify(item)})' class="text-slate-600 hover:text-slate-900">Chia đôi</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else if (cat.startsWith('elearning-')) {
+                thead.innerHTML = `
+                    <tr>
+                        <th class="px-4 py-2.5">Khóa học</th>
+                        <th class="px-4 py-2.5">Nội dung bài viết</th>
+                        <th class="px-4 py-2.5">Mô tả</th>
+                        <th class="px-4 py-2.5 text-center">Tài nguyên liên kết</th>
+                    </tr>
+                `;
+                tbody.innerHTML = data.map(item => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-4 py-3 whitespace-nowrap font-bold text-slate-700">${item.course}</td>
+                        <td class="px-4 py-3 font-semibold text-slate-900">${item.title}</td>
+                        <td class="px-4 py-3 text-slate-500 max-w-md truncate">${item.desc}</td>
+                        <td class="px-4 py-3 text-center space-x-2">
+                            ${item.hdsd ? `<a href="${item.hdsd}" target="_blank" class="text-blue-600 hover:underline"><i class="fa-solid fa-book"></i> HDSD</a>` : ''}
+                            ${item.youtube ? `<a href="${item.youtube}" target="_blank" class="text-red-600 hover:underline"><i class="fa-brands fa-youtube"></i> Video</a>` : ''}
+                            ${item.quiz ? `<a href="${item.quiz}" target="_blank" class="text-emerald-600 hover:underline"><i class="fa-solid fa-check-circle"></i> Quiz</a>` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // View Mode Switcher
+        function switchViewMode(mode) {
+            AppState.viewMode = mode;
+            const btnGrid = document.getElementById('view-mode-grid');
+            const btnTable = document.getElementById('view-mode-table');
+            
+            if (mode === 'grid') {
+                btnGrid.className = 'px-2.5 py-1 rounded text-slate-600 bg-white shadow-sm font-medium transition-all';
+                btnTable.className = 'px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all';
+            } else {
+                btnTable.className = 'px-2.5 py-1 rounded text-slate-600 bg-white shadow-sm font-medium transition-all';
+                btnGrid.className = 'px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all';
+            }
+            renderCurrentItems();
+        }
+
+        // --- 4. MULTI-WINDOW & WORKSPACE TAB ENGINE ---
+        function openInWorkspaceTab(item) {
+            const tabId = 'tab-' + (item.id || Math.random().toString(36).substr(2, 9));
+            const existing = AppState.openTabs.find(t => t.id === tabId);
+            
+            if (!existing) {
+                AppState.openTabs.push({
+                    id: tabId,
+                    title: item.title,
+                    type: item.badge || 'Tài liệu',
+                    url: item.appUrl || item.hdsd || '',
+                    data: item
+                });
+                renderTabBar();
+            }
+            activateTab(tabId);
+        }
+
+        function renderTabBar() {
+            const tabBar = document.getElementById('workspace-tab-bar');
+            let html = `
+                <div onclick="activateTab('tab-home')" id="tab-home" class="workspace-tab ${AppState.activeTabId === 'tab-home' ? 'active' : ''} h-9 px-3.5 rounded-t-lg bg-white flex items-center gap-2 text-xs text-slate-700 cursor-pointer border-t border-x border-slate-300">
+                    <i class="fa-solid fa-house text-kiot-blue text-[11px]"></i>
+                    <span class="font-medium">Trang Quản Trị</span>
+                </div>
+            `;
+
+            AppState.openTabs.forEach(tab => {
+                const isActive = (tab.id === AppState.activeTabId);
+                html += `
+                    <div onclick="activateTab('${tab.id}')" id="${tab.id}" class="workspace-tab ${isActive ? 'active' : 'hover:bg-slate-100'} h-9 px-3.5 rounded-t-lg flex items-center gap-2 text-xs text-slate-700 cursor-pointer border-t border-x border-slate-300 max-w-[200px] transition-all">
+                        <i class="fa-solid fa-file-lines text-slate-400 text-[11px]"></i>
+                        <span class="font-medium truncate flex-1">${tab.title}</span>
+                        <button onclick="closeTab('${tab.id}', event)" class="w-4 h-4 rounded-full hover:bg-slate-300 flex items-center justify-center text-slate-400 hover:text-slate-700 text-[10px] ml-1">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `;
+            });
+
+            tabBar.innerHTML = html;
+        }
+
+        function activateTab(tabId) {
+            AppState.activeTabId = tabId;
+            renderTabBar();
+
+            if (tabId === 'tab-home') {
+                document.getElementById('items-scroll-container').classList.remove('hidden');
+                document.getElementById('sub-filter-bar').classList.remove('hidden');
+                // Remove custom active frame if any
+                const existingFrame = document.getElementById('active-tab-frame-container');
+                if (existingFrame) existingFrame.remove();
+            } else {
+                const tab = AppState.openTabs.find(t => t.id === tabId);
+                if (tab) {
+                    document.getElementById('items-scroll-container').classList.add('hidden');
+                    document.getElementById('sub-filter-bar').classList.add('hidden');
+                    
+                    let frameContainer = document.getElementById('active-tab-frame-container');
+                    if (!frameContainer) {
+                        frameContainer = document.createElement('div');
+                        frameContainer.id = 'active-tab-frame-container';
+                        frameContainer.className = 'flex-1 w-full h-full relative overflow-hidden bg-slate-100';
+                        document.getElementById('pane-primary').appendChild(frameContainer);
+                    }
+
+                    frameContainer.innerHTML = `
+                        <div class="h-10 bg-slate-100 border-b border-slate-200 px-4 flex items-center justify-between text-xs">
+                            <span class="font-bold text-slate-800 truncate">${tab.title}</span>
+                            <div class="flex items-center gap-2">
+                                <a href="${tab.url}" target="_blank" class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-200 rounded font-medium text-slate-700 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở Tab Ngoài
+                                </a>
+                                <button onclick="openPopupCustom('${tab.url}', '${tab.title}')" class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-200 rounded font-medium text-slate-700 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-window-restore"></i> Mở Popup
+                                </button>
+                            </div>
+                        </div>
+                        <iframe src="${tab.url}" class="w-full h-[calc(100%-40px)] border-0" onerror="handleIframeError(this)"></iframe>
+                    `;
+                }
+            }
+        }
+
+        function closeTab(tabId, e) {
+            if (e) e.stopPropagation();
+            AppState.openTabs = AppState.openTabs.filter(t => t.id !== tabId);
+            if (AppState.activeTabId === tabId) {
+                AppState.activeTabId = AppState.openTabs.length > 0 ? AppState.openTabs[AppState.openTabs.length - 1].id : 'tab-home';
+            }
+            renderTabBar();
+            activateTab(AppState.activeTabId);
+        }
+
+        // --- 5. SPLIT-SCREEN ENGINE ---
+        function toggleSplitScreen() {
+            AppState.isSplitOpen = !AppState.isSplitOpen;
+            const paneSecondary = document.getElementById('pane-secondary');
+            const btnSplit = document.getElementById('view-mode-split');
+
+            if (AppState.isSplitOpen) {
+                paneSecondary.classList.remove('hidden');
+                btnSplit.classList.add('bg-kiot-blue', 'text-white');
+                btnSplit.classList.remove('text-slate-500');
+            } else {
+                paneSecondary.classList.add('hidden');
+                btnSplit.classList.remove('bg-kiot-blue', 'text-white');
+                btnSplit.classList.add('text-slate-500');
+            }
+        }
+
+        function openInSplit(item) {
+            AppState.splitItem = item;
+            if (!AppState.isSplitOpen) toggleSplitScreen();
+
+            const titleElem = document.getElementById('split-pane-title');
+            const extLink = document.getElementById('split-external-link');
+            const iframe = document.getElementById('split-iframe');
+            const fallback = document.getElementById('split-iframe-fallback');
+            const targetUrl = item.appUrl || item.hdsd || '';
+
+            titleElem.innerText = item.title;
+            extLink.href = targetUrl;
+            document.getElementById('fallback-open-tab').href = targetUrl;
+
+            // Check if URL is from Google Sites or Sheets which block iframe embedding
+            if (targetUrl.includes('sites.google.com') || targetUrl.includes('docs.google.com')) {
+                iframe.classList.add('hidden');
+                fallback.classList.remove('hidden');
+            } else {
+                iframe.classList.remove('hidden');
+                fallback.classList.add('hidden');
+                iframe.src = targetUrl;
+            }
+        }
+
+        function openPopupCurrentSplit() {
+            if (AppState.splitItem) {
+                const url = AppState.splitItem.appUrl || AppState.splitItem.hdsd;
+                openPopupCustom(url, AppState.splitItem.title);
+            }
+        }
+
+        function openPopupCustom(url, title) {
+            window.open(url, title, 'width=1280,height=850,menubar=no,toolbar=no,location=no,status=no');
+        }
+
+        // --- 6. MODALS & POPUPS ---
+        function openVideoModal(youtubeUrl, title) {
+            // Convert watch URL to embed URL
+            let embedUrl = youtubeUrl;
+            if (youtubeUrl.includes('watch?v=')) {
+                embedUrl = youtubeUrl.replace('watch?v=', 'embed/');
+            } else if (youtubeUrl.includes('youtu.be/')) {
+                embedUrl = youtubeUrl.replace('youtu.be/', 'www.youtube.com/embed/');
+            }
+
+            const modal = document.getElementById('floating-modal');
+            const iframe = document.getElementById('modal-iframe');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-badge').innerText = 'YOUTUBE VIDEO';
+            document.getElementById('modal-badge').className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-red-600 text-white uppercase tracking-wider';
+            document.getElementById('modal-external-link').href = youtubeUrl;
+            
+            iframe.classList.remove('hidden');
+            document.getElementById('modal-fallback').classList.add('hidden');
+            document.getElementById('modal-rich-details').classList.add('hidden');
+            iframe.src = embedUrl;
+            modal.classList.remove('hidden');
+        }
+
+        function openQuizTab(quizUrl, title) {
+            openInWorkspaceTab({ title: 'Quiz: ' + title, appUrl: quizUrl, badge: 'QUIZ' });
+        }
+
+        function closeFloatingModal() {
+            const modal = document.getElementById('floating-modal');
+            document.getElementById('modal-iframe').src = '';
+            modal.classList.add('hidden');
+        }
+
+        // --- 7. SEARCH ENGINES (GLOBAL CTRL+K & LOCAL) ---
+        function setupKeyboardShortcuts() {
+            window.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    openGlobalSearch();
+                }
+                if (e.key === 'Escape') {
+                    closeGlobalSearch();
+                    closeFloatingModal();
+                }
+            });
+        }
+
+        function openGlobalSearch() {
+            const modal = document.getElementById('global-search-modal');
+            const input = document.getElementById('global-search-input');
+            modal.classList.remove('hidden');
+            input.value = '';
+            input.focus();
+            handleGlobalSearch('');
+        }
+
+        function closeGlobalSearch() {
+            document.getElementById('global-search-modal').classList.add('hidden');
+        }
+
+        function closeGlobalSearchOnBackdrop(e) {
+            closeGlobalSearch();
+        }
+
+        function setGlobalFilter(type) {
+            AppState.globalFilterType = type;
+            document.querySelectorAll('.global-chip').forEach(btn => {
+                btn.className = 'global-chip px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium';
+            });
+            event.target.className = 'global-chip active px-2.5 py-0.5 rounded-full bg-slate-900 text-white font-medium';
+            handleGlobalSearch(document.getElementById('global-search-input').value);
+        }
+
+        function handleGlobalSearch(keyword) {
+            const resultsContainer = document.getElementById('global-search-results');
+            const q = keyword.toLowerCase().trim();
+            const filter = AppState.globalFilterType;
+            let combined = [];
+
+            if (filter === 'all' || filter === 'app') {
+                KNOWLEDGE_BASE.apps.forEach(item => combined.push({ ...item, searchType: 'Ứng dụng', searchIcon: 'fa-cube text-sky-500' }));
+            }
+            if (filter === 'all' || filter === 'elearning') {
+                KNOWLEDGE_BASE.elearning.forEach(item => combined.push({ ...item, searchType: 'E-Learning', searchIcon: 'fa-graduation-cap text-orange-500' }));
+            }
+            if (filter === 'all' || filter === 'mcq') {
+                KNOWLEDGE_BASE.mcq.forEach(item => combined.push({ title: `${item.code}: ${item.question}`, desc: `Đ/A: ${item.correct} | ${item.feature}`, searchType: 'MCQ', searchIcon: 'fa-circle-question text-emerald-500', raw: item }));
+            }
+            if (filter === 'all' || filter === 'case') {
+                KNOWLEDGE_BASE.scenarios.forEach(item => combined.push({ title: item.Title, desc: item.Question, searchType: 'Tình huống', searchIcon: 'fa-comments-dollar text-blue-500', raw: item }));
+            }
+            if (filter === 'all' || filter === 'exercise') {
+                KNOWLEDGE_BASE.exercises.forEach(item => combined.push({ title: `${item.Mã}: ${item.TenBuoi}`, desc: item.YeuCau, searchType: 'Bài tập', searchIcon: 'fa-tasks text-yellow-500', raw: item }));
+            }
+
+            const matched = q === '' ? combined.slice(0, 20) : combined.filter(item => {
+                const titleMatch = item.title && item.title.toLowerCase().includes(q);
+                const descMatch = item.desc && item.desc.toLowerCase().includes(q);
+                return titleMatch || descMatch;
+            }).slice(0, 25);
+
+            if (matched.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="py-8 text-center text-slate-400 text-xs">
+                        <i class="fa-solid fa-circle-exclamation text-base mb-1 block"></i>
+                        Không tìm thấy tài liệu phù hợp với "${keyword}"
+                    </div>
+                `;
+                return;
+            }
+
+            resultsContainer.innerHTML = matched.map((item, idx) => `
+                <div onclick='selectSearchResult(${JSON.stringify(item)})' class="p-3 hover:bg-slate-50 rounded-lg cursor-pointer flex items-center justify-between gap-3 transition-all">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <i class="fa-solid ${item.searchIcon} text-base flex-shrink-0"></i>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="px-1.5 py-0.2 text-[9px] font-bold uppercase rounded bg-slate-100 text-slate-600 border border-slate-200">${item.searchType}</span>
+                                <h4 class="text-xs font-bold text-slate-800 truncate">${item.title}</h4>
+                            </div>
+                            <p class="text-[11px] text-slate-500 truncate mt-0.5">${item.desc || ''}</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i>
+                </div>
+            `).join('');
+        }
+
+        function selectSearchResult(item) {
+            closeGlobalSearch();
+            if (item.appUrl || item.hdsd) {
+                openInWorkspaceTab({ title: item.title, appUrl: item.appUrl || item.hdsd });
+            } else if (item.youtube) {
+                openVideoModal(item.youtube, item.title);
+            } else {
+                alert(`Đang mở tài liệu: ${item.title}`);
+            }
+        }
+
+        function handleLocalSearch(val) {
+            AppState.searchQuery = val;
+            renderCurrentItems();
+        }
+
+        function resetFilters() {
+            AppState.searchQuery = '';
+            document.getElementById('local-search-input').value = '';
+            applySubFilter('all');
+        }
+
+        function refreshCurrentCategory() {
+            renderCurrentItems();
+        }
+    </script>
 </body>
 </html>
