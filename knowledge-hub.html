@@ -492,11 +492,16 @@
 
         function detectGroupingColumn(headers) {
             if (!headers || headers.length === 0) return null;
-            const priorityKeys = ['khóa học', 'ngành hàng', 'ngành', 'nhóm', 'day', 'mabuoi', 'hạng mục', 'loại'];
+            // Ưu tiên cột 'Nhãn' của Noova LMS và các cột phân loại nghiệp vụ, loại trừ 'loại câu hỏi'
+            const priorityKeys = ['nhãn', 'khóa học', 'ngành hàng', 'ngành', 'nhóm', 'day', 'mabuoi', 'hạng mục', 'chủ đề'];
             for (let p of priorityKeys) {
                 const found = headers.find(h => h.toLowerCase().includes(p));
                 if (found) return found;
             }
+            // Chỉ lấy 'loại' nếu không phải là 'loại câu hỏi'
+            const fallbackLoai = headers.find(h => h.toLowerCase().includes('loại') && !h.toLowerCase().includes('câu hỏi'));
+            if (fallbackLoai) return fallbackLoai;
+
             return headers[0]; // Mặc định lấy cột đầu tiên
         }
 
@@ -558,18 +563,82 @@
         }
 
         function renderSmartCardGrid(data, headers, container) {
+            window.currentFilteredData = data; // Lưu bộ nhớ tạm an toàn chống lỗi XSS/ký tự đặc biệt
             let html = '';
 
-            data.forEach(item => {
-                // Nhận diện kiểu tài liệu
-                const title = item['Nội dung'] || item['Tên app'] || item['Tiêu đề câu hỏi (*)'] || item['Title'] || item['TenBuoi'] || item['Tiêu đề'] || Object.values(item)[1] || Object.values(item)[0];
+            data.forEach((item, idx) => {
+                // Kiểm tra xem đây có phải là Sheet Trắc nghiệm (Noova LMS hoặc MCQ chuẩn) hay không
+                const isNoovaMcq = !!(item['Câu hỏi'] || item['Tiêu đề câu hỏi (*)'] || item['Lựa chọn 1']);
+
+                if (isNoovaMcq) {
+                    const question = item['Câu hỏi'] || item['Tiêu đề câu hỏi (*)'] || '';
+                    const label = item['Nhãn'] || item['Tên Tính Năng'] || item['Mã Bài Viết'] || 'Trắc nghiệm';
+                    const opt1 = item['Lựa chọn 1'] || item['Đáp án A'] || '';
+                    const opt2 = item['Lựa chọn 2'] || item['Đáp án B'] || '';
+                    const opt3 = item['Lựa chọn 3'] || item['Đáp án C'] || '';
+                    const correctRaw = String(item['Lựa chọn đúng'] || item['Đáp án đúng'] || '').trim();
+
+                    // Xác định đáp án đúng (hỗ trợ cả dạng số 1, 2, 3 hoặc ký tự A, B, C)
+                    const is1Correct = (correctRaw === '1' || correctRaw.toUpperCase() === 'A');
+                    const is2Correct = (correctRaw === '2' || correctRaw.toUpperCase() === 'B');
+                    const is3Correct = (correctRaw === '3' || correctRaw.toUpperCase() === 'C');
+                    const correctLetter = is1Correct ? 'A' : (is2Correct ? 'B' : (is3Correct ? 'C' : correctRaw));
+
+                    html += `
+                    <div class="saas-card p-4 flex flex-col justify-between group border-l-4 border-l-kiot-blue hover:shadow-md transition-all">
+                        <div>
+                            <!-- Tag Nhãn bài thi -->
+                            <div class="flex items-center justify-between gap-2 mb-2.5">
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-50 text-kiot-blue border border-blue-200 truncate max-w-[200px]" title="${escapeHtml(label)}">
+                                    <i class="fa-solid fa-tag text-[9px] mr-1"></i>${escapeHtml(label)}
+                                </span>
+                                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 flex-shrink-0">
+                                    Đ/A Đúng: ${correctLetter}
+                                </span>
+                            </div>
+
+                            <!-- Nội dung Câu hỏi -->
+                            <h4 class="text-xs font-bold text-slate-900 leading-snug mb-3">
+                                <span class="text-slate-400 font-mono mr-1">#${idx + 1}</span> ${escapeHtml(question)}
+                            </h4>
+
+                            <!-- 3 Ô Phương Án A - B - C -->
+                            <div class="space-y-1.5 text-xs">
+                                <div class="p-2 rounded-lg border text-[11px] leading-relaxed flex items-start gap-2 ${is1Correct ? 'bg-emerald-50/90 border-emerald-300 font-semibold text-emerald-900' : 'bg-slate-50 border-slate-200/80 text-slate-600'}">
+                                    <span class="font-bold flex-shrink-0 w-4">${is1Correct ? '<i class="fa-solid fa-circle-check text-emerald-600"></i>' : 'A.'}</span>
+                                    <span>${escapeHtml(opt1)}</span>
+                                </div>
+                                <div class="p-2 rounded-lg border text-[11px] leading-relaxed flex items-start gap-2 ${is2Correct ? 'bg-emerald-50/90 border-emerald-300 font-semibold text-emerald-900' : 'bg-slate-50 border-slate-200/80 text-slate-600'}">
+                                    <span class="font-bold flex-shrink-0 w-4">${is2Correct ? '<i class="fa-solid fa-circle-check text-emerald-600"></i>' : 'B.'}</span>
+                                    <span>${escapeHtml(opt2)}</span>
+                                </div>
+                                <div class="p-2 rounded-lg border text-[11px] leading-relaxed flex items-start gap-2 ${is3Correct ? 'bg-emerald-50/90 border-emerald-300 font-semibold text-emerald-900' : 'bg-slate-50 border-slate-200/80 text-slate-600'}">
+                                    <span class="font-bold flex-shrink-0 w-4">${is3Correct ? '<i class="fa-solid fa-circle-check text-emerald-600"></i>' : 'C.'}</span>
+                                    <span>${escapeHtml(opt3)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer Action Bar -->
+                        <div class="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                            <button onclick="copyMcqByIndex(${idx})" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded text-[11px] flex items-center gap-1.5 transition-all">
+                                <i class="fa-regular fa-copy text-slate-500"></i> Sao chép câu hỏi
+                            </button>
+                            <span class="text-[10px] text-slate-400 font-medium">${item['Loại câu hỏi'] || 'Trắc nghiệm'}</span>
+                        </div>
+                    </div>`;
+                    return;
+                }
+
+                // Render Thẻ chuẩn cho các Sheet khác (E-Learning, App, Video,...)
+                const title = item['Nội dung'] || item['Tên app'] || item['Title'] || item['TenBuoi'] || item['Tiêu đề'] || Object.values(item)[1] || Object.values(item)[0] || '';
                 const desc = item['Mô tả'] || item['Question'] || item['YeuCau'] || item['Answer'] || '';
                 const hdsdUrl = item['HDSD'] || item['Link app'] || item['Link'] || item['appUrl'] || '';
                 const ytUrl = item['YouTube'] || item['Link YouTube'] || '';
                 const quizUrl = item['Github'] || item['Quiz'] || '';
                 const editUrl = item['Link edit'] || '';
                 const img = item['Infographic'] || item['HinhAnh'] || '';
-                const codeBadge = item['Mã Bài Viết'] || item['Khóa học'] || item['NganhHang'] || item['Day'] || '';
+                const codeBadge = item['Khóa học'] || item['NganhHang'] || item['Day'] || '';
 
                 html += `
                 <div class="saas-card overflow-hidden flex flex-col justify-between group">
@@ -586,16 +655,9 @@
                         <div class="p-4">
                             <h3 class="text-xs font-bold text-slate-900 line-clamp-2 mb-2 group-hover:text-kiot-blue transition-all" title="${escapeHtml(title)}">${escapeHtml(title)}</h3>
                             <p class="text-[11px] text-slate-500 line-clamp-3 leading-relaxed mb-3">${escapeHtml(desc)}</p>
-                            
-                            <!-- Hiển thị chi tiết MCQ nếu có -->
-                            ${item['Đáp án đúng'] ? `
-                            <div class="p-2 bg-emerald-50 rounded text-[11px] text-emerald-800 font-semibold mb-2">
-                                <i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i> Đáp án đúng: ${item['Đáp án đúng']}
-                            </div>` : ''}
                         </div>
                     </div>
 
-                    <!-- Action Footer -->
                     <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-1 text-xs">
                         <div class="flex items-center gap-1.5 flex-wrap">
                             ${hdsdUrl ? `<button onclick="openResource('${escapeHtml(hdsdUrl)}', '${escapeHtml(title)}')" class="px-2 py-1 bg-white border border-slate-200 hover:border-kiot-blue text-slate-700 rounded text-[11px] font-medium"><i class="fa-solid fa-book-open text-blue-600 mr-1"></i>Xem</button>` : ''}
@@ -924,6 +986,25 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
+        }
+        function copyMcqByIndex(idx) {
+            const item = window.currentFilteredData[idx];
+            if (!item) return;
+
+            const q = item['Câu hỏi'] || item['Tiêu đề câu hỏi (*)'] || '';
+            const a = item['Lựa chọn 1'] || item['Đáp án A'] || '';
+            const b = item['Lựa chọn 2'] || item['Đáp án B'] || '';
+            const c = item['Lựa chọn 3'] || item['Đáp án C'] || '';
+            const correctRaw = String(item['Lựa chọn đúng'] || item['Đáp án đúng'] || '').trim();
+            const correctLetter = (correctRaw === '1' || correctRaw.toUpperCase() === 'A') ? 'A' : ((correctRaw === '2' || correctRaw.toUpperCase() === 'B') ? 'B' : 'C');
+
+            const textToCopy = `Câu hỏi: ${q}\nA. ${a}\nB. ${b}\nC. ${c}\n👉 Đáp án đúng: ${correctLetter}`;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert(`Đã sao chép câu hỏi #${idx + 1} vào bộ nhớ tạm!\nBạn có thể dán vào Zalo hoặc Slide đào tạo.`);
+            }).catch(err => {
+                console.error('Lỗi copy:', err);
+            });
         }
     </script>
 </body>
