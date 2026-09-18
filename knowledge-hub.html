@@ -1637,6 +1637,65 @@
                 prompt('Vui lòng sao chép thủ công:', url);
             });
         }
+        // Modal xem chi tiết Tình Huống Tái Ký (Bóc tách 4 hộp màu)
+        function openResourceModalDirect(title, question, answer) {
+            const modal = document.getElementById('floating-modal');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-badge').innerText = 'CASE STUDY';
+            document.getElementById('modal-badge').className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-600 text-white';
+            document.getElementById('modal-iframe').classList.add('hidden');
+            document.getElementById('modal-fallback').classList.add('hidden');
+            const rich = document.getElementById('modal-rich-details');
+            rich.classList.remove('hidden');
+
+            rich.innerHTML = `
+                <div class="max-w-4xl mx-auto space-y-5">
+                    <div class="p-4 bg-red-50 rounded-xl border border-red-200">
+                        <h4 class="text-xs font-bold text-red-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-circle-question mr-1"></i>Tình Huống / Khách Hàng Từ Chối:</h4>
+                        <p class="text-sm font-semibold text-slate-900 leading-relaxed">"${escapeHtml(question)}"</p>
+                    </div>
+
+                    <div class="p-5 bg-slate-50 rounded-xl border border-slate-200">
+                        <h4 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-3"><i class="fa-solid fa-lightbulb mr-1 text-emerald-600"></i>Kịch Bản Xử Lý Tái Ký & Thuyết Phục:</h4>
+                        <div class="text-xs leading-loose text-slate-800 whitespace-pre-line font-medium">${escapeHtml(answer)}</div>
+                    </div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        // Modal xem chi tiết Bài Tập Thực Hành (Đề bài, Hướng dẫn từng bước, Nghiệm thu)
+        function openExerciseModalDirect(code, session, req, guide, verify) {
+            const modal = document.getElementById('floating-modal');
+            document.getElementById('modal-title').innerText = `${code}: ${session}`;
+            document.getElementById('modal-badge').innerText = 'BÀI TẬP';
+            document.getElementById('modal-badge').className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-amber-600 text-white';
+            document.getElementById('modal-iframe').classList.add('hidden');
+            document.getElementById('modal-fallback').classList.add('hidden');
+            const rich = document.getElementById('modal-rich-details');
+            rich.classList.remove('hidden');
+
+            rich.innerHTML = `
+                <div class="max-w-4xl mx-auto space-y-5">
+                    <div class="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <h4 class="text-xs font-bold text-blue-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-list-check mr-1"></i>Yêu Cầu Bài Tập:</h4>
+                        <div class="text-xs leading-relaxed text-slate-800 whitespace-pre-line font-medium">${escapeHtml(req)}</div>
+                    </div>
+
+                    <div class="p-5 bg-slate-50 rounded-xl border border-slate-200">
+                        <h4 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-3"><i class="fa-solid fa-shoe-prints mr-1 text-emerald-600"></i>Hướng Dẫn Thao Tác Từng Bước:</h4>
+                        <div class="text-xs leading-loose text-slate-800 whitespace-pre-line font-medium">${escapeHtml(guide)}</div>
+                    </div>
+
+                    ${verify ? `
+                    <div class="p-4 bg-purple-50 rounded-xl border border-purple-200">
+                        <h4 class="text-xs font-bold text-purple-800 uppercase tracking-wider mb-1"><i class="fa-solid fa-camera mr-1"></i>Tiêu Chí Nghiệm Thu Ảnh Chụp:</h4>
+                        <p class="text-xs text-purple-900 font-semibold">${escapeHtml(verify)}</p>
+                    </div>` : ''}
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
 
         function escapeHtml(str) {
             if (!str) return '';
