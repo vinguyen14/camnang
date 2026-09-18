@@ -152,7 +152,7 @@
                 <i class="fa-solid fa-table text-emerald-400"></i>
                 <span id="total-sheets-badge">0 Sheet kết nối</span>
             </div>
-            <span class="text-slate-500 font-mono">v4.5 Executive</span>
+            <span class="text-slate-500 font-mono">v4.6 Unified Hub</span>
         </div>
     </aside>
 
@@ -197,7 +197,7 @@
             </div>
         </header>
 
-        <!-- Chrome-Style Tab Bar for Open Documents -->
+        <!-- Chrome-Style Tab Bar for Open Documents & Catalogs -->
         <div id="workspace-tab-bar" class="h-10 bg-slate-200/80 border-b border-slate-300/80 flex items-center px-2 gap-1 overflow-x-auto custom-scrollbar select-none z-10 flex-shrink-0">
             <div onclick="activateTab('tab-home')" id="tab-home" class="workspace-tab active h-9 px-3.5 rounded-t-lg bg-white flex items-center gap-2 text-xs text-slate-700 cursor-pointer border-t border-x border-slate-300">
                 <i class="fa-solid fa-gauge-high text-kiot-blue text-[11px]"></i>
@@ -209,12 +209,12 @@
         <div id="workspace-container" class="flex-1 flex overflow-hidden relative">
             
             <!-- PRIMARY PANE -->
-            <div id="pane-primary" class="flex-1 flex flex-col min-w-[320px] h-full overflow-hidden bg-white">
+            <div id="pane-primary" class="flex-1 flex flex-col min-w-[320px] h-full overflow-hidden bg-white relative">
                 
-                <!-- Sub-Filter Bar (For Sheet views) -->
+                <!-- Sub-Filter Bar (Always visible in Catalog Views) -->
                 <div id="sub-filter-bar" class="px-6 py-2.5 bg-slate-50/70 border-b border-slate-200 flex items-center gap-2 overflow-x-auto custom-scrollbar flex-shrink-0 hidden"></div>
 
-                <!-- Scrollable Content Area -->
+                <!-- Scrollable Content Area for Dashboard & Catalogs -->
                 <div id="items-scroll-container" class="flex-1 overflow-y-auto custom-scrollbar p-6">
                     
                     <!-- 1. MASTER EXECUTIVE DASHBOARD (Rendered on tab-home) -->
@@ -244,6 +244,9 @@
                     </div>
 
                 </div>
+
+                <!-- 4. ACTIVE EMBEDDED DOCUMENT VIEW (100% Full Height - No Layout Glitch) -->
+                <div id="active-document-container" class="hidden flex-1 w-full h-full flex flex-col bg-white overflow-hidden absolute inset-0 z-10"></div>
             </div>
 
             <!-- DRAGGABLE RESIZER DIVIDER -->
@@ -328,17 +331,16 @@
             currentSheet: '',     
             currentSubFilter: 'all',
             currentBatchFilter: 'all',
-            masterDomainFilter: 'all', // Retail, FNB, Salon, Hotel, Kế toán
-            masterGapFilter: 'all',    // all, missing-video, missing-quiz, unlinked-mcq
+            masterDomainFilter: 'all', 
             viewMode: 'table',    
             isSplitOpen: false,
             activeTabId: 'tab-home',
-            openTabs: [],
+            openTabs: [], // [{ id, title, type: 'catalog' | 'document', sheetName, url }]
             splitItem: null,
             searchQuery: ''
         };
 
-        // --- 2. GOOGLE SHEETS EMBED URL CONVERTER (FIX CHẶN IFRAME) ---
+        // --- 2. GOOGLE SHEETS EMBED CONVERTER (CHỐNG CHẶN IFRAME 100%) ---
         function formatGoogleSheetEmbedUrl(url) {
             if (!url) return '';
             const trimmed = String(url).trim();
@@ -398,7 +400,7 @@
             renderMasterDashboard();
         }
 
-        // --- 4. APPLY DATASET & DYNAMIC SIDEBAR ---
+        // --- 4. DATASET & SIDEBAR ---
         function applyDataset(data) {
             AppState.sheetsData = data.sheets || {};
             AppState.sheetList = data.sheetList || Object.keys(data.sheets || {});
@@ -406,7 +408,6 @@
             document.getElementById('total-sheets-badge').innerText = `${AppState.sheetList.length} Sheet kết nối`;
             renderDynamicSidebar();
 
-            // Nếu đang ở tab home, render Dashboard
             if (AppState.activeTabId === 'tab-home') {
                 renderMasterDashboard();
             } else if (AppState.currentSheet) {
@@ -450,13 +451,160 @@
             return 'fa-table';
         }
 
+        // --- 5. SHEET SELECTION & CATALOG TAB CREATION ---
         function selectSheet(sheetName) {
             AppState.currentSheet = sheetName;
             AppState.currentSubFilter = 'all';
             AppState.currentBatchFilter = 'all';
-            AppState.activeTabId = 'tab-sheet-view';
 
-            // Sidebar highlight
+            // Đảm bảo mở hoặc kích hoạt Tab Danh mục cho Sheet này trên Tab Bar
+            const catalogTabId = 'tab-sheet-' + encodeURIComponent(sheetName).replace(/%/g, '_');
+            const existingCatalogTab = AppState.openTabs.find(t => t.id === catalogTabId);
+
+            if (!existingCatalogTab) {
+                AppState.openTabs.push({
+                    id: catalogTabId,
+                    title: '📋 ' + sheetName,
+                    type: 'catalog',
+                    sheetName: sheetName,
+                    url: ''
+                });
+            }
+
+            // Kích hoạt tab danh mục này
+            activateTab(catalogTabId);
+        }
+
+        // --- 6. TAB BAR SYSTEM (ENTERPRISE MULTI-WINDOW) ---
+        function renderTabs() {
+            const bar = document.getElementById('workspace-tab-bar');
+            let html = `
+                <div onclick="activateTab('tab-home')" id="tab-home" class="workspace-tab ${AppState.activeTabId === 'tab-home' ? 'active' : ''} h-9 px-3.5 rounded-t-lg bg-white flex items-center gap-2 text-xs text-slate-700 cursor-pointer border-t border-x border-slate-300 flex-shrink-0">
+                    <i class="fa-solid fa-gauge-high text-kiot-blue text-[11px]"></i>
+                    <span class="font-semibold">Trang Quản Trị</span>
+                </div>
+            `;
+
+            AppState.openTabs.forEach(t => {
+                const isActive = (t.id === AppState.activeTabId);
+                const isCatalog = (t.type === 'catalog');
+                const icon = isCatalog ? 'fa-table-list text-kiot-blue' : 'fa-file-lines text-slate-400';
+
+                html += `
+                    <div onclick="activateTab('${t.id}')" id="${t.id}" class="workspace-tab ${isActive ? 'active' : 'hover:bg-slate-100'} h-9 px-3.5 rounded-t-lg flex items-center gap-2 text-xs text-slate-700 cursor-pointer border-t border-x border-slate-300 max-w-[240px] flex-shrink-0 transition-all">
+                        <i class="fa-solid ${icon} text-[11px]"></i>
+                        <span class="font-semibold truncate flex-1">${escapeHtml(t.title)}</span>
+                        <button onclick="closeTab('${t.id}', event)" class="w-4 h-4 rounded-full hover:bg-slate-300 flex items-center justify-center text-slate-400 hover:text-slate-700 text-[10px] ml-1">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `;
+            });
+
+            bar.innerHTML = html;
+        }
+
+        function activateTab(tabId) {
+            AppState.activeTabId = tabId;
+            renderTabs();
+
+            const docContainer = document.getElementById('active-document-container');
+            const itemsContainer = document.getElementById('items-scroll-container');
+            const subFilterBar = document.getElementById('sub-filter-bar');
+
+            // 1. Nếu quay về Trang Quản Trị (Home Dashboard)
+            if (tabId === 'tab-home') {
+                docContainer.classList.add('hidden');
+                docContainer.innerHTML = '';
+                itemsContainer.classList.remove('hidden');
+                subFilterBar.classList.add('hidden');
+                renderMasterDashboard();
+                return;
+            }
+
+            const currentTab = AppState.openTabs.find(t => t.id === tabId);
+            if (!currentTab) return;
+
+            // 2. Nếu là Tab Danh Mục của một Sheet (Catalog Tab)
+            if (currentTab.type === 'catalog') {
+                AppState.currentSheet = currentTab.sheetName;
+                docContainer.classList.add('hidden');
+                docContainer.innerHTML = '';
+                itemsContainer.classList.remove('hidden');
+
+                // Cập nhật Sidebar & Header
+                updateSidebarHighlight(currentTab.sheetName);
+                document.getElementById('breadcrumb-category').innerText = currentTab.sheetName;
+                document.getElementById('section-title').innerText = currentTab.sheetName;
+                document.getElementById('section-icon').innerHTML = `<i class="fa-solid ${getSheetIcon(currentTab.sheetName)}"></i>`;
+                document.getElementById('view-mode-controls').classList.remove('hidden');
+                document.getElementById('local-search-wrapper').classList.remove('hidden');
+
+                renderDynamicSubFilters(currentTab.sheetName);
+                renderItems();
+                return;
+            }
+
+            // 3. Nếu là Tab Xem Tài Liệu / File Đề Nhúng (Document Tab - 100% Height, No Blank Space)
+            if (currentTab.type === 'document') {
+                // ẨN HOÀN TOÀN items-scroll-container để không bị đè nửa trên
+                itemsContainer.classList.add('hidden');
+                subFilterBar.classList.add('hidden');
+
+                // HIỂN THỊ docContainer 100% FULL HEIGHT
+                docContainer.classList.remove('hidden');
+                docContainer.innerHTML = `
+                    <div class="h-11 bg-slate-100 border-b border-slate-200 px-4 flex items-center justify-between text-xs flex-shrink-0 select-none">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <button onclick="goBackToCatalog('${escapeHtml(currentTab.sheetName || AppState.currentSheet)}')" class="px-2.5 py-1 bg-white hover:bg-slate-200 text-slate-700 rounded font-bold flex items-center gap-1.5 shadow-sm border border-slate-200 transition-all">
+                                <i class="fa-solid fa-arrow-left text-[11px]"></i> Quay lại Danh mục
+                            </button>
+                            <span class="text-slate-300">|</span>
+                            <span class="font-bold text-slate-800 truncate">${escapeHtml(currentTab.title)}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <a href="${escapeHtml(currentTab.url)}" target="_blank" class="px-3 py-1 bg-white hover:bg-slate-50 border border-slate-200 rounded font-bold text-slate-700 flex items-center gap-1.5 shadow-sm transition-all">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i> Mở Tab Mới ↗
+                            </a>
+                        </div>
+                    </div>
+                    <div class="flex-1 w-full h-[calc(100%-44px)] bg-white relative">
+                        <iframe src="${escapeHtml(currentTab.url)}" class="w-full h-full border-0" allowfullscreen></iframe>
+                    </div>
+                `;
+            }
+        }
+
+        function closeTab(tabId, e) {
+            if (e) e.stopPropagation();
+            AppState.openTabs = AppState.openTabs.filter(t => t.id !== tabId);
+            if (AppState.activeTabId === tabId) {
+                AppState.activeTabId = AppState.openTabs.length > 0 ? AppState.openTabs[AppState.openTabs.length - 1].id : 'tab-home';
+            }
+            activateTab(AppState.activeTabId);
+        }
+
+        function openResource(url, title, sourceSheet) {
+            const tabId = 'tab-doc-' + Math.random().toString(36).substr(2, 8);
+            AppState.openTabs.push({
+                id: tabId,
+                title: title,
+                type: 'document',
+                sheetName: sourceSheet || AppState.currentSheet,
+                url: url
+            });
+            activateTab(tabId);
+        }
+
+        function goBackToCatalog(sheetName) {
+            if (sheetName) {
+                selectSheet(sheetName);
+            } else {
+                activateTab('tab-home');
+            }
+        }
+
+        function updateSidebarHighlight(sheetName) {
             document.querySelectorAll('.sheet-nav-btn').forEach(b => {
                 b.classList.remove('bg-kiot-blue', 'text-white', 'shadow-md');
                 b.classList.add('text-slate-300');
@@ -471,24 +619,10 @@
                     activeBtn.classList.remove('text-slate-300');
                 }
             }
-
-            // Update Header & Controls
-            document.getElementById('breadcrumb-category').innerText = sheetName;
-            document.getElementById('section-title').innerText = sheetName;
-            document.getElementById('section-icon').innerHTML = `<i class="fa-solid ${getSheetIcon(sheetName)}"></i>`;
-            document.getElementById('view-mode-controls').classList.remove('hidden');
-            document.getElementById('local-search-wrapper').classList.remove('hidden');
-
-            renderDynamicSubFilters(sheetName);
-            renderItems();
         }
 
-        // --- 5. MASTER EXECUTIVE DASHBOARD (CHỈ HUY TỔNG QUAN) ---
+        // --- 7. MASTER EXECUTIVE DASHBOARD ---
         function renderMasterDashboard() {
-            AppState.activeTabId = 'tab-home';
-            AppState.currentSheet = '';
-
-            // Update Header
             document.getElementById('breadcrumb-category').innerText = 'Tổng Quan Điều Hành';
             document.getElementById('section-title').innerText = 'Bảng Chỉ Huy Quản Trị Khảo Thí & Tri Thức L&D';
             document.getElementById('section-icon').innerHTML = `<i class="fa-solid fa-gauge-high"></i>`;
@@ -496,31 +630,22 @@
             document.getElementById('local-search-wrapper').classList.add('hidden');
             document.getElementById('sub-filter-bar').classList.add('hidden');
 
-            // Sidebar highlight Home
             document.querySelectorAll('.sheet-nav-btn').forEach(b => {
                 b.classList.remove('bg-kiot-blue', 'text-white', 'shadow-md');
                 b.classList.add('text-slate-300');
             });
             document.getElementById('sidebar-btn-home').className = 'w-full flex items-center justify-between px-3 py-2.5 text-xs font-bold rounded-lg bg-kiot-blue text-white shadow-sm transition-all text-left';
 
-            // Show Dashboard Container
             document.getElementById('master-dashboard-view').classList.remove('hidden');
             document.getElementById('sheet-content-view').classList.add('hidden');
             document.getElementById('empty-state').classList.add('hidden');
 
-            // --- AUDIT ENGINE (TÍNH TOÁN CHỈ SỐ LỖ HỔNG) ---
-            let totalAssets = 0;
-            let totalElearning = 0;
-            let elearningWithVideo = 0;
-            let elearningWithQuiz = 0;
-            let totalMcqRows = 0;
-            let mcqWithLink = 0;
-            let missingVideoList = [];
-            let missingQuizList = [];
-            let unlinkedMcqList = [];
+            // AUDIT METRICS
+            let totalAssets = 0, totalElearning = 0, elearningWithVideo = 0, elearningWithQuiz = 0;
+            let totalMcqRows = 0, mcqWithLink = 0;
+            let missingVideoList = [], missingQuizList = [], unlinkedMcqList = [];
             const courseMatrix = {};
 
-            // Quét dữ liệu
             Object.keys(AppState.sheetsData).forEach(sName => {
                 const sheet = AppState.sheetsData[sName];
                 if (!sheet || !sheet.items) return;
@@ -531,8 +656,6 @@
 
                 sheet.items.forEach(item => {
                     const course = (item['Khóa học'] || item['Khóa'] || 'Khác').trim();
-
-                    // Init Matrix
                     if (!courseMatrix[course]) {
                         courseMatrix[course] = { course, total: 0, video: 0, quiz: 0, mcqLinked: false, mcqCode: '' };
                     }
@@ -540,33 +663,21 @@
                     if (isELearning) {
                         totalElearning++;
                         courseMatrix[course].total++;
-
                         const hasVid = !!item['YouTube'] && String(item['YouTube']).trim().startsWith('http');
                         const hasQz = !!item['Github'] && String(item['Github']).trim().startsWith('http');
 
-                        if (hasVid) {
-                            elearningWithVideo++;
-                            courseMatrix[course].video++;
-                        } else {
-                            missingVideoList.push({ title: item['Nội dung'] || 'Bài học', course, sheetName: sName });
-                        }
+                        if (hasVid) { elearningWithVideo++; courseMatrix[course].video++; }
+                        else { missingVideoList.push({ title: item['Nội dung'] || 'Bài học', course, sheetName: sName }); }
 
-                        if (hasQz) {
-                            elearningWithQuiz++;
-                            courseMatrix[course].quiz++;
-                        } else {
-                            missingQuizList.push({ title: item['Nội dung'] || 'Bài học', course, sheetName: sName });
-                        }
+                        if (hasQz) { elearningWithQuiz++; courseMatrix[course].quiz++; }
+                        else { missingQuizList.push({ title: item['Nội dung'] || 'Bài học', course, sheetName: sName }); }
                     }
 
                     if (isMcq) {
                         totalMcqRows++;
                         let linkVal = '';
                         for (let k of Object.keys(item)) {
-                            if (String(item[k]).trim().startsWith('http')) {
-                                linkVal = String(item[k]).trim();
-                                break;
-                            }
+                            if (String(item[k]).trim().startsWith('http')) { linkVal = String(item[k]).trim(); break; }
                         }
                         const codeTitle = item['Mã bộ đề / Tên file ngân hàng câu hỏi'] || item['Tên bộ đề'] || 'Bộ đề';
                         if (linkVal) {
@@ -582,16 +693,14 @@
                 });
             });
 
-            // Tỷ lệ %
             const videoPct = totalElearning ? Math.round((elearningWithVideo / totalElearning) * 100) : 0;
             const quizPct = totalElearning ? Math.round((elearningWithQuiz / totalElearning) * 100) : 0;
             const mcqPct = totalMcqRows ? Math.round((mcqWithLink / totalMcqRows) * 100) : 0;
             const overallHealth = Math.round((videoPct * 0.4) + (quizPct * 0.3) + (mcqPct * 0.3));
 
-            // Render Dashboard HTML
             const dash = document.getElementById('master-dashboard-view');
             dash.innerHTML = `
-                <!-- 1. BỘ LỌC MASTER TOÀN CỤC -->
+                <!-- 1. BỘ LỌC MASTER -->
                 <div class="saas-card p-4 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex flex-wrap items-center justify-between gap-4">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-kiot-blue/30 border border-kiot-blue/40 flex items-center justify-center text-kiot-blue text-lg">
@@ -615,9 +724,8 @@
                     </div>
                 </div>
 
-                <!-- 2. KPI METRICS & SYSTEM HEALTH SCORE -->
+                <!-- 2. KPI METRICS -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- Health Score -->
                     <div class="saas-card p-5 border-l-4 border-l-emerald-500">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-bold text-slate-500 uppercase">Sức Khỏe Hệ Thống</span>
@@ -629,7 +737,6 @@
                         </div>
                     </div>
 
-                    <!-- Video Coverage -->
                     <div class="saas-card p-5 border-l-4 border-l-red-500">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-bold text-slate-500 uppercase">Tỷ Lệ Phủ Video</span>
@@ -641,7 +748,6 @@
                         </div>
                     </div>
 
-                    <!-- Quiz Coverage -->
                     <div class="saas-card p-5 border-l-4 border-l-blue-500">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-bold text-slate-500 uppercase">Tỷ Lệ Phủ Quiz</span>
@@ -653,7 +759,6 @@
                         </div>
                     </div>
 
-                    <!-- MCQ Sheet Linked -->
                     <div class="saas-card p-5 border-l-4 border-l-purple-500">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-bold text-slate-500 uppercase">Bộ Đề Đã Gán Link</span>
@@ -666,12 +771,12 @@
                     </div>
                 </div>
 
-                <!-- 3. RADA QUÉT LỖ HỔNG & NHẮC NHỞ MASTER (GAP DETECTOR) -->
+                <!-- 3. RADA LỖ HỔNG -->
                 <div class="saas-card p-5 border-l-4 border-l-amber-500">
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
                             <i class="fa-solid fa-triangle-exclamation text-amber-500 text-base"></i>
-                            <h3 class="text-sm font-bold text-slate-900">Rada Cảnh Báo Master: Lỗ Hổng Tài Liệu Cần Bổ Sung</h3>
+                            <h3 class="text-sm font-bold text-slate-900">Rada Cảnh Báo: Hạng Mục Cần Bổ Sung</h3>
                         </div>
                         <span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
                             Cần xử lý: ${unlinkedMcqList.length + missingVideoList.length + missingQuizList.length} hạng mục
@@ -679,7 +784,6 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <!-- Alert 1: Unlinked MCQ Sheets -->
                         <div class="p-3.5 rounded-lg bg-red-50/70 border border-red-200 flex flex-col justify-between">
                             <div>
                                 <div class="flex items-center gap-2 text-red-700 font-bold text-xs mb-1">
@@ -695,30 +799,24 @@
                             </button>
                         </div>
 
-                        <!-- Alert 2: Missing Video -->
                         <div class="p-3.5 rounded-lg bg-amber-50/70 border border-amber-200 flex flex-col justify-between">
                             <div>
                                 <div class="flex items-center gap-2 text-amber-800 font-bold text-xs mb-1">
                                     <i class="fa-brands fa-youtube text-red-500"></i> ${missingVideoList.length} Bài E-Learning thiếu Video
                                 </div>
-                                <p class="text-[11px] text-slate-600 leading-relaxed mb-3">
-                                    Các bài học này chưa có link YouTube minh họa tính năng cho học viên.
-                                </p>
+                                <p class="text-[11px] text-slate-600 leading-relaxed mb-3">Các bài học này chưa có link YouTube minh họa.</p>
                             </div>
                             <button onclick="navigateToGap('video')" class="w-full py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-semibold transition-all flex items-center justify-center gap-1">
                                 <i class="fa-solid fa-arrow-right"></i> Xem Danh Sách Thiếu Video
                             </button>
                         </div>
 
-                        <!-- Alert 3: Missing Quiz -->
                         <div class="p-3.5 rounded-lg bg-blue-50/70 border border-blue-200 flex flex-col justify-between">
                             <div>
                                 <div class="flex items-center gap-2 text-blue-800 font-bold text-xs mb-1">
                                     <i class="fa-solid fa-circle-question text-blue-500"></i> ${missingQuizList.length} Bài E-Learning thiếu Quiz
                                 </div>
-                                <p class="text-[11px] text-slate-600 leading-relaxed mb-3">
-                                    Chưa có link GitHub Quiz để học viên làm bài kiểm tra sau khi học.
-                                </p>
+                                <p class="text-[11px] text-slate-600 leading-relaxed mb-3">Chưa có link GitHub Quiz để học viên làm bài test.</p>
                             </div>
                             <button onclick="navigateToGap('quiz')" class="w-full py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold transition-all flex items-center justify-center gap-1">
                                 <i class="fa-solid fa-arrow-right"></i> Xem Danh Sách Thiếu Quiz
@@ -727,14 +825,13 @@
                     </div>
                 </div>
 
-                <!-- 4. MA TRẬN TIẾN ĐỘ HOÀN THIỆN THEO KHÓA & CHECKLIST BACKLOG -->
+                <!-- 4. MA TRẬN TIẾN ĐỘ & BACKLOG -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Progress Matrix -->
                     <div class="lg:col-span-2 saas-card p-5">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
                             <div>
                                 <h3 class="text-sm font-bold text-slate-900">Ma Trận Tiến Độ Số Hóa Khóa Học</h3>
-                                <p class="text-[11px] text-slate-400">Đo lường mức độ sẵn sàng đưa vào đào tạo của từng phân hệ</p>
+                                <p class="text-[11px] text-slate-400">Đo lường mức độ sẵn sàng đào tạo của từng phân hệ</p>
                             </div>
                             <span class="text-xs font-bold text-slate-500 font-mono">${Object.keys(courseMatrix).length} Khóa</span>
                         </div>
@@ -758,22 +855,19 @@
                         </div>
                     </div>
 
-                    <!-- 5. CHECKLIST BACKLOG & NHẬT KÝ ĐỒNG BỘ -->
                     <div class="saas-card p-5 flex flex-col justify-between">
                         <div>
                             <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
                                 <div>
                                     <h3 class="text-sm font-bold text-slate-900">Backlog Công Việc Trainer</h3>
-                                    <p class="text-[11px] text-slate-400">Ghi chú & theo dõi việc cần làm</p>
+                                    <p class="text-[11px] text-slate-400">Ghi chú & việc cần làm</p>
                                 </div>
-                                <button onclick="addNewBacklogPrompt()" class="px-2 py-1 bg-blue-50 text-kiot-blue hover:bg-blue-100 rounded text-xs font-bold" title="Thêm việc cần làm">
+                                <button onclick="addNewBacklogPrompt()" class="px-2 py-1 bg-blue-50 text-kiot-blue hover:bg-blue-100 rounded text-xs font-bold">
                                     <i class="fa-solid fa-plus"></i> Thêm việc
                                 </button>
                             </div>
 
-                            <div id="backlog-checklist-container" class="space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
-                                <!-- Dynamic Backlog items rendered here -->
-                            </div>
+                            <div id="backlog-checklist-container" class="space-y-2 max-h-72 overflow-y-auto custom-scrollbar"></div>
                         </div>
 
                         <div class="pt-3 border-t border-slate-100 mt-4 text-[11px] text-slate-400 flex items-center justify-between">
@@ -787,7 +881,6 @@
             renderBacklogTasks();
         }
 
-        // Helper render matrix rows
         function renderCourseMatrixRows(matrix) {
             const keys = Object.keys(matrix);
             if (keys.length === 0) return `<tr><td colspan="6" class="p-4 text-center text-slate-400">Chưa có dữ liệu khóa học</td></tr>`;
@@ -849,19 +942,13 @@
             renderMasterDashboard();
         }
 
-        // 1-Click Drilldown từ Cảnh Báo Lỗ Hổng
         function navigateToGap(gapType) {
             if (gapType === 'mcq') {
                 const mcqSheet = AppState.sheetList.find(s => s.toLowerCase().includes('mcq'));
                 if (mcqSheet) selectSheet(mcqSheet);
             } else if (gapType === 'video' || gapType === 'quiz') {
                 const elearningSheet = AppState.sheetList.find(s => s.toLowerCase().includes('elearning') || s.toLowerCase().includes('masterdata'));
-                if (elearningSheet) {
-                    selectSheet(elearningSheet);
-                    // Lọc những bài chưa có video hoặc quiz
-                    AppState.searchQuery = '';
-                    renderItems();
-                }
+                if (elearningSheet) selectSheet(elearningSheet);
             }
         }
 
@@ -872,8 +959,8 @@
                 try { return JSON.parse(raw); } catch (e) { return []; }
             }
             return [
-                { id: 1, text: 'Quay bổ sung Video cho các bài Retail 02 còn thiếu', done: false },
-                { id: 2, text: 'Gán link Google Sheet đề thi cho các khóa Salon 02 & Hotel 02', done: false },
+                { id: 1, text: 'Gán link Google Sheet cho các đề thi chưa kết nối', done: false },
+                { id: 2, text: 'Quay bổ sung Video cho các bài Retail 02 còn thiếu', done: false },
                 { id: 3, text: 'Soạn bộ câu hỏi trắc nghiệm cập nhật đợt tháng mới', done: true }
             ];
         }
@@ -927,7 +1014,7 @@
             }
         }
 
-        // --- 6. SUB-FILTER LOGIC (CHO CÁC SHEET) ---
+        // --- 8. SUB-FILTER LOGIC (CHO CATALOG VIEW) ---
         function renderDynamicSubFilters(sheetName) {
             const bar = document.getElementById('sub-filter-bar');
             bar.classList.remove('hidden');
@@ -1011,7 +1098,7 @@
             renderItems();
         }
 
-        // --- 7. FILTERED ITEMS & SHEET VIEWS ---
+        // --- 9. RENDER SHEET ITEMS ---
         function getFilteredItems() {
             const sheetMeta = AppState.sheetsData[AppState.currentSheet];
             if (!sheetMeta || !sheetMeta.items) return [];
@@ -1039,7 +1126,6 @@
         }
 
         function renderItems() {
-            // Ẩn Dashboard khi xem sheet chi tiết
             document.getElementById('master-dashboard-view').classList.add('hidden');
             document.getElementById('sheet-content-view').classList.remove('hidden');
 
@@ -1084,7 +1170,7 @@
             }
         }
 
-        // --- RENDER MCQ MATRIX TABLE ---
+        // RENDER MCQ ADMIN TABLE
         function renderMcqAdminTable(data, headers) {
             const thead = document.getElementById('table-head');
             const tbody = document.getElementById('table-body');
@@ -1151,22 +1237,26 @@
 
                     <td class="px-4 py-3.5 text-right whitespace-nowrap space-x-2">
                         ${hasValidLink ? `
-                        <button onclick="openResource('${escapeHtml(embedUrl)}', '📊 ${escapeHtml(codeTitle)}')" class="px-3 py-1.5 bg-kiot-blue hover:bg-kiot-navy text-white rounded-md text-xs font-semibold shadow-sm transition-all inline-flex items-center gap-1.5" title="Nhúng xem bảng tính trong Workspace">
+                        <!-- XEM ĐỀ: Nhúng trực tiếp vào Workspace -->
+                        <button onclick="openResource('${escapeHtml(embedUrl)}', '📊 ${escapeHtml(codeTitle)}', '${escapeHtml(AppState.currentSheet)}')" class="px-3 py-1.5 bg-kiot-blue hover:bg-kiot-navy text-white rounded-md text-xs font-semibold shadow-sm transition-all inline-flex items-center gap-1.5" title="Nhúng xem bảng tính trong Workspace">
                             <i class="fa-solid fa-table"></i> Xem Đề
                         </button>
 
+                        <!-- SỬA ĐỀ GỐC: Mở tab mới sang Google Sheets -->
                         <a href="${escapeHtml(rawLink)}" target="_blank" class="px-3 py-1.5 bg-white border border-slate-200 hover:border-emerald-500 text-slate-700 hover:text-emerald-700 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5" title="Mở file Google Sheets gốc để sửa câu hỏi">
                             <i class="fa-solid fa-pen-to-square text-emerald-600"></i> Sửa Đề Gốc ↗
                         </a>
 
+                        <!-- CHIA ĐÔI -->
                         <button onclick="openInSplitMode('${escapeHtml(embedUrl)}', '📊 ${escapeHtml(codeTitle)}')" class="p-1.5 text-slate-400 hover:text-slate-800 rounded hover:bg-slate-100" title="Xem ở nửa màn hình bên phải">
                             <i class="fa-solid fa-columns"></i>
                         </button>
 
+                        <!-- COPY LINK -->
                         <button onclick="copyToClipboardText('${escapeHtml(rawLink)}', 'Đã sao chép link đề: ${escapeHtml(codeTitle)}')" class="p-1.5 text-slate-400 hover:text-slate-800 rounded hover:bg-slate-100" title="Sao chép link Google Sheet">
                             <i class="fa-regular fa-copy"></i>
                         </button>
-                        ` : `<span class="text-xs text-slate-400 italic">Cần bổ sung link</span>`}
+                        ` : `<span class="text-xs text-slate-400 italic">Cần bổ sung link trên Google Sheets</span>`}
                     </td>
                 </tr>
                 `;
@@ -1221,7 +1311,7 @@
 
                     <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
                         ${hasValidLink ? `
-                        <button onclick="openResource('${escapeHtml(embedUrl)}', '📊 ${escapeHtml(codeTitle)}')" class="btn-primary text-xs flex-1 py-1.5">
+                        <button onclick="openResource('${escapeHtml(embedUrl)}', '📊 ${escapeHtml(codeTitle)}', '${escapeHtml(AppState.currentSheet)}')" class="btn-primary text-xs flex-1 py-1.5">
                             <i class="fa-solid fa-table"></i> Xem Đề
                         </button>
                         <a href="${escapeHtml(rawLink)}" target="_blank" class="px-3 py-1.5 bg-white border border-slate-200 hover:border-emerald-500 text-slate-700 hover:text-emerald-700 rounded text-xs font-semibold">
@@ -1252,7 +1342,7 @@
                 return `<tr class="hover:bg-slate-50 transition-colors">
                     ${displayHeaders.map(h => `<td class="px-4 py-3.5 text-slate-700 text-xs whitespace-normal break-words leading-relaxed">${formatTableCellValue(row[h])}</td>`).join('')}
                     <td class="px-4 py-3.5 text-right whitespace-nowrap space-x-2">
-                        ${primaryUrl ? `<button onclick="openResource('${escapeHtml(primaryUrl)}', '${escapeHtml(title)}')" class="text-kiot-blue font-bold hover:underline">Mở Tab</button>` : ''}
+                        ${primaryUrl ? `<button onclick="openResource('${escapeHtml(primaryUrl)}', '${escapeHtml(title)}', '${escapeHtml(AppState.currentSheet)}')" class="text-kiot-blue font-bold hover:underline">Mở Tab</button>` : ''}
                     </td>
                 </tr>`;
             }).join('');
@@ -1263,7 +1353,9 @@
             const str = String(val).trim();
             if (str.startsWith('http://') || str.startsWith('https://')) {
                 let label = str;
-                if (str.length > 35) label = str.replace(/^https?:\/\/(www\.)?/, '').slice(0, 32) + '...';
+                if (str.length > 35) {
+                    label = str.replace(/^https?:\/\/(www\.)?/, '').slice(0, 32) + '...';
+                }
                 return `<a href="${escapeHtml(str)}" target="_blank" class="text-kiot-blue hover:underline font-semibold inline-flex items-center gap-1"><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> ${escapeHtml(label)}</a>`;
             }
             return escapeHtml(str);
@@ -1302,9 +1394,9 @@
 
                     <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-1 text-xs">
                         <div class="flex items-center gap-1.5 flex-wrap">
-                            ${hdsdUrl ? `<button onclick="openResource('${escapeHtml(hdsdUrl)}', '${escapeHtml(title)}')" class="px-2 py-1 bg-white border border-slate-200 hover:border-kiot-blue text-slate-700 rounded text-[11px] font-medium"><i class="fa-solid fa-book-open text-blue-600 mr-1"></i>Xem</button>` : ''}
+                            ${hdsdUrl ? `<button onclick="openResource('${escapeHtml(hdsdUrl)}', '${escapeHtml(title)}', '${escapeHtml(AppState.currentSheet)}')" class="px-2 py-1 bg-white border border-slate-200 hover:border-kiot-blue text-slate-700 rounded text-[11px] font-medium"><i class="fa-solid fa-book-open text-blue-600 mr-1"></i>Xem</button>` : ''}
                             ${ytUrl ? `<button onclick="openVideo('${escapeHtml(ytUrl)}', '${escapeHtml(title)}')" class="px-2 py-1 bg-white border border-slate-200 hover:border-red-500 text-slate-700 rounded text-[11px] font-medium"><i class="fa-brands fa-youtube text-red-600 mr-1"></i>Video</button>` : ''}
-                            ${quizUrl ? `<button onclick="openResource('${escapeHtml(quizUrl)}', 'Quiz: ${escapeHtml(title)}')" class="px-2 py-1 bg-white border border-slate-200 hover:border-emerald-500 text-slate-700 rounded text-[11px] font-medium"><i class="fa-solid fa-check-circle text-emerald-600 mr-1"></i>Quiz</button>` : ''}
+                            ${quizUrl ? `<button onclick="openResource('${escapeHtml(quizUrl)}', 'Quiz: ${escapeHtml(title)}', '${escapeHtml(AppState.currentSheet)}')" class="px-2 py-1 bg-white border border-slate-200 hover:border-emerald-500 text-slate-700 rounded text-[11px] font-medium"><i class="fa-solid fa-check-circle text-emerald-600 mr-1"></i>Quiz</button>` : ''}
                             ${editUrl ? `<a href="${editUrl}" target="_blank" class="p-1 text-slate-400 hover:text-slate-800" title="Source Code"><i class="fa-brands fa-github text-sm"></i></a>` : ''}
                         </div>
                         ${hdsdUrl ? `
@@ -1317,85 +1409,7 @@
             container.innerHTML = html;
         }
 
-        // --- 8. MULTI-WINDOW WORKSPACE TABS ENGINE ---
-        function openResource(url, title) {
-            const tabId = 'tab-' + Math.random().toString(36).substr(2, 8);
-            AppState.openTabs.push({ id: tabId, title: title, url: url });
-            renderTabs();
-            activateTab(tabId);
-        }
-
-        function renderTabs() {
-            const bar = document.getElementById('workspace-tab-bar');
-            let html = `
-                <div onclick="activateTab('tab-home')" id="tab-home" class="workspace-tab ${AppState.activeTabId === 'tab-home' ? 'active' : ''} h-9 px-3.5 rounded-t-lg bg-white flex items-center gap-2 text-xs text-slate-700 cursor-pointer border-t border-x border-slate-300">
-                    <i class="fa-solid fa-gauge-high text-kiot-blue text-[11px]"></i>
-                    <span class="font-semibold">Trang Quản Trị</span>
-                </div>
-            `;
-            AppState.openTabs.forEach(t => {
-                const isActive = (t.id === AppState.activeTabId);
-                html += `
-                    <div onclick="activateTab('${t.id}')" id="${t.id}" class="workspace-tab ${isActive ? 'active' : 'hover:bg-slate-100'} h-9 px-3.5 rounded-t-lg flex items-center gap-2 text-xs text-slate-700 cursor-pointer border-t border-x border-slate-300 max-w-[220px]">
-                        <i class="fa-solid fa-window-restore text-slate-400 text-[11px]"></i>
-                        <span class="font-medium truncate flex-1">${escapeHtml(t.title)}</span>
-                        <button onclick="closeTab('${t.id}', event)" class="w-4 h-4 rounded-full hover:bg-slate-300 flex items-center justify-center text-slate-400 hover:text-slate-700 text-[10px] ml-1"><i class="fa-solid fa-xmark"></i></button>
-                    </div>
-                `;
-            });
-            bar.innerHTML = html;
-        }
-
-        function activateTab(tabId) {
-            AppState.activeTabId = tabId;
-            renderTabs();
-
-            const existingContainer = document.getElementById('active-tab-frame-container');
-
-            if (tabId === 'tab-home') {
-                if (existingContainer) existingContainer.remove();
-                renderMasterDashboard();
-            } else {
-                document.getElementById('master-dashboard-view').classList.add('hidden');
-                document.getElementById('sheet-content-view').classList.add('hidden');
-                document.getElementById('empty-state').classList.add('hidden');
-                document.getElementById('sub-filter-bar').classList.add('hidden');
-
-                const currentTab = AppState.openTabs.find(t => t.id === tabId);
-                if (currentTab) {
-                    let container = existingContainer;
-                    if (!container) {
-                        container = document.createElement('div');
-                        container.id = 'active-tab-frame-container';
-                        container.className = 'flex-1 w-full h-full relative overflow-hidden bg-white';
-                        document.getElementById('pane-primary').appendChild(container);
-                    }
-
-                    container.innerHTML = `
-                        <div class="h-10 bg-slate-100 border-b border-slate-200 px-4 flex items-center justify-between text-xs">
-                            <span class="font-bold text-slate-800 truncate">${escapeHtml(currentTab.title)}</span>
-                            <div class="flex items-center gap-2">
-                                <a href="${escapeHtml(currentTab.url)}" target="_blank" class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-200 rounded font-semibold text-slate-700 flex items-center gap-1.5 shadow-sm">
-                                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Mở Tab Mới ↗
-                                </a>
-                            </div>
-                        </div>
-                        <iframe src="${escapeHtml(currentTab.url)}" class="w-full h-[calc(100%-40px)] border-0" allowfullscreen></iframe>
-                    `;
-                }
-            }
-        }
-
-        function closeTab(tabId, e) {
-            if (e) e.stopPropagation();
-            AppState.openTabs = AppState.openTabs.filter(t => t.id !== tabId);
-            if (AppState.activeTabId === tabId) {
-                AppState.activeTabId = AppState.openTabs.length > 0 ? AppState.openTabs[AppState.openTabs.length - 1].id : 'tab-home';
-            }
-            activateTab(AppState.activeTabId);
-        }
-
-        // --- 9. RESIZABLE SPLIT-SCREEN ---
+        // --- 10. RESIZABLE SPLIT-SCREEN ---
         function toggleSplitScreen() {
             AppState.isSplitOpen = !AppState.isSplitOpen;
             const pane = document.getElementById('pane-secondary');
@@ -1470,7 +1484,7 @@
             openInSplitMode(embed, 'Video: ' + title);
         }
 
-        // --- 10. SYNC GOOGLE SHEETS API ---
+        // --- 11. SYNC GOOGLE SHEETS API ---
         async function syncGoogleSheetsData() {
             const apiUrl = localStorage.getItem('kv_api_url') || '';
             if (!apiUrl) {
@@ -1525,7 +1539,7 @@
             syncGoogleSheetsData();
         }
 
-        // --- 11. GLOBAL SEARCH (CTRL + K) ---
+        // --- 12. GLOBAL SEARCH (CTRL + K) ---
         function setupKeyboardShortcuts() {
             window.addEventListener('keydown', (e) => {
                 if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -1560,7 +1574,7 @@
                 const sheet = AppState.sheetsData[sName];
                 if (sheet && sheet.items) {
                     sheet.items.forEach(item => {
-                        const title = item['Nội dung'] || item['Tên app'] || item['Mã bộ đề / Tên file ngân hàng câu hỏi'] || item['Title'] || item['TenBuoi'] || Object.values(item)[1] || Object.values(item)[0] || '';
+                        const title = item['Nội dung'] || item['Tên app'] || item['Mã bộ đề / Tên file ngân hàng câu hỏi'] || item['Tên bộ đề'] || item['Tiêu đề'] || Object.values(item)[1] || Object.values(item)[0] || '';
                         const desc = item['Mô tả'] || item['Question'] || item['YeuCau'] || '';
                         const url = item['HDSD'] || item['Link app'] || item['Link'] || '';
                         all.push({ title, desc, url, sheetName: sName });
@@ -1578,7 +1592,7 @@
             }
 
             res.innerHTML = matched.map(m => `
-                <div onclick="selectSearchResult('${escapeHtml(m.url)}', '${escapeHtml(m.title)}')" class="p-3 hover:bg-slate-50 rounded-lg cursor-pointer flex items-center justify-between transition-all">
+                <div onclick="selectSearchResult('${escapeHtml(m.url)}', '${escapeHtml(m.title)}', '${escapeHtml(m.sheetName)}')" class="p-3 hover:bg-slate-50 rounded-lg cursor-pointer flex items-center justify-between transition-all">
                     <div class="min-w-0 pr-3">
                         <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 mb-1 inline-block">${escapeHtml(m.sheetName)}</span>
                         <h4 class="text-xs font-bold text-slate-800 truncate">${escapeHtml(m.title)}</h4>
@@ -1589,9 +1603,9 @@
             `).join('');
         }
 
-        function selectSearchResult(url, title) {
+        function selectSearchResult(url, title, sheetName) {
             closeGlobalSearch();
-            if (url) openResource(url, title);
+            if (url) openResource(url, title, sheetName);
         }
 
         function handleLocalSearch(val) {
