@@ -574,7 +574,7 @@
             let html = '';
 
             data.forEach((item, idx) => {
-                // KIỂM TRA ĐỊNH DẠNG 1: QUẢN TRỊ ĐỀ THI QUA LINK THEO KHÓA (KHÓA | LOẠI CÂU HỎI | LINK)
+                // ĐỊNH DẠNG 1: CỔNG KHẢO THÍ / QUẢN TRỊ ĐỀ THI BẰNG LINK (Khóa | Loại câu hỏi | Link)
                 const isQuizCatalog = !!(item['Link làm bài'] || item['Link'] || item['Link Quiz']) && !!(item['Khóa'] || item['Khóa học']);
 
                 if (isQuizCatalog) {
@@ -588,7 +588,6 @@
                     html += `
                     <div class="saas-card p-5 flex flex-col justify-between group hover:border-kiot-blue hover:shadow-md transition-all">
                         <div>
-                            <!-- Header Thẻ: Khóa & Thể Loại -->
                             <div class="flex items-start justify-between gap-3 mb-3">
                                 <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-blue-50 text-kiot-blue border border-blue-200">
                                     <i class="fa-solid fa-graduation-cap mr-1"></i>${escapeHtml(course)}
@@ -598,40 +597,32 @@
                                 </span>
                             </div>
 
-                            <!-- Tên Bộ Đề -->
                             <h3 class="text-sm font-bold text-slate-900 group-hover:text-kiot-blue transition-colors mb-2 leading-snug">
                                 ${escapeHtml(title)}
                             </h3>
 
-                            <!-- Mô Tả / Ghi Chú -->
                             <p class="text-xs text-slate-500 line-clamp-3 leading-relaxed mb-4">
                                 ${escapeHtml(desc)}
                             </p>
                         </div>
 
-                        <!-- Action Bar: Đa Cửa Sổ & Tiện Ích Gửi Zalo -->
                         <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
-                            <!-- Nút Làm bài trong Workspace Tab -->
                             <button onclick="openResource('${escapeHtml(quizUrl)}', '${escapeHtml(title)}')" class="btn-primary text-xs flex-1 py-1.5" title="Mở làm bài ngay trong Workspace">
                                 <i class="fa-solid fa-play text-[10px]"></i> Làm Bài Ngay
                             </button>
 
-                            <!-- Nút Mở Cửa Sổ Popup Độc Lập (1280x850) -->
                             <button onclick="window.open('${escapeHtml(quizUrl)}', '${escapeHtml(title)}', 'width=1280,height=850,menubar=no,toolbar=no,location=no,status=no')" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all" title="Mở cửa sổ Popup độc lập">
                                 <i class="fa-solid fa-window-restore text-slate-600"></i>
                             </button>
 
-                            <!-- Nút Sao Chép Link gửi Zalo -->
-                            <button onclick="copyToClipboardText('${escapeHtml(quizUrl)}', 'Đã sao chép link đề thi: ${escapeHtml(title)}')" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all" title="Sao chép link gửi Zalo cho học viên">
+                            <button onclick="copyToClipboardText('${escapeHtml(quizUrl)}', 'Đã sao chép link đề thi: ${escapeHtml(title)}')" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all" title="Sao chép link gửi Zalo">
                                 <i class="fa-regular fa-copy text-slate-600"></i>
                             </button>
 
-                            <!-- Nút Chia Đôi Màn Hình (Split Screen) -->
                             <button onclick="openInSplitMode('${escapeHtml(quizUrl)}', '${escapeHtml(title)}')" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all" title="Chia đôi màn hình">
                                 <i class="fa-solid fa-columns text-slate-600"></i>
                             </button>
 
-                            <!-- Nút Mở Link File Đề Gốc / Edit (Nếu có) -->
                             ${editUrl ? `
                             <a href="${escapeHtml(editUrl)}" target="_blank" class="p-1.5 text-slate-400 hover:text-slate-800 transition-all" title="Mở file đề gốc / Edit">
                                 <i class="fa-solid fa-pen-to-square text-sm"></i>
@@ -641,54 +632,7 @@
                     return;
                 }
 
-                // KIỂM TRA ĐỊNH DẠNG 2: BÀI GIẢNG E-LEARNING (HDSD, YOUTUBE, INFOGRAPHIC, QUIZ)
-                const title = item['Nội dung'] || item['Tên app'] || item['Title'] || item['TenBuoi'] || item['Tiêu đề'] || Object.values(item)[1] || Object.values(item)[0] || '';
-                const desc = item['Mô tả'] || item['Question'] || item['YeuCau'] || item['Answer'] || '';
-                const hdsdUrl = item['HDSD'] || item['Link app'] || item['appUrl'] || '';
-                const ytUrl = item['YouTube'] || item['Link YouTube'] || '';
-                const quizUrl = item['Github'] || item['Quiz'] || '';
-                const editUrl = item['Link edit'] || '';
-                const img = item['Infographic'] || item['HinhAnh'] || '';
-                const codeBadge = item['Khóa học'] || item['Khóa'] || item['NganhHang'] || item['Day'] || '';
-
-                html += `
-                <div class="saas-card overflow-hidden flex flex-col justify-between group">
-                    <div>
-                        ${img ? `
-                        <div class="h-36 bg-slate-100 relative overflow-hidden border-b border-slate-100">
-                            <img src="${img}" alt="${escapeHtml(title)}" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-300" onerror="this.src='https://placehold.co/600x300/e2e8f0/475569?text=KiotViet+Doc'">
-                            ${codeBadge ? `<span class="absolute top-2.5 left-2.5 px-2 py-0.5 text-[10px] font-bold rounded bg-slate-900/80 text-white backdrop-blur-sm">${escapeHtml(codeBadge)}</span>` : ''}
-                        </div>` : `
-                        <div class="p-4 pb-0 flex items-center justify-between">
-                            ${codeBadge ? `<span class="px-2 py-0.5 text-[10px] font-bold rounded bg-blue-50 text-blue-700 border border-blue-200">${escapeHtml(codeBadge)}</span>` : '<span></span>'}
-                        </div>`}
-
-                        <div class="p-4">
-                            <h3 class="text-xs font-bold text-slate-900 line-clamp-2 mb-2 group-hover:text-kiot-blue transition-all" title="${escapeHtml(title)}">${escapeHtml(title)}</h3>
-                            <p class="text-[11px] text-slate-500 line-clamp-3 leading-relaxed mb-3">${escapeHtml(desc)}</p>
-                        </div>
-                    </div>
-
-                    <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-1 text-xs">
-                        <div class="flex items-center gap-1.5 flex-wrap">
-                            ${hdsdUrl ? `<button onclick="openResource('${escapeHtml(hdsdUrl)}', '${escapeHtml(title)}')" class="px-2 py-1 bg-white border border-slate-200 hover:border-kiot-blue text-slate-700 rounded text-[11px] font-medium"><i class="fa-solid fa-book-open text-blue-600 mr-1"></i>Xem</button>` : ''}
-                            ${ytUrl ? `<button onclick="openVideo('${escapeHtml(ytUrl)}', '${escapeHtml(title)}')" class="px-2 py-1 bg-white border border-slate-200 hover:border-red-500 text-slate-700 rounded text-[11px] font-medium"><i class="fa-brands fa-youtube text-red-600 mr-1"></i>Video</button>` : ''}
-                            ${quizUrl ? `<button onclick="openResource('${escapeHtml(quizUrl)}', 'Quiz: ${escapeHtml(title)}')" class="px-2 py-1 bg-white border border-slate-200 hover:border-emerald-500 text-slate-700 rounded text-[11px] font-medium"><i class="fa-solid fa-check-circle text-emerald-600 mr-1"></i>Quiz</button>` : ''}
-                            ${editUrl ? `<a href="${editUrl}" target="_blank" class="p-1 text-slate-400 hover:text-slate-800" title="Source Code"><i class="fa-brands fa-github text-sm"></i></a>` : ''}
-                        </div>
-                        ${hdsdUrl ? `
-                        <button onclick="openInSplitMode('${escapeHtml(hdsdUrl)}', '${escapeHtml(title)}')" class="p-1.5 text-slate-400 hover:text-slate-800" title="Chia đôi màn hình">
-                            <i class="fa-solid fa-columns"></i>
-                        </button>` : ''}
-                    </div>
-                </div>`;
-            });
-
-            container.innerHTML = html;
-        }
-
-            // RENDER CÁC SHEET KHÁC (Masterdata E-Learning, Apps, Videos...) GIỮ NGUYÊN HOÀN HẢO
-            data.forEach(item => {
+                // ĐỊNH DẠNG 2: BÀI GIẢNG E-LEARNING (HDSD, YOUTUBE, INFOGRAPHIC, QUIZ) & CÁC SHEET KHÁC
                 const title = item['Nội dung'] || item['Tên app'] || item['Title'] || item['TenBuoi'] || item['Tiêu đề'] || Object.values(item)[1] || Object.values(item)[0] || '';
                 const desc = item['Mô tả'] || item['Question'] || item['YeuCau'] || item['Answer'] || '';
                 const hdsdUrl = item['HDSD'] || item['Link app'] || item['Link'] || item['appUrl'] || '';
@@ -696,7 +640,7 @@
                 const quizUrl = item['Github'] || item['Quiz'] || '';
                 const editUrl = item['Link edit'] || '';
                 const img = item['Infographic'] || item['HinhAnh'] || '';
-                const codeBadge = item['Khóa học'] || item['NganhHang'] || item['Day'] || '';
+                const codeBadge = item['Khóa học'] || item['Khóa'] || item['NganhHang'] || item['Day'] || '';
 
                 html += `
                 <div class="saas-card overflow-hidden flex flex-col justify-between group">
