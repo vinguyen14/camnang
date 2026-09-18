@@ -490,6 +490,22 @@
             let html = `<span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">Khóa học:</span>`;
             html += `<button onclick="applySubFilter('all')" class="px-3 py-1 rounded-full text-xs font-medium ${AppState.currentSubFilter === 'all' ? 'bg-kiot-blue text-white shadow-sm' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">Tất cả</button>`;
 
+            // Nếu là Tab MCQ: Thêm nút mở nhanh Công cụ Noova Convert Hub ở cuối thanh lọc
+            if (isMcqSheet) {
+                setTimeout(() => {
+                    const bar = document.getElementById('sub-filter-bar');
+                    if (bar && !document.getElementById('btn-quick-noova')) {
+                        const toolBtn = document.createElement('a');
+                        toolBtn.id = 'btn-quick-noova';
+                        toolBtn.href = 'https://sites.google.com/view/kvlnd-product-hub/noova-mcq-convert';
+                        toolBtn.target = '_blank';
+                        toolBtn.className = 'ml-auto px-3 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm flex-shrink-0';
+                        toolBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles text-purple-600"></i> Mở Noova MCQ Convert Hub';
+                        bar.appendChild(toolBtn);
+                    }
+                }, 50);
+            }
+
             filterValues.forEach(val => {
                 const isActive = (AppState.currentSubFilter === val);
                 const activeClass = isActive ? 'bg-kiot-blue text-white shadow-sm' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200';
@@ -542,6 +558,20 @@
             return data;
         }
 
+        // Tự động chuyển link Google Sheets sang dạng /preview để nhúng hiển thị 100% không bị chặn
+        function formatGoogleSheetEmbedUrl(url) {
+            if (!url) return '';
+            if (url.includes('docs.google.com/spreadsheets')) {
+                let clean = url.split('/edit')[0].split('/view')[0];
+                if (clean.endsWith('/')) clean = clean.slice(0, -1);
+                // Giữ lại gid nếu có để mở đúng tab con
+                const gidMatch = url.match(/gid=([0-9]+)/);
+                const gidParam = gidMatch ? `?gid=${gidMatch[1]}` : '';
+                return `${clean}/preview${gidParam}`;
+            }
+            return url;
+        }
+
         function renderItems() {
             const data = getFilteredItems();
             const gridContainer = document.getElementById('items-grid');
@@ -558,6 +588,16 @@
 
             emptyState.classList.add('hidden');
 
+            // NẾU LÀ TAB MCQ MASTER: TỰ ĐỘNG CHUYỂN SANG BẢNG ĐIỀU HÀNH QUẢN TRỊ KHẢO THÍ CHUYÊN NGHIỆP
+            const isMcqSheet = AppState.currentSheet.toLowerCase().includes('mcq') || (sheetMeta && sheetMeta.headers.includes('Khóa') && sheetMeta.headers.some(h => h.toLowerCase().includes('link')));
+            if (isMcqSheet) {
+                gridContainer.classList.add('hidden');
+                tableContainer.classList.remove('hidden');
+                renderMcqAdminMatrix(data, sheetMeta.headers);
+                return;
+            }
+
+            // CÁC TAB KHÁC (E-Learning, Apps, Videos...): THEO CHẾ ĐỘ XEM GRID/TABLE
             if (AppState.viewMode === 'grid') {
                 gridContainer.classList.remove('hidden');
                 tableContainer.classList.add('hidden');
@@ -567,6 +607,91 @@
                 tableContainer.classList.remove('hidden');
                 renderSmartTable(data, sheetMeta.headers);
             }
+        }
+
+        // BẢNG ĐIỀU HÀNH MA TRẬN QUẢN TRỊ NGÂN HÀNG ĐỀ THI MCQ (ADMIN MATRIX)
+        function renderMcqAdminMatrix(data, headers) {
+            const thead = document.getElementById('table-head');
+            const tbody = document.getElementById('table-body');
+
+            thead.innerHTML = `
+                <tr class="bg-slate-900 text-white text-[11px] uppercase tracking-wider">
+                    <th class="px-4 py-3 text-center w-12">STT</th>
+                    <th class="px-4 py-3">Khóa Học</th>
+                    <th class="px-4 py-3">Mã Bộ Đề / Tên File Ngân Hàng Câu Hỏi</th>
+                    <th class="px-4 py-3">Phân Loại</th>
+                    <th class="px-4 py-3 text-center">Tình Trạng File</th>
+                    <th class="px-4 py-3 text-right">Hành Động Quản Trị Cốt Lõi</th>
+                </tr>
+            `;
+
+            tbody.innerHTML = data.map((row, idx) => {
+                const course = row['Khóa'] || row['Khóa học'] || 'Chung';
+                const codeTitle = row['Tên bộ đề'] || row['Tiêu đề'] || Object.values(row)[1] || `Bộ đề #${idx + 1}`;
+                const type = row['Loại câu hỏi'] || row['Loại'] || 'Một đáp án';
+                const rawSheetUrl = row['Link làm bài'] || row['Link'] || row['Link Quiz'] || Object.values(row)[2] || '';
+                const editUrl = row['Link edit'] || row['Link đề gốc'] || rawSheetUrl;
+                const embedUrl = formatGoogleSheetEmbedUrl(rawSheetUrl);
+                const hasLink = !!rawSheetUrl;
+
+                return `
+                <tr class="hover:bg-blue-50/50 transition-colors group">
+                    <td class="px-4 py-3 text-center font-mono text-slate-400 text-xs font-semibold">${idx + 1}</td>
+                    
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-blue-50 text-kiot-blue border border-blue-200 inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-graduation-cap text-[10px]"></i> ${escapeHtml(course)}
+                        </span>
+                    </td>
+
+                    <td class="px-4 py-3">
+                        <div class="font-bold text-slate-900 text-xs tracking-tight group-hover:text-kiot-blue transition-colors flex items-center gap-2">
+                            <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i>
+                            <span class="font-mono text-[13px]">${escapeHtml(codeTitle)}</span>
+                        </div>
+                    </td>
+
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                            ${escapeHtml(type)}
+                        </span>
+                    </td>
+
+                    <td class="px-4 py-3 text-center whitespace-nowrap">
+                        ${hasLink ? `
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <i class="fa-solid fa-circle-check text-emerald-500"></i> Đã kết nối Sheet
+                            </span>` : `
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-400">
+                                <i class="fa-solid fa-circle-xmark"></i> Chưa có link
+                            </span>`}
+                    </td>
+
+                    <td class="px-4 py-3 text-right whitespace-nowrap space-x-1.5">
+                        ${hasLink ? `
+                        <!-- NÚT 1: NHÚNG XEM SHEET TRỰC TIẾP TRONG WORKSPACE (ĐÃ FIX CHỐNG CHẶN) -->
+                        <button onclick="openResource('${escapeHtml(embedUrl)}', '📊 Sheet: ${escapeHtml(codeTitle)}')" class="px-2.5 py-1.5 bg-kiot-blue hover:bg-kiot-navy text-white rounded text-xs font-medium shadow-sm transition-all inline-flex items-center gap-1" title="Nhúng xem trực tiếp bảng tính trong Workspace">
+                            <i class="fa-solid fa-table"></i> Nhúng Xem Sheet
+                        </button>
+
+                        <!-- NÚT 2: CHIA ĐÔI MÀN HÌNH ĐỂ VỪA DUYỆT BẢNG VỪA XEM SHEET -->
+                        <button onclick="openInSplitMode('${escapeHtml(embedUrl)}', '📊 Sheet: ${escapeHtml(codeTitle)}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-medium transition-all inline-flex items-center gap-1" title="Mở bảng tính ở nửa màn hình bên phải">
+                            <i class="fa-solid fa-columns text-slate-500"></i> Chia Đôi
+                        </button>
+
+                        <!-- NÚT 3: MỞ FILE GOOGLE SHEET GỐC ĐỂ CHỈNH SỬA CÂU HỎI -->
+                        <a href="${escapeHtml(editUrl)}" target="_blank" class="px-2 py-1.5 bg-white border border-slate-200 hover:border-emerald-500 text-slate-700 hover:text-emerald-700 rounded text-xs font-medium transition-all inline-flex items-center gap-1" title="Mở tab mới sang Google Sheets để sửa đề">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-emerald-600"></i> Mở Sheet Gốc
+                        </a>
+
+                        <!-- NÚT 4: COPY LINK GỬI CHO TEAM -->
+                        <button onclick="copyToClipboardText('${escapeHtml(rawSheetUrl)}', 'Đã sao chép link file: ${escapeHtml(codeTitle)}')" class="p-1.5 text-slate-400 hover:text-slate-700 rounded hover:bg-slate-100" title="Sao chép link Google Sheet">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>` : `<span class="text-xs text-slate-400 italic">Cần bổ sung link</span>`}
+                    </td>
+                </tr>
+                `;
+            }).join('');
         }
 
         function renderSmartCardGrid(data, headers, container) {
