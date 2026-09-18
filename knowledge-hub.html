@@ -500,17 +500,16 @@
         }
         function detectGroupingColumn(headers) {
             if (!headers || headers.length === 0) return null;
-            // Ưu tiên cột 'Nhãn' của Noova LMS và các cột phân loại nghiệp vụ, loại trừ 'loại câu hỏi'
-            const priorityKeys = ['nhãn', 'khóa học', 'ngành hàng', 'ngành', 'nhóm', 'day', 'mabuoi', 'hạng mục', 'chủ đề'];
+            // Ưu tiên cột 'Khóa', 'Khóa học', 'Nhãn' để tạo thanh lọc theo từng Khóa/Chủ đề
+            const priorityKeys = ['khóa', 'khóa học', 'nhãn', 'ngành hàng', 'ngành', 'nhóm', 'day', 'mabuoi', 'hạng mục', 'chủ đề'];
             for (let p of priorityKeys) {
-                const found = headers.find(h => h.toLowerCase().includes(p));
+                const found = headers.find(h => h.toLowerCase().trim() === p || h.toLowerCase().includes(p));
                 if (found) return found;
             }
-            // Chỉ lấy 'loại' nếu không phải là 'loại câu hỏi'
             const fallbackLoai = headers.find(h => h.toLowerCase().includes('loại') && !h.toLowerCase().includes('câu hỏi'));
             if (fallbackLoai) return fallbackLoai;
 
-            return headers[0]; // Mặc định lấy cột đầu tiên
+            return headers[0];
         }
 
         function applySubFilter(val) {
@@ -574,102 +573,119 @@
             window.currentFilteredData = data;
             let html = '';
 
-            const isMcqSheet = AppState.currentSheet.toLowerCase().includes('mcq') || headers.includes('Nhãn') || headers.includes('Câu hỏi');
+            data.forEach((item, idx) => {
+                // KIỂM TRA ĐỊNH DẠNG 1: QUẢN TRỊ ĐỀ THI QUA LINK THEO KHÓA (KHÓA | LOẠI CÂU HỎI | LINK)
+                const isQuizCatalog = !!(item['Link làm bài'] || item['Link'] || item['Link Quiz']) && !!(item['Khóa'] || item['Khóa học']);
 
-            // NẾU LÀ SHEET TRẮC NGHIỆM: TỰ ĐỘNG GOM 1.479 CÂU THÀNH CÁC THẺ BỘ ĐỀ TINH GỌN
-            if (isMcqSheet) {
-                const groups = {};
-
-                data.forEach(item => {
-                    const fullLabel = String(item['Nhãn'] || 'Bộ Đề Chung').trim();
-                    if (!groups[fullLabel]) {
-                        // Tách khóa học và tên bài
-                        const parts = fullLabel.split('-');
-                        const course = parts.length > 1 ? parts[0].trim() : 'MCQ';
-                        const topic = parts.length > 1 ? parts.slice(1).join('-').trim() : fullLabel;
-
-                        // Tự động tìm link Quiz tương ứng từ Tab E-Learning nếu có
-                        let linkedQuizUrl = '';
-                        Object.values(AppState.sheetsData).forEach(s => {
-                            if (s && s.items) {
-                                const found = s.items.find(x => 
-                                    (x['Nội dung'] && topic.toLowerCase().includes(x['Nội dung'].toLowerCase())) ||
-                                    (x['Github'] && x['Github'].toLowerCase().includes(topic.toLowerCase().replace(/\s+/g, '-')))
-                                );
-                                if (found && found['Github']) linkedQuizUrl = found['Github'];
-                            }
-                        });
-
-                        groups[fullLabel] = {
-                            fullLabel: fullLabel,
-                            course: course,
-                            topic: topic,
-                            quizUrl: linkedQuizUrl || 'https://sites.google.com/view/kvlnd-product-hub/noova-mcq-convert',
-                            questions: []
-                        };
-                    }
-                    groups[fullLabel].questions.push(item);
-                });
-
-                window.currentMcqGroups = groups; // Lưu bộ nhớ tạm phục vụ xem chi tiết
-                const groupKeys = Object.keys(groups);
-
-                groupKeys.forEach((key, gIdx) => {
-                    const grp = groups[key];
-                    const firstQ = grp.questions[0] ? (grp.questions[0]['Câu hỏi'] || '') : '';
+                if (isQuizCatalog) {
+                    const course = item['Khóa'] || item['Khóa học'] || 'Chung';
+                    const type = item['Loại câu hỏi'] || item['Loại'] || 'Một đáp án';
+                    const quizUrl = item['Link làm bài'] || item['Link'] || item['Link Quiz'] || '';
+                    const editUrl = item['Link edit'] || item['Link đề gốc'] || item['Link Edit'] || '';
+                    const title = item['Tên bộ đề'] || item['Tiêu đề'] || `Bộ Đề Trắc Nghiệm: ${course} (${type})`;
+                    const desc = item['Mô tả'] || `Bộ câu hỏi và đề thi trắc nghiệm phục vụ kiểm tra, đánh giá học viên khóa ${course}. Nhấp nút bên dưới để mở làm bài trực tiếp hoặc lấy link chia sẻ.`;
 
                     html += `
                     <div class="saas-card p-5 flex flex-col justify-between group hover:border-kiot-blue hover:shadow-md transition-all">
                         <div>
-                            <!-- Header Thẻ Bộ Đề -->
+                            <!-- Header Thẻ: Khóa & Thể Loại -->
                             <div class="flex items-start justify-between gap-3 mb-3">
                                 <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-blue-50 text-kiot-blue border border-blue-200">
-                                    <i class="fa-solid fa-graduation-cap mr-1"></i>${escapeHtml(grp.course)}
+                                    <i class="fa-solid fa-graduation-cap mr-1"></i>${escapeHtml(course)}
                                 </span>
-                                <span class="px-2 py-0.5 text-[11px] font-bold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                    ${grp.questions.length} câu hỏi
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-purple-50 text-purple-700 border border-purple-200">
+                                    <i class="fa-solid fa-circle-dot mr-1 text-[9px]"></i>${escapeHtml(type)}
                                 </span>
                             </div>
 
-                            <!-- Tên Bài Học / Bộ Đề -->
+                            <!-- Tên Bộ Đề -->
                             <h3 class="text-sm font-bold text-slate-900 group-hover:text-kiot-blue transition-colors mb-2 leading-snug">
-                                ${escapeHtml(grp.topic)}
+                                ${escapeHtml(title)}
                             </h3>
 
-                            <!-- Preview 1 câu hỏi tiêu biểu -->
-                            <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-lg text-xs text-slate-600 mb-4 line-clamp-2 italic">
-                                <span class="font-semibold text-slate-800 not-italic">Ví dụ:</span> "${escapeHtml(firstQ)}"
-                            </div>
+                            <!-- Mô Tả / Ghi Chú -->
+                            <p class="text-xs text-slate-500 line-clamp-3 leading-relaxed mb-4">
+                                ${escapeHtml(desc)}
+                            </p>
                         </div>
 
-                        <!-- Action Bar: Gán Link Làm Quiz & Xem Chi Tiết -->
-                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                            <!-- Nút Mở Làm Bài Quiz Trực Tiếp -->
-                            <button onclick="openResource('${escapeHtml(grp.quizUrl)}', 'Quiz: ${escapeHtml(grp.topic)}')" class="btn-primary text-xs flex-1 py-1.5" title="Mở làm bài trắc nghiệm">
-                                <i class="fa-solid fa-play text-[10px]"></i> Làm Quiz
+                        <!-- Action Bar: Đa Cửa Sổ & Tiện Ích Gửi Zalo -->
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+                            <!-- Nút Làm bài trong Workspace Tab -->
+                            <button onclick="openResource('${escapeHtml(quizUrl)}', '${escapeHtml(title)}')" class="btn-primary text-xs flex-1 py-1.5" title="Mở làm bài ngay trong Workspace">
+                                <i class="fa-solid fa-play text-[10px]"></i> Làm Bài Ngay
                             </button>
 
-                            <!-- Nút Mở Popup Xem Chi Tiết Toàn Bộ Câu Hỏi & Đáp Án -->
-                            <button onclick="openMcqGroupModal('${escapeHtml(grp.fullLabel)}')" class="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all flex items-center gap-1.5" title="Xem danh sách câu hỏi">
-                                <i class="fa-solid fa-list-check text-slate-500"></i> Xem Đề
+                            <!-- Nút Mở Cửa Sổ Popup Độc Lập (1280x850) -->
+                            <button onclick="window.open('${escapeHtml(quizUrl)}', '${escapeHtml(title)}', 'width=1280,height=850,menubar=no,toolbar=no,location=no,status=no')" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all" title="Mở cửa sổ Popup độc lập">
+                                <i class="fa-solid fa-window-restore text-slate-600"></i>
                             </button>
 
-                            <!-- Nút Sao Chép Bộ Đề -->
-                            <button onclick="copyMcqGroup('${escapeHtml(grp.fullLabel)}')" class="p-1.5 text-slate-400 hover:text-slate-800 rounded hover:bg-slate-100" title="Sao chép toàn bộ câu hỏi">
-                                <i class="fa-regular fa-copy text-sm"></i>
+                            <!-- Nút Sao Chép Link gửi Zalo -->
+                            <button onclick="copyToClipboardText('${escapeHtml(quizUrl)}', 'Đã sao chép link đề thi: ${escapeHtml(title)}')" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all" title="Sao chép link gửi Zalo cho học viên">
+                                <i class="fa-regular fa-copy text-slate-600"></i>
                             </button>
 
-                            <!-- Nút Chia Đôi Màn Hình -->
-                            <button onclick="openInSplitMode('${escapeHtml(grp.quizUrl)}', 'Quiz: ${escapeHtml(grp.topic)}')" class="p-1.5 text-slate-400 hover:text-slate-800 rounded hover:bg-slate-100" title="Chia đôi màn hình">
-                                <i class="fa-solid fa-columns"></i>
+                            <!-- Nút Chia Đôi Màn Hình (Split Screen) -->
+                            <button onclick="openInSplitMode('${escapeHtml(quizUrl)}', '${escapeHtml(title)}')" class="px-2.5 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all" title="Chia đôi màn hình">
+                                <i class="fa-solid fa-columns text-slate-600"></i>
                             </button>
+
+                            <!-- Nút Mở Link File Đề Gốc / Edit (Nếu có) -->
+                            ${editUrl ? `
+                            <a href="${escapeHtml(editUrl)}" target="_blank" class="p-1.5 text-slate-400 hover:text-slate-800 transition-all" title="Mở file đề gốc / Edit">
+                                <i class="fa-solid fa-pen-to-square text-sm"></i>
+                            </a>` : ''}
                         </div>
                     </div>`;
-                });
+                    return;
+                }
 
-                container.innerHTML = html;
-                return;
-            }
+                // KIỂM TRA ĐỊNH DẠNG 2: BÀI GIẢNG E-LEARNING (HDSD, YOUTUBE, INFOGRAPHIC, QUIZ)
+                const title = item['Nội dung'] || item['Tên app'] || item['Title'] || item['TenBuoi'] || item['Tiêu đề'] || Object.values(item)[1] || Object.values(item)[0] || '';
+                const desc = item['Mô tả'] || item['Question'] || item['YeuCau'] || item['Answer'] || '';
+                const hdsdUrl = item['HDSD'] || item['Link app'] || item['appUrl'] || '';
+                const ytUrl = item['YouTube'] || item['Link YouTube'] || '';
+                const quizUrl = item['Github'] || item['Quiz'] || '';
+                const editUrl = item['Link edit'] || '';
+                const img = item['Infographic'] || item['HinhAnh'] || '';
+                const codeBadge = item['Khóa học'] || item['Khóa'] || item['NganhHang'] || item['Day'] || '';
+
+                html += `
+                <div class="saas-card overflow-hidden flex flex-col justify-between group">
+                    <div>
+                        ${img ? `
+                        <div class="h-36 bg-slate-100 relative overflow-hidden border-b border-slate-100">
+                            <img src="${img}" alt="${escapeHtml(title)}" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-300" onerror="this.src='https://placehold.co/600x300/e2e8f0/475569?text=KiotViet+Doc'">
+                            ${codeBadge ? `<span class="absolute top-2.5 left-2.5 px-2 py-0.5 text-[10px] font-bold rounded bg-slate-900/80 text-white backdrop-blur-sm">${escapeHtml(codeBadge)}</span>` : ''}
+                        </div>` : `
+                        <div class="p-4 pb-0 flex items-center justify-between">
+                            ${codeBadge ? `<span class="px-2 py-0.5 text-[10px] font-bold rounded bg-blue-50 text-blue-700 border border-blue-200">${escapeHtml(codeBadge)}</span>` : '<span></span>'}
+                        </div>`}
+
+                        <div class="p-4">
+                            <h3 class="text-xs font-bold text-slate-900 line-clamp-2 mb-2 group-hover:text-kiot-blue transition-all" title="${escapeHtml(title)}">${escapeHtml(title)}</h3>
+                            <p class="text-[11px] text-slate-500 line-clamp-3 leading-relaxed mb-3">${escapeHtml(desc)}</p>
+                        </div>
+                    </div>
+
+                    <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-1 text-xs">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            ${hdsdUrl ? `<button onclick="openResource('${escapeHtml(hdsdUrl)}', '${escapeHtml(title)}')" class="px-2 py-1 bg-white border border-slate-200 hover:border-kiot-blue text-slate-700 rounded text-[11px] font-medium"><i class="fa-solid fa-book-open text-blue-600 mr-1"></i>Xem</button>` : ''}
+                            ${ytUrl ? `<button onclick="openVideo('${escapeHtml(ytUrl)}', '${escapeHtml(title)}')" class="px-2 py-1 bg-white border border-slate-200 hover:border-red-500 text-slate-700 rounded text-[11px] font-medium"><i class="fa-brands fa-youtube text-red-600 mr-1"></i>Video</button>` : ''}
+                            ${quizUrl ? `<button onclick="openResource('${escapeHtml(quizUrl)}', 'Quiz: ${escapeHtml(title)}')" class="px-2 py-1 bg-white border border-slate-200 hover:border-emerald-500 text-slate-700 rounded text-[11px] font-medium"><i class="fa-solid fa-check-circle text-emerald-600 mr-1"></i>Quiz</button>` : ''}
+                            ${editUrl ? `<a href="${editUrl}" target="_blank" class="p-1 text-slate-400 hover:text-slate-800" title="Source Code"><i class="fa-brands fa-github text-sm"></i></a>` : ''}
+                        </div>
+                        ${hdsdUrl ? `
+                        <button onclick="openInSplitMode('${escapeHtml(hdsdUrl)}', '${escapeHtml(title)}')" class="p-1.5 text-slate-400 hover:text-slate-800" title="Chia đôi màn hình">
+                            <i class="fa-solid fa-columns"></i>
+                        </button>` : ''}
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+        }
 
             // RENDER CÁC SHEET KHÁC (Masterdata E-Learning, Apps, Videos...) GIỮ NGUYÊN HOÀN HẢO
             data.forEach(item => {
@@ -1106,6 +1122,18 @@
 
             navigator.clipboard.writeText(text).then(() => {
                 alert(`Đã sao chép trọn bộ ${grp.questions.length} câu hỏi của bài:\n"${grp.topic}" vào clipboard!`);
+            });
+        }
+        function copyToClipboardText(url, alertMsg) {
+            if (!url) {
+                alert('Không có link để sao chép!');
+                return;
+            }
+            navigator.clipboard.writeText(url).then(() => {
+                alert(alertMsg || 'Đã sao chép đường link vào bộ nhớ tạm!');
+            }).catch(err => {
+                console.error('Lỗi sao chép:', err);
+                prompt('Vui lòng sao chép thủ công:', url);
             });
         }
 
