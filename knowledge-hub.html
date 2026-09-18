@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trainer OS - Knowledge Hub (Quản Trị Tài Liệu Đa Cửa Sổ)</title>
+    <title>Trainer OS - Master Executive Knowledge Hub</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome 6 -->
@@ -75,7 +75,6 @@
             border-bottom: 2px solid #0066cc;
             font-weight: 600;
         }
-        /* Split Resizer Divider */
         .resizer-divider {
             width: 6px;
             cursor: col-resize;
@@ -96,11 +95,11 @@
         <div class="h-16 flex items-center justify-between px-5 bg-slate-950 border-b border-slate-800">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-lg bg-kiot-blue flex items-center justify-center text-white font-bold text-lg shadow-md">
-                    <i class="fa-solid fa-folder-tree"></i>
+                    <i class="fa-solid fa-chart-line"></i>
                 </div>
                 <div>
                     <h1 class="font-bold text-white text-sm tracking-wide">TRAINER OS</h1>
-                    <p class="text-[11px] text-slate-400 font-medium">Knowledge & Doc Hub</p>
+                    <p class="text-[11px] text-slate-400 font-medium">Executive Control Hub</p>
                 </div>
             </div>
             <button onclick="openConfigModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-all" title="Cấu hình Google Sheets API">
@@ -130,8 +129,22 @@
             </button>
         </div>
 
-        <!-- DYNAMIC NAVIGATION TREE: Tự sinh dựa vào các Tab của Google Sheets -->
-        <div class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4" id="sidebar-dynamic-tree"></div>
+        <!-- Home Navigation (Executive Dashboard) -->
+        <div class="px-3 pt-3">
+            <button onclick="activateTab('tab-home')" id="sidebar-btn-home" class="w-full flex items-center justify-between px-3 py-2.5 text-xs font-bold rounded-lg bg-kiot-blue text-white shadow-sm transition-all text-left">
+                <span class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-gauge-high text-sm"></i>
+                    <span>Trang Quản Trị Tổng Quan</span>
+                </span>
+                <span class="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono">Master</span>
+            </button>
+        </div>
+
+        <!-- Dynamic Sheets Hierarchy -->
+        <div class="px-4 pt-3 pb-1">
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Danh Sách Bảng Dữ Liệu (Sheets)</p>
+        </div>
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-3 pt-0 space-y-1" id="sidebar-dynamic-tree"></div>
 
         <!-- Sidebar Footer Status -->
         <div class="p-3 bg-slate-950 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
@@ -139,7 +152,7 @@
                 <i class="fa-solid fa-table text-emerald-400"></i>
                 <span id="total-sheets-badge">0 Sheet kết nối</span>
             </div>
-            <span class="text-slate-500 font-mono">v4.0 Admin Hub</span>
+            <span class="text-slate-500 font-mono">v4.5 Executive</span>
         </div>
     </aside>
 
@@ -150,30 +163,30 @@
         <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 flex-shrink-0">
             <div class="flex items-center gap-3 min-w-0">
                 <div id="section-icon" class="w-8 h-8 rounded-lg bg-blue-50 text-kiot-blue flex items-center justify-center font-bold text-sm">
-                    <i class="fa-solid fa-layer-group"></i>
+                    <i class="fa-solid fa-gauge-high"></i>
                 </div>
                 <div>
                     <div class="flex items-center gap-2 text-xs text-slate-400">
-                        <span>Kho Tri Thức</span>
+                        <span>Trainer OS</span>
                         <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                        <span id="breadcrumb-category" class="font-medium text-slate-600">Sheet</span>
+                        <span id="breadcrumb-category" class="font-medium text-slate-600">Tổng Quan Điều Hành</span>
                     </div>
-                    <h2 id="section-title" class="text-sm font-bold text-slate-900 truncate">Tất cả tài liệu</h2>
+                    <h2 id="section-title" class="text-sm font-bold text-slate-900 truncate">Bảng Chỉ Huy Quản Trị Khảo Thí & Tri Thức L&D</h2>
                 </div>
             </div>
 
             <!-- Workspace Actions -->
             <div class="flex items-center gap-3">
-                <div class="relative w-64">
+                <div class="relative w-64" id="local-search-wrapper">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                     <input type="text" id="local-search-input" oninput="handleLocalSearch(this.value)" placeholder="Lọc trong bảng này..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-kiot-blue focus:outline-none transition-all">
                 </div>
 
-                <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs">
-                    <button onclick="switchViewMode('grid')" id="view-mode-grid" class="px-2.5 py-1 rounded text-slate-600 bg-white shadow-sm font-medium transition-all" title="Chế độ Lưới">
+                <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs" id="view-mode-controls">
+                    <button onclick="switchViewMode('grid')" id="view-mode-grid" class="px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all" title="Chế độ Lưới">
                         <i class="fa-solid fa-grip"></i>
                     </button>
-                    <button onclick="switchViewMode('table')" id="view-mode-table" class="px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all" title="Chế độ Bảng">
+                    <button onclick="switchViewMode('table')" id="view-mode-table" class="px-2.5 py-1 rounded text-slate-600 bg-white shadow-sm font-medium transition-all" title="Chế độ Bảng">
                         <i class="fa-solid fa-table-list"></i>
                     </button>
                     <button onclick="toggleSplitScreen()" id="view-mode-split" class="px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all flex items-center gap-1.5" title="Bật/Tắt Chia Đôi Màn Hình">
@@ -187,34 +200,38 @@
         <!-- Chrome-Style Tab Bar for Open Documents -->
         <div id="workspace-tab-bar" class="h-10 bg-slate-200/80 border-b border-slate-300/80 flex items-center px-2 gap-1 overflow-x-auto custom-scrollbar select-none z-10 flex-shrink-0">
             <div onclick="activateTab('tab-home')" id="tab-home" class="workspace-tab active h-9 px-3.5 rounded-t-lg bg-white flex items-center gap-2 text-xs text-slate-700 cursor-pointer border-t border-x border-slate-300">
-                <i class="fa-solid fa-house text-kiot-blue text-[11px]"></i>
-                <span class="font-medium">Trang Quản Trị</span>
+                <i class="fa-solid fa-gauge-high text-kiot-blue text-[11px]"></i>
+                <span class="font-semibold">Trang Quản Trị</span>
             </div>
         </div>
 
         <!-- Main Content Area: Supports Single, Split-View & Draggable Resizer -->
         <div id="workspace-container" class="flex-1 flex overflow-hidden relative">
             
-            <!-- LEFT PANE: Document Cards / Table / Details -->
-            <div id="pane-primary" class="flex-1 flex flex-col min-w-[300px] h-full overflow-hidden bg-white">
-                <!-- Filter Pills Bar -->
-                <div id="sub-filter-bar" class="px-6 py-2.5 bg-slate-50/70 border-b border-slate-200 flex items-center gap-2 overflow-x-auto custom-scrollbar flex-shrink-0">
-                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">Bộ lọc:</span>
-                    <button onclick="applySubFilter('all')" class="filter-pill active px-3 py-1 rounded-full text-xs font-medium bg-kiot-blue text-white shadow-sm transition-all">Tất cả</button>
-                </div>
+            <!-- PRIMARY PANE -->
+            <div id="pane-primary" class="flex-1 flex flex-col min-w-[320px] h-full overflow-hidden bg-white">
+                
+                <!-- Sub-Filter Bar (For Sheet views) -->
+                <div id="sub-filter-bar" class="px-6 py-2.5 bg-slate-50/70 border-b border-slate-200 flex items-center gap-2 overflow-x-auto custom-scrollbar flex-shrink-0 hidden"></div>
 
-                <!-- Dynamic Item Container -->
+                <!-- Scrollable Content Area -->
                 <div id="items-scroll-container" class="flex-1 overflow-y-auto custom-scrollbar p-6">
-                    <div id="items-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    
+                    <!-- 1. MASTER EXECUTIVE DASHBOARD (Rendered on tab-home) -->
+                    <div id="master-dashboard-view" class="space-y-6"></div>
 
-                    <div id="items-table-container" class="hidden overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
-                        <table class="w-full text-left text-xs text-slate-600">
-                            <thead class="bg-slate-100 text-slate-700 uppercase font-semibold border-b border-slate-200" id="table-head"></thead>
-                            <tbody class="divide-y divide-slate-200 bg-white" id="table-body"></tbody>
-                        </table>
+                    <!-- 2. SHEET CONTENT (Grid or Table) -->
+                    <div id="sheet-content-view" class="hidden space-y-4">
+                        <div id="items-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                        <div id="items-table-container" class="overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
+                            <table class="w-full text-left text-xs text-slate-600">
+                                <thead class="bg-slate-100 text-slate-700 uppercase font-semibold border-b border-slate-200" id="table-head"></thead>
+                                <tbody class="divide-y divide-slate-200 bg-white" id="table-body"></tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    <!-- Empty State Standard -->
+                    <!-- 3. EMPTY STATE -->
                     <div id="empty-state" class="hidden py-16 flex flex-col items-center justify-center text-center">
                         <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mb-3 shadow-inner">
                             <i class="fa-solid fa-folder-open"></i>
@@ -225,14 +242,15 @@
                             Làm mới bộ lọc
                         </button>
                     </div>
+
                 </div>
             </div>
 
             <!-- DRAGGABLE RESIZER DIVIDER -->
-            <div id="split-resizer" class="resizer-divider hidden" title="Kéo chuột sang trái/phải để điều chỉnh độ rộng màn hình"></div>
+            <div id="split-resizer" class="resizer-divider hidden" title="Kéo chuột sang trái/phải để điều chỉnh tỷ lệ chia đôi"></div>
 
             <!-- RIGHT PANE (SPLIT-SCREEN): Live Viewer / Iframe Previewer -->
-            <div id="pane-secondary" class="w-1/2 flex flex-col min-w-[300px] border-l border-slate-300 bg-slate-900 hidden transition-all duration-75">
+            <div id="pane-secondary" class="w-1/2 flex flex-col min-w-[320px] border-l border-slate-300 bg-slate-900 hidden transition-all duration-75">
                 <div class="h-10 bg-slate-950 border-b border-slate-800 flex items-center justify-between px-4 text-xs text-slate-300 select-none flex-shrink-0">
                     <div class="flex items-center gap-2 truncate">
                         <i id="split-type-icon" class="fa-solid fa-table text-emerald-400"></i>
@@ -273,8 +291,8 @@
                     <p class="text-[11px] text-slate-400 mt-1">Dán đường dẫn Web App URL sau khi Deploy từ Google Sheet.</p>
                 </div>
                 <div class="p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-800 space-y-1">
-                    <div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> Tự động nhận diện Đa Sheet:</div>
-                    <p class="text-[11px] leading-relaxed">Khi bạn thêm/xóa/đổi tên bất kỳ Tab nào trong Google Sheet, hệ thống sẽ tự động cập nhật thanh Sidebar và phân loại tương ứng.</p>
+                    <div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> Tự động nhận diện Đa Sheet & Quét Lỗ Hổng:</div>
+                    <p class="text-[11px] leading-relaxed">Hệ thống sẽ tự động quét tất cả các Tab, tính toán tỷ lệ phủ Video, Quiz và cảnh báo các bài còn thiếu tài liệu.</p>
                 </div>
             </div>
             <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
@@ -301,7 +319,7 @@
         </div>
     </div>
 
-    <!-- ==================== JAVASCRIPT ENGINE ==================== -->
+    <!-- ==================== JAVASCRIPT MASTER ENGINE ==================== -->
     <script>
         // --- 1. GLOBAL STATE ---
         const AppState = {
@@ -309,8 +327,10 @@
             sheetList: [],        
             currentSheet: '',     
             currentSubFilter: 'all',
-            currentBatchFilter: 'all', // Lọc theo Đợt/Tháng (MM_YYYY)
-            viewMode: 'table',    // Default to table for best admin UX
+            currentBatchFilter: 'all',
+            masterDomainFilter: 'all', // Retail, FNB, Salon, Hotel, Kế toán
+            masterGapFilter: 'all',    // all, missing-video, missing-quiz, unlinked-mcq
+            viewMode: 'table',    
             isSplitOpen: false,
             activeTabId: 'tab-home',
             openTabs: [],
@@ -328,7 +348,6 @@
                     const id = idMatch[1];
                     const gidMatch = trimmed.match(/gid=([0-9]+)/);
                     const gidParam = gidMatch ? `&gid=${gidMatch[1]}` : '';
-                    // htmlembed?widget=true cho phép Google Sheet nhúng 100% không bị chặn
                     return `https://docs.google.com/spreadsheets/d/${id}/htmlembed?widget=true${gidParam}`;
                 }
             }
@@ -347,13 +366,8 @@
             const cachedDb = localStorage.getItem('kv_doc_hub_db');
             const lastSync = localStorage.getItem('kv_doc_hub_last_sync');
 
-            if (cachedUrl) {
-                document.getElementById('cfg-api-url').value = cachedUrl;
-            }
-
-            if (lastSync) {
-                document.getElementById('sync-time-label').innerText = 'Đồng bộ: ' + lastSync;
-            }
+            if (cachedUrl) document.getElementById('cfg-api-url').value = cachedUrl;
+            if (lastSync) document.getElementById('sync-time-label').innerText = 'Đồng bộ: ' + lastSync;
 
             if (cachedDb) {
                 try {
@@ -381,10 +395,10 @@
                     </button>
                 </div>
             `;
-            document.getElementById('empty-state').classList.remove('hidden');
+            renderMasterDashboard();
         }
 
-        // --- 4. DYNAMIC SIDEBAR & AUTO-BRANCHING ---
+        // --- 4. APPLY DATASET & DYNAMIC SIDEBAR ---
         function applyDataset(data) {
             AppState.sheetsData = data.sheets || {};
             AppState.sheetList = data.sheetList || Object.keys(data.sheets || {});
@@ -392,12 +406,11 @@
             document.getElementById('total-sheets-badge').innerText = `${AppState.sheetList.length} Sheet kết nối`;
             renderDynamicSidebar();
 
-            if (AppState.sheetList.length > 0) {
-                if (!AppState.currentSheet || !AppState.sheetList.includes(AppState.currentSheet)) {
-                    selectSheet(AppState.sheetList[0]);
-                } else {
-                    selectSheet(AppState.currentSheet);
-                }
+            // Nếu đang ở tab home, render Dashboard
+            if (AppState.activeTabId === 'tab-home') {
+                renderMasterDashboard();
+            } else if (AppState.currentSheet) {
+                selectSheet(AppState.currentSheet);
             }
         }
 
@@ -412,7 +425,7 @@
 
                 html += `
                     <div>
-                        <button onclick="selectSheet('${escapeHtml(sheetName)}')" id="nav-sheet-${idx}" class="sheet-nav-btn w-full flex items-center justify-between px-3 py-2.5 text-xs font-medium rounded-lg hover:bg-slate-800 hover:text-white transition-all text-left group">
+                        <button onclick="selectSheet('${escapeHtml(sheetName)}')" id="nav-sheet-${idx}" class="sheet-nav-btn w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-lg hover:bg-slate-800 hover:text-white transition-all text-left group">
                             <span class="flex items-center gap-2.5 truncate">
                                 <i class="fa-solid ${icon} text-slate-400 group-hover:text-kiot-blue transition-colors"></i>
                                 <span class="truncate font-semibold">${escapeHtml(sheetName)}</span>
@@ -426,34 +439,6 @@
             sidebar.innerHTML = html;
         }
 
-        function selectSheet(sheetName) {
-            AppState.currentSheet = sheetName;
-            AppState.currentSubFilter = 'all';
-            AppState.currentBatchFilter = 'all';
-
-            // Sidebar highlight
-            document.querySelectorAll('.sheet-nav-btn').forEach(b => {
-                b.classList.remove('bg-kiot-blue', 'text-white', 'shadow-md');
-                b.classList.add('text-slate-300');
-            });
-            const sheetIdx = AppState.sheetList.indexOf(sheetName);
-            if (sheetIdx !== -1) {
-                const activeBtn = document.getElementById(`nav-sheet-${sheetIdx}`);
-                if (activeBtn) {
-                    activeBtn.classList.add('bg-kiot-blue', 'text-white', 'shadow-md');
-                    activeBtn.classList.remove('text-slate-300');
-                }
-            }
-
-            // Header Update
-            document.getElementById('breadcrumb-category').innerText = sheetName;
-            document.getElementById('section-title').innerText = sheetName;
-            document.getElementById('section-icon').innerHTML = `<i class="fa-solid ${getSheetIcon(sheetName)}"></i>`;
-
-            renderDynamicSubFilters(sheetName);
-            renderItems();
-        }
-
         function getSheetIcon(name) {
             const n = name.toLowerCase();
             if (n.includes('app') || n.includes('link')) return 'fa-cube';
@@ -465,9 +450,487 @@
             return 'fa-table';
         }
 
-        // --- 5. BỘ LỌC ĐA TẦNG: ĐỢT/THÁNG + KHÓA HỌC KÈM ĐẾM SỐ LƯỢNG ---
+        function selectSheet(sheetName) {
+            AppState.currentSheet = sheetName;
+            AppState.currentSubFilter = 'all';
+            AppState.currentBatchFilter = 'all';
+            AppState.activeTabId = 'tab-sheet-view';
+
+            // Sidebar highlight
+            document.querySelectorAll('.sheet-nav-btn').forEach(b => {
+                b.classList.remove('bg-kiot-blue', 'text-white', 'shadow-md');
+                b.classList.add('text-slate-300');
+            });
+            document.getElementById('sidebar-btn-home').className = 'w-full flex items-center justify-between px-3 py-2.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all text-left';
+
+            const sheetIdx = AppState.sheetList.indexOf(sheetName);
+            if (sheetIdx !== -1) {
+                const activeBtn = document.getElementById(`nav-sheet-${sheetIdx}`);
+                if (activeBtn) {
+                    activeBtn.classList.add('bg-kiot-blue', 'text-white', 'shadow-md');
+                    activeBtn.classList.remove('text-slate-300');
+                }
+            }
+
+            // Update Header & Controls
+            document.getElementById('breadcrumb-category').innerText = sheetName;
+            document.getElementById('section-title').innerText = sheetName;
+            document.getElementById('section-icon').innerHTML = `<i class="fa-solid ${getSheetIcon(sheetName)}"></i>`;
+            document.getElementById('view-mode-controls').classList.remove('hidden');
+            document.getElementById('local-search-wrapper').classList.remove('hidden');
+
+            renderDynamicSubFilters(sheetName);
+            renderItems();
+        }
+
+        // --- 5. MASTER EXECUTIVE DASHBOARD (CHỈ HUY TỔNG QUAN) ---
+        function renderMasterDashboard() {
+            AppState.activeTabId = 'tab-home';
+            AppState.currentSheet = '';
+
+            // Update Header
+            document.getElementById('breadcrumb-category').innerText = 'Tổng Quan Điều Hành';
+            document.getElementById('section-title').innerText = 'Bảng Chỉ Huy Quản Trị Khảo Thí & Tri Thức L&D';
+            document.getElementById('section-icon').innerHTML = `<i class="fa-solid fa-gauge-high"></i>`;
+            document.getElementById('view-mode-controls').classList.add('hidden');
+            document.getElementById('local-search-wrapper').classList.add('hidden');
+            document.getElementById('sub-filter-bar').classList.add('hidden');
+
+            // Sidebar highlight Home
+            document.querySelectorAll('.sheet-nav-btn').forEach(b => {
+                b.classList.remove('bg-kiot-blue', 'text-white', 'shadow-md');
+                b.classList.add('text-slate-300');
+            });
+            document.getElementById('sidebar-btn-home').className = 'w-full flex items-center justify-between px-3 py-2.5 text-xs font-bold rounded-lg bg-kiot-blue text-white shadow-sm transition-all text-left';
+
+            // Show Dashboard Container
+            document.getElementById('master-dashboard-view').classList.remove('hidden');
+            document.getElementById('sheet-content-view').classList.add('hidden');
+            document.getElementById('empty-state').classList.add('hidden');
+
+            // --- AUDIT ENGINE (TÍNH TOÁN CHỈ SỐ LỖ HỔNG) ---
+            let totalAssets = 0;
+            let totalElearning = 0;
+            let elearningWithVideo = 0;
+            let elearningWithQuiz = 0;
+            let totalMcqRows = 0;
+            let mcqWithLink = 0;
+            let missingVideoList = [];
+            let missingQuizList = [];
+            let unlinkedMcqList = [];
+            const courseMatrix = {};
+
+            // Quét dữ liệu
+            Object.keys(AppState.sheetsData).forEach(sName => {
+                const sheet = AppState.sheetsData[sName];
+                if (!sheet || !sheet.items) return;
+                totalAssets += sheet.items.length;
+
+                const isELearning = sName.toLowerCase().includes('elearning') || sName.toLowerCase().includes('masterdata');
+                const isMcq = sName.toLowerCase().includes('mcq') || sheet.headers.some(h => h.toLowerCase().includes('mã bộ đề'));
+
+                sheet.items.forEach(item => {
+                    const course = (item['Khóa học'] || item['Khóa'] || 'Khác').trim();
+
+                    // Init Matrix
+                    if (!courseMatrix[course]) {
+                        courseMatrix[course] = { course, total: 0, video: 0, quiz: 0, mcqLinked: false, mcqCode: '' };
+                    }
+
+                    if (isELearning) {
+                        totalElearning++;
+                        courseMatrix[course].total++;
+
+                        const hasVid = !!item['YouTube'] && String(item['YouTube']).trim().startsWith('http');
+                        const hasQz = !!item['Github'] && String(item['Github']).trim().startsWith('http');
+
+                        if (hasVid) {
+                            elearningWithVideo++;
+                            courseMatrix[course].video++;
+                        } else {
+                            missingVideoList.push({ title: item['Nội dung'] || 'Bài học', course, sheetName: sName });
+                        }
+
+                        if (hasQz) {
+                            elearningWithQuiz++;
+                            courseMatrix[course].quiz++;
+                        } else {
+                            missingQuizList.push({ title: item['Nội dung'] || 'Bài học', course, sheetName: sName });
+                        }
+                    }
+
+                    if (isMcq) {
+                        totalMcqRows++;
+                        let linkVal = '';
+                        for (let k of Object.keys(item)) {
+                            if (String(item[k]).trim().startsWith('http')) {
+                                linkVal = String(item[k]).trim();
+                                break;
+                            }
+                        }
+                        const codeTitle = item['Mã bộ đề / Tên file ngân hàng câu hỏi'] || item['Tên bộ đề'] || 'Bộ đề';
+                        if (linkVal) {
+                            mcqWithLink++;
+                            if (courseMatrix[course]) {
+                                courseMatrix[course].mcqLinked = true;
+                                courseMatrix[course].mcqCode = codeTitle;
+                            }
+                        } else {
+                            unlinkedMcqList.push({ code: codeTitle, course, sheetName: sName });
+                        }
+                    }
+                });
+            });
+
+            // Tỷ lệ %
+            const videoPct = totalElearning ? Math.round((elearningWithVideo / totalElearning) * 100) : 0;
+            const quizPct = totalElearning ? Math.round((elearningWithQuiz / totalElearning) * 100) : 0;
+            const mcqPct = totalMcqRows ? Math.round((mcqWithLink / totalMcqRows) * 100) : 0;
+            const overallHealth = Math.round((videoPct * 0.4) + (quizPct * 0.3) + (mcqPct * 0.3));
+
+            // Render Dashboard HTML
+            const dash = document.getElementById('master-dashboard-view');
+            dash.innerHTML = `
+                <!-- 1. BỘ LỌC MASTER TOÀN CỤC -->
+                <div class="saas-card p-4 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-kiot-blue/30 border border-kiot-blue/40 flex items-center justify-center text-kiot-blue text-lg">
+                            <i class="fa-solid fa-sliders"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Bộ Lọc Master Toàn Cục</h3>
+                            <p class="text-[11px] text-slate-400">Kiểm soát tiến độ số hóa theo từng ngành hàng & lỗ hổng tài nguyên</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-[11px] text-slate-400 font-semibold uppercase mr-1">Ngành:</span>
+                        <div class="flex items-center gap-1">
+                            ${['all', 'Retail', 'FNB', 'Salon', 'Hotel', 'Kế toán'].map(d => `
+                                <button onclick="setMasterDomainFilter('${d}')" class="px-2.5 py-1 rounded-md text-[11px] font-bold ${AppState.masterDomainFilter === d ? 'bg-kiot-blue text-white shadow-sm' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'} transition-all">
+                                    ${d === 'all' ? 'Tất cả ngành' : d}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. KPI METRICS & SYSTEM HEALTH SCORE -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Health Score -->
+                    <div class="saas-card p-5 border-l-4 border-l-emerald-500">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Sức Khỏe Hệ Thống</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full font-bold ${overallHealth >= 80 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}">${overallHealth}% Chuẩn</span>
+                        </div>
+                        <div class="text-2xl font-extrabold text-slate-900 mb-2">${overallHealth}<span class="text-sm font-normal text-slate-400">/100</span></div>
+                        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: ${overallHealth}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Video Coverage -->
+                    <div class="saas-card p-5 border-l-4 border-l-red-500">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Tỷ Lệ Phủ Video</span>
+                            <i class="fa-brands fa-youtube text-red-500 text-base"></i>
+                        </div>
+                        <div class="text-2xl font-extrabold text-slate-900 mb-2">${videoPct}% <span class="text-xs font-normal text-slate-400">(${elearningWithVideo}/${totalElearning})</span></div>
+                        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div class="bg-red-500 h-2 rounded-full transition-all duration-500" style="width: ${videoPct}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Quiz Coverage -->
+                    <div class="saas-card p-5 border-l-4 border-l-blue-500">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Tỷ Lệ Phủ Quiz</span>
+                            <i class="fa-solid fa-circle-question text-blue-500 text-base"></i>
+                        </div>
+                        <div class="text-2xl font-extrabold text-slate-900 mb-2">${quizPct}% <span class="text-xs font-normal text-slate-400">(${elearningWithQuiz}/${totalElearning})</span></div>
+                        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div class="bg-blue-500 h-2 rounded-full transition-all duration-500" style="width: ${quizPct}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- MCQ Sheet Linked -->
+                    <div class="saas-card p-5 border-l-4 border-l-purple-500">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Bộ Đề Đã Gán Link</span>
+                            <i class="fa-solid fa-file-excel text-purple-500 text-base"></i>
+                        </div>
+                        <div class="text-2xl font-extrabold text-slate-900 mb-2">${mcqPct}% <span class="text-xs font-normal text-slate-400">(${mcqWithLink}/${totalMcqRows})</span></div>
+                        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div class="bg-purple-500 h-2 rounded-full transition-all duration-500" style="width: ${mcqPct}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. RADA QUÉT LỖ HỔNG & NHẮC NHỞ MASTER (GAP DETECTOR) -->
+                <div class="saas-card p-5 border-l-4 border-l-amber-500">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-500 text-base"></i>
+                            <h3 class="text-sm font-bold text-slate-900">Rada Cảnh Báo Master: Lỗ Hổng Tài Liệu Cần Bổ Sung</h3>
+                        </div>
+                        <span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+                            Cần xử lý: ${unlinkedMcqList.length + missingVideoList.length + missingQuizList.length} hạng mục
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <!-- Alert 1: Unlinked MCQ Sheets -->
+                        <div class="p-3.5 rounded-lg bg-red-50/70 border border-red-200 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center gap-2 text-red-700 font-bold text-xs mb-1">
+                                    <i class="fa-solid fa-circle-xmark"></i> ${unlinkedMcqList.length} Đề thi chưa gán Link Sheet
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-relaxed mb-3">
+                                    ${unlinkedMcqList.slice(0, 3).map(x => `<span class="inline-block bg-white px-1.5 py-0.5 rounded border border-red-200 font-mono text-[10px] mr-1 mb-1 font-bold text-red-600">${x.code}</span>`).join('')}
+                                    ${unlinkedMcqList.length > 3 ? `<span class="text-[10px] text-slate-500">+${unlinkedMcqList.length - 3} đề khác...</span>` : ''}
+                                </p>
+                            </div>
+                            <button onclick="navigateToGap('mcq')" class="w-full py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold transition-all flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-arrow-right"></i> Mở Bảng MCQ Để Bổ Sung
+                            </button>
+                        </div>
+
+                        <!-- Alert 2: Missing Video -->
+                        <div class="p-3.5 rounded-lg bg-amber-50/70 border border-amber-200 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center gap-2 text-amber-800 font-bold text-xs mb-1">
+                                    <i class="fa-brands fa-youtube text-red-500"></i> ${missingVideoList.length} Bài E-Learning thiếu Video
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-relaxed mb-3">
+                                    Các bài học này chưa có link YouTube minh họa tính năng cho học viên.
+                                </p>
+                            </div>
+                            <button onclick="navigateToGap('video')" class="w-full py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-semibold transition-all flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-arrow-right"></i> Xem Danh Sách Thiếu Video
+                            </button>
+                        </div>
+
+                        <!-- Alert 3: Missing Quiz -->
+                        <div class="p-3.5 rounded-lg bg-blue-50/70 border border-blue-200 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center gap-2 text-blue-800 font-bold text-xs mb-1">
+                                    <i class="fa-solid fa-circle-question text-blue-500"></i> ${missingQuizList.length} Bài E-Learning thiếu Quiz
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-relaxed mb-3">
+                                    Chưa có link GitHub Quiz để học viên làm bài kiểm tra sau khi học.
+                                </p>
+                            </div>
+                            <button onclick="navigateToGap('quiz')" class="w-full py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold transition-all flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-arrow-right"></i> Xem Danh Sách Thiếu Quiz
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. MA TRẬN TIẾN ĐỘ HOÀN THIỆN THEO KHÓA & CHECKLIST BACKLOG -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Progress Matrix -->
+                    <div class="lg:col-span-2 saas-card p-5">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">Ma Trận Tiến Độ Số Hóa Khóa Học</h3>
+                                <p class="text-[11px] text-slate-400">Đo lường mức độ sẵn sàng đưa vào đào tạo của từng phân hệ</p>
+                            </div>
+                            <span class="text-xs font-bold text-slate-500 font-mono">${Object.keys(courseMatrix).length} Khóa</span>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-600">
+                                <thead>
+                                    <tr class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold border-b border-slate-200">
+                                        <th class="px-3 py-2.5">Phân Hệ Khóa Học</th>
+                                        <th class="px-3 py-2.5 text-center">Tổng Bài</th>
+                                        <th class="px-3 py-2.5 text-center">Video HDSD</th>
+                                        <th class="px-3 py-2.5 text-center">Quiz Đánh Giá</th>
+                                        <th class="px-3 py-2.5 text-center">Sheet Đề Thi</th>
+                                        <th class="px-3 py-2.5 text-right">Mức Sẵn Sàng</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 font-medium">
+                                    ${renderCourseMatrixRows(courseMatrix)}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 5. CHECKLIST BACKLOG & NHẬT KÝ ĐỒNG BỘ -->
+                    <div class="saas-card p-5 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-900">Backlog Công Việc Trainer</h3>
+                                    <p class="text-[11px] text-slate-400">Ghi chú & theo dõi việc cần làm</p>
+                                </div>
+                                <button onclick="addNewBacklogPrompt()" class="px-2 py-1 bg-blue-50 text-kiot-blue hover:bg-blue-100 rounded text-xs font-bold" title="Thêm việc cần làm">
+                                    <i class="fa-solid fa-plus"></i> Thêm việc
+                                </button>
+                            </div>
+
+                            <div id="backlog-checklist-container" class="space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
+                                <!-- Dynamic Backlog items rendered here -->
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-100 mt-4 text-[11px] text-slate-400 flex items-center justify-between">
+                            <span><i class="fa-solid fa-clock-rotate-left mr-1"></i>Đồng bộ gần nhất:</span>
+                            <span class="font-mono text-slate-600 font-bold" id="dash-last-sync">${localStorage.getItem('kv_doc_hub_last_sync') || 'Chưa đồng bộ'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            renderBacklogTasks();
+        }
+
+        // Helper render matrix rows
+        function renderCourseMatrixRows(matrix) {
+            const keys = Object.keys(matrix);
+            if (keys.length === 0) return `<tr><td colspan="6" class="p-4 text-center text-slate-400">Chưa có dữ liệu khóa học</td></tr>`;
+
+            let filteredKeys = keys;
+            if (AppState.masterDomainFilter !== 'all') {
+                filteredKeys = keys.filter(k => k.toLowerCase().includes(AppState.masterDomainFilter.toLowerCase()));
+            }
+
+            return filteredKeys.map(k => {
+                const c = matrix[k];
+                const vidRatio = c.total ? Math.round((c.video / c.total) * 100) : 0;
+                const qzRatio = c.total ? Math.round((c.quiz / c.total) * 100) : 0;
+                const score = Math.round((vidRatio * 0.45) + (qzRatio * 0.35) + (c.mcqLinked ? 20 : 0));
+
+                let badgeColor = 'bg-red-50 text-red-700 border-red-200';
+                if (score >= 80) badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                else if (score >= 50) badgeColor = 'bg-amber-50 text-amber-700 border-amber-200';
+
+                return `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-3 py-3 font-bold text-slate-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-book-bookmark text-kiot-blue text-xs"></i> ${escapeHtml(c.course)}
+                        </td>
+                        <td class="px-3 py-3 text-center font-mono font-bold text-slate-700">${c.total} bài</td>
+                        <td class="px-3 py-3 text-center">
+                            <span class="font-mono text-[11px]">${c.video}/${c.total}</span>
+                            <div class="w-16 bg-slate-100 rounded-full h-1.5 mx-auto mt-1 overflow-hidden">
+                                <div class="bg-red-500 h-1.5 rounded-full" style="width: ${vidRatio}%"></div>
+                            </div>
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                            <span class="font-mono text-[11px]">${c.quiz}/${c.total}</span>
+                            <div class="w-16 bg-slate-100 rounded-full h-1.5 mx-auto mt-1 overflow-hidden">
+                                <div class="bg-blue-500 h-1.5 rounded-full" style="width: ${qzRatio}%"></div>
+                            </div>
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                            ${c.mcqLinked ? `
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-50 text-emerald-700 border border-emerald-200" title="${escapeHtml(c.mcqCode)}">
+                                    <i class="fa-solid fa-check"></i> Đã có Sheet
+                                </span>` : `
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-400 border border-slate-200">
+                                    Thiếu Sheet
+                                </span>`}
+                        </td>
+                        <td class="px-3 py-3 text-right">
+                            <span class="px-2 py-1 text-xs font-extrabold rounded-md border ${badgeColor}">
+                                ${score}%
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function setMasterDomainFilter(domain) {
+            AppState.masterDomainFilter = domain;
+            renderMasterDashboard();
+        }
+
+        // 1-Click Drilldown từ Cảnh Báo Lỗ Hổng
+        function navigateToGap(gapType) {
+            if (gapType === 'mcq') {
+                const mcqSheet = AppState.sheetList.find(s => s.toLowerCase().includes('mcq'));
+                if (mcqSheet) selectSheet(mcqSheet);
+            } else if (gapType === 'video' || gapType === 'quiz') {
+                const elearningSheet = AppState.sheetList.find(s => s.toLowerCase().includes('elearning') || s.toLowerCase().includes('masterdata'));
+                if (elearningSheet) {
+                    selectSheet(elearningSheet);
+                    // Lọc những bài chưa có video hoặc quiz
+                    AppState.searchQuery = '';
+                    renderItems();
+                }
+            }
+        }
+
+        // --- BACKLOG TO-DO LOGIC ---
+        function getBacklogTasks() {
+            const raw = localStorage.getItem('kv_doc_hub_backlog');
+            if (raw) {
+                try { return JSON.parse(raw); } catch (e) { return []; }
+            }
+            return [
+                { id: 1, text: 'Quay bổ sung Video cho các bài Retail 02 còn thiếu', done: false },
+                { id: 2, text: 'Gán link Google Sheet đề thi cho các khóa Salon 02 & Hotel 02', done: false },
+                { id: 3, text: 'Soạn bộ câu hỏi trắc nghiệm cập nhật đợt tháng mới', done: true }
+            ];
+        }
+
+        function saveBacklogTasks(tasks) {
+            localStorage.setItem('kv_doc_hub_backlog', JSON.stringify(tasks));
+            renderBacklogTasks();
+        }
+
+        function renderBacklogTasks() {
+            const container = document.getElementById('backlog-checklist-container');
+            if (!container) return;
+            const tasks = getBacklogTasks();
+
+            if (tasks.length === 0) {
+                container.innerHTML = `<div class="p-4 text-center text-xs text-slate-400 italic">Chưa có công việc tồn đọng</div>`;
+                return;
+            }
+
+            container.innerHTML = tasks.map(t => `
+                <div class="p-2 rounded-lg border border-slate-200/80 bg-slate-50/70 hover:bg-slate-100 flex items-start justify-between gap-2 text-xs transition-colors">
+                    <label class="flex items-start gap-2 cursor-pointer select-none flex-1 min-w-0">
+                        <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleBacklogTask(${t.id})" class="mt-0.5 rounded text-kiot-blue focus:ring-0">
+                        <span class="${t.done ? 'line-through text-slate-400' : 'text-slate-700 font-medium'} truncate">${escapeHtml(t.text)}</span>
+                    </label>
+                    <button onclick="deleteBacklogTask(${t.id})" class="text-slate-300 hover:text-red-500 p-1" title="Xóa">
+                        <i class="fa-solid fa-trash text-[10px]"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function toggleBacklogTask(id) {
+            const tasks = getBacklogTasks();
+            const found = tasks.find(t => t.id === id);
+            if (found) found.done = !found.done;
+            saveBacklogTasks(tasks);
+        }
+
+        function deleteBacklogTask(id) {
+            const tasks = getBacklogTasks().filter(t => t.id !== id);
+            saveBacklogTasks(tasks);
+        }
+
+        function addNewBacklogPrompt() {
+            const text = prompt('Nhập nội dung công việc / backlog cần theo dõi:');
+            if (text && text.trim()) {
+                const tasks = getBacklogTasks();
+                tasks.unshift({ id: Date.now(), text: text.trim(), done: false });
+                saveBacklogTasks(tasks);
+            }
+        }
+
+        // --- 6. SUB-FILTER LOGIC (CHO CÁC SHEET) ---
         function renderDynamicSubFilters(sheetName) {
             const bar = document.getElementById('sub-filter-bar');
+            bar.classList.remove('hidden');
             const sheetMeta = AppState.sheetsData[sheetName];
             if (!sheetMeta || !sheetMeta.items || sheetMeta.items.length === 0) {
                 bar.innerHTML = '';
@@ -476,7 +939,6 @@
 
             const isMcqSheet = sheetName.toLowerCase().includes('mcq') || sheetMeta.headers.some(h => h.toLowerCase().includes('mã bộ đề') || h.toLowerCase().includes('tên file'));
 
-            // Tầng 1: Nếu có tiền tố Đợt/Tháng (MM_YYYY_...), tự động trích xuất bộ lọc Đợt
             let batchFilters = [];
             if (isMcqSheet) {
                 const rawTitles = sheetMeta.items.map(r => r['Mã bộ đề / Tên file ngân hàng câu hỏi'] || r['Tên bộ đề'] || r['Tiêu đề'] || Object.values(r)[1] || '');
@@ -487,18 +949,15 @@
                 batchFilters = [...new Set(batches)];
             }
 
-            // Tầng 2: Danh sách Khóa học kèm đếm số lượng thực tế
             const groupCol = detectGroupingColumn(sheetMeta.headers);
             const courseCounts = {};
             let totalCount = 0;
 
             sheetMeta.items.forEach(item => {
-                // Nếu đang lọc theo đợt cụ thể, chỉ đếm trong đợt đó
                 if (AppState.currentBatchFilter !== 'all') {
                     const titleStr = String(item['Mã bộ đề / Tên file ngân hàng câu hỏi'] || item['Tên bộ đề'] || Object.values(item)[1] || '');
                     if (!titleStr.startsWith(AppState.currentBatchFilter)) return;
                 }
-
                 totalCount++;
                 const val = (item[groupCol] || 'Chung').trim();
                 courseCounts[val] = (courseCounts[val] || 0) + 1;
@@ -506,19 +965,18 @@
 
             let html = '';
 
-            // Render thanh chọn Đợt/Tháng nếu có
             if (batchFilters.length > 1) {
                 html += `<div class="flex items-center gap-1 mr-3 border-r border-slate-300 pr-3 flex-shrink-0">
                     <span class="text-[11px] font-bold text-slate-500 uppercase"><i class="fa-regular fa-calendar mr-1"></i>Đợt:</span>
                     <select onchange="applyBatchFilter(this.value)" class="text-xs bg-white border border-slate-300 rounded px-2 py-0.5 font-semibold text-slate-700 outline-none">
-                        <option value="all">Tất cả các đợt</option>
+                        <option value="all">Tất cả đợt</option>
                         ${batchFilters.map(b => `<option value="${b}" ${AppState.currentBatchFilter === b ? 'selected' : ''}>Tháng ${b.replace('_', '/')}</option>`).join('')}
                     </select>
                 </div>`;
             }
 
             html += `<span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">Khóa:</span>`;
-            html += `<button onclick="applySubFilter('all')" class="px-3 py-1 rounded-full text-xs font-medium ${AppState.currentSubFilter === 'all' ? 'bg-kiot-blue text-white shadow-sm' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">Tất cả (${totalCount})</button>`;
+            html += `<button onclick="applySubFilter('all')" class="px-3 py-1 rounded-full text-xs font-medium ${AppState.currentSubFilter === 'all' ? 'bg-kiot-blue text-white shadow-sm font-semibold' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">Tất cả (${totalCount})</button>`;
 
             Object.keys(courseCounts).forEach(val => {
                 const count = courseCounts[val];
@@ -553,7 +1011,7 @@
             renderItems();
         }
 
-        // --- 6. GET FILTERED DATA ---
+        // --- 7. FILTERED ITEMS & SHEET VIEWS ---
         function getFilteredItems() {
             const sheetMeta = AppState.sheetsData[AppState.currentSheet];
             if (!sheetMeta || !sheetMeta.items) return [];
@@ -561,7 +1019,6 @@
             let data = [...sheetMeta.items];
             const groupCol = detectGroupingColumn(sheetMeta.headers);
 
-            // Filter by Batch/Month
             if (AppState.currentBatchFilter !== 'all') {
                 data = data.filter(item => {
                     const titleStr = String(item['Mã bộ đề / Tên file ngân hàng câu hỏi'] || item['Tên bộ đề'] || Object.values(item)[1] || '');
@@ -569,24 +1026,23 @@
                 });
             }
 
-            // Filter by Course
             if (AppState.currentSubFilter !== 'all' && groupCol) {
                 data = data.filter(item => (item[groupCol] || '').trim() === AppState.currentSubFilter);
             }
 
-            // Local Search
             if (AppState.searchQuery.trim() !== '') {
                 const q = AppState.searchQuery.toLowerCase();
-                data = data.filter(item => {
-                    return Object.values(item).some(val => String(val).toLowerCase().includes(q));
-                });
+                data = data.filter(item => Object.values(item).some(val => String(val).toLowerCase().includes(q)));
             }
 
             return data;
         }
 
-        // --- 7. RENDERING ENGINE (BẢNG QUẢN TRỊ KHẢO THÍ CHUẨN) ---
         function renderItems() {
+            // Ẩn Dashboard khi xem sheet chi tiết
+            document.getElementById('master-dashboard-view').classList.add('hidden');
+            document.getElementById('sheet-content-view').classList.remove('hidden');
+
             const data = getFilteredItems();
             const gridContainer = document.getElementById('items-grid');
             const tableContainer = document.getElementById('items-table-container');
@@ -617,7 +1073,6 @@
                 return;
             }
 
-            // Các Sheet khác (Masterdata E-Learning, Apps, Video Scripts...)
             if (AppState.viewMode === 'grid') {
                 gridContainer.classList.remove('hidden');
                 tableContainer.classList.add('hidden');
@@ -629,7 +1084,7 @@
             }
         }
 
-        // BẢNG QUẢN TRỊ MA TRẬN ĐỀ THI (TABLE VIEW CHO MCQ)
+        // --- RENDER MCQ MATRIX TABLE ---
         function renderMcqAdminTable(data, headers) {
             const thead = document.getElementById('table-head');
             const tbody = document.getElementById('table-body');
@@ -650,7 +1105,6 @@
                 const codeTitle = row['Mã bộ đề / Tên file ngân hàng câu hỏi'] || row['Tên bộ đề'] || row['Tiêu đề'] || Object.values(row)[1] || `Bộ đề #${idx + 1}`;
                 const type = row['Loại câu hỏi'] || row['Phân loại'] || 'Một đáp án';
                 
-                // Tìm kiếm cột link thực tế
                 let rawLink = '';
                 for (let k of Object.keys(row)) {
                     const val = String(row[k]).trim();
@@ -697,35 +1151,29 @@
 
                     <td class="px-4 py-3.5 text-right whitespace-nowrap space-x-2">
                         ${hasValidLink ? `
-                        <!-- 1. XEM ĐỀ (Nhúng trực tiếp vào Workspace Tab) -->
                         <button onclick="openResource('${escapeHtml(embedUrl)}', '📊 ${escapeHtml(codeTitle)}')" class="px-3 py-1.5 bg-kiot-blue hover:bg-kiot-navy text-white rounded-md text-xs font-semibold shadow-sm transition-all inline-flex items-center gap-1.5" title="Nhúng xem bảng tính trong Workspace">
                             <i class="fa-solid fa-table"></i> Xem Đề
                         </button>
 
-                        <!-- 2. SỬA ĐỀ GỐC (Mở tab mới sang Google Sheets để gõ phím sửa câu hỏi) -->
                         <a href="${escapeHtml(rawLink)}" target="_blank" class="px-3 py-1.5 bg-white border border-slate-200 hover:border-emerald-500 text-slate-700 hover:text-emerald-700 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5" title="Mở file Google Sheets gốc để sửa câu hỏi">
                             <i class="fa-solid fa-pen-to-square text-emerald-600"></i> Sửa Đề Gốc ↗
                         </a>
 
-                        <!-- 3. CHIA ĐÔI MÀN HÌNH -->
                         <button onclick="openInSplitMode('${escapeHtml(embedUrl)}', '📊 ${escapeHtml(codeTitle)}')" class="p-1.5 text-slate-400 hover:text-slate-800 rounded hover:bg-slate-100" title="Xem ở nửa màn hình bên phải">
                             <i class="fa-solid fa-columns"></i>
                         </button>
 
-                        <!-- 4. SAO CHÉP LINK -->
                         <button onclick="copyToClipboardText('${escapeHtml(rawLink)}', 'Đã sao chép link đề: ${escapeHtml(codeTitle)}')" class="p-1.5 text-slate-400 hover:text-slate-800 rounded hover:bg-slate-100" title="Sao chép link Google Sheet">
                             <i class="fa-regular fa-copy"></i>
                         </button>
-                        ` : `
-                        <span class="text-xs text-slate-400 italic">Cần bổ sung link trên Google Sheets</span>
-                        `}
+                        ` : `<span class="text-xs text-slate-400 italic">Cần bổ sung link</span>`}
                     </td>
                 </tr>
                 `;
             }).join('');
         }
 
-        // THẺ QUẢN TRỊ KỸ THUẬT (GRID VIEW CHO MCQ)
+        // RENDER MCQ CARDS (GRID VIEW)
         function renderMcqAdminCards(data, headers, container) {
             let html = '';
             data.forEach((row, idx) => {
@@ -789,7 +1237,7 @@
             container.innerHTML = html;
         }
 
-        // BẢNG TIÊU CHUẨN KHÔNG BỊ MẤT CHỮ & LINK CLICK ĐƯỢC (CHO E-LEARNING & KHÁC)
+        // RENDER STANDARD TABLE (KHÔNG CẮT CHỮ & LINK CLICK ĐƯỢC)
         function renderStandardTable(data, headers) {
             const thead = document.getElementById('table-head');
             const tbody = document.getElementById('table-body');
@@ -815,15 +1263,13 @@
             const str = String(val).trim();
             if (str.startsWith('http://') || str.startsWith('https://')) {
                 let label = str;
-                if (str.length > 35) {
-                    label = str.replace(/^https?:\/\/(www\.)?/, '').slice(0, 32) + '...';
-                }
+                if (str.length > 35) label = str.replace(/^https?:\/\/(www\.)?/, '').slice(0, 32) + '...';
                 return `<a href="${escapeHtml(str)}" target="_blank" class="text-kiot-blue hover:underline font-semibold inline-flex items-center gap-1"><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> ${escapeHtml(label)}</a>`;
             }
             return escapeHtml(str);
         }
 
-        // GRID CHO MASTERDATA E-LEARNING
+        // RENDER STANDARD GRID (MASTERDATA E-LEARNING)
         function renderStandardGrid(data, headers, container) {
             let html = '';
             data.forEach(item => {
@@ -883,8 +1329,8 @@
             const bar = document.getElementById('workspace-tab-bar');
             let html = `
                 <div onclick="activateTab('tab-home')" id="tab-home" class="workspace-tab ${AppState.activeTabId === 'tab-home' ? 'active' : ''} h-9 px-3.5 rounded-t-lg bg-white flex items-center gap-2 text-xs text-slate-700 cursor-pointer border-t border-x border-slate-300">
-                    <i class="fa-solid fa-house text-kiot-blue text-[11px]"></i>
-                    <span class="font-medium">Trang Quản Trị</span>
+                    <i class="fa-solid fa-gauge-high text-kiot-blue text-[11px]"></i>
+                    <span class="font-semibold">Trang Quản Trị</span>
                 </div>
             `;
             AppState.openTabs.forEach(t => {
@@ -907,11 +1353,12 @@
             const existingContainer = document.getElementById('active-tab-frame-container');
 
             if (tabId === 'tab-home') {
-                document.getElementById('items-scroll-container').classList.remove('hidden');
-                document.getElementById('sub-filter-bar').classList.remove('hidden');
                 if (existingContainer) existingContainer.remove();
+                renderMasterDashboard();
             } else {
-                document.getElementById('items-scroll-container').classList.add('hidden');
+                document.getElementById('master-dashboard-view').classList.add('hidden');
+                document.getElementById('sheet-content-view').classList.add('hidden');
+                document.getElementById('empty-state').classList.add('hidden');
                 document.getElementById('sub-filter-bar').classList.add('hidden');
 
                 const currentTab = AppState.openTabs.find(t => t.id === tabId);
@@ -924,7 +1371,6 @@
                         document.getElementById('pane-primary').appendChild(container);
                     }
 
-                    // Tải trực tiếp Iframe (Đã fix nhúng Google Sheet)
                     container.innerHTML = `
                         <div class="h-10 bg-slate-100 border-b border-slate-200 px-4 flex items-center justify-between text-xs">
                             <span class="font-bold text-slate-800 truncate">${escapeHtml(currentTab.title)}</span>
@@ -949,7 +1395,7 @@
             activateTab(AppState.activeTabId);
         }
 
-        // --- 9. SPLIT-SCREEN & DRAGGABLE RESIZER ENGINE ---
+        // --- 9. RESIZABLE SPLIT-SCREEN ---
         function toggleSplitScreen() {
             AppState.isSplitOpen = !AppState.isSplitOpen;
             const pane = document.getElementById('pane-secondary');
@@ -964,7 +1410,6 @@
                 pane.classList.add('hidden');
                 resizer.classList.add('hidden');
                 btn.classList.remove('bg-kiot-blue', 'text-white');
-                // Reset widths
                 document.getElementById('pane-primary').style.width = '';
                 document.getElementById('pane-secondary').style.width = '';
             }
@@ -999,7 +1444,6 @@
                 const offsetX = e.clientX - rect.left;
                 let leftPercent = (offsetX / rect.width) * 100;
 
-                // Giới hạn tỷ lệ kéo giãn từ 20% đến 80%
                 if (leftPercent < 20) leftPercent = 20;
                 if (leftPercent > 80) leftPercent = 80;
 
