@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sơ đồ Vận hành | Trainer OS</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@600;700;800&family=Patrick+Hand&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@600;700;800&family=Patrick+Hand&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
@@ -17,30 +17,52 @@
 
     <style>
         html { scroll-behavior: smooth; }
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow: hidden; }
-        .sidebar-saas { background-color: #ffffff; border-right: 1px solid #e2e8f0; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .nav-group-title { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; padding: 0 24px; margin-top: 20px; margin-bottom: 8px; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 8px 24px; font-size: 13px; font-weight: 500; color: #475569; cursor: pointer; transition: all 0.2s; border-right: 3px solid transparent; }
-        .nav-item:hover { background-color: #f8fafc; color: #1e293b; }
-        .nav-item.active { background-color: #eff6ff; color: #2563eb; font-weight: 600; border-right-color: #2563eb; }
-        .nav-item i { width: 16px; text-align: center; font-size: 14px; }
-        .content-area { height: calc(100vh - 60px); overflow-y: auto; overflow-x: hidden; padding: 20px 28px; }
-        .saas-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .saas-input { width: 100%; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; }
-        .saas-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        .btn-outline { background: white; color: #334155; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #1e293b; overflow: hidden; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        
+        /* Sidebar Style */
+        .sidebar-saas { background-color: #ffffff; border-right: 1px solid #e5e7eb; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-x: hidden; }
+        .sidebar-logo { height: 64px; display: flex; align-items: center; padding: 0 24px; border-bottom: 1px solid #e5e7eb; }
+        .nav-group-title { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; padding: 0 24px; margin-top: 20px; margin-bottom: 8px; transition: opacity 0.2s; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; margin: 2px 12px; font-size: 13.5px; font-weight: 500; color: #4b5563; cursor: pointer; transition: all 0.2s; border-radius: 8px; white-space: nowrap; }
+        .nav-item:hover { background-color: #f3f4f6; color: #1f2937; }
+        .nav-item.active { background-color: #eff6ff; color: #7c3aed; font-weight: 600; }
+        .nav-item.active i { color: #7c3aed; }
+        .nav-item i { width: 20px; text-align: center; color: #9ca3af; font-size: 16px; transition: color 0.2s; flex-shrink: 0; }
+
+        /* Sidebar Collapsed */
+        .sidebar-collapsed { width: 64px !important; min-width: 64px !important; }
+        .sidebar-collapsed .logo-full { display: none; }
+        .sidebar-collapsed .logo-icon { display: block !important; margin: 0 auto; text-align: center; }
+        .sidebar-collapsed .sidebar-logo { justify-content: center; padding: 0; }
+        .sidebar-collapsed .nav-group-title { display: none; }
+        .sidebar-collapsed .nav-item span:not(#tooltip-text) { display: none; }
+        .sidebar-collapsed .nav-item i.fa-chevron-right { display: none; }
+        .sidebar-collapsed .pulse-dot { display: none; }
+        .sidebar-collapsed #submenu-cn { display: none !important; }
+        .sidebar-collapsed .nav-item { justify-content: center !important; padding: 0 !important; margin: 6px auto !important; width: 40px !important; height: 40px !important; border-radius: 10px; }
+        .sidebar-collapsed .nav-item i { margin: 0 !important; font-size: 16px !important; }
+        .sidebar-collapsed .user-profile-area { justify-content: center !important; padding: 16px 0 !important; gap: 0 !important; }
+        .sidebar-collapsed .user-profile-area .flex-grow { display: none !important; }
+
+        .content-area { height: calc(100vh - 64px); overflow-y: auto; overflow-x: hidden; padding: 24px 32px; }
+        .saas-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .saas-input { width: 100%; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; transition: all 0.2s;}
+        .saas-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .btn-outline { background: white; color: #334155; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;}
+        .btn-outline:hover { background-color: #f8fafc; }
         
         .wp-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 12px 0; }
         .wp-content iframe, .wp-content video { width: 100%; aspect-ratio: 16/9; border-radius: 8px; margin: 12px 0; }
         
         /* INDUSTRY PILLS */
-        .industry-pill { padding: 6px 16px; font-size: 13px; font-weight: 700; color: #64748b; background: white; border: 1px solid #cbd5e1; border-radius: 9999px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
+        .industry-pill { padding: 8px 18px; font-size: 13px; font-weight: 700; color: #64748b; background: white; border: 1px solid #cbd5e1; border-radius: 9999px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
         .industry-pill:hover { background: #f1f5f9; }
         .industry-pill.active { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; box-shadow: 0 2px 4px rgba(37,99,235,0.1); }
 
-        /* STYLE MINDMAP TỰ ĐỘNG XMIND (CẬP NHẬT CHO ROLE) */
+        /* STYLE MINDMAP TỰ ĐỘNG XMIND */
         #markmap-svg { cursor: grab; width: 100%; height: 100%; font-family: 'Nunito', sans-serif !important; }
         #markmap-svg:active { cursor: grabbing; }
         .markmap-node-root > foreignObject > div { background-color: #3b82f6 !important; color: white !important; padding: 8px 20px !important; border-radius: 12px !important; font-size: 18px !important; font-weight: 800 !important; border: 2px solid white !important; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3) !important; text-transform: uppercase; }
@@ -49,15 +71,12 @@
         .markmap-node-level-3 > foreignObject > div { padding: 4px 12px !important; border-radius: 6px !important; font-size: 13px !important; font-weight: 500 !important; color: #475569 !important; background-color: transparent !important; }
         .markmap-node-note > foreignObject > div { background-color: #fef3c7 !important; color: #b45309 !important; border: 1px dashed #f59e0b !important; font-size: 12px !important; padding: 6px 12px !important; border-radius: 8px !important; font-weight: 700 !important; }
 
-        @keyframes scanline { 0% { top: 0; } 100% { top: 100%; } }
-        .ai-scanning::after { content: ''; position: absolute; left: 0; right: 0; height: 2px; background: #8b5cf6; box-shadow: 0 0 10px #8b5cf6; animation: scanline 1.5s linear infinite; }
-
         /* WIDGET BẢNG VẼ GLOBAL */
         .widget-panel { position: fixed; bottom: 80px; right: 30px; width: 450px; height: 600px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 35px -5px rgba(0,0,0,0.2); border: 1px solid #e2e8f0; z-index: 1000; transform: translateY(10px); opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; overflow: hidden; }
         .widget-panel.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
         .widget-panel.fullscreen-widget { width: 100vw !important; height: 100vh !important; bottom: 0 !important; right: 0 !important; border-radius: 0 !important; }
         .floating-tool { bottom: 20px; right: 30px; z-index: 100; }
-        .wb-tool-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #475569; transition: all 0.2s; font-size: 14px; background: #f8fafc; border: 1px solid #e2e8f0; }
+        .wb-tool-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #475569; transition: all 0.2s; font-size: 14px; background: #f8fafc; border: 1px solid #e2e8f0; cursor: pointer; }
         .wb-tool-btn:hover { background-color: #e2e8f0; color: #2563eb; }
         .wb-tool-btn.active { background-color: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
         input[type="color"] { -webkit-appearance: none; border: none; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; padding: 0; }
@@ -68,68 +87,74 @@
 <body>
 
     <div class="flex h-screen">
+        <!-- SIDEBAR CHUẨN KIOTVIET L&D (COLLAPSIBLE) -->
         <aside id="sidebar" class="sidebar-saas w-64 flex flex-col z-50 shrink-0">
-            <!-- 1. HEADER CỦA SIDEBAR -->
-            <div class="h-16 flex items-center px-6 border-b border-slate-100 shrink-0">
-                <div class="w-6 h-6 bg-blue-600 rounded flex items-center justify-center text-white text-[10px] mr-3"><i class="fas fa-layer-group"></i></div>
-                <span class="font-bold text-slate-800 text-sm tracking-tight">Agentic L&D</span>
+            <div class="sidebar-logo">
+                <img src="https://cdn-kvweb-website.kiotviet.vn/images/v2/giai-phap/logos/kiotviet-logo-horizontal.svg" alt="KiotViet" class="h-[28px] logo-full">
+                <div class="logo-icon hidden w-[28px] h-[28px] overflow-hidden rounded-full">
+                    <img src="https://cdn-kvweb-website.kiotviet.vn/images/v2/giai-phap/logos/kiotviet-logo-horizontal.svg" class="h-[28px] max-w-none" alt="KV">
+                </div>
             </div>
 
-            <!-- 2. DANH SÁCH MENU -->
-            <nav class="flex-1 overflow-y-auto py-2 custom-scrollbar">
-                <div class="nav-group-title lang-text" data-vi="TỔNG QUAN" data-en="OVERVIEW">TỔNG QUAN</div>
-                <a href="index.html" class="nav-item"><i class="fas fa-columns"></i> <span class="lang-text" data-vi="Bảng điều khiển" data-en="Dashboard">Bảng điều khiển</span></a>
-                <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i> <span class="lang-text" data-vi="Thiết lập" data-en="Settings">Thiết lập</span> <span class="ml-auto text-[8px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-bold">NEW</span></a>
+            <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4 custom-scrollbar">
+                <div class="nav-group-title">Tổng quan</div>
+                <a href="index.html" class="nav-item" data-title="Bảng điều khiển"><i class="fas fa-chart-line"></i> <span>Bảng điều khiển</span></a>
 
-                <div class="nav-group-title lang-text" data-vi="QUẢN TRỊ KHÓA HỌC" data-en="COURSE MANAGEMENT">QUẢN TRỊ KHÓA HỌC</div>
-                <a href="spcb.html" class="nav-item"><i class="fas fa-box"></i> <span class="lang-text" data-vi="Cơ bản (TS-DS)" data-en="Basic">Cơ bản (TS-DS)</span></a>
-                <a href="thuehkd.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i> <span class="lang-text" data-vi="Chuyên đề Thuế" data-en="Tax">Chuyên đề Thuế</span></a>
-                <div class="nav-item group relative">
-                    <i class="fas fa-laptop-code"></i> <span class="flex-grow lang-text" data-vi="Chuyên ngành" data-en="Industry">Chuyên ngành</span><i class="fas fa-chevron-down text-[10px]"></i>
-                    <div class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all z-10 py-1">
-                        <a href="kv1.html" class="block px-10 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-600">Sản phẩm KV1</a>
-                        <a href="industry.html" class="block px-10 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-500">KiotViet FNB</a>
-                        <a href="industry.html" class="block px-10 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-pink-500">KV Salon</a>
-                        <a href="industry.html" class="block px-10 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-emerald-500">KV Hotel</a>
+                <div class="nav-group-title">Quản trị Khóa học</div>
+                <a href="spcb.html" class="nav-item" data-title="Cơ bản (TS-DS)"><i class="fas fa-box"></i> <span>Cơ bản (TS-DS)</span></a>
+                <a href="thuehkd.html" class="nav-item" data-title="Chuyên đề Thuế"><i class="fas fa-file-invoice-dollar"></i> <span>Chuyên đề Thuế</span></a>
+                
+                <div class="flex flex-col">
+                    <div class="nav-item group justify-between" onclick="toggleAccordion('submenu-cn', 'icon-cn')" data-title="Chuyên ngành">
+                        <div class="flex items-center gap-3"><i class="fas fa-laptop-code"></i> <span>Chuyên ngành</span></div>
+                        <i id="icon-cn" class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform duration-300"></i>
+                    </div>
+                    <div id="submenu-cn" class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out pl-[44px] flex flex-col gap-1 pr-4">
+                        <a href="kv1.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-blue-600 transition-colors">Sản phẩm KV1</a>
+                        <a href="industry.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-orange-500 transition-colors">KiotViet FNB</a>
+                        <a href="industry.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-pink-500 transition-colors">KV Salon</a>
+                        <a href="industry.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-emerald-500 transition-colors">KV Hotel</a>
                     </div>
                 </div>
-                <a href="index.html" class="nav-item"><i class="fas fa-th-large"></i> <span class="lang-text" data-vi="Tất cả khóa học" data-en="All Courses">Tất cả khóa học</span></a>
+                <a href="index.html" class="nav-item" data-title="Tất cả khóa học"><i class="fas fa-th-large"></i> <span>Tất cả khóa học</span></a>
 
-                <div class="nav-group-title">ĐÀO TẠO & NGHIỆP VỤ</div>
-                <a href="knowledge.html" class="nav-item active group relative">
-                    <i class="fas fa-project-diagram text-purple-500"></i> 
-                    <span class="font-bold text-purple-700">Sơ đồ Vận hành</span>
-                    <span class="absolute right-4 w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                <div class="nav-group-title">Công cụ & Tài nguyên</div>
+                <a href="knowledge.html" class="nav-item active relative" data-title="Sơ đồ Vận hành">
+                    <i class="fas fa-project-diagram text-purple-600"></i> <span>Sơ đồ Vận hành</span>
+                    <span class="pulse-dot absolute right-4 w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
                 </a>
-
-                <div class="nav-group-title lang-text" data-vi="DỮ LIỆU & BÁO CÁO" data-en="DATA">DỮ LIỆU & BÁO CÁO</div>
-                <a href="index.html" class="nav-item"><i class="fas fa-database"></i> <span class="lang-text" data-vi="Master Data API" data-en="Master Data">Master Data API</span></a>
-
-                <div class="nav-group-title lang-text" data-vi="CÔNG CỤ TỰ ĐỘNG" data-en="TOOLS">CÔNG CỤ TỰ ĐỘNG</div>
-                <a href="tools.html" class="nav-item"><i class="fas fa-bolt"></i> <span class="lang-text" data-vi="Runner Tools" data-en="Runner Tools">Runner Tools</span></a>
-                <a href="vault.html" class="nav-item group relative"><i class="fas fa-box-open text-purple-600"></i> <span class="font-bold text-purple-700">Kho Lưu Trữ Vault</span><span class="absolute right-4 w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span></a>
+                <a href="vault.html" class="nav-item" data-title="Kho Lưu Trữ Vault"><i class="fas fa-box-open"></i> <span>Kho Lưu Trữ Vault</span></a>
+                <a href="tools.html" class="nav-item" data-title="Runner Tools"><i class="fas fa-bolt"></i> <span>Runner Tools</span></a>
+                
+                <div class="nav-group-title">Dữ liệu & Hệ thống</div>
+                <a href="knowledge-hub.html" class="nav-item" data-title="Master Data Hub"><i class="fas fa-database"></i> <span>Master Data Hub</span></a>
+                <a href="settings.html" class="nav-item" data-title="Cài đặt hệ thống"><i class="fas fa-cog"></i> <span>Cài đặt hệ thống</span></a>
             </nav>
 
-            <div class="p-4 border-t border-slate-100 shrink-0 flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs" id="display-prof-ava">V</div>
+            <div class="user-profile-area p-4 border-t border-slate-200 shrink-0 flex items-center gap-3 bg-slate-50/50 hover:bg-slate-100 transition cursor-pointer" onclick="location.href='settings.html'">
+                <div class="w-9 h-9 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-sm shrink-0 border border-purple-200" id="display-prof-ava">A</div>
                 <div class="overflow-hidden flex-grow">
-                    <p id="display-prof-name" class="text-[13px] font-semibold text-slate-700 truncate">Admin User</p>
-                    <p id="display-prof-title" class="text-[10px] text-slate-500 truncate">admin@kiotviet.com</p>
+                    <p id="display-prof-name" class="text-[13px] font-bold text-slate-800 truncate">L&D KiotViet</p>
+                    <p id="display-prof-title" class="text-[11px] font-medium text-slate-500 truncate">Administrator</p>
                 </div>
             </div>
         </aside>
 
+        <!-- MAIN LAYOUT -->
         <div class="flex-1 flex flex-col overflow-hidden relative">
-            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 shrink-0">
-                <div class="relative w-96">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" placeholder="Tìm kiếm tài liệu..." class="saas-input !pl-10 bg-slate-50 border-transparent text-sm">
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 shrink-0 shadow-sm">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-purple-50 hover:text-purple-600 transition border border-slate-200"><i class="fas fa-bars"></i></button>
+                    <div class="relative w-96">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="text" placeholder="Tìm kiếm tài liệu..." class="saas-input !pl-10 bg-slate-50 border-transparent text-sm">
+                    </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="syncFromGoogleSheets()" class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded text-[11px] font-bold shadow-sm border border-blue-100 hover:bg-blue-600 hover:text-white transition flex items-center gap-1.5">
+                    <button onclick="syncFromGoogleSheets()" class="bg-blue-50 text-blue-600 px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-sm border border-blue-100 hover:bg-blue-600 hover:text-white transition flex items-center gap-1.5">
                         <i id="syncIcon" class="fas fa-sync-alt"></i> Đồng bộ với Google Sheets
                     </button>
-                    <span class="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded text-[11px] font-bold shadow-inner border border-emerald-200 flex items-center gap-1.5"><i class="fas fa-server"></i> <span id="docCount">0</span> Bài học</span>
+                    <span class="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-emerald-200 flex items-center gap-1.5"><i class="fas fa-server"></i> <span id="docCount">0</span> Bài học</span>
                 </div>
             </header>
 
@@ -195,7 +220,6 @@
                     </div>
                 </div>
 
-                <!-- SELECT MATRAN 3D -->
                 <div class="grid grid-cols-3 gap-4 border-b border-slate-100 pb-4">
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">1. Ngành hàng</label>
@@ -245,7 +269,7 @@
         </div>
     </div>
 
-    <!-- MODAL HIỂN THỊ TÓM TẮT -->
+    <!-- MODAL TÓM TẮT BƯỚC -->
     <div id="summaryModal" class="fixed inset-0 bg-slate-900/40 z-[9999] hidden items-center justify-center backdrop-blur-sm" onclick="closeSummaryModal()">
         <div class="bg-white w-[500px] rounded-2xl shadow-2xl flex flex-col transform scale-95 transition-transform overflow-hidden" onclick="event.stopPropagation()">
             <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
@@ -257,11 +281,18 @@
         </div>
     </div>
 
+    <!-- Global Tooltip -->
+    <div id="global-tooltip" class="fixed bg-slate-800 text-white text-[12px] font-medium px-3 py-1.5 rounded-lg shadow-xl pointer-events-none opacity-0 transition-opacity duration-200 z-[100000] whitespace-nowrap flex items-center">
+        <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
+        <span id="tooltip-text" class="relative z-10"></span>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-2xl font-medium text-sm z-[100000] opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-3">
+        <span id="toast-msg"></span>
+    </div>
+
     <script>
-        // ==========================================
-        // CẤU TRÚC 3D KNOWLEDGE MATRIX
-        // ==========================================
-        
         const INDUSTRIES = {
             "retail": { title: "Cơ bản - Retail", icon: "fa-shopping-bag" },
             "fnb": { title: "Chuyên ngành FNB", icon: "fa-utensils" },
@@ -281,26 +312,54 @@
         let activeIndustry = "retail";
         let activeKnowledgeNode = "setup"; 
         let currentTargetDocId = null;
-        let globalDocs = []; // Dữ liệu phẳng (Flat Array) lưu từ LocalForage bản v2
+        let globalDocs = []; 
 
-        // ==========================================
-        // HÀM LẤY API
-        // ==========================================
-        function getApiUrl() {
-            return localStorage.getItem('kv_api_url') || "";
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-collapsed'); }
+        function toggleAccordion(menuId, iconId) {
+            const menu = document.getElementById(menuId); const icon = document.getElementById(iconId);
+            if (menu.style.maxHeight && menu.style.maxHeight !== '0px') { menu.style.maxHeight = '0px'; icon.style.transform = 'rotate(0deg)'; } 
+            else { menu.style.maxHeight = menu.scrollHeight + 'px'; icon.style.transform = 'rotate(90deg)'; }
         }
 
+        const tooltip = document.getElementById('global-tooltip');
+        const tooltipText = document.getElementById('tooltip-text');
+        document.querySelectorAll('.nav-item[data-title]').forEach(item => {
+            item.addEventListener('mouseenter', (e) => {
+                if (document.getElementById('sidebar').classList.contains('sidebar-collapsed')) {
+                    const rect = item.getBoundingClientRect();
+                    tooltipText.innerText = item.getAttribute('data-title');
+                    tooltip.style.top = (rect.top + (rect.height / 2) - 14) + 'px'; 
+                    tooltip.style.left = (rect.right + 12) + 'px'; 
+                    tooltip.style.opacity = '1';
+                }
+            });
+            item.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; });
+        });
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            if(!t) return;
+            document.getElementById('toast-msg').innerHTML = `<i class="fas fa-check-circle text-emerald-400 mr-2"></i> ${msg}`;
+            t.classList.replace('opacity-0', 'opacity-100');
+            t.classList.remove('pointer-events-none');
+            setTimeout(() => {
+                t.classList.replace('opacity-100', 'opacity-0');
+                t.classList.add('pointer-events-none');
+            }, 3000);
+        }
+
+        function getApiUrl() { return localStorage.getItem('kv_api_url') || ""; }
         localforage.config({ name: 'TrainerOS_Database', storeName: 'ld_knowledge_base' });
 
-        // --- HÀM ĐỒNG BỘ GOOGLE SHEETS ---
         async function syncFromGoogleSheets() {
             const apiUrl = getApiUrl();
-            if(!apiUrl) return alert("Vui lòng vào tab THIẾT LẬP để điền Link API Google Apps Script trước khi đồng bộ!");
+            if(!apiUrl) return alert("Vui lòng vào Cài đặt để điền Link API Google Apps Script trước!");
             
             const icon = document.getElementById('syncIcon'); icon.classList.add('fa-spin');
             
             try {
-                let response = await fetch(apiUrl); let json = await response.json();
+                let response = await fetch(apiUrl); 
+                let json = await response.json();
                 if(json.knowledge) {
                     let newDocs = [];
                     json.knowledge.forEach(row => {
@@ -312,24 +371,22 @@
                             role: row.role || 'Tất cả',
                             title: row.title, 
                             url: row.url, 
-                            html: row.html || "<p>Chưa có dữ liệu HTML, bot đang xử lý...</p>", 
+                            html: row.html || "<p>Chưa có dữ liệu HTML</p>", 
                             summary: summary 
                         });
                     });
                     await localforage.setItem('kv_wp_docs_v2', newDocs);
                     globalDocs = newDocs;
-                    alert("Đồng bộ dữ liệu 3D Matrix thành công!"); 
+                    showToast("Đồng bộ dữ liệu 3D Matrix thành công!"); 
                     renderNodeDetail(activeKnowledgeNode);
                 }
             } catch (err) { alert("Lỗi khi kết nối đến Google Sheets!"); }
             icon.classList.remove('fa-spin');
         }
 
-        // --- KHỞI TẠO GIAO DIỆN CHÍNH ---
         function renderUI() {
             const container = document.getElementById('main-tab-container');
             
-            // Generate Industry Tabs
             let industryTabsHtml = Object.keys(INDUSTRIES).map(ind => `
                 <button onclick="switchIndustry('${ind}')" id="ind-tab-${ind}" class="industry-pill ${ind === activeIndustry ? 'active' : ''}">
                     <i class="fas ${INDUSTRIES[ind].icon}"></i> ${INDUSTRIES[ind].title}
@@ -345,12 +402,10 @@
                     <button onclick="openWPModal()" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition shadow-md"><i class="fas fa-plus mr-2"></i> Nhập Bài viết URL</button>
                 </div>
                 
-                <!-- TABS NGÀNH HÀNG -->
                 <div class="flex flex-wrap gap-3 mb-6 bg-white p-3 rounded-2xl shadow-sm border border-slate-200">
                     ${industryTabsHtml}
                 </div>
 
-                <!-- BONG BÓNG VÒNG ĐỜI -->
                 <div class="saas-card p-6 mb-6 overflow-x-auto custom-scrollbar bg-white">
                     <div class="min-w-[800px] flex items-center justify-between relative">
                         <div class="absolute top-1/2 left-10 right-10 h-1 bg-slate-200 -translate-y-1/2 z-0"></div>
@@ -380,18 +435,15 @@
             const activeEl = document.getElementById(`node-${nodeId}`);
             if(activeEl) { activeEl.classList.remove('border-slate-200'); activeEl.classList.add('ring-4', 'ring-purple-200', 'scale-105', 'border-purple-500'); }
 
-            // Lấy dữ liệu v2
             let savedDocs = await localforage.getItem('kv_wp_docs_v2');
-            if(!savedDocs) savedDocs = [];
-            globalDocs = savedDocs;
+            globalDocs = savedDocs || [];
 
-            // Đếm tổng số bài
-            document.getElementById('docCount').innerText = globalDocs.length;
+            const docCountEl = document.getElementById('docCount');
+            if(docCountEl) docCountEl.innerText = globalDocs.length;
 
-            // Lọc theo Ngành và Vòng đời hiện tại
             let nodeDocs = globalDocs.filter(d => d.industry === activeIndustry && d.node === activeKnowledgeNode);
             
-            let wpDocsHtml = nodeDocs.map((doc, index) => `
+            let wpDocsHtml = nodeDocs.map((doc) => `
                 <div id="doc-wrapper-${doc.id}" class="mb-3 border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm doc-drag-wrapper">
                     <div class="bg-slate-50 px-4 py-2 flex justify-between items-center group">
                         <div class="flex items-center gap-3 flex-grow">
@@ -428,13 +480,13 @@
 
         function renderAutoMindmap(nodeId, nodeDocs) {
             try {
-                const { Transformer, Markmap } = window.markmap; const transformer = new Transformer(); 
+                const { Transformer, Markmap } = window.markmap; 
+                const transformer = new Transformer(); 
                 const rootTitle = `${INDUSTRIES[activeIndustry].title} - ${LIFECYCLES[nodeId].title.split('. ')[1]}`;
                 let mdContent = `# ${rootTitle}\n`;
                 
                 if(nodeDocs.length === 0) { mdContent += `## (Trống)\n`; } 
                 else {
-                    // Group by Role
                     let roleGroups = {};
                     nodeDocs.forEach(doc => {
                         let r = doc.role || 'Tất cả';
@@ -455,9 +507,11 @@
                         });
                     }
                 }
-                const { root } = transformer.transform(mdContent); const svgEl = document.querySelector('#markmap-svg');
+                const { root } = transformer.transform(mdContent); 
+                const svgEl = document.querySelector('#markmap-svg');
                 if(svgEl) {
-                    svgEl.innerHTML = ''; Markmap.create(svgEl, { autoFit: true, fitRatio: 0.9, spacingHorizontal: 80, spacingVertical: 15, maxWidth: 300 }, root);
+                    svgEl.innerHTML = ''; 
+                    Markmap.create(svgEl, { autoFit: true, fitRatio: 0.9, spacingHorizontal: 80, spacingVertical: 15, maxWidth: 300 }, root);
                     setTimeout(() => {
                         d3.selectAll('#markmap-svg .markmap-node').each(function(d) {
                             const node = d3.select(this); 
@@ -472,10 +526,18 @@
             } catch (error) { console.error(error); }
         }
 
-        // --- HÀM AI PARSER ---
         function aiExtractStepsFromHTML(html) {
             let tempDiv = document.createElement("div"); tempDiv.innerHTML = html; let results = [];
-            tempDiv.querySelectorAll('h2, h3, h4').forEach(h => { let t = h.textContent.toLowerCase(); if(t.includes('giới thiệu') || t.includes('lợi ích') || t.includes('tổng quan')) { let next = h.nextElementSibling; while(next && !next.tagName.match(/^H[1-6]$/)) { let toDelete = next; next = next.nextElementSibling; toDelete.remove(); } h.remove(); } });
+            tempDiv.querySelectorAll('h2, h3, h4').forEach(h => { 
+                let t = h.textContent.toLowerCase(); 
+                if(t.includes('giới thiệu') || t.includes('lợi ích') || t.includes('tổng quan')) { 
+                    let next = h.nextElementSibling; 
+                    while(next && !next.tagName.match(/^H[1-6]$/)) { 
+                        let toDelete = next; next = next.nextElementSibling; toDelete.remove(); 
+                    } 
+                    h.remove(); 
+                } 
+            });
             tempDiv.querySelectorAll('ol > li, ul > li, p > strong').forEach(el => {
                 let text = el.textContent.replace(/\s+/g, ' ').trim();
                 text = text.replace(/^(Tình huống|Thao tác( thực hiện)?( như sau)?|Mục đích|Để|Từ|Tại|Sau đó|Tiếp theo|Bạn cần( phải)?|Hệ thống sẽ|Vui lòng):?\s*/i, '').replace(/^(Bấm|Nhấn) (vào )?(nút|mục|tab)\s+/i, 'Chọn ').trim();
@@ -496,17 +558,21 @@
             return uniqueResults.slice(0, 10);
         }
 
-        // --- ĐẨY LÊN GOOGLE SHEETS ---
         function openWPModal() { 
             document.getElementById('wpDocIndustry').value = activeIndustry;
             document.getElementById('wpDocNode').value = activeKnowledgeNode;
-            document.getElementById('wpImportModal').classList.remove('hidden'); document.getElementById('wpImportModal').classList.add('flex'); document.getElementById('aiLoadingOverlay').classList.add('hidden'); 
+            document.getElementById('wpImportModal').classList.remove('hidden'); 
+            document.getElementById('wpImportModal').classList.add('flex'); 
+            document.getElementById('aiLoadingOverlay').classList.add('hidden'); 
         }
-        function closeWPModal() { document.getElementById('wpImportModal').classList.add('hidden'); document.getElementById('wpImportModal').classList.remove('flex'); }
+        function closeWPModal() { 
+            document.getElementById('wpImportModal').classList.add('hidden'); 
+            document.getElementById('wpImportModal').classList.remove('flex'); 
+        }
         
         async function saveDocViaAPI() {
             const apiUrl = getApiUrl();
-            if(!apiUrl) return alert("Vui lòng vào tab THIẾT LẬP để dán Link API Google Sheets của bạn trước!");
+            if(!apiUrl) return alert("Vui lòng vào Cài đặt để dán Link API Google Sheets trước!");
             
             const industry = document.getElementById('wpDocIndustry').value;
             const node = document.getElementById('wpDocNode').value; 
@@ -516,44 +582,71 @@
 
             if(!title || !url) return alert("Vui lòng nhập Tên bài và Link URL WordPress!");
             
-            document.getElementById('aiLoadingOverlay').classList.remove('hidden'); document.getElementById('aiLoadingOverlay').classList.add('flex');
+            document.getElementById('aiLoadingOverlay').classList.remove('hidden'); 
+            document.getElementById('aiLoadingOverlay').classList.add('flex');
 
             try {
                 let response = await fetch(apiUrl, { method: 'POST', body: JSON.stringify({ action: "add_knowledge", industry: industry, node: node, role: role, title: title, url: url }) });
                 let result = await response.json();
-                if(result.status === "success") { closeWPModal(); await syncFromGoogleSheets(); }
-            } catch (err) { alert("Lỗi đẩy lên Sheet!"); document.getElementById('aiLoadingOverlay').classList.add('hidden'); }
+                if(result.status === "success") { 
+                    closeWPModal(); 
+                    await syncFromGoogleSheets(); 
+                }
+            } catch (err) { 
+                alert("Lỗi đẩy lên Sheet!"); 
+                document.getElementById('aiLoadingOverlay').classList.add('hidden'); 
+            }
         }
 
         async function deleteDocViaAPI(docId) {
             const apiUrl = getApiUrl();
-            if(!apiUrl) return alert("Vui lòng vào tab THIẾT LẬP để dán Link API Google Sheets của bạn trước!");
+            if(!apiUrl) return alert("Vui lòng vào Cài đặt để dán Link API Google Sheets trước!");
 
             if(!confirm("Bạn có chắc chắn muốn xóa bài học này khỏi Google Sheets?")) return;
             try {
                 let response = await fetch(apiUrl, { method: 'POST', body: JSON.stringify({ action: "delete_knowledge", id: docId }) });
                 let result = await response.json();
-                if(result.status === "success") { await syncFromGoogleSheets(); }
+                if(result.status === "success") { 
+                    await syncFromGoogleSheets(); 
+                }
             } catch (err) { alert("Lỗi khi xóa!"); }
         }
 
         function openSummaryModal(docId) {
             let doc = globalDocs.find(d => d.id === docId);
             if(doc) {
-                currentTargetDocId = doc.id; document.getElementById('sumModalTitleText').innerText = doc.title;
+                currentTargetDocId = doc.id; 
+                document.getElementById('sumModalTitleText').innerText = doc.title;
                 let stepsHtml = '';
                 if(Array.isArray(doc.summary) && doc.summary.length > 0) {
                     stepsHtml = doc.summary.map((step, idx) => `<div class="flex items-start gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100"><div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">${idx + 1}</div><span class="text-sm text-slate-700 font-medium leading-relaxed">${step.text}</span></div>`).join('');
                 } else { stepsHtml = `<div class="text-sm text-slate-500 italic p-3">Tài liệu không có cấu trúc chuẩn. Bot không phân tích được.</div>`; }
                 document.getElementById('sumModalContent').innerHTML = stepsHtml;
-                document.getElementById('summaryModal').classList.remove('hidden'); document.getElementById('summaryModal').classList.add('flex');
-                document.querySelector('#summaryModal > div').classList.remove('scale-95'); document.querySelector('#summaryModal > div').classList.add('scale-100');
+                document.getElementById('summaryModal').classList.remove('hidden'); 
+                document.getElementById('summaryModal').classList.add('flex'); 
+                document.querySelector('#summaryModal > div').classList.remove('scale-95'); 
+                document.querySelector('#summaryModal > div').classList.add('scale-100');
             }
         }
-        function closeSummaryModal() { document.getElementById('summaryModal').classList.add('hidden'); document.querySelector('#summaryModal > div').classList.add('scale-95'); }
-        function scrollToDoc() { closeSummaryModal(); if(currentTargetDocId) { const targetEl = document.getElementById(`doc-wrapper-${currentTargetDocId}`); const contentEl = document.getElementById(`doc-${currentTargetDocId}`); if(targetEl) { contentEl.classList.remove('hidden'); targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); targetEl.classList.add('ring-4', 'ring-purple-300'); setTimeout(() => targetEl.classList.remove('ring-4', 'ring-purple-300'), 1500); } } }
+        function closeSummaryModal() { 
+            document.getElementById('summaryModal').classList.add('hidden'); 
+            document.querySelector('#summaryModal > div').classList.add('scale-95'); 
+        }
+        function scrollToDoc() { 
+            closeSummaryModal(); 
+            if(currentTargetDocId) { 
+                const targetEl = document.getElementById(`doc-wrapper-${currentTargetDocId}`); 
+                const contentEl = document.getElementById(`doc-${currentTargetDocId}`); 
+                if(targetEl) { 
+                    contentEl.classList.remove('hidden'); 
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); 
+                    targetEl.classList.add('ring-4', 'ring-purple-300'); 
+                    setTimeout(() => targetEl.classList.remove('ring-4', 'ring-purple-300'), 1500); 
+                } 
+            } 
+        }
 
-        // --- WHITEBOARD (SỔ VẼ) ---
+        // --- WHITEBOARD FABRIC.JS ---
         let fCanvas = null;
 
         function switchNoteTab(tab) {
@@ -576,6 +669,7 @@
         async function initFabric() {
             if(fCanvas) return;
             const canvasEl = document.getElementById('fabricCanvas'); const wrapper = document.getElementById('drawArea');
+            if(!canvasEl || !wrapper) return;
             canvasEl.width = wrapper.clientWidth; canvasEl.height = wrapper.clientHeight;
             
             fCanvas = new fabric.Canvas('fabricCanvas', { isDrawingMode: false });
@@ -585,65 +679,87 @@
             let savedData = await localforage.getItem('kv_global_whiteboard');
             if(savedData) fCanvas.loadFromJSON(savedData, fCanvas.renderAll.bind(fCanvas));
         }
-        async function saveDrawingToLocal() { await localforage.setItem('kv_global_whiteboard', JSON.stringify(fCanvas.toJSON())); }
+        async function saveDrawingToLocal() { if(fCanvas) await localforage.setItem('kv_global_whiteboard', JSON.stringify(fCanvas.toJSON())); }
         function updateColorPickers(e) {
-            let obj = e.selected[0]; if(!obj) return;
+            let obj = e.selected ? e.selected[0] : null; if(!obj) return;
             if(obj.type === 'textbox') { document.getElementById('shapeBgColor').value = obj.backgroundColor || '#ffffff'; document.getElementById('textColor').value = obj.fill || '#000000'; } 
             else if (obj.type === 'rect' || obj.type === 'circle') { document.getElementById('shapeBgColor').value = obj.fill; document.getElementById('textColor').value = obj.stroke; } 
             else if (obj.type === 'i-text') { document.getElementById('textColor').value = obj.fill; }
             else if (obj.type === 'path') { document.getElementById('shapeBgColor').value = obj.stroke; }
         }
         function setWbMode(mode) {
-            document.querySelectorAll('.wb-tool-btn').forEach(b => b.classList.remove('active')); event.currentTarget.classList.add('active');
+            document.querySelectorAll('.wb-tool-btn').forEach(b => b.classList.remove('active')); 
+            if(event && event.currentTarget) event.currentTarget.classList.add('active');
+            if(!fCanvas) return;
             if(mode === 'draw') { fCanvas.isDrawingMode = true; fCanvas.freeDrawingBrush.color = document.getElementById('shapeBgColor').value; fCanvas.freeDrawingBrush.width = 4; } 
             else { fCanvas.isDrawingMode = false; }
         }
         function addShape(type) {
+            if(!fCanvas) return;
             let bgColor = document.getElementById('shapeBgColor').value; let strokeColor = document.getElementById('textColor').value; let shape;
             if(type === 'rect') shape = new fabric.Rect({ left: 100, top: 100, fill: bgColor, stroke: strokeColor, strokeWidth: 2, width: 100, height: 80, rx: 5, ry: 5 });
             else if(type === 'circle') shape = new fabric.Circle({ left: 150, top: 100, fill: bgColor, stroke: strokeColor, strokeWidth: 2, radius: 40 });
             fCanvas.add(shape); fCanvas.setActiveObject(shape); fCanvas.isDrawingMode = false; saveDrawingToLocal();
         }
         function addStickyNote() {
+            if(!fCanvas) return;
             let bgColor = document.getElementById('shapeBgColor').value; let txColor = document.getElementById('textColor').value;
             let text = new fabric.Textbox('Gõ nội dung...', { left: 100, top: 100, width: 200, fontSize: 16, fontFamily: 'Nunito', fill: txColor, backgroundColor: bgColor, padding: 12, borderColor: '#3b82f6', cornerColor: '#3b82f6' });
             fCanvas.add(text); fCanvas.setActiveObject(text); fCanvas.isDrawingMode = false; saveDrawingToLocal();
         }
         function addPureText() {
+            if(!fCanvas) return;
             let txColor = document.getElementById('textColor').value;
             let text = new fabric.IText('Chữ không nền', { left: 150, top: 150, fontFamily: 'Nunito', fill: txColor, fontSize: 20 });
             fCanvas.add(text); fCanvas.setActiveObject(text); fCanvas.isDrawingMode = false; saveDrawingToLocal();
         }
         function applyWbColor(type, hex) {
+            if(!fCanvas) return;
             if(fCanvas.isDrawingMode && type === 'bg') fCanvas.freeDrawingBrush.color = hex;
             const activeObj = fCanvas.getActiveObject(); if(!activeObj) return;
             if(type === 'bg') { if(activeObj.type === 'textbox') activeObj.set('backgroundColor', hex); else if (activeObj.type === 'path') activeObj.set('stroke', hex); else activeObj.set('fill', hex); } 
             else if (type === 'text') { if(activeObj.type === 'textbox' || activeObj.type === 'i-text') activeObj.set('fill', hex); else activeObj.set('stroke', hex); }
             fCanvas.renderAll(); saveDrawingToLocal();
         }
-        function deleteSelected() { const activeObjs = fCanvas.getActiveObjects(); if (activeObjs.length) { fCanvas.discardActiveObject(); activeObjs.forEach(function(object) { fCanvas.remove(object); }); saveDrawingToLocal(); } }
-        function newDrawing() { if(confirm("Xóa SẠCH toàn bộ bảng vẽ này?")) { fCanvas.clear(); localforage.removeItem('kv_global_whiteboard'); } }
+        function deleteSelected() { 
+            if(!fCanvas) return;
+            const activeObjs = fCanvas.getActiveObjects(); 
+            if (activeObjs.length) { 
+                fCanvas.discardActiveObject(); 
+                activeObjs.forEach(object => fCanvas.remove(object)); 
+                saveDrawingToLocal(); 
+            } 
+        }
+        function newDrawing() { 
+            if(!fCanvas) return;
+            if(confirm("Xóa SẠCH toàn bộ bảng vẽ này?")) { 
+                fCanvas.clear(); 
+                localforage.removeItem('kv_global_whiteboard'); 
+            } 
+        }
         function toggleFullscreen() {
-            const widget = document.getElementById('notesWidget'); widget.classList.toggle('fullscreen-widget');
+            const widget = document.getElementById('notesWidget'); 
+            widget.classList.toggle('fullscreen-widget');
             setTimeout(() => { if(fCanvas) { const wrapper = document.getElementById('drawArea'); fCanvas.setWidth(wrapper.clientWidth); fCanvas.setHeight(wrapper.clientHeight); fCanvas.renderAll(); } }, 350); 
         }
         function toggleNotes() { 
-            const widget = document.getElementById('notesWidget'); widget.classList.toggle('active');
-            if(widget.classList.contains('active')) { document.getElementById('stickyNoteText').value = localStorage.getItem('kv_global_notepad') || ''; setTimeout(initFabric, 300); }
+            const widget = document.getElementById('notesWidget'); 
+            widget.classList.toggle('active');
+            if(widget.classList.contains('active')) { 
+                document.getElementById('stickyNoteText').value = localStorage.getItem('kv_global_notepad') || ''; 
+                setTimeout(initFabric, 300); 
+            }
         }
 
         window.onload = () => { 
             try {
                 const prof = JSON.parse(localStorage.getItem('kv_trainer_profile'));
                 if(prof) {
-                    const elName = document.getElementById('display-prof-name');
-                    const elTitle = document.getElementById('display-prof-title');
-                    const elAva = document.getElementById('display-prof-ava');
-                    if(elName) elName.innerText = prof.name;
-                    if(elTitle) elTitle.innerText = prof.title;
-                    if(elAva) elAva.innerText = prof.name.charAt(0).toUpperCase();
+                    document.getElementById('display-prof-name').innerText = prof.name || "L&D KiotViet";
+                    document.getElementById('display-prof-title').innerText = prof.title || "Administrator";
+                    document.getElementById('display-prof-ava').innerText = (prof.name || "A").charAt(0).toUpperCase();
                 }
-            } catch(e) { console.warn("Chưa load được Profile User."); }
+            } catch(e) {}
             renderUI(); 
         };
     </script>
