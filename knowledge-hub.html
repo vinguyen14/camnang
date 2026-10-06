@@ -92,14 +92,15 @@
 
     <!-- ==================== SIDEBAR ==================== -->
     <aside class="w-80 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-30 border-r border-slate-800 select-none">
+        <!-- Header với Nút Trở Về Dashboard Siêu Tiện Lợi -->
         <div class="h-16 flex items-center justify-between px-5 bg-slate-950 border-b border-slate-800">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-lg bg-kiot-blue flex items-center justify-center text-white font-bold text-lg shadow-md">
-                    <i class="fa-solid fa-chart-line"></i>
-                </div>
+                <a href="index.html" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition" title="Trở về Bảng điều khiển">
+                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                </a>
                 <div>
-                    <h1 class="font-bold text-white text-sm tracking-wide">TRAINER OS</h1>
-                    <p class="text-[11px] text-slate-400 font-medium">Executive Control Hub</p>
+                    <h1 class="font-bold text-white text-sm tracking-wide">MASTER HUB</h1>
+                    <p class="text-[11px] text-slate-400 font-medium">Executive Control</p>
                 </div>
             </div>
             <button onclick="openConfigModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-all" title="Cấu hình Google Sheets API">
@@ -167,7 +168,7 @@
                 </div>
                 <div>
                     <div class="flex items-center gap-2 text-xs text-slate-400">
-                        <span>Trainer OS</span>
+                        <a href="index.html" class="hover:text-blue-600 transition">Trainer OS</a>
                         <i class="fa-solid fa-chevron-right text-[10px]"></i>
                         <span id="breadcrumb-category" class="font-medium text-slate-600">Tổng Quan Điều Hành</span>
                     </div>
@@ -311,7 +312,7 @@
                 </div>
                 <div class="p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-800 space-y-1">
                     <div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> Tự động nhận diện Đa Sheet & Quét Lỗ Hổng:</div>
-                    <p class="text-[11px] leading-relaxed">Hệ thống sẽ tự động lọc bỏ các dòng tiêu đề rác và vẽ bảng ma trận điều hành cho Tình Huống, Bài Tập và Đề Thi.</p>
+                    <p class="text-[11px] leading-relaxed">Hệ thống tự động đồng bộ CSDL tập trung và vẽ ma trận điều hành cho Tình Huống, Bài Tập và Đề Thi.</p>
                 </div>
             </div>
             <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
@@ -338,6 +339,11 @@
         </div>
     </div>
 
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-2xl font-medium text-sm z-[100000] opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-3">
+        <span id="toast-msg"></span>
+    </div>
+
     <!-- ==================== JAVASCRIPT MASTER ENGINE ==================== -->
     <script>
         // --- 1. GLOBAL STATE ---
@@ -345,16 +351,28 @@
             sheetsData: {},       
             sheetList: [],        
             currentSheet: '',     
-            currentSubFilter: 'all',      // Ngành (Retail, FNB...) hoặc Khóa
-            currentSecondaryFilter: 'all',// Lộ trình (Day 1, Day 2...) hoặc Buổi (1A, 1B...)
+            currentSubFilter: 'all',      
+            currentSecondaryFilter: 'all',
             masterDomainFilter: 'all', 
             viewMode: 'table',    
             isSplitOpen: false,
             activeTabId: 'tab-home',
-            openTabs: [], // [{ id, title, type: 'catalog' | 'document', sheetName, url }]
+            openTabs: [], 
             splitItem: null,
             searchQuery: ''
         };
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            if(!t) return;
+            document.getElementById('toast-msg').innerHTML = `<i class="fas fa-check-circle text-emerald-400 mr-2"></i> ${msg}`;
+            t.classList.replace('opacity-0', 'opacity-100');
+            t.classList.remove('pointer-events-none');
+            setTimeout(() => {
+                t.classList.replace('opacity-100', 'opacity-0');
+                t.classList.add('pointer-events-none');
+            }, 3000);
+        }
 
         // --- 2. GOOGLE SHEETS EMBED CONVERTER ---
         function formatGoogleSheetEmbedUrl(url) {
@@ -377,10 +395,8 @@
             if (!item) return true;
             const values = Object.values(item).map(v => String(v).trim().toLowerCase());
             
-            // Nếu toàn bộ ô rỗng
             if (values.every(v => v === '')) return true;
 
-            // Nếu dòng chứa lại chính các từ khóa tiêu đề (Headers)
             const dayVal = String(item['Day'] || '').trim().toLowerCase();
             const typeVal = String(item['Type'] || '').trim().toLowerCase();
             const titleVal = String(item['Title'] || '').trim().toLowerCase();
@@ -444,7 +460,6 @@
             AppState.sheetsData = data.sheets || {};
             AppState.sheetList = data.sheetList || Object.keys(data.sheets || {});
 
-            // Làm sạch dữ liệu từng sheet (loại bỏ dòng rác)
             Object.keys(AppState.sheetsData).forEach(sName => {
                 if (AppState.sheetsData[sName] && AppState.sheetsData[sName].items) {
                     AppState.sheetsData[sName].items = AppState.sheetsData[sName].items.filter(item => !isGarbageRow(item));
@@ -555,7 +570,6 @@
             const itemsContainer = document.getElementById('items-scroll-container');
             const subFilterBar = document.getElementById('sub-filter-bar');
 
-            // 1. Home Dashboard
             if (tabId === 'tab-home') {
                 docContainer.classList.add('hidden');
                 docContainer.innerHTML = '';
@@ -568,7 +582,6 @@
             const currentTab = AppState.openTabs.find(t => t.id === tabId);
             if (!currentTab) return;
 
-            // 2. Tab Danh Mục (Catalog Tab)
             if (currentTab.type === 'catalog') {
                 AppState.currentSheet = currentTab.sheetName;
                 docContainer.classList.add('hidden');
@@ -587,7 +600,6 @@
                 return;
             }
 
-            // 3. Tab Xem File Nhúng (100% Full Height)
             if (currentTab.type === 'document') {
                 itemsContainer.classList.add('hidden');
                 subFilterBar.classList.add('hidden');
@@ -693,7 +705,7 @@
                 totalAssets += cleanItems.length;
 
                 const isELearning = sName.toLowerCase().includes('elearning') || sName.toLowerCase().includes('masterdata');
-                const isMcq = sName.toLowerCase().includes('mcq') || sheet.headers.some(h => h.toLowerCase().includes('mã bộ đề'));
+                const isMcq = sName.toLowerCase().includes('mcq') || (sheet.headers && sheet.headers.some(h => h.toLowerCase().includes('mã bộ đề')));
 
                 cleanItems.forEach(item => {
                     const course = (item['Khóa học'] || item['Khóa'] || item['NganhHang'] || 'Khác').trim();
@@ -1055,7 +1067,7 @@
             }
         }
 
-        // --- 8. SUB-FILTER LOGIC (BỘ LỌC 2 TẦNG CHUẨN) ---
+        // --- 8. SUB-FILTER LOGIC ---
         function renderDynamicSubFilters(sheetName) {
             const bar = document.getElementById('sub-filter-bar');
             bar.classList.remove('hidden');
@@ -1065,16 +1077,13 @@
                 return;
             }
 
-            // Lọc bỏ rác trước khi tính toán
             const cleanItems = sheetMeta.items.filter(item => !isGarbageRow(item));
-
             const isCaseSheet = sheetName.toLowerCase().includes('tình huống') || sheetName.toLowerCase().includes('tái ký');
             const isExerciseSheet = sheetName.toLowerCase().includes('exercise') || sheetName.toLowerCase().includes('bài tập');
             const isMcqSheet = sheetName.toLowerCase().includes('mcq');
 
             let html = '';
 
-            // 1. NẾU LÀ TAB TÌNH HUỐNG TÁI KÝ: Lọc Ngành (Retail/FNB) + Lọc Lộ Trình (Day 1/2/3)
             if (isCaseSheet) {
                 const roadmaps = [...new Set(cleanItems.map(i => (i['Roadmap'] || 'Chung').trim()))].filter(Boolean);
                 const days = [...new Set(cleanItems.map(i => (i['Day'] || '').trim()))].filter(Boolean);
@@ -1100,7 +1109,6 @@
                 return;
             }
 
-            // 2. NẾU LÀ TAB MASTEREXERCISES: Lọc Ngành (Retail/FNB) + Lọc Buổi học
             if (isExerciseSheet) {
                 const branches = [...new Set(cleanItems.map(i => (i['NganhHang'] || 'Chung').trim()))].filter(Boolean);
                 const sessions = [...new Set(cleanItems.map(i => (i['TenBuoi'] || i['MaBuoi'] || '').trim()))].filter(Boolean);
@@ -1126,32 +1134,6 @@
                 return;
             }
 
-            // 3. NẾU LÀ TAB MCQ MASTER
-            if (isMcqSheet) {
-                const groupCol = detectGroupingColumn(sheetMeta.headers);
-                const courseCounts = {};
-                let totalCount = 0;
-
-                cleanItems.forEach(item => {
-                    totalCount++;
-                    const val = (item[groupCol] || 'Chung').trim();
-                    courseCounts[val] = (courseCounts[val] || 0) + 1;
-                });
-
-                html += `<span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">Khóa:</span>`;
-                html += `<button onclick="applySubFilter('all')" class="px-3 py-1 rounded-full text-xs font-medium ${AppState.currentSubFilter === 'all' ? 'bg-kiot-blue text-white shadow-sm font-semibold' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">Tất cả (${totalCount})</button>`;
-
-                Object.keys(courseCounts).forEach(val => {
-                    const count = courseCounts[val];
-                    const isActive = (AppState.currentSubFilter === val);
-                    html += `<button onclick="applySubFilter('${escapeHtml(val)}')" class="px-3 py-1 rounded-full text-xs font-medium ${isActive ? 'bg-kiot-blue text-white shadow-sm font-semibold' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">${escapeHtml(val)} (${count})</button>`;
-                });
-
-                bar.innerHTML = html;
-                return;
-            }
-
-            // 4. MẶC ĐỊNH CHO MASTERDATA E-LEARNING
             const groupCol = detectGroupingColumn(sheetMeta.headers);
             const courseCounts = {};
             let totalCount = 0;
@@ -1200,7 +1182,6 @@
             const sheetMeta = AppState.sheetsData[AppState.currentSheet];
             if (!sheetMeta || !sheetMeta.items) return [];
 
-            // Loại bỏ dòng rác
             let data = sheetMeta.items.filter(item => !isGarbageRow(item));
 
             const isCaseSheet = AppState.currentSheet.toLowerCase().includes('tình huống') || AppState.currentSheet.toLowerCase().includes('tái ký');
@@ -1235,12 +1216,14 @@
             return data;
         }
 
-        // --- 10. SMART DISPATCH RENDERER ---
+        // --- 10. DISPATCH RENDERER ---
         function renderItems() {
             document.getElementById('master-dashboard-view').classList.add('hidden');
             document.getElementById('sheet-content-view').classList.remove('hidden');
 
             const data = getFilteredItems();
+            window.currentFilteredData = data;
+
             const gridContainer = document.getElementById('items-grid');
             const tableContainer = document.getElementById('items-table-container');
             const emptyState = document.getElementById('empty-state');
@@ -1259,7 +1242,6 @@
             const isCaseSheet = AppState.currentSheet.toLowerCase().includes('tình huống') || AppState.currentSheet.toLowerCase().includes('tái ký');
             const isExerciseSheet = AppState.currentSheet.toLowerCase().includes('exercise') || AppState.currentSheet.toLowerCase().includes('bài tập');
 
-            // 1. TÌNH HUỐNG TÁI KÝ
             if (isCaseSheet) {
                 if (AppState.viewMode === 'table') {
                     gridContainer.classList.add('hidden');
@@ -1273,7 +1255,6 @@
                 return;
             }
 
-            // 2. BÀI TẬP THỰC HÀNH (MASTEREXERCISES)
             if (isExerciseSheet) {
                 if (AppState.viewMode === 'table') {
                     gridContainer.classList.add('hidden');
@@ -1287,7 +1268,6 @@
                 return;
             }
 
-            // 3. MCQ MASTER
             if (isMcqSheet) {
                 if (AppState.viewMode === 'table') {
                     gridContainer.classList.add('hidden');
@@ -1301,7 +1281,6 @@
                 return;
             }
 
-            // 4. MASTERDATA E-LEARNING & KHÁC
             if (AppState.viewMode === 'grid') {
                 gridContainer.classList.remove('hidden');
                 tableContainer.classList.add('hidden');
@@ -1313,7 +1292,7 @@
             }
         }
 
-        // ==================== BẢNG MA TRẬN TÌNH HUỐNG TÁI KÝ ====================
+        // --- 11. BẢNG TÌNH HUỐNG TÁI KÝ ---
         function renderCaseAdminTable(data) {
             const thead = document.getElementById('table-head');
             const tbody = document.getElementById('table-body');
@@ -1335,7 +1314,6 @@
                 const type = (row['Type'] || 'morning').trim() === 'morning' ? 'Sáng' : 'Chiều';
                 const title = row['Title'] || `Tình huống #${idx + 1}`;
                 const question = row['Question'] || '';
-                const answer = row['Answer'] || '';
 
                 return `
                 <tr class="hover:bg-blue-50/40 transition-colors">
@@ -1416,7 +1394,7 @@
             container.innerHTML = html;
         }
 
-        // ==================== BẢNG MA TRẬN BÀI TẬP THỰC HÀNH ====================
+        // --- 12. BẢNG BÀI TẬP THỰC HÀNH ---
         function renderExerciseAdminTable(data) {
             const thead = document.getElementById('table-head');
             const tbody = document.getElementById('table-body');
@@ -1515,7 +1493,140 @@
             container.innerHTML = html;
         }
 
-        // ==================== MODAL BÓC TÁCH 4 HỘP MÀU TÌNH HUỐNG ====================
+        // --- 13. BẢNG MCQ MASTER & TIÊU CHUẨN ---
+        function renderMcqAdminTable(data, headers) {
+            const thead = document.getElementById('table-head');
+            const tbody = document.getElementById('table-body');
+
+            thead.innerHTML = `
+                <tr class="bg-slate-900 text-white text-[11px] uppercase tracking-wider">
+                    <th class="px-4 py-3 text-center w-12">STT</th>
+                    <th class="px-4 py-3">Mã Bộ Đề / Tên File Ngân Hàng Câu Hỏi</th>
+                    <th class="px-4 py-3 text-center">Khóa Học</th>
+                    <th class="px-4 py-3 text-center">Liên Kết Sheet</th>
+                    <th class="px-4 py-3 text-right">Thao Tác</th>
+                </tr>
+            `;
+
+            tbody.innerHTML = data.map((row, idx) => {
+                const title = row['Mã bộ đề / Tên file ngân hàng câu hỏi'] || row['Tên bộ đề'] || row[headers[0]] || `Đề #${idx + 1}`;
+                const course = row['Khóa học'] || row['Khóa'] || '-';
+                let linkVal = '';
+                for (let k of Object.keys(row)) {
+                    if (String(row[k]).trim().startsWith('http')) { linkVal = String(row[k]).trim(); break; }
+                }
+
+                return `
+                <tr class="hover:bg-purple-50/40 transition-colors">
+                    <td class="px-4 py-3 text-center font-mono text-slate-400 text-xs font-semibold">${idx + 1}</td>
+                    <td class="px-4 py-3 font-bold text-slate-900 text-xs">${escapeHtml(title)}</td>
+                    <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700">${escapeHtml(course)}</span></td>
+                    <td class="px-4 py-3 text-center">
+                        ${linkVal ? `
+                        <button onclick="openInSplitMode('${escapeHtml(formatGoogleSheetEmbedUrl(linkVal))}', '${escapeHtml(title)}')" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded text-xs font-bold transition-all">
+                            <i class="fa-solid fa-table mr-1"></i> Xem Sheet
+                        </button>` : `<span class="text-xs text-red-500 font-semibold italic">Chưa gán link</span>`}
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        ${linkVal ? `
+                        <a href="${escapeHtml(linkVal)}" target="_blank" class="px-2 py-1 text-slate-500 hover:text-blue-600 font-bold text-xs">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở ngoài
+                        </a>` : ''}
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderMcqAdminCards(data, headers, container) {
+            let html = '';
+            data.forEach((row, idx) => {
+                const title = row['Mã bộ đề / Tên file ngân hàng câu hỏi'] || row['Tên bộ đề'] || `Đề #${idx + 1}`;
+                const course = row['Khóa học'] || row['Khóa'] || '-';
+                let linkVal = '';
+                for (let k of Object.keys(row)) {
+                    if (String(row[k]).trim().startsWith('http')) { linkVal = String(row[k]).trim(); break; }
+                }
+
+                html += `
+                <div class="saas-card p-5 flex flex-col justify-between group hover:border-purple-400">
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">${escapeHtml(course)}</span>
+                            <span class="text-xs font-mono text-slate-400">#${idx+1}</span>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-800 line-clamp-2 mb-4">${escapeHtml(title)}</h4>
+                    </div>
+                    <div>
+                        ${linkVal ? `
+                        <button onclick="openInSplitMode('${escapeHtml(formatGoogleSheetEmbedUrl(linkVal))}', '${escapeHtml(title)}')" class="btn-primary w-full text-xs py-1.5">
+                            <i class="fa-solid fa-table"></i> Xem Bảng Tính
+                        </button>` : `
+                        <span class="block text-center text-xs text-red-500 font-semibold italic bg-red-50 py-1.5 rounded">Chưa gán liên kết</span>`}
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderStandardTable(data, headers) {
+            const thead = document.getElementById('table-head');
+            const tbody = document.getElementById('table-body');
+
+            thead.innerHTML = `
+                <tr class="bg-slate-900 text-white text-[11px] uppercase tracking-wider">
+                    <th class="px-4 py-3 text-center w-12">STT</th>
+                    ${headers.slice(0, 5).map(h => `<th class="px-4 py-3">${escapeHtml(h)}</th>`).join('')}
+                    <th class="px-4 py-3 text-right">Thao Tác</th>
+                </tr>
+            `;
+
+            tbody.innerHTML = data.map((row, idx) => {
+                let firstLink = '';
+                for (let k of Object.keys(row)) {
+                    if (String(row[k]).trim().startsWith('http')) { firstLink = String(row[k]).trim(); break; }
+                }
+
+                return `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-4 py-3 text-center font-mono text-slate-400 text-xs">${idx + 1}</td>
+                    ${headers.slice(0, 5).map(h => `<td class="px-4 py-3 text-xs max-w-xs truncate">${escapeHtml(String(row[h] || ''))}</td>`).join('')}
+                    <td class="px-4 py-3 text-right whitespace-nowrap">
+                        ${firstLink ? `
+                        <button onclick="openResource('${escapeHtml(firstLink)}', '${escapeHtml(row[headers[0]] || 'Tài liệu')}')" class="px-2.5 py-1 bg-kiot-blue hover:bg-kiot-navy text-white text-xs font-bold rounded">
+                            Xem Ngay
+                        </button>` : `<span class="text-slate-300 text-xs italic">-</span>`}
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderStandardGrid(data, headers, container) {
+            let html = '';
+            data.forEach((row, idx) => {
+                let firstLink = '';
+                for (let k of Object.keys(row)) {
+                    if (String(row[k]).trim().startsWith('http')) { firstLink = String(row[k]).trim(); break; }
+                }
+
+                html += `
+                <div class="saas-card p-5 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-mono text-slate-400 mb-2 block">#${idx + 1}</span>
+                        <h4 class="text-xs font-bold text-slate-800 line-clamp-2 mb-2">${escapeHtml(String(row[headers[0]] || 'Tài liệu'))}</h4>
+                        <p class="text-[11px] text-slate-500 line-clamp-3 mb-4">${escapeHtml(String(row[headers[1]] || ''))}</p>
+                    </div>
+                    <div>
+                        ${firstLink ? `
+                        <button onclick="openResource('${escapeHtml(firstLink)}', '${escapeHtml(row[headers[0]] || 'Tài liệu')}')" class="btn-primary w-full text-xs py-1.5">
+                            Mở Tài Liệu
+                        </button>` : ''}
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // --- 14. MODAL BÓC TÁCH TÌNH HUỐNG ---
         function openCaseModal(idx) {
             const item = window.currentFilteredData[idx];
             if (!item) return;
@@ -1532,7 +1643,6 @@
             const rich = document.getElementById('modal-rich-details');
             rich.innerHTML = `
                 <div class="space-y-4">
-                    <!-- Câu hỏi của khách -->
                     <div class="p-4 bg-red-50 rounded-xl border border-red-200">
                         <h4 class="text-xs font-bold text-red-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                             <i class="fa-solid fa-circle-question text-red-600 text-sm"></i> Lời Từ Chối / Câu Hỏi Của Khách Hàng:
@@ -1540,7 +1650,6 @@
                         <p class="text-sm font-semibold text-slate-900 leading-relaxed italic">"${escapeHtml(question)}"</p>
                     </div>
 
-                    <!-- Kịch bản 4 bước bóc tách -->
                     <div class="p-5 bg-white rounded-xl border border-slate-200 space-y-3">
                         <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                             <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
@@ -1557,7 +1666,6 @@
             modal.classList.remove('hidden');
         }
 
-        // Bóc tách tự động 4 phần của Answer
         function formatCaseAnswerHtml(answer) {
             if (!answer) return '';
             const ntMatch = answer.match(/-\s*Nhận diện nút thắt:?\s*([\s\S]*?)(?=-\s*Gợi ý giải pháp:?|$)/i);
@@ -1585,7 +1693,7 @@
             copyToClipboardText(text, 'Đã sao chép kịch bản tình huống vào clipboard!');
         }
 
-        // ==================== MODAL BÀI TẬP THỰC HÀNH ====================
+        // --- 15. MODAL BÀI TẬP THỰC HÀNH ---
         function openExerciseModal(idx) {
             const item = window.currentFilteredData[idx];
             if (!item) return;
@@ -1641,7 +1749,7 @@
             document.getElementById('floating-modal').classList.add('hidden');
         }
 
-        // ==================== RESIZABLE SPLIT-SCREEN ====================
+        // --- 16. RESIZABLE SPLIT-SCREEN ---
         function toggleSplitScreen() {
             AppState.isSplitOpen = !AppState.isSplitOpen;
             const pane = document.getElementById('pane-secondary');
@@ -1709,14 +1817,7 @@
             });
         }
 
-        function openVideo(youtubeUrl, title) {
-            let embed = youtubeUrl;
-            if (youtubeUrl.includes('watch?v=')) embed = youtubeUrl.replace('watch?v=', 'embed/');
-            else if (youtubeUrl.includes('youtu.be/')) embed = youtubeUrl.replace('youtu.be/', 'www.youtube.com/embed/');
-            openInSplitMode(embed, 'Video: ' + title);
-        }
-
-        // ==================== SYNC API ====================
+        // --- 17. SYNC API ---
         async function syncGoogleSheetsData() {
             const apiUrl = localStorage.getItem('kv_api_url') || '';
             if (!apiUrl) {
@@ -1745,6 +1846,7 @@
 
                     timeLabel.innerText = 'Đồng bộ: ' + nowStr;
                     ind.className = 'w-2 h-2 rounded-full bg-emerald-500';
+                    showToast('Đồng bộ dữ liệu thành công!');
                 } else {
                     throw new Error(result.message || 'Lỗi đọc bảng tính');
                 }
@@ -1752,7 +1854,7 @@
                 console.error('Sync Error:', err);
                 timeLabel.innerText = 'Lỗi đồng bộ!';
                 ind.className = 'w-2 h-2 rounded-full bg-red-500';
-                alert('Không thể đồng bộ với Google Apps Script:\n' + err.message);
+                showToast('Lỗi kết nối API Google Apps Script');
             } finally {
                 syncIcon.classList.remove('fa-spin');
             }
@@ -1771,7 +1873,7 @@
             syncGoogleSheetsData();
         }
 
-        // ==================== GLOBAL SEARCH (CTRL + K) ====================
+        // --- 18. GLOBAL SEARCH (CTRL + K) ---
         function setupKeyboardShortcuts() {
             window.addEventListener('keydown', (e) => {
                 if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -1866,11 +1968,11 @@
 
         function copyToClipboardText(url, alertMsg) {
             if (!url) {
-                alert('Không có nội dung để sao chép!');
+                showToast('Không có nội dung để sao chép!');
                 return;
             }
             navigator.clipboard.writeText(url).then(() => {
-                alert(alertMsg || 'Đã sao chép vào bộ nhớ tạm!');
+                showToast(alertMsg || 'Đã sao chép vào bộ nhớ tạm!');
             }).catch(err => {
                 prompt('Vui lòng sao chép thủ công:', url);
             });
