@@ -36,12 +36,12 @@
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 0.75rem;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
             transition: all 0.2s ease-in-out;
         }
         .saas-card:hover {
             border-color: #cbd5e1;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.07);
         }
         .btn-primary {
             background-color: #0066cc;
@@ -75,16 +75,38 @@
             border-bottom: 2px solid #0066cc;
             font-weight: 600;
         }
+        /* Grid tự động thích ứng với chiều rộng khung thay vì màn hình */
+        .auto-responsive-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+        /* Thanh kéo chia đôi mượt mà với tay nắm định vị */
         .resizer-divider {
-            width: 6px;
+            width: 8px;
             cursor: col-resize;
             background-color: #e2e8f0;
             transition: background-color 0.15s;
             user-select: none;
             z-index: 25;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .resizer-divider::after {
+            content: '';
+            width: 2px;
+            height: 28px;
+            background-color: #94a3b8;
+            border-radius: 9999px;
+            transition: background-color 0.15s;
         }
         .resizer-divider:hover, .resizer-divider.resizing {
             background-color: #0066cc;
+        }
+        .resizer-divider:hover::after, .resizer-divider.resizing::after {
+            background-color: #ffffff;
         }
     </style>
 </head>
@@ -184,10 +206,10 @@
                 </div>
 
                 <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs" id="view-mode-controls">
-                    <button onclick="switchViewMode('grid')" id="view-mode-grid" class="px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all" title="Chế độ Lưới">
+                    <button onclick="switchViewMode('grid')" id="view-mode-grid" class="px-2.5 py-1 rounded text-slate-600 bg-white shadow-sm font-medium transition-all" title="Chế độ Lưới">
                         <i class="fa-solid fa-grip"></i>
                     </button>
-                    <button onclick="switchViewMode('table')" id="view-mode-table" class="px-2.5 py-1 rounded text-slate-600 bg-white shadow-sm font-medium transition-all" title="Chế độ Bảng">
+                    <button onclick="switchViewMode('table')" id="view-mode-table" class="px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all" title="Chế độ Bảng">
                         <i class="fa-solid fa-table-list"></i>
                     </button>
                     <button onclick="toggleSplitScreen()" id="view-mode-split" class="px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all flex items-center gap-1.5" title="Bật/Tắt Chia Đôi Màn Hình">
@@ -210,7 +232,7 @@
         <div id="workspace-container" class="flex-1 flex overflow-hidden relative">
             
             <!-- PRIMARY PANE -->
-            <div id="pane-primary" class="flex-1 flex flex-col min-w-[320px] h-full overflow-hidden bg-white relative">
+            <div id="pane-primary" class="flex-1 flex flex-col min-w-[300px] h-full overflow-hidden bg-white relative">
                 
                 <!-- Sub-Filter Bar (Always visible in Catalog Views) -->
                 <div id="sub-filter-bar" class="px-6 py-2.5 bg-slate-50/70 border-b border-slate-200 flex items-center gap-2 overflow-x-auto custom-scrollbar flex-shrink-0 hidden"></div>
@@ -223,7 +245,9 @@
 
                     <!-- 2. SHEET CONTENT (Grid or Table) -->
                     <div id="sheet-content-view" class="hidden space-y-4">
-                        <div id="items-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+                        <!-- Auto-Responsive Grid: Thích ứng 1, 2, 3 cột theo độ rộng thực tế -->
+                        <div id="items-grid" class="auto-responsive-grid"></div>
+                        
                         <div id="items-table-container" class="overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
                             <table class="w-full text-left text-xs text-slate-600">
                                 <thead class="bg-slate-100 text-slate-700 uppercase font-semibold border-b border-slate-200" id="table-head"></thead>
@@ -254,7 +278,7 @@
             <div id="split-resizer" class="resizer-divider hidden" title="Kéo chuột sang trái/phải để điều chỉnh tỷ lệ chia đôi"></div>
 
             <!-- RIGHT PANE (SPLIT-SCREEN) -->
-            <div id="pane-secondary" class="w-1/2 flex flex-col min-w-[320px] border-l border-slate-300 bg-slate-900 hidden transition-all duration-75">
+            <div id="pane-secondary" class="w-1/2 flex flex-col min-w-[300px] border-l border-slate-300 bg-slate-900 hidden transition-all duration-75">
                 <div class="h-10 bg-slate-950 border-b border-slate-800 flex items-center justify-between px-4 text-xs text-slate-300 select-none flex-shrink-0">
                     <div class="flex items-center gap-2 truncate">
                         <i id="split-type-icon" class="fa-solid fa-table text-emerald-400"></i>
@@ -277,6 +301,45 @@
 
         </div>
     </main>
+
+    <!-- ==================== INFOGRAPHIC LIGHTBOX ZOOM MODAL ==================== -->
+    <div id="image-lightbox-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[90] hidden flex flex-col justify-between p-4 select-none animate-in fade-in duration-200">
+        <!-- Top Toolbar -->
+        <div class="h-12 flex items-center justify-between px-5 bg-slate-900/90 text-white rounded-xl border border-slate-800 z-10 shadow-lg flex-shrink-0">
+            <div class="flex items-center gap-3 min-w-0 pr-4">
+                <i class="fa-solid fa-diagram-project text-kiot-blue text-sm"></i>
+                <span id="lightbox-title" class="font-bold text-xs truncate">Infographic Sơ Đồ Bài Học</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="zoomLightboxImage(-0.25)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1" title="Thu nhỏ">
+                    <i class="fa-solid fa-magnifying-glass-minus"></i>
+                </button>
+                <span id="lightbox-zoom-val" class="font-mono text-xs px-2 text-slate-300 min-w-[50px] text-center">100%</span>
+                <button onclick="zoomLightboxImage(0.25)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1" title="Phóng to">
+                    <i class="fa-solid fa-magnifying-glass-plus"></i>
+                </button>
+                <button onclick="resetLightboxZoom()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-bold transition" title="Đặt lại 100%">
+                    1:1
+                </button>
+                <span class="text-slate-700">|</span>
+                <a id="lightbox-external-btn" href="#" target="_blank" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5" title="Mở ảnh gốc">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Ảnh gốc
+                </a>
+                <button onclick="closeLightboxModal()" class="w-8 h-8 rounded-lg bg-rose-600/90 hover:bg-rose-600 text-white flex items-center justify-center transition ml-2 shadow-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Canvas Zoom Area -->
+        <div class="flex-1 flex items-center justify-center overflow-auto custom-scrollbar p-4" onclick="closeLightboxModalOnBackdrop(event)">
+            <img id="lightbox-img" src="" alt="Infographic" class="max-h-[82vh] max-w-full object-contain rounded-xl shadow-2xl transition-transform duration-150 cursor-zoom-in" onclick="event.stopPropagation()">
+        </div>
+
+        <div class="text-center text-[11px] text-slate-400 pb-1">
+            Mẹo: Dùng nút phóng to hoặc nhấp chuột để quan sát chi tiết sơ đồ nghiệp vụ.
+        </div>
+    </div>
 
     <!-- ==================== FLOATING DETAILS MODAL ==================== -->
     <div id="floating-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4 sm:p-8">
@@ -354,12 +417,13 @@
             currentSubFilter: 'all',      
             currentSecondaryFilter: 'all',
             masterDomainFilter: 'all', 
-            viewMode: 'grid', // Mặc định ở chế độ lưới trực quan
+            viewMode: 'grid',    
             isSplitOpen: false,
             activeTabId: 'tab-home',
             openTabs: [], 
             splitItem: null,
-            searchQuery: ''
+            searchQuery: '',
+            lightboxZoom: 1.0
         };
 
         function showToast(msg) {
@@ -1366,15 +1430,15 @@
             }
         }
 
-        // --- 11. BẢNG & LƯỚI E-LEARNING CHUYÊN NGHIỆP CÓ INFOGRAPHICS ---
+        // --- 11. BẢNG & LƯỚI E-LEARNING CHUYÊN NGHIỆP VỚI HỆ MÀU PASTEL VÀ LIGHTBOX ---
         function getDomainVisualTheme(domainName) {
             const d = String(domainName || '').toLowerCase();
-            if (d.includes('retail')) return { gradient: 'from-blue-600 via-indigo-600 to-slate-900', icon: 'fa-shop', badge: 'bg-blue-50 text-blue-700 border-blue-200' };
-            if (d.includes('fnb')) return { gradient: 'from-amber-500 via-orange-600 to-slate-900', icon: 'fa-utensils', badge: 'bg-amber-50 text-amber-800 border-amber-200' };
-            if (d.includes('salon')) return { gradient: 'from-rose-500 via-pink-600 to-slate-900', icon: 'fa-scissors', badge: 'bg-rose-50 text-rose-700 border-rose-200' };
-            if (d.includes('hotel')) return { gradient: 'from-emerald-500 via-teal-600 to-slate-900', icon: 'fa-hotel', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
-            if (d.includes('kế toán') || d.includes('ketoan')) return { gradient: 'from-purple-600 via-indigo-700 to-slate-900', icon: 'fa-calculator', badge: 'bg-purple-50 text-purple-700 border-purple-200' };
-            return { gradient: 'from-slate-700 via-slate-800 to-slate-950', icon: 'fa-graduation-cap', badge: 'bg-slate-100 text-slate-700 border-slate-200' };
+            if (d.includes('retail')) return { gradient: 'from-sky-500 via-indigo-500 to-slate-800', icon: 'fa-shop', badge: 'bg-sky-50 text-sky-700 border-sky-200' };
+            if (d.includes('fnb')) return { gradient: 'from-amber-400 via-orange-500 to-slate-800', icon: 'fa-utensils', badge: 'bg-amber-50 text-amber-800 border-amber-200' };
+            if (d.includes('salon')) return { gradient: 'from-rose-400 via-pink-500 to-slate-800', icon: 'fa-scissors', badge: 'bg-rose-50 text-rose-700 border-rose-200' };
+            if (d.includes('hotel')) return { gradient: 'from-emerald-400 via-teal-500 to-slate-800', icon: 'fa-hotel', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+            if (d.includes('kế toán') || d.includes('ketoan')) return { gradient: 'from-violet-400 via-purple-500 to-slate-800', icon: 'fa-calculator', badge: 'bg-purple-50 text-purple-700 border-purple-200' };
+            return { gradient: 'from-slate-600 via-slate-700 to-slate-900', icon: 'fa-graduation-cap', badge: 'bg-slate-100 text-slate-700 border-slate-200' };
         }
 
         function renderElearningCards(data, headers, container) {
@@ -1397,40 +1461,59 @@
                 const hasQuiz = !!quizUrl && quizUrl.startsWith('http');
                 const hasDoc = !!docUrl && docUrl.startsWith('http');
 
-                // Xây dựng Infographic Banner
+                // Ảnh để xem Lightbox Phóng to
+                let fullImgUrl = customImg && customImg.startsWith('http') ? customImg : (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '');
+
+                // Xây dựng Infographic Banner với hiệu ứng Pastel & nút bấm phóng to
                 let bannerHtml = '';
                 if (customImg && customImg.startsWith('http')) {
                     bannerHtml = `
-                        <div class="relative h-44 overflow-hidden rounded-t-xl bg-slate-900">
-                            <img src="${escapeHtml(customImg)}" alt="${escapeHtml(title)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.parentElement.innerHTML=getFallbackInfographicHtml('${escapeHtml(course)}', '${escapeHtml(title)}', '${theme.icon}', '${theme.gradient}')">
-                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/30"></div>
-                            ${hasVideo ? `<button onclick="event.stopPropagation(); openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="absolute inset-0 flex items-center justify-center group-hover:scale-110 transition-transform"><span class="w-12 h-12 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg backdrop-blur-sm hover:bg-red-600"><i class="fa-solid fa-play text-sm ml-0.5"></i></span></button>` : ''}
+                        <div class="relative h-44 overflow-hidden rounded-t-xl bg-slate-900 group/banner cursor-pointer" onclick="openLightboxModal('${escapeHtml(customImg)}', '${escapeHtml(title)}')">
+                            <img src="${escapeHtml(customImg)}" alt="${escapeHtml(title)}" class="w-full h-full object-cover group-hover/banner:scale-105 transition-transform duration-500" onerror="this.parentElement.innerHTML=getFallbackInfographicHtml('${escapeHtml(course)}', '${escapeHtml(title)}', '${theme.icon}', '${theme.gradient}')">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-black/20"></div>
+                            
+                            <!-- Nút Phóng to Infographic góc phải -->
+                            <div class="absolute top-2.5 right-2.5 px-2 py-1 rounded-md bg-slate-900/60 hover:bg-slate-900 text-white backdrop-blur-sm text-[10px] font-semibold flex items-center gap-1 transition shadow-sm" title="Bấm để phóng to Infographic">
+                                <i class="fa-solid fa-up-right-and-down-left-from-center text-[9px]"></i> Phóng to
+                            </div>
+
+                            ${hasVideo ? `
+                            <button onclick="event.stopPropagation(); openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="absolute inset-0 flex items-center justify-center group/btn" title="Bấm để phát video">
+                                <span class="w-12 h-12 rounded-full bg-rose-500/90 text-white flex items-center justify-center shadow-lg backdrop-blur-sm group-hover/btn:scale-110 group-hover/btn:bg-rose-600 transition-all">
+                                    <i class="fa-solid fa-play text-sm ml-0.5"></i>
+                                </span>
+                            </button>` : ''}
                         </div>
                     `;
                 } else if (ytId) {
                     bannerHtml = `
-                        <div class="relative h-44 overflow-hidden rounded-t-xl bg-slate-900 group/thumb">
-                            <img src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" alt="${escapeHtml(title)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/30"></div>
-                            <button onclick="event.stopPropagation(); openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="absolute inset-0 flex items-center justify-center transition-all group-hover/thumb:scale-110">
-                                <span class="w-12 h-12 rounded-full bg-red-600/90 hover:bg-red-600 text-white flex items-center justify-center shadow-xl backdrop-blur-sm transition-colors">
+                        <div class="relative h-44 overflow-hidden rounded-t-xl bg-slate-900 group/banner cursor-pointer" onclick="openLightboxModal('https://img.youtube.com/vi/${ytId}/hqdefault.jpg', '${escapeHtml(title)}')">
+                            <img src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" alt="${escapeHtml(title)}" class="w-full h-full object-cover group-hover/banner:scale-105 transition-transform duration-500">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-black/20"></div>
+                            
+                            <!-- Nút Phóng to góc phải -->
+                            <div class="absolute top-2.5 right-2.5 px-2 py-1 rounded-md bg-slate-900/60 hover:bg-slate-900 text-white backdrop-blur-sm text-[10px] font-semibold flex items-center gap-1 transition shadow-sm" title="Bấm để xem ảnh chi tiết">
+                                <i class="fa-solid fa-up-right-and-down-left-from-center text-[9px]"></i> Phóng to
+                            </div>
+
+                            <button onclick="event.stopPropagation(); openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="absolute inset-0 flex items-center justify-center group/btn" title="Bấm để phát video">
+                                <span class="w-12 h-12 rounded-full bg-rose-500/90 text-white flex items-center justify-center shadow-lg backdrop-blur-sm group-hover/btn:scale-110 group-hover/btn:bg-rose-600 transition-all">
                                     <i class="fa-solid fa-play text-sm ml-0.5"></i>
                                 </span>
                             </button>
-                            <span class="absolute bottom-2.5 right-2.5 px-2 py-0.5 bg-slate-950/80 text-white text-[10px] font-mono rounded font-semibold backdrop-blur-sm">
-                                <i class="fa-brands fa-youtube text-red-500 mr-1"></i>HD Video
+                            <span class="absolute bottom-2.5 right-2.5 px-2 py-0.5 bg-slate-950/70 text-white text-[10px] font-mono rounded font-medium backdrop-blur-sm">
+                                <i class="fa-brands fa-youtube text-rose-400 mr-1"></i>HD Video
                             </span>
                         </div>
                     `;
                 } else {
-                    // Modern Vector Infographic Fallback Card
                     bannerHtml = `
                         <div class="relative h-44 overflow-hidden rounded-t-xl bg-gradient-to-br ${theme.gradient} p-4 flex flex-col justify-between text-white">
                             <div class="absolute right-[-15px] bottom-[-20px] text-white/10 text-8xl pointer-events-none select-none">
                                 <i class="fa-solid ${theme.icon}"></i>
                             </div>
                             <div class="flex items-center justify-between z-10">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-white/20 backdrop-blur-md uppercase tracking-wider">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white/20 backdrop-blur-md uppercase tracking-wider">
                                     ${escapeHtml(course)}
                                 </span>
                                 <span class="text-[10px] font-mono opacity-60">#${idx + 1}</span>
@@ -1439,14 +1522,14 @@
                                 <div class="w-9 h-9 rounded-lg bg-white/15 backdrop-blur-md flex items-center justify-center text-white mb-2 shadow-inner">
                                     <i class="fa-solid ${theme.icon} text-sm"></i>
                                 </div>
-                                <p class="text-xs font-bold text-white line-clamp-1">${escapeHtml(session || 'Bài giảng lý thuyết')}</p>
+                                <p class="text-xs font-bold text-white line-clamp-1">${escapeHtml(session || 'Bài giảng nghiệp vụ')}</p>
                             </div>
                         </div>
                     `;
                 }
 
                 html += `
-                <div class="saas-card rounded-xl flex flex-col justify-between group hover:border-kiot-blue hover:shadow-xl transition-all duration-300 overflow-hidden bg-white">
+                <div class="saas-card rounded-xl flex flex-col justify-between group hover:border-indigo-300 hover:shadow-lg transition-all duration-300 overflow-hidden bg-white">
                     <!-- 1. VISUAL COVER (INFOGRAPHIC / THUMBNAIL) -->
                     <div>
                         ${bannerHtml}
@@ -1454,7 +1537,7 @@
                         <!-- 2. CONTENT DETAILS -->
                         <div class="p-5">
                             <div class="flex items-center gap-2 mb-2 flex-wrap">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${theme.badge}">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${theme.badge}">
                                     ${escapeHtml(course)}
                                 </span>
                                 ${session ? `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">${escapeHtml(session)}</span>` : ''}
@@ -1468,40 +1551,40 @@
                                 ${escapeHtml(desc)}
                             </p>
 
-                            <!-- Mini State Pills -->
+                            <!-- Mini State Pills (Màu Pastel Dịu Mắt) -->
                             <div class="flex items-center gap-2 pt-2 border-t border-slate-100 text-[10px] font-bold">
-                                <span class="inline-flex items-center gap-1 ${hasVideo ? 'text-emerald-700 bg-emerald-50' : 'text-slate-400 bg-slate-50'} px-2 py-0.5 rounded border ${hasVideo ? 'border-emerald-200' : 'border-slate-200'}">
-                                    <i class="fa-brands fa-youtube ${hasVideo ? 'text-red-500' : ''}"></i> ${hasVideo ? 'Có Video' : 'Thiếu Video'}
+                                <span class="inline-flex items-center gap-1 ${hasVideo ? 'text-rose-700 bg-rose-50/80 border-rose-200/70' : 'text-slate-400 bg-slate-50 border-slate-200'} px-2 py-0.5 rounded-md border">
+                                    <i class="fa-brands fa-youtube ${hasVideo ? 'text-rose-500' : ''}"></i> ${hasVideo ? 'Có Video' : 'Thiếu Video'}
                                 </span>
-                                <span class="inline-flex items-center gap-1 ${hasQuiz ? 'text-blue-700 bg-blue-50' : 'text-slate-400 bg-slate-50'} px-2 py-0.5 rounded border ${hasQuiz ? 'border-blue-200' : 'border-slate-200'}">
-                                    <i class="fa-solid fa-circle-question ${hasQuiz ? 'text-blue-600' : ''}"></i> ${hasQuiz ? 'Có Quiz' : 'Thiếu Quiz'}
+                                <span class="inline-flex items-center gap-1 ${hasQuiz ? 'text-indigo-700 bg-indigo-50/80 border-indigo-200/70' : 'text-slate-400 bg-slate-50 border-slate-200'} px-2 py-0.5 rounded-md border">
+                                    <i class="fa-solid fa-circle-question ${hasQuiz ? 'text-indigo-500' : ''}"></i> ${hasQuiz ? 'Có Quiz' : 'Thiếu Quiz'}
                                 </span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 3. ACTION BAR (TRỰC TIẾP TRUY CẬP) -->
-                    <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-1.5 flex-1">
+                    <!-- 3. ACTION BAR (HỆ MÀU PASTEL HIỆN ĐẠI CHỐNG CHÓI) -->
+                    <div class="px-5 py-3 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 flex-1">
                             ${hasVideo ? `
-                            <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="flex-1 py-1.5 px-2 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-sm" title="Xem video bài học">
-                                <i class="fa-brands fa-youtube text-[11px]"></i> Video
+                            <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="flex-1 py-1.5 px-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs" title="Xem video bài học">
+                                <i class="fa-solid fa-play text-[10px]"></i> Video
                             </button>` : `
-                            <button disabled class="flex-1 py-1.5 px-2 bg-slate-200 text-slate-400 rounded text-xs font-medium cursor-not-allowed">
-                                <i class="fa-brands fa-youtube text-[11px]"></i> Video
+                            <button disabled class="flex-1 py-1.5 px-2 bg-slate-100 text-slate-400 rounded-lg text-xs font-medium cursor-not-allowed border border-slate-200/60">
+                                <i class="fa-solid fa-play text-[10px]"></i> Video
                             </button>`}
 
                             ${hasQuiz ? `
-                            <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(quizUrl))}', 'Quiz: ${escapeHtml(title)}')" class="flex-1 py-1.5 px-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-sm" title="Làm bài kiểm tra Quiz">
-                                <i class="fa-solid fa-circle-question text-[11px]"></i> Quiz
+                            <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(quizUrl))}', 'Quiz: ${escapeHtml(title)}')" class="flex-1 py-1.5 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs" title="Làm bài kiểm tra Quiz">
+                                <i class="fa-solid fa-circle-question text-[10px]"></i> Quiz
                             </button>` : `
-                            <button disabled class="flex-1 py-1.5 px-2 bg-slate-200 text-slate-400 rounded text-xs font-medium cursor-not-allowed">
-                                <i class="fa-solid fa-circle-question text-[11px]"></i> Quiz
+                            <button disabled class="flex-1 py-1.5 px-2 bg-slate-100 text-slate-400 rounded-lg text-xs font-medium cursor-not-allowed border border-slate-200/60">
+                                <i class="fa-solid fa-circle-question text-[10px]"></i> Quiz
                             </button>`}
                         </div>
 
                         ${hasDoc ? `
-                        <button onclick="openResource('${escapeHtml(docUrl)}', '${escapeHtml(title)}', '${escapeHtml(AppState.currentSheet)}')" class="p-1.5 bg-white hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-200 rounded text-xs font-bold shadow-sm transition-all" title="Mở tài liệu HDSD đính kèm">
+                        <button onclick="openResource('${escapeHtml(docUrl)}', '${escapeHtml(title)}', '${escapeHtml(AppState.currentSheet)}')" class="p-1.5 bg-slate-50 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg text-xs font-bold transition-all" title="Mở tài liệu HDSD đính kèm">
                             <i class="fa-solid fa-book-open"></i>
                         </button>` : ''}
                     </div>
@@ -1515,7 +1598,7 @@
             return `
                 <div class="relative h-44 overflow-hidden rounded-t-xl bg-gradient-to-br ${gradient} p-4 flex flex-col justify-between text-white">
                     <div class="flex items-center justify-between z-10">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-white/20 backdrop-blur-md uppercase tracking-wider">${escapeHtml(course)}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white/20 backdrop-blur-md uppercase tracking-wider">${escapeHtml(course)}</span>
                     </div>
                     <div class="z-10">
                         <div class="w-9 h-9 rounded-lg bg-white/15 backdrop-blur-md flex items-center justify-center text-white mb-2 shadow-inner">
@@ -1559,17 +1642,17 @@
                 const hasQuiz = !!quizUrl && quizUrl.startsWith('http');
                 const hasDoc = !!docUrl && docUrl.startsWith('http');
 
+                const previewImg = customImg && customImg.startsWith('http') ? customImg : (ytId ? `https://img.youtube.com/vi/${ytId}/default.jpg` : '');
+
                 return `
                 <tr class="hover:bg-blue-50/30 transition-colors">
                     <td class="px-4 py-3 text-center font-mono text-slate-400 text-xs font-semibold">${idx + 1}</td>
                     
                     <td class="px-4 py-3 text-center">
-                        <div class="w-20 h-12 rounded-lg overflow-hidden bg-slate-900 border border-slate-200 relative mx-auto group">
-                            ${customImg && customImg.startsWith('http') ? `
-                                <img src="${escapeHtml(customImg)}" class="w-full h-full object-cover">
-                            ` : ytId ? `
-                                <img src="https://img.youtube.com/vi/${ytId}/default.jpg" class="w-full h-full object-cover">
-                                <div class="absolute inset-0 bg-black/20 flex items-center justify-center text-white text-[10px]"><i class="fa-solid fa-play"></i></div>
+                        <div class="w-20 h-12 rounded-lg overflow-hidden bg-slate-900 border border-slate-200 relative mx-auto group cursor-pointer" onclick="${previewImg ? `openLightboxModal('${escapeHtml(previewImg)}', '${escapeHtml(title)}')` : ''}" title="Nhấp để phóng to">
+                            ${previewImg ? `
+                                <img src="${escapeHtml(previewImg)}" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] transition"><i class="fa-solid fa-magnifying-glass"></i></div>
                             ` : `
                                 <div class="w-full h-full bg-gradient-to-br ${theme.gradient} flex items-center justify-center text-white text-xs">
                                     <i class="fa-solid ${theme.icon}"></i>
@@ -1580,7 +1663,7 @@
 
                     <td class="px-4 py-3 whitespace-nowrap">
                         <div class="flex items-center gap-1.5 mb-1">
-                            <span class="px-2 py-0.5 rounded text-xs font-bold border ${theme.badge}">${escapeHtml(course)}</span>
+                            <span class="px-2 py-0.5 rounded-full text-xs font-bold border ${theme.badge}">${escapeHtml(course)}</span>
                         </div>
                         ${session ? `<span class="text-[11px] font-semibold text-slate-500">${escapeHtml(session)}</span>` : ''}
                     </td>
@@ -1592,10 +1675,10 @@
 
                     <td class="px-4 py-3 text-center whitespace-nowrap">
                         <div class="inline-flex items-center gap-1.5">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${hasVideo ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-slate-100 text-slate-400'}" title="${hasVideo ? ytUrl : 'Chưa có Video'}">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${hasVideo ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-100 text-slate-400'}" title="${hasVideo ? ytUrl : 'Chưa có Video'}">
                                 <i class="fa-brands fa-youtube"></i> Video
                             </span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${hasQuiz ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-slate-100 text-slate-400'}" title="${hasQuiz ? quizUrl : 'Chưa có Quiz'}">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${hasQuiz ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-400'}" title="${hasQuiz ? quizUrl : 'Chưa có Quiz'}">
                                 <i class="fa-solid fa-circle-question"></i> Quiz
                             </span>
                         </div>
@@ -1603,17 +1686,17 @@
 
                     <td class="px-4 py-3 text-right whitespace-nowrap space-x-1.5">
                         ${hasVideo ? `
-                        <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-bold shadow-sm transition-all inline-flex items-center gap-1">
-                            <i class="fa-brands fa-youtube"></i> Video
+                        <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold shadow-xs transition-all inline-flex items-center gap-1">
+                            <i class="fa-solid fa-play text-[10px]"></i> Video
                         </button>` : ''}
 
                         ${hasQuiz ? `
-                        <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(quizUrl))}', 'Quiz: ${escapeHtml(title)}')" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold shadow-sm transition-all inline-flex items-center gap-1">
-                            <i class="fa-solid fa-circle-question"></i> Quiz
+                        <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(quizUrl))}', 'Quiz: ${escapeHtml(title)}')" class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold shadow-xs transition-all inline-flex items-center gap-1">
+                            <i class="fa-solid fa-circle-question text-[10px]"></i> Quiz
                         </button>` : ''}
 
                         ${hasDoc ? `
-                        <button onclick="openResource('${escapeHtml(docUrl)}', '${escapeHtml(title)}', '${escapeHtml(AppState.currentSheet)}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded text-xs font-bold shadow-sm transition-all inline-flex items-center gap-1">
+                        <button onclick="openResource('${escapeHtml(docUrl)}', '${escapeHtml(title)}', '${escapeHtml(AppState.currentSheet)}')" class="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-xs transition-all inline-flex items-center gap-1">
                             <i class="fa-solid fa-book-open"></i> HDSD
                         </button>` : ''}
                     </td>
@@ -1621,7 +1704,52 @@
             }).join('');
         }
 
-        // --- 12. BẢNG TÌNH HUỐNG TÁI KÝ ---
+        // --- 12. INFOGRAPHIC LIGHTBOX ZOOM CONTROLLER ---
+        function openLightboxModal(imgUrl, title) {
+            if (!imgUrl) return;
+            const modal = document.getElementById('image-lightbox-modal');
+            const img = document.getElementById('lightbox-img');
+            const titleEl = document.getElementById('lightbox-title');
+            const extBtn = document.getElementById('lightbox-external-btn');
+
+            titleEl.innerText = title || 'Infographic Sơ Đồ';
+            extBtn.href = imgUrl;
+            img.src = imgUrl;
+
+            AppState.lightboxZoom = 1.0;
+            updateLightboxZoomDisplay();
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeLightboxModal() {
+            document.getElementById('image-lightbox-modal').classList.add('hidden');
+            document.getElementById('lightbox-img').src = '';
+        }
+
+        function closeLightboxModalOnBackdrop(e) {
+            if (e.target.id === 'lightbox-img') return;
+            closeLightboxModal();
+        }
+
+        function zoomLightboxImage(delta) {
+            AppState.lightboxZoom = Math.min(Math.max(AppState.lightboxZoom + delta, 0.5), 3.0);
+            updateLightboxZoomDisplay();
+        }
+
+        function resetLightboxZoom() {
+            AppState.lightboxZoom = 1.0;
+            updateLightboxZoomDisplay();
+        }
+
+        function updateLightboxZoomDisplay() {
+            const img = document.getElementById('lightbox-img');
+            const valEl = document.getElementById('lightbox-zoom-val');
+            img.style.transform = `scale(${AppState.lightboxZoom})`;
+            valEl.innerText = `${Math.round(AppState.lightboxZoom * 100)}%`;
+        }
+
+        // --- 13. BẢNG TÌNH HUỐNG TÁI KÝ ---
         function renderCaseAdminTable(data) {
             const thead = document.getElementById('table-head');
             const tbody = document.getElementById('table-body');
@@ -1723,7 +1851,7 @@
             container.innerHTML = html;
         }
 
-        // --- 13. BẢNG BÀI TẬP THỰC HÀNH ---
+        // --- 14. BẢNG BÀI TẬP THỰC HÀNH ---
         function renderExerciseAdminTable(data) {
             const thead = document.getElementById('table-head');
             const tbody = document.getElementById('table-body');
@@ -1822,7 +1950,7 @@
             container.innerHTML = html;
         }
 
-        // --- 14. BẢNG MCQ MASTER & TIÊU CHUẨN ---
+        // --- 15. BẢNG MCQ MASTER & TIÊU CHUẨN ---
         function renderMcqAdminTable(data, headers) {
             const thead = document.getElementById('table-head');
             const tbody = document.getElementById('table-body');
@@ -1955,7 +2083,7 @@
             container.innerHTML = html;
         }
 
-        // --- 15. MODAL BÓC TÁCH TÌNH HUỐNG ---
+        // --- 16. MODAL BÓC TÁCH TÌNH HUỐNG ---
         function openCaseModal(idx) {
             const item = window.currentFilteredData[idx];
             if (!item) return;
@@ -2022,7 +2150,7 @@
             copyToClipboardText(text, 'Đã sao chép kịch bản tình huống vào clipboard!');
         }
 
-        // --- 16. MODAL BÀI TẬP THỰC HÀNH ---
+        // --- 17. MODAL BÀI TẬP THỰC HÀNH ---
         function openExerciseModal(idx) {
             const item = window.currentFilteredData[idx];
             if (!item) return;
@@ -2078,7 +2206,7 @@
             document.getElementById('floating-modal').classList.add('hidden');
         }
 
-        // --- 17. RESIZABLE SPLIT-SCREEN ---
+        // --- 18. RESIZABLE SPLIT-SCREEN (CHỐNG KẸT CHUỘT TRÊN IFRAME) ---
         function toggleSplitScreen() {
             AppState.isSplitOpen = !AppState.isSplitOpen;
             const pane = document.getElementById('pane-secondary');
@@ -2112,6 +2240,7 @@
             const primary = document.getElementById('pane-primary');
             const secondary = document.getElementById('pane-secondary');
             const container = document.getElementById('workspace-container');
+            const iframe = document.getElementById('split-iframe');
             let isDragging = false;
 
             resizer.addEventListener('mousedown', (e) => {
@@ -2119,6 +2248,8 @@
                 resizer.classList.add('resizing');
                 document.body.style.cursor = 'col-resize';
                 document.body.style.userSelect = 'none';
+                // Chặn bắt sự kiện chuột trên iframe để kéo không bị khựng
+                if (iframe) iframe.style.pointerEvents = 'none';
             });
 
             window.addEventListener('mousemove', (e) => {
@@ -2127,8 +2258,8 @@
                 const offsetX = e.clientX - rect.left;
                 let leftPercent = (offsetX / rect.width) * 100;
 
-                if (leftPercent < 20) leftPercent = 20;
-                if (leftPercent > 80) leftPercent = 80;
+                if (leftPercent < 25) leftPercent = 25;
+                if (leftPercent > 75) leftPercent = 75;
 
                 primary.style.width = `${leftPercent}%`;
                 primary.style.flex = 'none';
@@ -2142,11 +2273,12 @@
                     resizer.classList.remove('resizing');
                     document.body.style.cursor = '';
                     document.body.style.userSelect = '';
+                    if (iframe) iframe.style.pointerEvents = 'auto';
                 }
             });
         }
 
-        // --- 18. SYNC API ---
+        // --- 19. SYNC API ---
         async function syncGoogleSheetsData() {
             const apiUrl = localStorage.getItem('kv_api_url') || '';
             if (!apiUrl) {
@@ -2202,7 +2334,7 @@
             syncGoogleSheetsData();
         }
 
-        // --- 19. GLOBAL SEARCH (CTRL + K) ---
+        // --- 20. GLOBAL SEARCH (CTRL + K) ---
         function setupKeyboardShortcuts() {
             window.addEventListener('keydown', (e) => {
                 if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -2213,6 +2345,7 @@
                     closeGlobalSearch();
                     closeConfigModal();
                     closeFloatingModal();
+                    closeLightboxModal();
                 }
             });
         }
