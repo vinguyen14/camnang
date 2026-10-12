@@ -223,7 +223,7 @@
 
                     <!-- 2. SHEET CONTENT (Grid or Table) -->
                     <div id="sheet-content-view" class="hidden space-y-4">
-                        <div id="items-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                        <div id="items-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
                         <div id="items-table-container" class="overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
                             <table class="w-full text-left text-xs text-slate-600">
                                 <thead class="bg-slate-100 text-slate-700 uppercase font-semibold border-b border-slate-200" id="table-head"></thead>
@@ -354,7 +354,7 @@
             currentSubFilter: 'all',      
             currentSecondaryFilter: 'all',
             masterDomainFilter: 'all', 
-            viewMode: 'table',    
+            viewMode: 'grid', // Mặc định ở chế độ lưới trực quan
             isSplitOpen: false,
             activeTabId: 'tab-home',
             openTabs: [], 
@@ -374,7 +374,7 @@
             }, 3000);
         }
 
-        // --- 2. GOOGLE SHEETS EMBED CONVERTER ---
+        // --- 2. MULTI-FORMAT EMBED CONVERTER ---
         function formatGoogleSheetEmbedUrl(url) {
             if (!url) return '';
             const trimmed = String(url).trim();
@@ -386,6 +386,26 @@
                     const gidParam = gidMatch ? `&gid=${gidMatch[1]}` : '';
                     return `https://docs.google.com/spreadsheets/d/${id}/htmlembed?widget=true${gidParam}`;
                 }
+            }
+            return trimmed;
+        }
+
+        function extractYouTubeId(url) {
+            if (!url) return null;
+            const str = String(url).trim();
+            const match = str.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/i);
+            return match ? match[1] : null;
+        }
+
+        function formatUniversalEmbedUrl(url) {
+            if (!url) return '';
+            const trimmed = String(url).trim();
+            const ytId = extractYouTubeId(trimmed);
+            if (ytId) {
+                return `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`;
+            }
+            if (trimmed.includes('docs.google.com/spreadsheets')) {
+                return formatGoogleSheetEmbedUrl(trimmed);
             }
             return trimmed;
         }
@@ -1080,7 +1100,7 @@
             const cleanItems = sheetMeta.items.filter(item => !isGarbageRow(item));
             const isCaseSheet = sheetName.toLowerCase().includes('tình huống') || sheetName.toLowerCase().includes('tái ký');
             const isExerciseSheet = sheetName.toLowerCase().includes('exercise') || sheetName.toLowerCase().includes('bài tập');
-            const isMcqSheet = sheetName.toLowerCase().includes('mcq');
+            const isELearningSheet = sheetName.toLowerCase().includes('elearning') || sheetName.toLowerCase().includes('masterdata');
 
             let html = '';
 
@@ -1128,6 +1148,33 @@
                     const count = cleanItems.filter(i => (i['NganhHang'] || '').trim() === br).length;
                     const isActive = (AppState.currentSubFilter === br);
                     html += `<button onclick="applySubFilter('${escapeHtml(br)}')" class="px-3 py-1 rounded-full text-xs font-medium ${isActive ? 'bg-kiot-blue text-white shadow-sm font-semibold' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">${escapeHtml(br)} (${count})</button>`;
+                });
+
+                bar.innerHTML = html;
+                return;
+            }
+
+            if (isELearningSheet) {
+                const courses = [...new Set(cleanItems.map(i => (i['Khóa học'] || i['Khóa'] || i['NganhHang'] || 'Chung').trim()))].filter(Boolean);
+                const sessions = [...new Set(cleanItems.map(i => (i['Buổi'] || i['Bài'] || i['MaBuoi'] || '').trim()))].filter(Boolean);
+
+                if (sessions.length > 0) {
+                    html += `<div class="flex items-center gap-1 mr-3 border-r border-slate-300 pr-3 flex-shrink-0">
+                        <span class="text-[11px] font-bold text-slate-500 uppercase"><i class="fa-solid fa-layer-group mr-1"></i>Buổi:</span>
+                        <select onchange="applySecondaryFilter(this.value)" class="text-xs bg-white border border-slate-300 rounded px-2 py-0.5 font-semibold text-slate-700 outline-none max-w-[180px] truncate">
+                            <option value="all">Tất cả buổi học</option>
+                            ${sessions.map(s => `<option value="${s}" ${AppState.currentSecondaryFilter === s ? 'selected' : ''}>${s}</option>`).join('')}
+                        </select>
+                    </div>`;
+                }
+
+                html += `<span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">Khóa học:</span>`;
+                html += `<button onclick="applySubFilter('all')" class="px-3 py-1 rounded-full text-xs font-medium ${AppState.currentSubFilter === 'all' ? 'bg-kiot-blue text-white shadow-sm font-semibold' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">Tất cả (${cleanItems.length})</button>`;
+
+                courses.forEach(c => {
+                    const count = cleanItems.filter(i => (i['Khóa học'] || i['Khóa'] || i['NganhHang'] || '').trim() === c).length;
+                    const isActive = (AppState.currentSubFilter === c);
+                    html += `<button onclick="applySubFilter('${escapeHtml(c)}')" class="px-3 py-1 rounded-full text-xs font-medium ${isActive ? 'bg-kiot-blue text-white shadow-sm font-semibold' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">${escapeHtml(c)} (${count})</button>`;
                 });
 
                 bar.innerHTML = html;
@@ -1186,6 +1233,7 @@
 
             const isCaseSheet = AppState.currentSheet.toLowerCase().includes('tình huống') || AppState.currentSheet.toLowerCase().includes('tái ký');
             const isExerciseSheet = AppState.currentSheet.toLowerCase().includes('exercise') || AppState.currentSheet.toLowerCase().includes('bài tập');
+            const isELearningSheet = AppState.currentSheet.toLowerCase().includes('elearning') || AppState.currentSheet.toLowerCase().includes('masterdata');
 
             if (isCaseSheet) {
                 if (AppState.currentSubFilter !== 'all') {
@@ -1200,6 +1248,13 @@
                 }
                 if (AppState.currentSecondaryFilter !== 'all') {
                     data = data.filter(item => (item['TenBuoi'] || item['MaBuoi'] || '').trim() === AppState.currentSecondaryFilter);
+                }
+            } else if (isELearningSheet) {
+                if (AppState.currentSubFilter !== 'all') {
+                    data = data.filter(item => (item['Khóa học'] || item['Khóa'] || item['NganhHang'] || '').trim() === AppState.currentSubFilter);
+                }
+                if (AppState.currentSecondaryFilter !== 'all') {
+                    data = data.filter(item => (item['Buổi'] || item['Bài'] || item['MaBuoi'] || '').trim() === AppState.currentSecondaryFilter);
                 }
             } else {
                 const groupCol = detectGroupingColumn(sheetMeta.headers);
@@ -1238,10 +1293,26 @@
 
             emptyState.classList.add('hidden');
 
+            const isELearningSheet = AppState.currentSheet.toLowerCase().includes('elearning') || AppState.currentSheet.toLowerCase().includes('masterdata');
             const isMcqSheet = AppState.currentSheet.toLowerCase().includes('mcq');
             const isCaseSheet = AppState.currentSheet.toLowerCase().includes('tình huống') || AppState.currentSheet.toLowerCase().includes('tái ký');
             const isExerciseSheet = AppState.currentSheet.toLowerCase().includes('exercise') || AppState.currentSheet.toLowerCase().includes('bài tập');
 
+            // 1. RENDER CHUYÊN BIỆT CHO MASTER E-LEARNING
+            if (isELearningSheet) {
+                if (AppState.viewMode === 'table') {
+                    gridContainer.classList.add('hidden');
+                    tableContainer.classList.remove('hidden');
+                    renderElearningTable(data, sheetMeta.headers);
+                } else {
+                    gridContainer.classList.remove('hidden');
+                    tableContainer.classList.add('hidden');
+                    renderElearningCards(data, sheetMeta.headers, gridContainer);
+                }
+                return;
+            }
+
+            // 2. RENDER TÌNH HUỐNG
             if (isCaseSheet) {
                 if (AppState.viewMode === 'table') {
                     gridContainer.classList.add('hidden');
@@ -1255,6 +1326,7 @@
                 return;
             }
 
+            // 3. RENDER BÀI TẬP
             if (isExerciseSheet) {
                 if (AppState.viewMode === 'table') {
                     gridContainer.classList.add('hidden');
@@ -1268,6 +1340,7 @@
                 return;
             }
 
+            // 4. RENDER MCQ
             if (isMcqSheet) {
                 if (AppState.viewMode === 'table') {
                     gridContainer.classList.add('hidden');
@@ -1281,6 +1354,7 @@
                 return;
             }
 
+            // 5. RENDER TIÊU CHUẨN MẶC ĐỊNH
             if (AppState.viewMode === 'grid') {
                 gridContainer.classList.remove('hidden');
                 tableContainer.classList.add('hidden');
@@ -1292,7 +1366,262 @@
             }
         }
 
-        // --- 11. BẢNG TÌNH HUỐNG TÁI KÝ ---
+        // --- 11. BẢNG & LƯỚI E-LEARNING CHUYÊN NGHIỆP CÓ INFOGRAPHICS ---
+        function getDomainVisualTheme(domainName) {
+            const d = String(domainName || '').toLowerCase();
+            if (d.includes('retail')) return { gradient: 'from-blue-600 via-indigo-600 to-slate-900', icon: 'fa-shop', badge: 'bg-blue-50 text-blue-700 border-blue-200' };
+            if (d.includes('fnb')) return { gradient: 'from-amber-500 via-orange-600 to-slate-900', icon: 'fa-utensils', badge: 'bg-amber-50 text-amber-800 border-amber-200' };
+            if (d.includes('salon')) return { gradient: 'from-rose-500 via-pink-600 to-slate-900', icon: 'fa-scissors', badge: 'bg-rose-50 text-rose-700 border-rose-200' };
+            if (d.includes('hotel')) return { gradient: 'from-emerald-500 via-teal-600 to-slate-900', icon: 'fa-hotel', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+            if (d.includes('kế toán') || d.includes('ketoan')) return { gradient: 'from-purple-600 via-indigo-700 to-slate-900', icon: 'fa-calculator', badge: 'bg-purple-50 text-purple-700 border-purple-200' };
+            return { gradient: 'from-slate-700 via-slate-800 to-slate-950', icon: 'fa-graduation-cap', badge: 'bg-slate-100 text-slate-700 border-slate-200' };
+        }
+
+        function renderElearningCards(data, headers, container) {
+            let html = '';
+            data.forEach((row, idx) => {
+                const title = row['Nội dung'] || row['Title'] || row['Tên bài'] || `Bài học #${idx + 1}`;
+                const course = (row['Khóa học'] || row['Khóa'] || row['NganhHang'] || 'Chung').trim();
+                const session = (row['Buổi'] || row['Bài'] || row['MaBuoi'] || '').trim();
+                const desc = row['Mô tả'] || row['Description'] || 'Nội dung đào tạo thực chiến chuẩn nghiệp vụ KiotViet.';
+
+                const ytUrl = (row['YouTube'] || '').trim();
+                const quizUrl = (row['Github'] || '').trim();
+                const docUrl = (row['HDSD'] || row['Tài liệu'] || row['Link doc'] || '').trim();
+                const customImg = (row['Hình ảnh'] || row['Infographic'] || row['Thumbnail'] || row['Banner'] || '').trim();
+
+                const ytId = extractYouTubeId(ytUrl);
+                const theme = getDomainVisualTheme(course);
+
+                const hasVideo = !!ytUrl && ytUrl.startsWith('http');
+                const hasQuiz = !!quizUrl && quizUrl.startsWith('http');
+                const hasDoc = !!docUrl && docUrl.startsWith('http');
+
+                // Xây dựng Infographic Banner
+                let bannerHtml = '';
+                if (customImg && customImg.startsWith('http')) {
+                    bannerHtml = `
+                        <div class="relative h-44 overflow-hidden rounded-t-xl bg-slate-900">
+                            <img src="${escapeHtml(customImg)}" alt="${escapeHtml(title)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.parentElement.innerHTML=getFallbackInfographicHtml('${escapeHtml(course)}', '${escapeHtml(title)}', '${theme.icon}', '${theme.gradient}')">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/30"></div>
+                            ${hasVideo ? `<button onclick="event.stopPropagation(); openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="absolute inset-0 flex items-center justify-center group-hover:scale-110 transition-transform"><span class="w-12 h-12 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg backdrop-blur-sm hover:bg-red-600"><i class="fa-solid fa-play text-sm ml-0.5"></i></span></button>` : ''}
+                        </div>
+                    `;
+                } else if (ytId) {
+                    bannerHtml = `
+                        <div class="relative h-44 overflow-hidden rounded-t-xl bg-slate-900 group/thumb">
+                            <img src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" alt="${escapeHtml(title)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/30"></div>
+                            <button onclick="event.stopPropagation(); openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="absolute inset-0 flex items-center justify-center transition-all group-hover/thumb:scale-110">
+                                <span class="w-12 h-12 rounded-full bg-red-600/90 hover:bg-red-600 text-white flex items-center justify-center shadow-xl backdrop-blur-sm transition-colors">
+                                    <i class="fa-solid fa-play text-sm ml-0.5"></i>
+                                </span>
+                            </button>
+                            <span class="absolute bottom-2.5 right-2.5 px-2 py-0.5 bg-slate-950/80 text-white text-[10px] font-mono rounded font-semibold backdrop-blur-sm">
+                                <i class="fa-brands fa-youtube text-red-500 mr-1"></i>HD Video
+                            </span>
+                        </div>
+                    `;
+                } else {
+                    // Modern Vector Infographic Fallback Card
+                    bannerHtml = `
+                        <div class="relative h-44 overflow-hidden rounded-t-xl bg-gradient-to-br ${theme.gradient} p-4 flex flex-col justify-between text-white">
+                            <div class="absolute right-[-15px] bottom-[-20px] text-white/10 text-8xl pointer-events-none select-none">
+                                <i class="fa-solid ${theme.icon}"></i>
+                            </div>
+                            <div class="flex items-center justify-between z-10">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-white/20 backdrop-blur-md uppercase tracking-wider">
+                                    ${escapeHtml(course)}
+                                </span>
+                                <span class="text-[10px] font-mono opacity-60">#${idx + 1}</span>
+                            </div>
+                            <div class="z-10">
+                                <div class="w-9 h-9 rounded-lg bg-white/15 backdrop-blur-md flex items-center justify-center text-white mb-2 shadow-inner">
+                                    <i class="fa-solid ${theme.icon} text-sm"></i>
+                                </div>
+                                <p class="text-xs font-bold text-white line-clamp-1">${escapeHtml(session || 'Bài giảng lý thuyết')}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += `
+                <div class="saas-card rounded-xl flex flex-col justify-between group hover:border-kiot-blue hover:shadow-xl transition-all duration-300 overflow-hidden bg-white">
+                    <!-- 1. VISUAL COVER (INFOGRAPHIC / THUMBNAIL) -->
+                    <div>
+                        ${bannerHtml}
+
+                        <!-- 2. CONTENT DETAILS -->
+                        <div class="p-5">
+                            <div class="flex items-center gap-2 mb-2 flex-wrap">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${theme.badge}">
+                                    ${escapeHtml(course)}
+                                </span>
+                                ${session ? `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">${escapeHtml(session)}</span>` : ''}
+                            </div>
+
+                            <h3 class="text-xs font-bold text-slate-900 leading-snug line-clamp-2 mb-2 group-hover:text-kiot-blue transition-colors" title="${escapeHtml(title)}">
+                                ${escapeHtml(title)}
+                            </h3>
+
+                            <p class="text-[11px] text-slate-500 line-clamp-2 leading-relaxed mb-4">
+                                ${escapeHtml(desc)}
+                            </p>
+
+                            <!-- Mini State Pills -->
+                            <div class="flex items-center gap-2 pt-2 border-t border-slate-100 text-[10px] font-bold">
+                                <span class="inline-flex items-center gap-1 ${hasVideo ? 'text-emerald-700 bg-emerald-50' : 'text-slate-400 bg-slate-50'} px-2 py-0.5 rounded border ${hasVideo ? 'border-emerald-200' : 'border-slate-200'}">
+                                    <i class="fa-brands fa-youtube ${hasVideo ? 'text-red-500' : ''}"></i> ${hasVideo ? 'Có Video' : 'Thiếu Video'}
+                                </span>
+                                <span class="inline-flex items-center gap-1 ${hasQuiz ? 'text-blue-700 bg-blue-50' : 'text-slate-400 bg-slate-50'} px-2 py-0.5 rounded border ${hasQuiz ? 'border-blue-200' : 'border-slate-200'}">
+                                    <i class="fa-solid fa-circle-question ${hasQuiz ? 'text-blue-600' : ''}"></i> ${hasQuiz ? 'Có Quiz' : 'Thiếu Quiz'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. ACTION BAR (TRỰC TIẾP TRUY CẬP) -->
+                    <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5 flex-1">
+                            ${hasVideo ? `
+                            <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="flex-1 py-1.5 px-2 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-sm" title="Xem video bài học">
+                                <i class="fa-brands fa-youtube text-[11px]"></i> Video
+                            </button>` : `
+                            <button disabled class="flex-1 py-1.5 px-2 bg-slate-200 text-slate-400 rounded text-xs font-medium cursor-not-allowed">
+                                <i class="fa-brands fa-youtube text-[11px]"></i> Video
+                            </button>`}
+
+                            ${hasQuiz ? `
+                            <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(quizUrl))}', 'Quiz: ${escapeHtml(title)}')" class="flex-1 py-1.5 px-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-sm" title="Làm bài kiểm tra Quiz">
+                                <i class="fa-solid fa-circle-question text-[11px]"></i> Quiz
+                            </button>` : `
+                            <button disabled class="flex-1 py-1.5 px-2 bg-slate-200 text-slate-400 rounded text-xs font-medium cursor-not-allowed">
+                                <i class="fa-solid fa-circle-question text-[11px]"></i> Quiz
+                            </button>`}
+                        </div>
+
+                        ${hasDoc ? `
+                        <button onclick="openResource('${escapeHtml(docUrl)}', '${escapeHtml(title)}', '${escapeHtml(AppState.currentSheet)}')" class="p-1.5 bg-white hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-200 rounded text-xs font-bold shadow-sm transition-all" title="Mở tài liệu HDSD đính kèm">
+                            <i class="fa-solid fa-book-open"></i>
+                        </button>` : ''}
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function getFallbackInfographicHtml(course, title, icon, gradient) {
+            return `
+                <div class="relative h-44 overflow-hidden rounded-t-xl bg-gradient-to-br ${gradient} p-4 flex flex-col justify-between text-white">
+                    <div class="flex items-center justify-between z-10">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-white/20 backdrop-blur-md uppercase tracking-wider">${escapeHtml(course)}</span>
+                    </div>
+                    <div class="z-10">
+                        <div class="w-9 h-9 rounded-lg bg-white/15 backdrop-blur-md flex items-center justify-center text-white mb-2 shadow-inner">
+                            <i class="fa-solid ${icon} text-sm"></i>
+                        </div>
+                        <p class="text-xs font-bold text-white line-clamp-1">${escapeHtml(title)}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderElearningTable(data, headers) {
+            const thead = document.getElementById('table-head');
+            const tbody = document.getElementById('table-body');
+
+            thead.innerHTML = `
+                <tr class="bg-slate-900 text-white text-[11px] uppercase tracking-wider">
+                    <th class="px-4 py-3 text-center w-12">STT</th>
+                    <th class="px-4 py-3 w-28 text-center">Infographic</th>
+                    <th class="px-4 py-3 whitespace-nowrap">Phân Hệ & Buổi</th>
+                    <th class="px-4 py-3">Nội Dung Bài Học</th>
+                    <th class="px-4 py-3 text-center">Trạng Thái Số Hóa</th>
+                    <th class="px-4 py-3 text-right whitespace-nowrap">Hành Động Trực Tiếp</th>
+                </tr>
+            `;
+
+            tbody.innerHTML = data.map((row, idx) => {
+                const title = row['Nội dung'] || row['Title'] || row['Tên bài'] || `Bài học #${idx + 1}`;
+                const course = (row['Khóa học'] || row['Khóa'] || row['NganhHang'] || 'Chung').trim();
+                const session = (row['Buổi'] || row['Bài'] || row['MaBuoi'] || '').trim();
+                const desc = row['Mô tả'] || row['Description'] || '';
+
+                const ytUrl = (row['YouTube'] || '').trim();
+                const quizUrl = (row['Github'] || '').trim();
+                const docUrl = (row['HDSD'] || row['Tài liệu'] || row['Link doc'] || '').trim();
+                const customImg = (row['Hình ảnh'] || row['Infographic'] || row['Thumbnail'] || '').trim();
+
+                const ytId = extractYouTubeId(ytUrl);
+                const theme = getDomainVisualTheme(course);
+                const hasVideo = !!ytUrl && ytUrl.startsWith('http');
+                const hasQuiz = !!quizUrl && quizUrl.startsWith('http');
+                const hasDoc = !!docUrl && docUrl.startsWith('http');
+
+                return `
+                <tr class="hover:bg-blue-50/30 transition-colors">
+                    <td class="px-4 py-3 text-center font-mono text-slate-400 text-xs font-semibold">${idx + 1}</td>
+                    
+                    <td class="px-4 py-3 text-center">
+                        <div class="w-20 h-12 rounded-lg overflow-hidden bg-slate-900 border border-slate-200 relative mx-auto group">
+                            ${customImg && customImg.startsWith('http') ? `
+                                <img src="${escapeHtml(customImg)}" class="w-full h-full object-cover">
+                            ` : ytId ? `
+                                <img src="https://img.youtube.com/vi/${ytId}/default.jpg" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-black/20 flex items-center justify-center text-white text-[10px]"><i class="fa-solid fa-play"></i></div>
+                            ` : `
+                                <div class="w-full h-full bg-gradient-to-br ${theme.gradient} flex items-center justify-center text-white text-xs">
+                                    <i class="fa-solid ${theme.icon}"></i>
+                                </div>
+                            `}
+                        </div>
+                    </td>
+
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <span class="px-2 py-0.5 rounded text-xs font-bold border ${theme.badge}">${escapeHtml(course)}</span>
+                        </div>
+                        ${session ? `<span class="text-[11px] font-semibold text-slate-500">${escapeHtml(session)}</span>` : ''}
+                    </td>
+
+                    <td class="px-4 py-3">
+                        <div class="font-bold text-slate-900 text-xs leading-snug max-w-md">${escapeHtml(title)}</div>
+                        ${desc ? `<div class="text-[11px] text-slate-400 line-clamp-1 mt-0.5">${escapeHtml(desc)}</div>` : ''}
+                    </td>
+
+                    <td class="px-4 py-3 text-center whitespace-nowrap">
+                        <div class="inline-flex items-center gap-1.5">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${hasVideo ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-slate-100 text-slate-400'}" title="${hasVideo ? ytUrl : 'Chưa có Video'}">
+                                <i class="fa-brands fa-youtube"></i> Video
+                            </span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${hasQuiz ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-slate-100 text-slate-400'}" title="${hasQuiz ? quizUrl : 'Chưa có Quiz'}">
+                                <i class="fa-solid fa-circle-question"></i> Quiz
+                            </span>
+                        </div>
+                    </td>
+
+                    <td class="px-4 py-3 text-right whitespace-nowrap space-x-1.5">
+                        ${hasVideo ? `
+                        <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-bold shadow-sm transition-all inline-flex items-center gap-1">
+                            <i class="fa-brands fa-youtube"></i> Video
+                        </button>` : ''}
+
+                        ${hasQuiz ? `
+                        <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(quizUrl))}', 'Quiz: ${escapeHtml(title)}')" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold shadow-sm transition-all inline-flex items-center gap-1">
+                            <i class="fa-solid fa-circle-question"></i> Quiz
+                        </button>` : ''}
+
+                        ${hasDoc ? `
+                        <button onclick="openResource('${escapeHtml(docUrl)}', '${escapeHtml(title)}', '${escapeHtml(AppState.currentSheet)}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded text-xs font-bold shadow-sm transition-all inline-flex items-center gap-1">
+                            <i class="fa-solid fa-book-open"></i> HDSD
+                        </button>` : ''}
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        // --- 12. BẢNG TÌNH HUỐNG TÁI KÝ ---
         function renderCaseAdminTable(data) {
             const thead = document.getElementById('table-head');
             const tbody = document.getElementById('table-body');
@@ -1394,7 +1723,7 @@
             container.innerHTML = html;
         }
 
-        // --- 12. BẢNG BÀI TẬP THỰC HÀNH ---
+        // --- 13. BẢNG BÀI TẬP THỰC HÀNH ---
         function renderExerciseAdminTable(data) {
             const thead = document.getElementById('table-head');
             const tbody = document.getElementById('table-body');
@@ -1493,7 +1822,7 @@
             container.innerHTML = html;
         }
 
-        // --- 13. BẢNG MCQ MASTER & TIÊU CHUẨN ---
+        // --- 14. BẢNG MCQ MASTER & TIÊU CHUẨN ---
         function renderMcqAdminTable(data, headers) {
             const thead = document.getElementById('table-head');
             const tbody = document.getElementById('table-body');
@@ -1523,7 +1852,7 @@
                     <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700">${escapeHtml(course)}</span></td>
                     <td class="px-4 py-3 text-center">
                         ${linkVal ? `
-                        <button onclick="openInSplitMode('${escapeHtml(formatGoogleSheetEmbedUrl(linkVal))}', '${escapeHtml(title)}')" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded text-xs font-bold transition-all">
+                        <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(linkVal))}', '${escapeHtml(title)}')" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded text-xs font-bold transition-all">
                             <i class="fa-solid fa-table mr-1"></i> Xem Sheet
                         </button>` : `<span class="text-xs text-red-500 font-semibold italic">Chưa gán link</span>`}
                     </td>
@@ -1558,7 +1887,7 @@
                     </div>
                     <div>
                         ${linkVal ? `
-                        <button onclick="openInSplitMode('${escapeHtml(formatGoogleSheetEmbedUrl(linkVal))}', '${escapeHtml(title)}')" class="btn-primary w-full text-xs py-1.5">
+                        <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(linkVal))}', '${escapeHtml(title)}')" class="btn-primary w-full text-xs py-1.5">
                             <i class="fa-solid fa-table"></i> Xem Bảng Tính
                         </button>` : `
                         <span class="block text-center text-xs text-red-500 font-semibold italic bg-red-50 py-1.5 rounded">Chưa gán liên kết</span>`}
@@ -1626,7 +1955,7 @@
             container.innerHTML = html;
         }
 
-        // --- 14. MODAL BÓC TÁCH TÌNH HUỐNG ---
+        // --- 15. MODAL BÓC TÁCH TÌNH HUỐNG ---
         function openCaseModal(idx) {
             const item = window.currentFilteredData[idx];
             if (!item) return;
@@ -1693,7 +2022,7 @@
             copyToClipboardText(text, 'Đã sao chép kịch bản tình huống vào clipboard!');
         }
 
-        // --- 15. MODAL BÀI TẬP THỰC HÀNH ---
+        // --- 16. MODAL BÀI TẬP THỰC HÀNH ---
         function openExerciseModal(idx) {
             const item = window.currentFilteredData[idx];
             if (!item) return;
@@ -1749,7 +2078,7 @@
             document.getElementById('floating-modal').classList.add('hidden');
         }
 
-        // --- 16. RESIZABLE SPLIT-SCREEN ---
+        // --- 17. RESIZABLE SPLIT-SCREEN ---
         function toggleSplitScreen() {
             AppState.isSplitOpen = !AppState.isSplitOpen;
             const pane = document.getElementById('pane-secondary');
@@ -1817,7 +2146,7 @@
             });
         }
 
-        // --- 17. SYNC API ---
+        // --- 18. SYNC API ---
         async function syncGoogleSheetsData() {
             const apiUrl = localStorage.getItem('kv_api_url') || '';
             if (!apiUrl) {
@@ -1873,7 +2202,7 @@
             syncGoogleSheetsData();
         }
 
-        // --- 18. GLOBAL SEARCH (CTRL + K) ---
+        // --- 19. GLOBAL SEARCH (CTRL + K) ---
         function setupKeyboardShortcuts() {
             window.addEventListener('keydown', (e) => {
                 if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
