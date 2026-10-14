@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trainer OS | Agentic Dashboard</title>
+    <title>Trainer OS | Agentic Dashboard & Analytics</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,7 +14,6 @@
     <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
 
     <style>
-        /* === KIOTVIET SAAS MINIMALIST DESIGN (CLEANED) === */
         html { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #1e293b; overflow: hidden; }
         
@@ -22,13 +21,11 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 
-        /* --- HIỆU ỨNG ĐỘNG (DYNAMIC FLOATING & SKELETON) --- */
-        @keyframes fadeUpIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-up { animation: fadeUpIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
-        .delay-100 { animation-delay: 0.1s; }
-        .delay-200 { animation-delay: 0.2s; }
-        .delay-300 { animation-delay: 0.3s; }
-        .delay-400 { animation-delay: 0.4s; }
+        @keyframes fadeUpIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-up { animation: fadeUpIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .delay-100 { animation-delay: 0.08s; }
+        .delay-200 { animation-delay: 0.15s; }
+        .delay-300 { animation-delay: 0.22s; }
 
         @keyframes shimmer { 100% { transform: translateX(100%); } }
         .skeleton { position: relative; overflow: hidden; background-color: #e5e7eb; }
@@ -38,24 +35,22 @@
             animation: shimmer 1.5s infinite;
         }
 
-        /* --- BỐ CỤC THẺ CARD & FLOATING 3D --- */
         .content-area { height: calc(100vh - 64px); overflow-y: auto; overflow-x: hidden; padding: 24px 32px; }
         .saas-card { 
             background: #ffffff; border-radius: 16px; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03); 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.02); 
             border: 1px solid #e5e7eb; 
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.1);
         }
         .saas-card:hover { 
-            box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.08), 0 6px 8px -4px rgba(0, 0, 0, 0.04); 
-            border-color: #d1d5db; 
-            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -4px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.03); 
+            border-color: #cbd5e1; 
         }
 
-        /* --- BỐ CỤC SIDEBAR PILL STYLE --- */
+        /* SIDEBAR STYLES */
         .sidebar-saas { background-color: #ffffff; border-right: 1px solid #e5e7eb; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-x: hidden; }
         .sidebar-logo { height: 64px; display: flex; align-items: center; padding: 0 24px; border-bottom: 1px solid #e5e7eb; }
-        .nav-group-title { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; padding: 0 24px; margin-top: 20px; margin-bottom: 8px; transition: opacity 0.2s; }
+        .nav-group-title { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; padding: 0 24px; margin-top: 20px; margin-bottom: 8px; }
         
         .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; margin: 2px 12px; font-size: 13.5px; font-weight: 500; color: #4b5563; cursor: pointer; transition: all 0.2s; border-radius: 8px; white-space: nowrap; }
         .nav-item:hover { background-color: #f3f4f6; color: #1f2937; }
@@ -63,7 +58,6 @@
         .nav-item.active i { color: #2563eb; }
         .nav-item i { width: 20px; text-align: center; color: #9ca3af; font-size: 16px; transition: color 0.2s; flex-shrink: 0; }
 
-        /* --- TRẠNG THÁI SIDEBAR THU GỌN (COLLAPSED) --- */
         .sidebar-collapsed { width: 64px !important; min-width: 64px !important; }
         .sidebar-collapsed .logo-full { display: none; }
         .sidebar-collapsed .logo-icon { display: block !important; margin: 0 auto; text-align: center; }
@@ -78,20 +72,19 @@
         .sidebar-collapsed .user-profile-area { justify-content: center !important; padding: 16px 0 !important; gap: 0 !important; }
         .sidebar-collapsed .user-profile-area .flex-grow { display: none !important; }
 
-        /* --- FORM, BUTTONS & TABLES --- */
         .saas-input { width: 100%; background: #ffffff; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; transition: all 0.2s; }
         .saas-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        .btn-outline { background: white; color: #374151; border: 1px solid #d1d5db; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px;}
-        .btn-outline:hover { background-color: #f3f4f6; }
-        .btn-primary { background-color: #2563eb; color: white; border: 1px solid #1d4ed8; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px;}
+        .btn-outline { background: white; color: #374151; border: 1px solid #d1d5db; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px;}
+        .btn-outline:hover { background-color: #f8fafc; border-color: #94a3b8; }
+        .btn-primary { background-color: #2563eb; color: white; border: 1px solid #1d4ed8; padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.15);}
         .btn-primary:hover { background-color: #1d4ed8; }
 
         table { width: 100%; border-collapse: collapse; }
-        table th { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; background: #f9fafb; text-align: left; }
-        table td { font-size: 13px; padding: 12px 16px; border-bottom: 1px solid #f3f4f6; }
+        table th { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 12px 14px; border-bottom: 1px solid #e5e7eb; background: #f8fafc; text-align: left; }
+        table td { font-size: 12.5px; padding: 12px 14px; border-bottom: 1px solid #f1f5f9; }
 
-        /* --- WIDGETS --- */
-        .widget-panel { position: fixed; bottom: 80px; right: 30px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; z-index: 1000; transform: translateY(10px); opacity: 0; pointer-events: none; transition: all 0.3s; display: flex; flex-direction: column; overflow: hidden; }
+        /* WIDGETS */
+        .widget-panel { position: fixed; bottom: 80px; right: 30px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.12); border: 1px solid #e5e7eb; z-index: 1000; transform: translateY(10px); opacity: 0; pointer-events: none; transition: all 0.3s; display: flex; flex-direction: column; overflow: hidden; }
         .widget-panel.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
         .widget-panel.fullscreen-widget { width: 100vw !important; height: 100vh !important; bottom: 0 !important; right: 0 !important; border-radius: 0 !important; }
         #notesWidget { width: 450px; height: 600px; }
@@ -104,28 +97,26 @@
         input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
         input[type="color"]::-webkit-color-swatch { border: 1px solid #cbd5e1; border-radius: 4px; }
 
-        .progress-bar-container { background-color: #f1f5f9; border-radius: 9999px; height: 20px; position: relative; overflow: hidden; margin-top: 4px;}
-        .progress-bar-fill { height: 100%; border-radius: 9999px; transition: width 1s ease-in-out; }
-        .tooltip-box { display: none; position: absolute; top: 110%; left: 0; background: #1e293b; color: white; padding: 12px; border-radius: 8px; font-size: 12px; z-index: 9999; width: max-content; box-shadow: 0 10px 25px rgba(0,0,0,0.2); white-space: pre-line; line-height: 1.6;}
-        .group:hover > .tooltip-box { display: block; animation: fadeUp 0.2s ease forwards; }
+        .progress-bar-container { background-color: #f1f5f9; border-radius: 9999px; height: 18px; position: relative; overflow: hidden; }
+        .progress-bar-fill { height: 100%; border-radius: 9999px; transition: width 0.8s ease-in-out; }
+        .tooltip-box { display: none; position: absolute; top: 110%; left: 0; background: #1e293b; color: white; padding: 8px 12px; border-radius: 8px; font-size: 11px; z-index: 9999; width: max-content; box-shadow: 0 10px 25px rgba(0,0,0,0.2); white-space: pre-line; line-height: 1.5;}
+        .group:hover > .tooltip-box { display: block; animation: fadeUpIn 0.2s ease forwards; }
 
-        /* --- MODERN REPORT PRESENTATION MODE --- */
+        /* FULLSCREEN REPORT SLIDES */
         #presentation-overlay { position: fixed; inset: 0; background: #f8fafc; z-index: 99999; display: none; font-family: 'Inter', sans-serif; overflow: hidden; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 30px 30px;}
         #presentation-overlay.active { display: block; }
-        .tech-slide { position: absolute; inset: 0; padding: 60px 80px; opacity: 0; transform: translateY(30px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; pointer-events: none; }
+        .tech-slide { position: absolute; inset: 0; padding: 60px 80px; opacity: 0; transform: translateY(30px); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; pointer-events: none; }
         .tech-slide.active { opacity: 1; transform: translateY(0); pointer-events: auto; z-index: 10;}
         .tech-title { font-size: 2.5rem; font-weight: 800; color: #1e293b; margin-bottom: 5px; text-transform: uppercase; letter-spacing: -0.05em;}
         .tech-subtitle { font-size: 1.1rem; color: #64748b; font-weight: 500; margin-bottom: 40px;}
-        .tech-stat-card { background: rgba(255, 255, 255, 0.9); border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); backdrop-filter: blur(10px); }
-        .tech-stat-val { font-size: 3.5rem; font-weight: 800; color: var(--accent); margin: 10px 0; line-height: 1;}
+        .tech-stat-card { background: rgba(255, 255, 255, 0.95); border: 1px solid #e2e8f0; border-radius: 20px; padding: 28px; text-align: center; box-shadow: 0 10px 35px -10px rgba(0,0,0,0.06); backdrop-filter: blur(10px); }
+        .tech-stat-val { font-size: 3.5rem; font-weight: 800; color: var(--accent); margin: 8px 0; line-height: 1;}
         .tech-stat-label { font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;}
-        .insight-box { padding: 20px; background: white; border-left: 4px solid #3b82f6; margin-bottom: 15px; border-radius: 0 12px 12px 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); font-size: 15px; color: #334155; line-height: 1.6;}
-        .insight-box.warning { border-left-color: #f59e0b; } 
-        .tech-nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; background: white; padding: 12px 20px; border-radius: 100px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); z-index: 100000; }
-        .tech-nav button { width: 40px; height: 40px; border-radius: 50%; border: none; background: #f1f5f9; color: #475569; font-size: 18px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
+        .insight-box { padding: 18px; background: white; border-left: 4px solid #3b82f6; margin-bottom: 12px; border-radius: 0 12px 12px 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); font-size: 14px; color: #334155; line-height: 1.6;}
+        .tech-nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; background: white; padding: 10px 18px; border-radius: 100px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); z-index: 100000; }
+        .tech-nav button { width: 40px; height: 40px; border-radius: 50%; border: none; background: #f1f5f9; color: #475569; font-size: 16px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
         .tech-nav button:hover { background: #3b82f6; color: white; }
 
-        /* --- MODAL --- */
         .modal { display: none; opacity: 0; transition: opacity 0.2s; z-index: 99999; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
         .modal.active { display: flex; opacity: 1; }
         .modal-content { transform: scale(0.98) translateY(10px); opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -137,7 +128,6 @@
     <div class="flex h-screen">
         <!-- SIDEBAR CHUẨN KIOTVIET L&D (COLLAPSIBLE) -->
         <aside id="sidebar" class="sidebar-saas w-64 flex flex-col z-50 shrink-0">
-            <!-- Logo Area -->
             <div class="sidebar-logo">
                 <img src="https://cdn-kvweb-website.kiotviet.vn/images/v2/giai-phap/logos/kiotviet-logo-horizontal.svg" alt="KiotViet" class="h-[28px] logo-full">
                 <div class="logo-icon hidden w-[28px] h-[28px] overflow-hidden rounded-full">
@@ -145,7 +135,6 @@
                 </div>
             </div>
 
-            <!-- Navigation Menu -->
             <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4 custom-scrollbar">
                 <div class="nav-group-title">Tổng quan</div>
                 <div onclick="switchTab('tong-quan')" class="nav-item active" data-title="Bảng điều khiển"><i class="fas fa-chart-line"></i> <span>Bảng điều khiển</span></div>
@@ -154,7 +143,6 @@
                 <a href="spcb.html" class="nav-item" data-title="Cơ bản (TS-DS)"><i class="fas fa-box"></i> <span>Cơ bản (TS-DS)</span></a>
                 <a href="thuehkd.html" class="nav-item" data-title="Chuyên đề Thuế"><i class="fas fa-file-invoice-dollar"></i> <span>Chuyên đề Thuế</span></a>
                 
-                <!-- Accordion Menu: Chuyên ngành -->
                 <div class="flex flex-col">
                     <div class="nav-item group justify-between" onclick="toggleAccordion('submenu-cn', 'icon-cn')" data-title="Chuyên ngành">
                         <div class="flex items-center gap-3"><i class="fas fa-laptop-code"></i> <span>Chuyên ngành</span></div>
@@ -182,8 +170,7 @@
                 <a href="settings.html" class="nav-item" data-title="Cài đặt hệ thống"><i class="fas fa-cog"></i> <span>Cài đặt hệ thống</span></a>
             </nav>
 
-            <!-- User Profile Area -->
-            <div class="user-profile-area p-4 border-t border-slate-200 shrink-0 flex items-center gap-3 bg-slate-50/50 hover:bg-slate-100 transition cursor-pointer" onclick="location.href='settings.html'" title="Click để vào Cài đặt Profile">
+            <div class="user-profile-area p-4 border-t border-slate-200 shrink-0 flex items-center gap-3 bg-slate-50/50 hover:bg-slate-100 transition cursor-pointer" onclick="location.href='settings.html'">
                 <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0 border border-blue-200" id="display-prof-ava">A</div>
                 <div class="overflow-hidden flex-grow">
                     <p id="display-prof-name" class="text-[13px] font-bold text-slate-800 truncate">Admin User</p>
@@ -194,7 +181,6 @@
 
         <!-- MAIN LAYOUT -->
         <div class="flex-1 flex flex-col overflow-hidden relative">
-            <!-- HEADER -->
             <header class="h-16 bg-white flex items-center justify-between px-6 z-40 shrink-0 shadow-sm border-b border-slate-200">
                 <div class="flex items-center gap-4">
                     <button onclick="toggleSidebar()" class="w-8 h-8 rounded bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-blue-50 hover:text-blue-600 transition border border-slate-200">
@@ -205,7 +191,6 @@
                     </div>
                 </div>
 
-                <!-- Right Header Tools -->
                 <div class="flex items-center gap-6">
                     <button onclick="openCanvaReportModal()" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-sm hover:shadow transition flex items-center gap-1.5">
                         <i class="fas fa-magic text-amber-300"></i> AI Slide Generator
@@ -225,7 +210,7 @@
                         </div>
                     </div>
 
-                    <!-- Profile Dropdown -->
+                    <!-- Profile Header Link -->
                     <div class="flex items-center gap-3 pl-4 border-l border-slate-200 cursor-pointer" onclick="location.href='settings.html'">
                         <div class="text-right hidden md:block">
                             <p class="text-sm font-bold text-slate-800 leading-tight" id="header-prof-name">L&D KiotViet</p>
@@ -237,7 +222,6 @@
             </header>
 
             <main class="content-area" id="main-tab-container">
-                <!-- SKELETON PLACEHOLDER -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                     <div class="saas-card p-5 flex items-center gap-4 animate-fade-up"><div class="w-14 h-14 rounded-2xl skeleton shrink-0"></div><div class="w-full"><div class="h-6 skeleton w-1/2 rounded mb-2"></div><div class="h-3 skeleton w-3/4 rounded"></div></div></div>
                     <div class="saas-card p-5 flex items-center gap-4 animate-fade-up delay-100"><div class="w-14 h-14 rounded-2xl skeleton shrink-0"></div><div class="w-full"><div class="h-6 skeleton w-1/2 rounded mb-2"></div><div class="h-3 skeleton w-3/4 rounded"></div></div></div>
@@ -248,7 +232,7 @@
         </div>
     </div>
 
-    <!-- WIDGET SỔ VẼ WHITEBOARD (HOÀN THIỆN ĐẦY ĐỦ 100% FABRIC.JS) -->
+    <!-- WIDGET SỔ VẼ WHITEBOARD (FABRIC.JS 100%) -->
     <div id="notesWidget" class="widget-panel">
         <div class="bg-slate-800 px-4 py-3 flex justify-between items-center shrink-0">
             <span class="font-bold text-sm text-white flex items-center gap-2"><i class="fas fa-object-group text-purple-400"></i> Bảng Phác Thảo Ghi chú</span>
@@ -293,7 +277,7 @@
         </div>
     </div>
 
-    <!-- AI CHATBOT -->
+    <!-- AI CHATBOT KEVIN -->
     <div id="chatWidget" class="widget-panel">
         <div class="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center shrink-0">
             <span class="font-semibold text-sm text-slate-800"><i class="fas fa-robot text-blue-500 mr-2"></i> Kevin - AI Assistant</span>
@@ -317,21 +301,26 @@
         </button>
     </div>
 
-    <!-- MODAL NẠP DỮ LIỆU KHẢO SÁT -->
+    <!-- MODAL NẠP DỮ LIỆU KHẢO SÁT (TỰ LƯU LOCALSTORAGE) -->
     <div id="surveyModal" class="modal fixed inset-0 items-center justify-center p-4 bg-slate-900/60 z-[99999]">
         <div class="modal-content bg-white w-full max-w-4xl rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-200 flex justify-between bg-slate-50"><h3 class="font-bold text-slate-800">Nạp Dữ liệu Khảo sát</h3><button onclick="closeSurveyInput()" class="text-slate-500"><i class="fas fa-times"></i></button></div>
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between bg-slate-50">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2"><i class="fas fa-clipboard-check text-purple-600"></i> Nạp Dữ Liệu Khảo Sát Học Viên</h3>
+                <button onclick="closeSurveyInput()" class="text-slate-500"><i class="fas fa-times"></i></button>
+            </div>
             <div class="p-6 grid grid-cols-2 gap-4">
                 <div>
                     <label class="text-xs font-bold text-blue-600 block mb-2">Data Khảo sát SPCB (Copy từ Excel)</label>
-                    <textarea id="survey-spcb" class="saas-input h-64 text-[10px]" placeholder="Dán dữ liệu điểm 1-5 và Góp ý..."></textarea>
+                    <textarea id="survey-spcb" oninput="saveSurveyDrafts()" class="saas-input h-64 text-[11px] font-mono" placeholder="Dán các cột điểm 1-5 và ý kiến góp ý của học viên..."></textarea>
                 </div>
                 <div>
                     <label class="text-xs font-bold text-emerald-600 block mb-2">Data Khảo sát Thuế - Kế toán</label>
-                    <textarea id="survey-tax" class="saas-input h-64 text-[10px]" placeholder="Dán dữ liệu điểm 1-5 và Góp ý..."></textarea>
+                    <textarea id="survey-tax" oninput="saveSurveyDrafts()" class="saas-input h-64 text-[11px] font-mono" placeholder="Dán các cột điểm 1-5 và ý kiến góp ý của học viên..."></textarea>
                 </div>
             </div>
-            <div class="p-4 bg-slate-50 text-right"><button onclick="closeSurveyInput(); showToast('Đã lưu dữ liệu Khảo sát vào bộ đệm!');" class="btn-primary">Lưu Data & Đóng</button></div>
+            <div class="p-4 bg-slate-50 text-right">
+                <button onclick="closeSurveyInput(); showToast('Đã lưu dữ liệu Khảo sát vào hệ thống!');" class="btn-primary">Lưu Data & Đóng</button>
+            </div>
         </div>
     </div>
 
@@ -344,7 +333,7 @@
             <div class="h-full flex flex-col items-center justify-center text-center max-w-4xl mx-auto">
                 <div class="w-24 h-24 bg-blue-600 text-white rounded-3xl flex items-center justify-center text-4xl mb-8 shadow-2xl shadow-blue-500/30 transform rotate-12"><i class="fas fa-chart-pie -rotate-12"></i></div>
                 <h1 class="text-6xl font-black text-slate-800 mb-6 tracking-tight leading-tight">Báo Cáo Tổng Kết<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Hoạt Động Đào Tạo</span></h1>
-                <p class="text-2xl text-slate-500 font-medium mb-12">Báo cáo động (Real-time) từ Hệ thống AI</p>
+                <p class="text-2xl text-slate-500 font-medium mb-12" id="slide-period-title">Báo cáo động (Real-time) từ Hệ thống AI</p>
                 <div class="text-5xl font-black text-slate-300" id="slide-year">2026</div>
             </div>
         </div>
@@ -352,13 +341,13 @@
         <div class="tech-slide" id="tslide-2">
             <div class="max-w-6xl mx-auto w-full">
                 <h2 class="tech-title text-center">I. Hiệu Suất Tổng Quan</h2>
-                <p class="tech-subtitle text-center">Dữ liệu Master DB cập nhật tức thời</p>
+                <p class="tech-subtitle text-center" id="slide-sub-period">Dữ liệu Master DB cập nhật tức thời</p>
                 
                 <div class="grid grid-cols-4 gap-8 mt-10">
                     <div class="tech-stat-card" style="--accent: #3b82f6"><div class="tech-stat-val" id="sl-total-class">0</div><p class="tech-stat-label">Tổng Lớp Học</p></div>
                     <div class="tech-stat-card" style="--accent: #10b981"><div class="tech-stat-val" id="sl-total-hv">0</div><p class="tech-stat-label">Học Viên</p></div>
                     <div class="tech-stat-card" style="--accent: #f59e0b"><div class="tech-stat-val" id="sl-pass-rate">0%</div><p class="tech-stat-label">Tỷ lệ Pass</p></div>
-                    <div class="tech-stat-card" style="--accent: #8b5cf6"><div class="tech-stat-val" id="sl-csat">4.8/5</div><p class="tech-stat-label">Mức Hài Lòng</p></div>
+                    <div class="tech-stat-card" style="--accent: #8b5cf6"><div class="tech-stat-val" id="sl-csat">4.8/5</div><p class="tech-stat-label">Mức Hài Lòng (CSAT)</p></div>
                 </div>
                 
                 <div class="mt-12 grid grid-cols-2 gap-8">
@@ -398,11 +387,17 @@
         </div>
     </div>
 
-    <!-- MODAL BÁO CÁO AI CANVA PRO -->
+    <!-- MODAL BÁO CÁO AI CANVA PRO (TÍCH HỢP THEO KỲ BÁO CÁO) -->
     <div id="canvaReportModal" class="modal fixed inset-0 items-center justify-center p-4 z-[99999]">
         <div class="modal-content bg-white w-full max-w-6xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-purple-200">
             <div class="px-6 py-4 bg-gradient-to-r from-purple-700 to-blue-700 flex justify-between items-center shrink-0">
-                <h3 class="font-bold text-white text-lg flex items-center gap-2"><i class="fas fa-magic text-amber-300"></i> AI Report Generator (Canva Pro Edition)</h3>
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-amber-300 font-bold"><i class="fas fa-magic"></i></div>
+                    <div>
+                        <h3 class="font-bold text-white text-base leading-tight">AI Report Generator (Canva Pro Edition)</h3>
+                        <p class="text-[11px] text-purple-200" id="canvaPeriodTag">Kỳ báo cáo: Toàn bộ thời gian</p>
+                    </div>
+                </div>
                 <button onclick="closeModal('canvaReportModal')" class="text-white/70 hover:text-white w-8 h-8 flex items-center justify-center bg-white/10 rounded-full transition"><i class="fas fa-times"></i></button>
             </div>
             
@@ -415,7 +410,7 @@
                     <div id="canvaReportContent" class="flex-grow bg-white border border-slate-200 rounded-xl p-6 overflow-y-auto custom-scrollbar text-[14px] leading-relaxed text-slate-700 font-mono shadow-inner relative">
                         <div class="flex flex-col items-center justify-center h-full text-slate-400">
                             <i class="fas fa-robot text-5xl mb-4 text-slate-300"></i>
-                            <p class="font-medium">Bấm nút "Tạo Báo Cáo" bên phải để AI bắt đầu phân tích dữ liệu...</p>
+                            <p class="font-medium">Bấm nút "Tạo Báo Cáo" bên phải để AI bắt đầu phân tích dữ liệu kỳ này...</p>
                         </div>
                     </div>
                 </div>
@@ -424,10 +419,10 @@
                     <div class="mb-6">
                         <h4 class="font-bold text-slate-800 mb-2">Trợ lý Kevin đọc số liệu gì?</h4>
                         <ul class="text-[13px] text-slate-600 space-y-2">
-                            <li><i class="fas fa-check text-emerald-500 mr-2"></i> Tổng số lớp, Tổng HV, Tỷ lệ Pass</li>
-                            <li><i class="fas fa-check text-emerald-500 mr-2"></i> Điểm CSAT trung bình</li>
-                            <li><i class="fas fa-check text-emerald-500 mr-2"></i> Các Điểm sáng (Highlights)</li>
-                            <li><i class="fas fa-check text-emerald-500 mr-2"></i> Tồn đọng (Issues) & Kế hoạch</li>
+                            <li><i class="fas fa-check text-emerald-500 mr-2"></i> Lọc dữ liệu theo kỳ bạn chọn</li>
+                            <li><i class="fas fa-check text-emerald-500 mr-2"></i> Điểm CSAT trung bình thực tế</li>
+                            <li><i class="fas fa-check text-emerald-500 mr-2"></i> Điểm sáng nổi bật (Highlights)</li>
+                            <li><i class="fas fa-check text-emerald-500 mr-2"></i> Tồn đọng (Issues) & Kế hoạch tiếp theo</li>
                         </ul>
                     </div>
                     
@@ -460,14 +455,19 @@
         <span id="toast-msg"></span>
     </div>
 
-    <!-- SCRIPTS LÕI TIÊN TIẾN -->
+    <!-- SCRIPTS LÕI BÁO CÁO TIÊN TIẾN -->
     <script>
         localforage.config({ name: 'TrainerOS_Database' });
         const GOOGLE_API_URL = localStorage.getItem('kv_api_url') || "";
         let globalMasterDB = []; 
         let globalGiftsDB = [];
         let perfChartInstance = null;
+        let trendChartInstance = null;
         let fCanvas = null;
+
+        // Quản lý trạng thái bộ lọc báo cáo
+        let currentReportTimeRange = 'all';
+        let masterTableSearchKeyword = '';
 
         const courseCatalog = [
             { id: 'SPCB', group: 'Retail', title: 'Cơ bản (TS-DS)', desc: 'Quy trình Onboard 3 ngày dành cho nhân viên kinh doanh mới.', link: 'spcb.html', icon: 'fa-box', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
@@ -517,6 +517,53 @@
             }
         }
 
+        // --- BỘ LỌC THỜI GIAN ĐA TẦNG CHO BÁO CÁO ---
+        function getFilteredMasterData() {
+            let data = Array.isArray(globalMasterDB) ? globalMasterDB.slice() : [];
+            const r = currentReportTimeRange;
+            if (r === 'all') return data;
+
+            return data.filter(d => {
+                let m = parseInt(d.month) || 0;
+                if (!m && d.startDate) {
+                    const parts = d.startDate.split('-');
+                    if (parts.length >= 2) m = parseInt(parts[1]) || 0;
+                }
+                if (!m && d.timestamp) {
+                    m = new Date(d.timestamp).getMonth() + 1;
+                }
+
+                if (r === 'year') return true;
+                if (r === 'q1') return m >= 1 && m <= 3;
+                if (r === 'q2') return m >= 4 && m <= 6;
+                if (r === 'q3') return m >= 7 && m <= 9;
+                if (r === 'q4') return m >= 10 && m <= 12;
+                if (r.startsWith('m')) {
+                    const targetM = parseInt(r.replace('m', ''));
+                    return m === targetM;
+                }
+                return true;
+            });
+        }
+
+        function getTimeRangeLabel() {
+            const r = currentReportTimeRange;
+            if (r === 'all') return 'Toàn bộ thời gian';
+            if (r === 'year') return 'Cả năm 2026';
+            if (r === 'q1') return 'Quý 1/2026 (Tháng 1 - 3)';
+            if (r === 'q2') return 'Quý 2/2026 (Tháng 4 - 6)';
+            if (r === 'q3') return 'Quý 3/2026 (Tháng 7 - 9)';
+            if (r === 'q4') return 'Quý 4/2026 (Tháng 10 - 12)';
+            if (r.startsWith('m')) return `Tháng ${r.replace('m', '').padStart(2, '0')}/2026`;
+            return 'Toàn bộ thời gian';
+        }
+
+        function applyReportFilter(rangeVal) {
+            currentReportTimeRange = rangeVal || document.getElementById('reportTimeRange').value;
+            switchTab('tong-quan');
+            showToast(`Đã lọc báo cáo: ${getTimeRangeLabel()}`);
+        }
+
         // --- SIDEBAR & TOOLTIP ---
         function toggleSidebar() { 
             document.getElementById('sidebar').classList.toggle('sidebar-collapsed'); 
@@ -559,7 +606,7 @@
 
             if (!calData[mKey]) {
                 if(isDropdown) return `<div class="p-6 text-sm text-slate-500 text-center"><i class="fas fa-calendar-times text-3xl text-slate-200 mb-2 block"></i>Chưa cài lịch tháng này</div>`;
-                return `<div class="saas-card p-4 flex items-start gap-4 mb-3 border-l-4 border-l-slate-300"><div class="w-10 h-10 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center font-bold text-lg shrink-0"><i class="fas fa-calendar-times"></i></div><div><h4 class="font-semibold text-slate-800 text-sm">Chưa cài đặt lịch</h4><p class="text-xs font-medium text-slate-500 mt-0.5">Vào Thiết lập để cấu hình</p></div></div>`;
+                return `<div class="saas-card p-4 flex items-start gap-4 mb-3 border-l-4 border-l-slate-300"><div class="w-10 h-10 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center font-bold text-lg shrink-0"><i class="fas fa-calendar-times"></i></div><div><h4 class="font-semibold text-slate-800 text-sm">Chưa cài đặt lịch</h4><p class="text-xs font-medium text-slate-500 mt-0.5">Vào Cài đặt Hệ thống để cấu hình</p></div></div>`;
             }
 
             const checkUpcoming = (dateStr, eventName, type) => {
@@ -620,48 +667,126 @@
             }
         });
 
-        // --- ROUTING TABS (TỔNG QUAN / KHÓA HỌC / PHÂN TÍCH) ---
+        // --- ROUTING TABS & TRUNG TÂM BÁO CÁO ---
         function switchTab(tabId) {
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             const clickedElement = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
             if(clickedElement) clickedElement.classList.add('active');
 
             const container = document.getElementById('main-tab-container');
-            const data = Array.isArray(globalMasterDB) ? globalMasterDB : [];
 
-            // 1. TAB TỔNG QUAN
+            // 1. TAB TỔNG QUAN & BÁO CÁO TOÀN DIỆN
             if (tabId === 'tong-quan') {
-                let sumTotal = 0, sumPass = 0;
+                const filteredData = getFilteredMasterData();
+                let sumTotal = 0, sumPass = 0, sumFail = 0;
                 let breakCourse = {};
                 
-                data.forEach(d => {
+                filteredData.forEach(d => {
                     let g = d.groupName || 'Khác';
                     breakCourse[g] = (breakCourse[g] || 0) + 1;
                     sumTotal += parseInt(d.totalTrainees) || 0; 
                     sumPass += parseInt(d.passedTrainees) || 0;
+                    sumFail += parseInt(d.failedTrainees) || 0;
                 });
                 
                 const passRate = sumTotal > 0 ? Math.round((sumPass/sumTotal)*100) : 0;
                 const alerts = generateSmartAlerts(false);
 
-                const renderHistory = () => {
-                    if(!data || data.length === 0) return `<div class="text-center py-6 text-slate-400 text-sm">Chưa có lịch sử hoạt động</div>`;
-                    return `<div class="relative"><div class="absolute left-[15px] top-4 bottom-4 w-px bg-slate-200 z-0"></div>` + 
-                    data.slice().sort((a,b) => b.timestamp - a.timestamp).slice(0, 5).map(d => {
-                        const date = new Date(d.timestamp || Date.now());
-                        const timeStr = date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+                // Render Bảng MasterDB Chi tiết có tìm kiếm
+                const renderMasterDetailTable = () => {
+                    let searchData = filteredData;
+                    if(masterTableSearchKeyword) {
+                        const kw = masterTableSearchKeyword.toLowerCase();
+                        searchData = searchData.filter(d => 
+                            (d.courseId && d.courseId.toLowerCase().includes(kw)) ||
+                            (d.groupName && d.groupName.toLowerCase().includes(kw)) ||
+                            (d.highlights && d.highlights.toLowerCase().includes(kw)) ||
+                            (d.issues && d.issues.toLowerCase().includes(kw))
+                        );
+                    }
+
+                    if(searchData.length === 0) {
+                        return `<tr><td colspan="8" class="text-center py-10 text-slate-400 italic">Không tìm thấy khóa học nào trong kỳ báo cáo này.</td></tr>`;
+                    }
+
+                    return searchData.slice().sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)).map((d, idx) => {
+                        let p = parseInt(d.totalTrainees) || 0;
+                        let s = parseInt(d.passedTrainees) || 0;
+                        let rate = p > 0 ? Math.round((s/p)*100) : 0;
+                        let statusColor = d.status === 'Hoàn thành' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200';
+
                         return `
-                        <div class="flex gap-4 items-start relative mb-4">
-                            <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 z-10 border-2 border-white shadow-sm"><i class="fas fa-check text-xs"></i></div>
-                            <div class="pb-1 flex-grow">
-                                <p class="text-[13px] text-slate-800">Cập nhật hệ thống báo cáo khóa <span class="font-bold text-blue-600">${d.courseId}</span> (${d.groupName})</p>
-                                <p class="text-[11px] text-slate-500 mt-1"><i class="far fa-clock mr-1"></i>${timeStr} • Tổng: ${d.totalTrainees} HV • <span class="font-medium text-slate-700">${d.status}</span></p>
-                            </div>
-                        </div>`;
-                    }).join('') + `</div>`;
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="text-center font-mono font-bold text-slate-400">${idx + 1}</td>
+                                <td>
+                                    <span class="font-extrabold text-blue-600 block">${d.courseId || '-'}</span>
+                                    <span class="text-[10px] text-slate-400">${d.startDate || ''}</span>
+                                </td>
+                                <td><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">${d.groupName || 'Khác'}</span></td>
+                                <td class="text-center font-bold text-slate-800">${p}</td>
+                                <td class="text-center"><span class="font-bold text-emerald-600">${s}</span> / <span class="font-bold text-rose-500">${d.failedTrainees || 0}</span></td>
+                                <td class="text-center"><span class="px-2 py-0.5 rounded-full text-xs font-black ${rate>=80?'bg-emerald-50 text-emerald-700 border border-emerald-200':'bg-rose-50 text-rose-700 border border-rose-200'}">${rate}%</span></td>
+                                <td class="text-center font-bold text-purple-600">${d.csat || '4.8/5'}</td>
+                                <td>
+                                    <p class="text-[11px] text-slate-700 line-clamp-1" title="${d.highlights || ''}"><b class="text-emerald-600">Sáng:</b> ${d.highlights || '-'}</p>
+                                    <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5" title="${d.issues || ''}"><b class="text-rose-500">Tồn:</b> ${d.issues || '-'}</p>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
                 };
 
                 container.innerHTML = `
+                    <!-- 1. THANH ĐIỀU KHIỂN BỘ LỌC THỜI GIAN ĐA TẦNG -->
+                    <div class="flex flex-wrap items-center justify-between gap-4 mb-6 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs animate-fade-up">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fas fa-calendar-alt text-blue-600"></i> Kỳ Báo Cáo:
+                            </span>
+                            <select id="reportTimeRange" onchange="applyReportFilter()" class="saas-input py-1.5 px-3 text-xs font-bold text-blue-700 bg-blue-50 border-blue-200 rounded-lg cursor-pointer w-48">
+                                <option value="all" ${currentReportTimeRange==='all'?'selected':''}>Toàn bộ thời gian</option>
+                                <option value="year" ${currentReportTimeRange==='year'?'selected':''}>Cả năm 2026</option>
+                                <option value="q1" ${currentReportTimeRange==='q1'?'selected':''}>Quý 1 (Tháng 1 - 3)</option>
+                                <option value="q2" ${currentReportTimeRange==='q2'?'selected':''}>Quý 2 (Tháng 4 - 6)</option>
+                                <option value="q3" ${currentReportTimeRange==='q3'?'selected':''}>Quý 3 (Tháng 7 - 9)</option>
+                                <option value="q4" ${currentReportTimeRange==='q4'?'selected':''}>Quý 4 (Tháng 10 - 12)</option>
+                                <optgroup label="Theo Từng Tháng">
+                                    <option value="m1" ${currentReportTimeRange==='m1'?'selected':''}>Tháng 01</option>
+                                    <option value="m2" ${currentReportTimeRange==='m2'?'selected':''}>Tháng 02</option>
+                                    <option value="m3" ${currentReportTimeRange==='m3'?'selected':''}>Tháng 03</option>
+                                    <option value="m4" ${currentReportTimeRange==='m4'?'selected':''}>Tháng 04</option>
+                                    <option value="m5" ${currentReportTimeRange==='m5'?'selected':''}>Tháng 05</option>
+                                    <option value="m6" ${currentReportTimeRange==='m6'?'selected':''}>Tháng 06</option>
+                                    <option value="m7" ${currentReportTimeRange==='m7'?'selected':''}>Tháng 07</option>
+                                    <option value="m8" ${currentReportTimeRange==='m8'?'selected':''}>Tháng 08</option>
+                                    <option value="m9" ${currentReportTimeRange==='m9'?'selected':''}>Tháng 09</option>
+                                    <option value="m10" ${currentReportTimeRange==='m10'?'selected':''}>Tháng 10</option>
+                                    <option value="m11" ${currentReportTimeRange==='m11'?'selected':''}>Tháng 11</option>
+                                    <option value="m12" ${currentReportTimeRange==='m12'?'selected':''}>Tháng 12</option>
+                                </optgroup>
+                            </select>
+                            <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-md border border-slate-200">
+                                ${filteredData.length} Khóa Học
+                            </span>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button onclick="openSurveyInput()" class="btn-outline text-xs !py-1.5 font-bold hover:bg-purple-50 text-purple-700 border-purple-200 shadow-xs" title="Nạp dữ liệu khảo sát học viên">
+                                <i class="fas fa-clipboard-list"></i> Nạp Khảo Sát
+                            </button>
+                            <button onclick="exportMasterDBToCSV()" class="btn-outline text-xs !py-1.5 font-bold hover:bg-slate-50 border-slate-300 shadow-xs" title="Xuất dữ liệu ra Excel">
+                                <i class="fas fa-file-excel text-emerald-600"></i> Xuất Excel (CSV)
+                            </button>
+                            <button onclick="runTechPresentation()" class="btn-outline text-xs !py-1.5 font-bold hover:bg-slate-50 border-slate-300 shadow-xs" title="Trình chiếu Slide Fullscreen">
+                                <i class="fas fa-tv text-blue-600"></i> Trình Chiếu
+                            </button>
+                            <button onclick="openCanvaReportModal()" class="btn-primary text-xs !py-1.5 font-bold bg-gradient-to-r from-purple-600 to-blue-600 border-none shadow-sm hover:shadow transition" title="Tạo slide bằng AI">
+                                <i class="fas fa-magic text-amber-300"></i> Canva AI Slide
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. THẺ KPI METRICS THEO KỲ LỌC -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                         <div class="saas-card p-5 flex items-center justify-between group animate-fade-up">
                             <div class="flex items-center gap-4">
@@ -672,13 +797,13 @@
                         <div class="saas-card p-5 flex items-center justify-between group animate-fade-up delay-100">
                             <div class="flex items-center gap-4">
                                 <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-2xl group-hover:scale-110 transition"><i class="fas fa-chalkboard-teacher"></i></div>
-                                <div><h3 class="text-2xl font-bold text-slate-800">${Object.keys(breakCourse).length || 6}</h3><p class="text-[13px] font-medium text-slate-600 mt-0.5">Tổng phân hệ khóa</p></div>
+                                <div><h3 class="text-2xl font-bold text-slate-800">${Object.keys(breakCourse).length}</h3><p class="text-[13px] font-medium text-slate-600 mt-0.5">Phân hệ hoạt động</p></div>
                             </div>
                         </div>
                         <div class="saas-card p-5 flex items-center justify-between group animate-fade-up delay-200">
                             <div class="flex items-center gap-4">
                                 <div class="w-14 h-14 rounded-2xl bg-pink-50 text-pink-500 flex items-center justify-center text-2xl group-hover:scale-110 transition"><i class="fas fa-graduation-cap"></i></div>
-                                <div><h3 class="text-2xl font-bold text-slate-800">${data.length}</h3><p class="text-[13px] font-medium text-slate-600 mt-0.5">Tổng lớp đã mở</p></div>
+                                <div><h3 class="text-2xl font-bold text-slate-800">${filteredData.length}</h3><p class="text-[13px] font-medium text-slate-600 mt-0.5">Lớp mở trong kỳ</p></div>
                             </div>
                         </div>
                         <div class="saas-card p-5 flex items-center justify-between group relative overflow-hidden animate-fade-up delay-300">
@@ -689,25 +814,35 @@
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-2">
-                            <div class="saas-card p-6 h-[400px] flex flex-col relative mb-6 animate-fade-up delay-300">
-                                <div class="flex justify-between items-center mb-6">
+                    <!-- 3. BẢNG ĐIỀU HÀNH BIỂU ĐỒ & LỊCH TRÌNH -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <div class="lg:col-span-2 space-y-6">
+                            <!-- BIỂU ĐỒ 1: HIỆU SUẤT ĐẠT/FAIL THEO PHÂN HỆ -->
+                            <div class="saas-card p-6 h-[380px] flex flex-col relative animate-fade-up delay-200">
+                                <div class="flex justify-between items-center mb-4">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="fas fa-chart-area"></i></div>
-                                        <div><h3 class="text-[15px] font-bold text-slate-800">Hiệu suất Đạt/Fail theo Phân Hệ</h3><p class="text-[12px] text-slate-400 font-medium">Biểu đồ tích lũy từ MasterDB</p></div>
+                                        <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm"><i class="fas fa-chart-bar"></i></div>
+                                        <div><h3 class="text-[14px] font-bold text-slate-800">Hiệu suất Đạt/Fail theo Phân Hệ</h3><p class="text-[11px] text-slate-400">Số liệu cập nhật theo: ${getTimeRangeLabel()}</p></div>
                                     </div>
                                 </div>
                                 <div class="flex-grow relative w-full h-full"><canvas id="performanceChart"></canvas></div>
                             </div>
-                            <div class="animate-fade-up delay-400">
-                                <h3 class="text-[15px] font-bold text-slate-800 mb-3">Lịch sử cập nhật hệ thống</h3>
-                                <div class="saas-card p-6">${renderHistory()}</div>
+
+                            <!-- BIỂU ĐỒ 2: XU HƯỚNG ĐÀO TẠO THEO 12 THÁNG -->
+                            <div class="saas-card p-6 h-[340px] flex flex-col relative animate-fade-up delay-300">
+                                <div class="flex justify-between items-center mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm"><i class="fas fa-chart-line"></i></div>
+                                        <div><h3 class="text-[14px] font-bold text-slate-800">Xu Hướng Số Lượng Học Viên & Tỷ Lệ Pass Năm 2026</h3><p class="text-[11px] text-slate-400">Đo lường sự biến thiên quy mô qua 12 tháng</p></div>
+                                    </div>
+                                </div>
+                                <div class="flex-grow relative w-full h-full"><canvas id="trendChart"></canvas></div>
                             </div>
                         </div>
 
-                        <div class="animate-fade-up delay-400">
-                            <div class="saas-card p-0 overflow-hidden mb-6">
+                        <!-- CỘT PHẢI: LỊCH TRÌNH & TỒN KHO -->
+                        <div class="space-y-6 animate-fade-up delay-300">
+                            <div class="saas-card p-0 overflow-hidden">
                                 <div class="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
                                     <div class="flex items-center gap-2"><i class="fas fa-calendar-alt text-blue-500"></i> <span class="font-bold text-sm text-slate-800">Lịch trình đào tạo sắp tới</span></div>
                                 </div>
@@ -723,11 +858,52 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- 4. BẢNG CHI TIẾT MASTERDB ĐỘNG & TÌM KIẾM -->
+                    <div class="saas-card p-6 animate-fade-up delay-300">
+                        <div class="flex flex-wrap items-center justify-between gap-4 mb-4 pb-3 border-b border-slate-100">
+                            <div>
+                                <h3 class="text-[15px] font-bold text-slate-800">Chi Tiết Báo Cáo Các Khóa Học (MasterDB)</h3>
+                                <p class="text-xs text-slate-400">Hiển thị thông tin 16 cột chuẩn: Pass/Fail, CSAT, Điểm sáng & Tồn đọng</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="relative w-64">
+                                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                    <input type="text" oninput="handleMasterTableSearch(this.value)" placeholder="Tìm mã khóa, nhận xét..." class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:bg-white focus:border-blue-400 transition">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-xs">
+                            <table class="w-full">
+                                <thead>
+                                    <tr>
+                                        <th class="w-12 text-center">STT</th>
+                                        <th>Mã Khóa & Ngày</th>
+                                        <th>Phân Hệ</th>
+                                        <th class="text-center">Tổng HV</th>
+                                        <th class="text-center">Đạt / Trượt</th>
+                                        <th class="text-center">Tỷ Lệ Pass</th>
+                                        <th class="text-center">CSAT</th>
+                                        <th class="w-72">Highlights & Issues</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="masterDetailTableBody" class="divide-y divide-slate-100">
+                                    ${renderMasterDetailTable()}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 `;
-                setTimeout(() => { updatePerfChart(); renderMerchHTML(); }, 100);
+
+                setTimeout(() => { 
+                    updatePerfChart(filteredData); 
+                    updateTrendChart();
+                    renderMerchHTML(); 
+                }, 100);
             } 
             
-            // 2. TAB TẤT CẢ KHÓA HỌC (ĐÃ SỬA LỖI DEAD-END HOÀN HẢO)
+            // 2. TAB TẤT CẢ KHÓA HỌC (CATALOG CHUẨN)
             else if (tabId === 'khoa-hoc') {
                 let courseCardsHtml = courseCatalog.map(c => {
                     let totalClasses = 0, totalHV = 0, passHV = 0;
@@ -778,40 +954,92 @@
                     </div>
                 `;
             }
-
-            // 3. TAB PHÂN TÍCH & MASTER DATA
-            else if (tabId === 'phan-tich') {
-                container.innerHTML = `
-                    <div class="mb-6 flex justify-between items-center">
-                        <div>
-                            <h2 class="text-2xl font-bold text-slate-800">Master Data API & Báo Cáo Thông Minh</h2>
-                            <p class="text-sm text-slate-500 mt-1">Đồng bộ hai chiều với Google Sheets và xuất bản báo cáo AI</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <button onclick="openSurveyInput()" class="btn-outline bg-purple-50 text-purple-700 border-purple-200"><i class="fas fa-clipboard-list"></i> Nạp Data Khảo Sát</button>
-                            <button onclick="runTechPresentation()" class="btn-outline bg-blue-50 text-blue-700 border-blue-200"><i class="fas fa-tv"></i> Trình Chiếu Real-time</button>
-                            <a href="knowledge-hub.html" class="btn-primary bg-slate-900 border-slate-900"><i class="fas fa-external-link-alt"></i> Mở Master Executive Hub</a>
-                        </div>
-                    </div>
-                    <div class="saas-card p-12 flex flex-col items-center justify-center text-center">
-                        <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center text-4xl mb-4 shadow-sm"><i class="fas fa-database"></i></div>
-                        <h3 class="text-xl font-bold text-slate-800 mb-2">Kho dữ liệu Master DB đã sẵn sàng</h3>
-                        <p class="text-sm text-slate-500 max-w-md mb-6 leading-relaxed">Dữ liệu được bảo toàn tự động và đồng bộ với Google Sheets. Bạn có thể mở Executive Hub để phân tích nâng cao hoặc dùng AI để tạo Slide báo cáo.</p>
-                        <div class="flex gap-4">
-                            <button onclick="openCanvaReportModal()" class="btn-primary py-3 px-6 bg-gradient-to-r from-purple-600 to-blue-600 border-none shadow-lg text-sm font-bold"><i class="fas fa-magic text-amber-300 mr-2"></i> Tạo Báo Cáo Slide Canva (AI)</button>
-                        </div>
-                    </div>
-                `;
-            }
         }
 
-        // --- CHART JS ---
+        // --- TÌM KIẾM TRÊN BẢNG MASTERDB ---
+        function handleMasterTableSearch(val) {
+            masterTableSearchKeyword = val;
+            const tbody = document.getElementById('masterDetailTableBody');
+            if(!tbody) return;
+            const filteredData = getFilteredMasterData();
+
+            let searchData = filteredData;
+            if(masterTableSearchKeyword) {
+                const kw = masterTableSearchKeyword.toLowerCase();
+                searchData = searchData.filter(d => 
+                    (d.courseId && d.courseId.toLowerCase().includes(kw)) ||
+                    (d.groupName && d.groupName.toLowerCase().includes(kw)) ||
+                    (d.highlights && d.highlights.toLowerCase().includes(kw)) ||
+                    (d.issues && d.issues.toLowerCase().includes(kw))
+                );
+            }
+
+            if(searchData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-slate-400 italic">Không tìm thấy khóa học nào phù hợp từ khóa "${val}".</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = searchData.slice().sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)).map((d, idx) => {
+                let p = parseInt(d.totalTrainees) || 0;
+                let s = parseInt(d.passedTrainees) || 0;
+                let rate = p > 0 ? Math.round((s/p)*100) : 0;
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="text-center font-mono font-bold text-slate-400">${idx + 1}</td>
+                        <td>
+                            <span class="font-extrabold text-blue-600 block">${d.courseId || '-'}</span>
+                            <span class="text-[10px] text-slate-400">${d.startDate || ''}</span>
+                        </td>
+                        <td><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">${d.groupName || 'Khác'}</span></td>
+                        <td class="text-center font-bold text-slate-800">${p}</td>
+                        <td class="text-center"><span class="font-bold text-emerald-600">${s}</span> / <span class="font-bold text-rose-500">${d.failedTrainees || 0}</span></td>
+                        <td class="text-center"><span class="px-2 py-0.5 rounded-full text-xs font-black ${rate>=80?'bg-emerald-50 text-emerald-700 border border-emerald-200':'bg-rose-50 text-rose-700 border border-rose-200'}">${rate}%</span></td>
+                        <td class="text-center font-bold text-purple-600">${d.csat || '4.8/5'}</td>
+                        <td>
+                            <p class="text-[11px] text-slate-700 line-clamp-1" title="${d.highlights || ''}"><b class="text-emerald-600">Sáng:</b> ${d.highlights || '-'}</p>
+                            <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5" title="${d.issues || ''}"><b class="text-rose-500">Tồn:</b> ${d.issues || '-'}</p>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- XUẤT MASTERDB RA FILE EXCEL (CSV) CHUẨN TIẾNG VIỆT UTF-8 ---
+        function exportMasterDBToCSV() {
+            const data = getFilteredMasterData();
+            if(data.length === 0) return alert('Không có dữ liệu trong kỳ báo cáo này để xuất!');
+
+            let csvContent = "\uFEFFMã Khóa\tPhân Hệ\tTháng\tBắt Đầu\tKết Thúc\tTổng Học Viên\tSố Lượng Đạt\tSố Lượng Trượt\tTỷ Lệ Pass\tCSAT\tĐiểm Sáng (Highlights)\tTồn Đọng (Issues)\tKế Hoạch (Action Plan)\tTrạng Thái\tLink Danh Sách\tLink LMS\n";
+
+            data.forEach(d => {
+                let p = parseInt(d.totalTrainees) || 0;
+                let s = parseInt(d.passedTrainees) || 0;
+                let rate = p > 0 ? Math.round((s/p)*100) + '%' : '0%';
+                
+                csvContent += `"${d.courseId || ''}"\t"${d.groupName || ''}"\t"${d.month || ''}"\t"${d.startDate || ''}"\t"${d.finishDate || ''}"\t${p}\t${s}\t${d.failedTrainees || 0}\t"${rate}"\t"${d.csat || '4.8/5'}"\t"${(d.highlights || '').replace(/"/g, '""')}"\t"${(d.issues || '').replace(/"/g, '""')}"\t"${(d.actionPlan || '').replace(/"/g, '""')}"\t"${d.status || ''}"\t"${d.listLink || ''}"\t"${d.quizLink || ''}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `BaoCao_L&D_MasterDB_${currentReportTimeRange}_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Đã xuất báo cáo CSV thành công!');
+        }
+
+        // --- BIỂU ĐỒ 1: HIỆU SUẤT ĐẠT/FAIL THEO PHÂN HỆ ---
         Chart.defaults.font.family = 'Inter'; 
         Chart.defaults.color = '#94a3b8';
 
-        function updatePerfChart() {
+        function updatePerfChart(filteredData) {
             const ctx = document.getElementById('performanceChart'); if(!ctx) return;
-            let data = globalMasterDB;
+            let data = filteredData || getFilteredMasterData();
+            
             const groups = {};
             data.forEach(i => {
                 const name = i.groupName || 'Khác';
@@ -828,16 +1056,81 @@
             perfChartInstance = new Chart(ctx.getContext('2d'), {
                 type: 'bar',
                 data: { 
-                    labels: labels, 
+                    labels: labels.length ? labels : ['Chưa có dữ liệu'], 
                     datasets: [
-                        { label: 'Đạt (Pass)', data: passData, backgroundColor: '#3b82f6', borderRadius: 4, barThickness: 24 },
-                        { label: 'Trượt (Fail)', data: failData, backgroundColor:'#ef4444', borderRadius: 4, barThickness: 24 }
+                        { label: 'Đạt (Pass)', data: passData.length ? passData : [0], backgroundColor: '#3b82f6', borderRadius: 4, barThickness: 24 },
+                        { label: 'Trượt (Fail)', data: failData.length ? failData : [0], backgroundColor:'#ef4444', borderRadius: 4, barThickness: 24 }
                     ] 
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: {size: 11} } } }, scales: { y: { stacked: true, beginAtZero: true, border: {display: false}, grid: {color: '#f1f5f9', borderDash:[4,4]}, ticks: {font: {size: 10}} }, x: { stacked: true, border: {display: false}, grid: {display: false}, ticks: {font: {size: 10}} } } }
             });
         }
 
+        // --- BIỂU ĐỒ 2: XU HƯỚNG ĐÀO TẠO 12 THÁNG (LINE CHART) ---
+        function updateTrendChart() {
+            const ctx = document.getElementById('trendChart'); if(!ctx) return;
+            const fullData = globalMasterDB;
+            
+            const monthlyHV = Array(12).fill(0);
+            const monthlyPass = Array(12).fill(0);
+
+            fullData.forEach(d => {
+                let m = parseInt(d.month) || 0;
+                if(!m && d.startDate) {
+                    const parts = d.startDate.split('-');
+                    if(parts.length >= 2) m = parseInt(parts[1]) || 0;
+                }
+                if(m >= 1 && m <= 12) {
+                    monthlyHV[m - 1] += parseInt(d.totalTrainees) || 0;
+                    monthlyPass[m - 1] += parseInt(d.passedTrainees) || 0;
+                }
+            });
+
+            const monthlyRate = monthlyHV.map((tot, idx) => tot > 0 ? Math.round((monthlyPass[idx] / tot) * 100) : 0);
+            const labels = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+
+            if(trendChartInstance) trendChartInstance.destroy();
+            trendChartInstance = new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Số Lượng Học Viên',
+                            data: monthlyHV,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                            fill: true,
+                            tension: 0.35,
+                            borderWidth: 2.5,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Tỷ Lệ Pass (%)',
+                            data: monthlyRate,
+                            borderColor: '#10b981',
+                            backgroundColor: 'transparent',
+                            borderDash: [4, 4],
+                            tension: 0.2,
+                            borderWidth: 2,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true, position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: {size: 11} } } },
+                    scales: {
+                        y: { type: 'linear', position: 'left', beginAtZero: true, grid: {color: '#f1f5f9'}, ticks: {font: {size: 10}} },
+                        y1: { type: 'linear', position: 'right', min: 0, max: 100, grid: {display: false}, ticks: {callback: v => v + '%', font: {size: 10}} },
+                        x: { grid: {display: false}, ticks: {font: {size: 10}} }
+                    }
+                }
+            });
+        }
+
+        // --- QUÀ TẶNG & TỒN KHO ---
         function getIconForGift(name) {
             const n = name.toLowerCase();
             if(n.includes('túi')) return 'fa-shopping-bag text-orange-500';
@@ -881,7 +1174,181 @@
             container.innerHTML = html || `<div class="h-full flex items-center justify-center text-xs text-slate-400">Không có dữ liệu tồn kho.</div>`;
         }
 
-        // --- WHITEBOARD (SỔ VẼ FABRIC.JS 100% HOÀN CHỈNH) ---
+        // --- KHẢO SÁT & TỰ LƯU LOCALSTORAGE ---
+        function openSurveyInput() { 
+            document.getElementById('survey-spcb').value = localStorage.getItem('kv_survey_spcb') || '';
+            document.getElementById('survey-tax').value = localStorage.getItem('kv_survey_tax') || '';
+            document.getElementById('surveyModal').classList.add('active'); 
+        }
+        function closeSurveyInput() { document.getElementById('surveyModal').classList.remove('active'); }
+        function saveSurveyDrafts() {
+            localStorage.setItem('kv_survey_spcb', document.getElementById('survey-spcb').value);
+            localStorage.setItem('kv_survey_tax', document.getElementById('survey-tax').value);
+        }
+
+        // --- TRÌNH CHIẾU PRESENTATION THEO KỲ BÁO CÁO ---
+        function closePresentation() { document.getElementById('presentation-overlay').classList.remove('active'); }
+        let curSlide = 1; const maxSlide = 3;
+        function changeSlide(dir) {
+            document.getElementById(`tslide-${curSlide}`).classList.remove('active');
+            curSlide += dir;
+            if(curSlide > maxSlide) curSlide = maxSlide; if(curSlide < 1) curSlide = 1;
+            document.getElementById(`tslide-${curSlide}`).classList.add('active');
+        }
+
+        async function runTechPresentation() {
+            let data = getFilteredMasterData();
+            if(data.length === 0) return alert('Chưa có dữ liệu MasterDB trong kỳ này để tạo báo cáo!');
+
+            document.getElementById('slide-year').innerText = new Date().getFullYear();
+            document.getElementById('slide-period-title').innerText = `Kỳ Báo Cáo: ${getTimeRangeLabel()}`;
+            document.getElementById('slide-sub-period').innerText = `Dữ liệu phân tích theo: ${getTimeRangeLabel()}`;
+
+            let totalHV = 0, totalPass = 0; let groupStats = {};
+            data.forEach(d => {
+                let g = d.groupName || 'Other';
+                if(!groupStats[g]) groupStats[g] = { classes: 0, hv: 0, pass: 0 };
+                groupStats[g].classes++;
+                groupStats[g].hv += parseInt(d.totalTrainees) || 0;
+                groupStats[g].pass += parseInt(d.passedTrainees) || 0;
+                totalHV += parseInt(d.totalTrainees) || 0;
+                totalPass += parseInt(d.passedTrainees) || 0;
+            });
+
+            document.getElementById('sl-total-class').innerText = data.length;
+            document.getElementById('sl-total-hv').innerText = totalHV;
+            document.getElementById('sl-pass-rate').innerText = totalHV > 0 ? Math.round((totalPass/totalHV)*100) + '%' : '0%';
+
+            let taughtHtml = '', selfHtml = '';
+            for(let key in groupStats) {
+                let s = groupStats[key];
+                let pRate = s.hv > 0 ? Math.round((s.pass/s.hv)*100) : 0;
+                let html = `<div class="flex justify-between items-center bg-slate-800 p-3 rounded mb-2">
+                                <span class="font-bold text-white">${key}</span>
+                                <span class="text-sm text-slate-300">${s.classes} Lớp | ${s.hv} HV | <span class="${pRate>=80?'text-emerald-400 font-bold':'text-rose-400 font-bold'}">Pass: ${pRate}%</span></span>
+                            </div>`;
+                if(key === 'SPCB' || key === 'TAX') taughtHtml += html; else selfHtml += html;
+            }
+            document.getElementById('sl-taught-detail').innerHTML = taughtHtml || '<p class="italic text-slate-400">Chưa có dữ liệu</p>';
+            document.getElementById('sl-self-detail').innerHTML = selfHtml || '<p class="italic text-slate-400">Chưa có dữ liệu</p>';
+
+            curSlide = 1;
+            document.querySelectorAll('.tech-slide').forEach(el => el.classList.remove('active'));
+            document.getElementById('tslide-1').classList.add('active');
+            document.getElementById('presentation-overlay').classList.add('active');
+
+            const sSpcb = localStorage.getItem('kv_survey_spcb') || '';
+            const sTax = localStorage.getItem('kv_survey_tax') || '';
+            const insightBox = document.getElementById('sl-survey-insights');
+            const evalBox = document.getElementById('sl-ai-evaluation');
+
+            if(!sSpcb && !sTax) {
+                insightBox.innerHTML = `<div class="insight-box"><strong>Thông tin Khảo sát:</strong><br>Chưa có dữ liệu khảo sát nháp. Bạn có thể bấm "Nạp Khảo Sát" để bổ sung phản hồi học viên.</div>`;
+                evalBox.innerHTML = `<div class="insight-box">Hệ thống đang hoạt động ổn định. Tỷ lệ Pass trung bình là ${totalHV > 0 ? Math.round((totalPass/totalHV)*100) : 0}%.</div>`;
+            } else {
+                insightBox.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i><p class="font-bold">AI đang phân tích ý kiến...</p></div>`;
+                evalBox.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fas fa-brain fa-pulse text-4xl text-emerald-500 mb-4"></i><p class="font-bold">Đang tổng hợp định hướng...</p></div>`;
+                
+                const promptInsight = `Đóng vai Quản lý đào tạo. Đọc nhận xét sau của học viên và tóm tắt thành 2 mục ngắn gọn (có dùng icon): Điểm Sáng và Điểm Cần Cải Thiện.\nData: ${sSpcb} ${sTax}`;
+                const aiInsight = await askAgenticAI(promptInsight);
+                insightBox.innerHTML = `<div class="insight-box bg-blue-50 border-blue-200 text-[13px] leading-relaxed">${formatAIResponse(aiInsight)}</div>`;
+
+                const promptEval = `Đóng vai Giám đốc L&D. Tỷ lệ Pass kỳ này (${getTimeRangeLabel()}) là ${totalHV > 0 ? Math.round((totalPass/totalHV)*100) : 0}%. Đưa ra 2 Lời khuyên ngắn gọn cho Trainer. (Dùng icon)`;
+                const aiEval = await askAgenticAI(promptEval);
+                evalBox.innerHTML = `<div class="insight-box bg-emerald-50 border-emerald-200 text-[13px] leading-relaxed">${formatAIResponse(aiEval)}</div>`;
+            }
+        }
+
+        // --- CANVA AI GENERATOR THEO KỲ BÁO CÁO ---
+        function openCanvaReportModal() {
+            document.getElementById('canvaPeriodTag').innerText = `Kỳ báo cáo: ${getTimeRangeLabel()}`;
+            document.getElementById('canvaReportModal').classList.add('active');
+            document.getElementById('canvaReportContent').innerHTML = `<div class="flex flex-col items-center justify-center h-full text-slate-400"><i class="fas fa-robot text-5xl mb-4 text-slate-300"></i><p class="font-medium">Sẵn sàng phân tích dữ liệu cho kỳ: <b>${getTimeRangeLabel()}</b>...</p></div>`;
+            const btnCopy = document.getElementById('btnCopyCanva');
+            btnCopy.classList.add('hidden', 'opacity-0');
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        async function generateCanvaReport() {
+            const data = getFilteredMasterData();
+            if(data.length === 0) return alert('Hệ thống chưa có dữ liệu MasterDB trong kỳ này để phân tích!');
+
+            const btnGen = document.getElementById('btnGenReport');
+            const contentBox = document.getElementById('canvaReportContent');
+            const btnCopy = document.getElementById('btnCopyCanva');
+
+            btnGen.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Đang phân tích...';
+            btnGen.classList.add('pointer-events-none', 'opacity-70');
+            btnCopy.classList.add('hidden', 'opacity-0');
+            contentBox.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-purple-600"><i class="fas fa-brain fa-pulse text-5xl mb-4"></i><p class="font-bold">Kevin đang tổng hợp số liệu kỳ ${getTimeRangeLabel()}...</p></div>`;
+
+            let totalHV = 0, totalPass = 0;
+            let listHighlights = []; let listIssues = []; let listPlans = [];
+            
+            data.forEach(d => {
+                totalHV += parseInt(d.totalTrainees) || 0;
+                totalPass += parseInt(d.passedTrainees) || 0;
+                if(d.highlights) listHighlights.push(d.highlights);
+                if(d.issues) listIssues.push(d.issues);
+                if(d.actionPlan) listPlans.push(d.actionPlan);
+            });
+
+            const passRate = totalHV > 0 ? Math.round((totalPass/totalHV)*100) : 0;
+            const periodStr = getTimeRangeLabel();
+
+            const prompt = `Bạn là Giám đốc Đào tạo (L&D Director). Hãy tổng hợp số liệu sau và viết một kịch bản Báo cáo Tổng kết kỳ "${periodStr}" định dạng thuần Markdown (Không dùng code block, chỉ viết text).
+            MỤC ĐÍCH: Để copy thẳng vào Canva Docs để tự động chuyển thành Slide thuyết trình.
+            
+            DỮ LIỆU ĐẦU VÀO:
+            - Kỳ báo cáo: ${periodStr}
+            - Tổng số lớp đã mở: ${data.length}
+            - Tổng học viên: ${totalHV}
+            - Tỷ lệ Pass: ${passRate}%
+            - Điểm sáng ghi nhận: ${listHighlights.slice(0,5).join(' | ') || 'Hoàn thành tốt các lớp tiêu chuẩn'}
+            - Tồn đọng gặp phải: ${listIssues.slice(0,5).join(' | ') || 'Cần tăng cường thực hành thao tác'}
+            - Kế hoạch đề xuất: ${listPlans.slice(0,5).join(' | ') || 'Bám sát kèm cặp học viên'}
+
+            YÊU CẦU 5 SLIDE (Dùng # Heading 1 cho tiêu đề Slide, gạch đầu dòng cho nội dung):
+            # Slide 1: Báo Cáo Đào Tạo Kỳ ${periodStr}
+            # Slide 2: Những Con Số Ấn Tượng
+            # Slide 3: Thành Tựu & Điểm Sáng
+            # Slide 4: Thách Thức & Điểm Nghẽn
+            # Slide 5: Kế Hoạch Hành Động Kỳ Tới`;
+
+            let aiResponse = await askAgenticAI(prompt);
+            
+            if(aiResponse.includes("⚠️ Lỗi")) {
+                contentBox.innerHTML = `<div class="text-rose-500 font-bold p-4 bg-rose-50 rounded-lg">${aiResponse}</div>`;
+            } else {
+                const formattedHtml = aiResponse.replace(/# Slide(.*?)\n/g, '<h2 class="text-lg font-bold text-purple-700 mt-4 mb-2 border-b border-slate-200 pb-1"><i class="fas fa-tv mr-2 text-slate-400"></i>Slide$1</h2>')
+                                                .replace(/\n/g, '<br>');
+                contentBox.innerHTML = formattedHtml;
+                contentBox.setAttribute('data-raw-markdown', aiResponse);
+                btnCopy.classList.remove('hidden');
+                setTimeout(() => btnCopy.classList.remove('opacity-0'), 100);
+            }
+
+            btnGen.innerHTML = '<i class="fas fa-bolt text-amber-300 mr-2"></i> TẠO LẠI BÁO CÁO';
+            btnGen.classList.remove('pointer-events-none', 'opacity-70');
+        }
+
+        function copyToCanva() {
+            const rawText = document.getElementById('canvaReportContent').getAttribute('data-raw-markdown');
+            if(!rawText) return;
+            navigator.clipboard.writeText(rawText).then(() => {
+                const btnCopy = document.getElementById('btnCopyCanva');
+                const oldHtml = btnCopy.innerHTML;
+                btnCopy.innerHTML = '<i class="fas fa-check mr-1 text-emerald-400"></i> Đã Copy Thành Công';
+                btnCopy.classList.replace('bg-slate-800', 'bg-emerald-600');
+                setTimeout(() => {
+                    btnCopy.innerHTML = oldHtml;
+                    btnCopy.classList.replace('bg-emerald-600', 'bg-slate-800');
+                }, 3000);
+            });
+        }
+
+        // --- WHITEBOARD (FABRIC.JS 100% HOÀN HẢO) ---
         function switchNoteTab(tab) {
             const dBtn = document.getElementById('tab-draw'); const tBtn = document.getElementById('tab-text');
             const drawArea = document.getElementById('drawArea'); const drawToolbar = document.getElementById('drawToolbar');
@@ -1025,7 +1492,7 @@
             }
         }
 
-        // --- AI CHATBOT & KEVIN ASSISTANT ---
+        // --- AI CHATBOT KEVIN ---
         function toggleChat() { 
             document.getElementById('notesWidget').classList.remove('active'); 
             document.getElementById('chatWidget').classList.toggle('active'); 
@@ -1075,7 +1542,7 @@
                 }
             } catch(e) {}
 
-            let systemContext = `Dưới đây là Data hệ thống hiện tại:\n1. Tổng số khóa học đã lưu: ${globalMasterDB.length} khóa.\n2. Tình hình Tồn Kho Quà Tặng:\n${giftData}\n`;
+            let systemContext = `Dưới đây là Data hệ thống hiện tại:\n1. Tổng số khóa học đã lưu: ${globalMasterDB.length} khóa.\n2. Kỳ báo cáo đang xem: ${getTimeRangeLabel()}.\n3. Tình hình Tồn Kho Quà Tặng:\n${giftData}\n`;
             const finalPrompt = `${systemContext}\nCâu hỏi: ${text}`;
 
             let aiResponse = await askAgenticAI(finalPrompt);
@@ -1083,166 +1550,6 @@
             if(replyBox) {
                 replyBox.innerHTML = `<i class="fas fa-robot text-purple-500 mt-1 text-lg"></i><div class="leading-relaxed flex-grow text-slate-700">${formatAIResponse(aiResponse)}</div>`;
                 history.scrollTop = history.scrollHeight;
-            }
-        }
-
-        // --- CANVA REPORT GENERATOR ---
-        function openCanvaReportModal() {
-            document.getElementById('canvaReportModal').classList.add('active');
-            document.getElementById('canvaReportContent').innerHTML = `<div class="flex flex-col items-center justify-center h-full text-slate-400"><i class="fas fa-robot text-5xl mb-4 text-slate-300"></i><p class="font-medium">Sẵn sàng phân tích dữ liệu...</p></div>`;
-            const btnCopy = document.getElementById('btnCopyCanva');
-            btnCopy.classList.add('hidden', 'opacity-0');
-        }
-
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-        async function generateCanvaReport() {
-            const data = globalMasterDB || [];
-            if(data.length === 0) return alert('Hệ thống chưa có dữ liệu MasterDB để phân tích!');
-
-            const btnGen = document.getElementById('btnGenReport');
-            const contentBox = document.getElementById('canvaReportContent');
-            const btnCopy = document.getElementById('btnCopyCanva');
-
-            btnGen.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Đang phân tích...';
-            btnGen.classList.add('pointer-events-none', 'opacity-70');
-            btnCopy.classList.add('hidden', 'opacity-0');
-            contentBox.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-purple-600"><i class="fas fa-brain fa-pulse text-5xl mb-4"></i><p class="font-bold">Kevin đang tổng hợp số liệu 12 tháng...</p></div>`;
-
-            let totalHV = 0, totalPass = 0;
-            let listHighlights = []; let listIssues = []; let listPlans = [];
-            
-            data.forEach(d => {
-                totalHV += parseInt(d.totalTrainees) || 0;
-                totalPass += parseInt(d.passedTrainees) || 0;
-                if(d.highlights) listHighlights.push(d.highlights);
-                if(d.issues) listIssues.push(d.issues);
-                if(d.actionPlan) listPlans.push(d.actionPlan);
-            });
-
-            const passRate = totalHV > 0 ? Math.round((totalPass/totalHV)*100) : 0;
-            const currentYear = new Date().getFullYear();
-
-            const prompt = `Bạn là Giám đốc Đào tạo (L&D Director). Hãy tổng hợp số liệu sau và viết một kịch bản Báo cáo Tổng kết năm ${currentYear} định dạng thuần Markdown (Không dùng code block markdown, chỉ viết text).
-            MỤC ĐÍCH: Để copy thẳng vào Canva Docs để tự động tạo Slide.
-            
-            DỮ LIỆU ĐẦU VÀO:
-            - Tổng số lớp đã mở: ${data.length}
-            - Tổng học viên: ${totalHV}
-            - Tỷ lệ Pass: ${passRate}%
-            - Điểm sáng: ${listHighlights.slice(0,5).join(' | ') || 'Hoàn thành tốt các lớp cơ bản'}
-            - Tồn đọng: ${listIssues.slice(0,5).join(' | ') || 'Học viên cần thực hành nhiều hơn'}
-            - Kế hoạch: ${listPlans.slice(0,5).join(' | ') || 'Số hóa bài giảng lên LMS'}
-
-            YÊU CẦU CẤU TRÚC 5 SLIDE (Dùng # Heading 1 cho tiêu đề Slide, gạch đầu dòng cho nội dung):
-            # Slide 1: Báo cáo Tổng kết Hoạt động Đào tạo ${currentYear}
-            # Slide 2: Những con số biết nói
-            # Slide 3: Thành tựu nổi bật
-            # Slide 4: Thách thức & Điểm nghẽn
-            # Slide 5: Kế hoạch Hành động năm tới`;
-
-            let aiResponse = await askAgenticAI(prompt);
-            
-            if(aiResponse.includes("⚠️ Lỗi")) {
-                contentBox.innerHTML = `<div class="text-rose-500 font-bold p-4 bg-rose-50 rounded-lg">${aiResponse}</div>`;
-            } else {
-                const formattedHtml = aiResponse.replace(/# Slide(.*?)\n/g, '<h2 class="text-lg font-bold text-purple-700 mt-4 mb-2 border-b border-slate-200 pb-1"><i class="fas fa-tv mr-2 text-slate-400"></i>Slide$1</h2>')
-                                                .replace(/\n/g, '<br>');
-                contentBox.innerHTML = formattedHtml;
-                contentBox.setAttribute('data-raw-markdown', aiResponse);
-                btnCopy.classList.remove('hidden');
-                setTimeout(() => btnCopy.classList.remove('opacity-0'), 100);
-            }
-
-            btnGen.innerHTML = '<i class="fas fa-bolt text-amber-300 mr-2"></i> TẠO LẠI BÁO CÁO';
-            btnGen.classList.remove('pointer-events-none', 'opacity-70');
-        }
-
-        function copyToCanva() {
-            const rawText = document.getElementById('canvaReportContent').getAttribute('data-raw-markdown');
-            if(!rawText) return;
-            navigator.clipboard.writeText(rawText).then(() => {
-                const btnCopy = document.getElementById('btnCopyCanva');
-                const oldHtml = btnCopy.innerHTML;
-                btnCopy.innerHTML = '<i class="fas fa-check mr-1 text-emerald-400"></i> Đã Copy Thành Công';
-                btnCopy.classList.replace('bg-slate-800', 'bg-emerald-600');
-                setTimeout(() => {
-                    btnCopy.innerHTML = oldHtml;
-                    btnCopy.classList.replace('bg-emerald-600', 'bg-slate-800');
-                }, 3000);
-            });
-        }
-
-        // --- FULLSCREEN PRESENTATION SLIDES ---
-        function openSurveyInput() { document.getElementById('surveyModal').classList.add('active'); }
-        function closeSurveyInput() { document.getElementById('surveyModal').classList.remove('active'); }
-        function closePresentation() { document.getElementById('presentation-overlay').classList.remove('active'); }
-        let curSlide = 1; const maxSlide = 3;
-        function changeSlide(dir) {
-            document.getElementById(`tslide-${curSlide}`).classList.remove('active');
-            curSlide += dir;
-            if(curSlide > maxSlide) curSlide = maxSlide; if(curSlide < 1) curSlide = 1;
-            document.getElementById(`tslide-${curSlide}`).classList.add('active');
-        }
-
-        async function runTechPresentation() {
-            let data = globalMasterDB || [];
-            if(data.length === 0) return alert('Chưa có dữ liệu MasterDB để trình chiếu!');
-
-            document.getElementById('slide-year').innerText = new Date().getFullYear();
-
-            let totalHV = 0, totalPass = 0; let groupStats = {};
-            data.forEach(d => {
-                let g = d.groupName || 'Other';
-                if(!groupStats[g]) groupStats[g] = { classes: 0, hv: 0, pass: 0 };
-                groupStats[g].classes++;
-                groupStats[g].hv += parseInt(d.totalTrainees) || 0;
-                groupStats[g].pass += parseInt(d.passedTrainees) || 0;
-                totalHV += parseInt(d.totalTrainees) || 0;
-                totalPass += parseInt(d.passedTrainees) || 0;
-            });
-
-            document.getElementById('sl-total-class').innerText = data.length;
-            document.getElementById('sl-total-hv').innerText = totalHV;
-            document.getElementById('sl-pass-rate').innerText = totalHV > 0 ? Math.round((totalPass/totalHV)*100) + '%' : '0%';
-
-            let taughtHtml = '', selfHtml = '';
-            for(let key in groupStats) {
-                let s = groupStats[key];
-                let pRate = s.hv > 0 ? Math.round((s.pass/s.hv)*100) : 0;
-                let html = `<div class="flex justify-between items-center bg-slate-800 p-3 rounded mb-2">
-                                <span class="font-bold text-white">${key}</span>
-                                <span class="text-sm text-slate-300">${s.classes} Lớp | ${s.hv} HV | <span class="${pRate>=80?'text-emerald-400 font-bold':'text-rose-400 font-bold'}">Pass: ${pRate}%</span></span>
-                            </div>`;
-                if(key === 'SPCB' || key === 'TAX') taughtHtml += html; else selfHtml += html;
-            }
-            document.getElementById('sl-taught-detail').innerHTML = taughtHtml || '<p class="italic text-slate-400">Chưa có dữ liệu</p>';
-            document.getElementById('sl-self-detail').innerHTML = selfHtml || '<p class="italic text-slate-400">Chưa có dữ liệu</p>';
-
-            curSlide = 1;
-            document.querySelectorAll('.tech-slide').forEach(el => el.classList.remove('active'));
-            document.getElementById('tslide-1').classList.add('active');
-            document.getElementById('presentation-overlay').classList.add('active');
-
-            const sSpcb = document.getElementById('survey-spcb') ? document.getElementById('survey-spcb').value.trim() : '';
-            const sTax = document.getElementById('survey-tax') ? document.getElementById('survey-tax').value.trim() : '';
-            const insightBox = document.getElementById('sl-survey-insights');
-            const evalBox = document.getElementById('sl-ai-evaluation');
-
-            if(!sSpcb && !sTax) {
-                insightBox.innerHTML = `<div class="insight-box warning"><strong>⚠️ Chưa có dữ liệu khảo sát:</strong><br>Vui lòng dán data từ Excel vào modal "Nạp Data Khảo Sát" để AI tóm tắt.</div>`;
-                evalBox.innerHTML = `<div class="insight-box">Hệ thống đang hoạt động ổn định. Tỷ lệ Pass trung bình là ${totalHV > 0 ? Math.round((totalPass/totalHV)*100) : 0}%.</div>`;
-            } else {
-                insightBox.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i><p class="font-bold">AI đang phân tích ý kiến học viên...</p></div>`;
-                evalBox.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fas fa-brain fa-pulse text-4xl text-emerald-500 mb-4"></i><p class="font-bold">Đang tổng hợp định hướng...</p></div>`;
-                
-                const promptInsight = `Đóng vai Quản lý đào tạo. Đọc các nhận xét sau của học viên và tóm tắt thành 2 mục ngắn gọn (có dùng icon): Điểm Sáng và Cần Cải Thiện.\nData: ${sSpcb} ${sTax}`;
-                const aiInsight = await askAgenticAI(promptInsight);
-                insightBox.innerHTML = `<div class="insight-box bg-blue-50 border-blue-200 text-[13px] leading-relaxed">${formatAIResponse(aiInsight)}</div>`;
-
-                const promptEval = `Đóng vai Giám đốc L&D. Tỷ lệ Pass học viên là ${totalHV > 0 ? Math.round((totalPass/totalHV)*100) : 0}%. Hãy đưa ra 2 Lời khuyên ngắn gọn cho Trainer tháng tới. (Dùng icon)`;
-                const aiEval = await askAgenticAI(promptEval);
-                evalBox.innerHTML = `<div class="insight-box bg-emerald-50 border-emerald-200 text-[13px] leading-relaxed">${formatAIResponse(aiEval)}</div>`;
             }
         }
 
@@ -1281,6 +1588,7 @@
             });
         };
     </script>
+    <!-- TÍCH HỢP BỘ CẨM NANG SOP TOÀN CỤC -->
     <script src="sop-drawer.js"></script>
 </body>
 </html>
