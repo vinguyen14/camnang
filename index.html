@@ -1011,31 +1011,119 @@
             }).join('');
         }
 
-        // --- XUẤT MASTERDB RA FILE EXCEL (CSV) CHUẨN TIẾNG VIỆT UTF-8 ---
+        // --- XUẤT MASTERDB RA BẢNG TÍNH EXCEL (.XLS) CHUẨN ĐẸP 17 CỘT ---
         function exportMasterDBToCSV() {
             const data = getFilteredMasterData();
             if(data.length === 0) return alert('Không có dữ liệu trong kỳ báo cáo này để xuất!');
 
-            let csvContent = "\uFEFFMã Khóa\tPhân Hệ\tTháng\tBắt Đầu\tKết Thúc\tTổng Học Viên\tSố Lượng Đạt\tSố Lượng Trượt\tTỷ Lệ Pass\tCSAT\tĐiểm Sáng (Highlights)\tTồn Đọng (Issues)\tKế Hoạch (Action Plan)\tTrạng Thái\tLink Danh Sách\tLink LMS\n";
+            // Hàm làm sạch chuỗi ngày tháng ISO sang chuẩn DD/MM/YYYY
+            const cleanDate = (val) => {
+                if(!val) return '-';
+                const str = String(val).trim();
+                if(/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                    const p = str.split('-');
+                    return `${p[2]}/${p[1]}/${p[0]}`;
+                }
+                const d = new Date(val);
+                if(isNaN(d.getTime())) return str;
+                return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
+            };
 
-            data.forEach(d => {
+            // Dựng bảng tính HTML tương thích 100% với Microsoft Excel
+            let excelHtml = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="utf-8">
+                    <!--[if gte mso 9]>
+                    <xml>
+                        <x:ExcelWorkbook>
+                            <x:ExcelWorksheets>
+                                <x:ExcelWorksheet>
+                                    <x:Name>MasterDB_BaoCao</x:Name>
+                                    <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+                                </x:ExcelWorksheet>
+                            </x:ExcelWorksheets>
+                        </x:ExcelWorkbook>
+                    </xml>
+                    <![endif]-->
+                </head>
+                <body>
+                    <table border="1" style="border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 11pt;">
+                        <thead>
+                            <tr style="background-color: #0066cc; color: #ffffff; font-weight: bold; text-align: center; height: 35px;">
+                                <th style="padding: 6px 10px;">STT</th>
+                                <th style="padding: 6px 15px;">Mã Khóa Học</th>
+                                <th style="padding: 6px 15px;">Phân Hệ</th>
+                                <th style="padding: 6px 10px;">Tháng</th>
+                                <th style="padding: 6px 12px;">Ngày Bắt Đầu</th>
+                                <th style="padding: 6px 12px;">Ngày Kết Thúc</th>
+                                <th style="padding: 6px 10px;">Sĩ Số (Tổng HV)</th>
+                                <th style="padding: 6px 10px;">Số Đạt (Pass)</th>
+                                <th style="padding: 6px 10px;">Số Trượt (Fail)</th>
+                                <th style="padding: 6px 10px;">Tỷ Lệ Pass</th>
+                                <th style="padding: 6px 10px;">Mức CSAT</th>
+                                <th style="padding: 6px 20px; width: 280px;">Điểm Sáng (Highlights)</th>
+                                <th style="padding: 6px 20px; width: 280px;">Khó Khăn / Tồn Đọng (Issues)</th>
+                                <th style="padding: 6px 20px; width: 280px;">Kế Hoạch Hành Động (Action Plan)</th>
+                                <th style="padding: 6px 15px;">Trạng Thái</th>
+                                <th style="padding: 6px 20px;">Link Danh Sách Lớp</th>
+                                <th style="padding: 6px 20px;">Link Khóa Học LMS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            data.forEach((d, idx) => {
                 let p = parseInt(d.totalTrainees) || 0;
                 let s = parseInt(d.passedTrainees) || 0;
+                let fail = parseInt(d.failedTrainees) || 0;
                 let rate = p > 0 ? Math.round((s/p)*100) + '%' : '0%';
-                
-                csvContent += `"${d.courseId || ''}"\t"${d.groupName || ''}"\t"${d.month || ''}"\t"${d.startDate || ''}"\t"${d.finishDate || ''}"\t${p}\t${s}\t${d.failedTrainees || 0}\t"${rate}"\t"${d.csat || '4.8/5'}"\t"${(d.highlights || '').replace(/"/g, '""')}"\t"${(d.issues || '').replace(/"/g, '""')}"\t"${(d.actionPlan || '').replace(/"/g, '""')}"\t"${d.status || ''}"\t"${d.listLink || ''}"\t"${d.quizLink || ''}"\n`;
+
+                const highlightsClean = (d.highlights || '').replace(/\n/g, '<br>');
+                const issuesClean = (d.issues || '').replace(/\n/g, '<br>');
+                const planClean = (d.actionPlan || '').replace(/\n/g, '<br>');
+
+                excelHtml += `
+                    <tr style="height: 28px;">
+                        <td style="text-align: center;">${idx + 1}</td>
+                        <td style="font-weight: bold; text-align: center; color: #0066cc;">${d.courseId || '-'}</td>
+                        <td style="text-align: center;">${d.groupName || 'Khác'}</td>
+                        <td style="text-align: center;">${d.month || '-'}</td>
+                        <td style="text-align: center;">${cleanDate(d.startDate)}</td>
+                        <td style="text-align: center;">${cleanDate(d.finishDate)}</td>
+                        <td style="text-align: center; font-weight: bold;">${p}</td>
+                        <td style="text-align: center; font-weight: bold; color: #107c41;">${s}</td>
+                        <td style="text-align: center; font-weight: bold; color: #d83b01;">${fail}</td>
+                        <td style="text-align: center; font-weight: bold; background-color: #f2f9f5;">${rate}</td>
+                        <td style="text-align: center; font-weight: bold; color: #5c2d91;">${d.csat || '4.8/5'}</td>
+                        <td style="vertical-align: top;">${highlightsClean || '-'}</td>
+                        <td style="vertical-align: top;">${issuesClean || '-'}</td>
+                        <td style="vertical-align: top;">${planClean || '-'}</td>
+                        <td style="text-align: center; font-weight: bold;">${d.status || 'Hoàn thành'}</td>
+                        <td style="vertical-align: top;">${d.listLink && d.listLink.startsWith('http') ? `<a href="${d.listLink}">Mở Danh Sách</a>` : '-'}</td>
+                        <td style="vertical-align: top;">${d.quizLink && d.quizLink.startsWith('http') ? `<a href="${d.quizLink}">Mở Bài Thi LMS</a>` : '-'}</td>
+                    </tr>
+                `;
             });
 
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            excelHtml += `
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+
+            // Xuất file chuẩn MIME Excel (.xls)
+            const blob = new Blob([excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
             const link = document.createElement("a");
             const url = URL.createObjectURL(blob);
             link.setAttribute("href", url);
-            link.setAttribute("download", `BaoCao_L&D_MasterDB_${currentReportTimeRange}_${new Date().toISOString().split('T')[0]}.csv`);
+            link.setAttribute("download", `BaoCao_L&D_MasterDB_${currentReportTimeRange}_${new Date().toISOString().split('T')[0]}.xls`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            showToast('Đã xuất báo cáo CSV thành công!');
+            showToast('Đã xuất báo cáo Excel (.xls) 17 cột thành công!');
         }
 
         // --- BIỂU ĐỒ 1: HIỆU SUẤT ĐẠT/FAIL THEO PHÂN HỆ ---
