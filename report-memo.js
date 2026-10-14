@@ -1,24 +1,29 @@
 /**
  * TRAINER OS - EXECUTIVE TRAINING REPORT MEMO (CHUẨN DOANH NGHIỆP A4)
- * Version: 5.0 Enterprise
+ * Version: 5.1 Enterprise UX (Fixed Scroll Clipping & Vietnamese Date Format)
  * Tính năng: Xem trước trước khi nộp, xem lại từ MasterDB, in ấn xuất PDF chuẩn A4, chữ ký Trainer & Leader
  */
 
 (function () {
-    // 1. CSS CHO PHIẾU BÁO CÁO VÀ CHUẨN IN ẤN A4 (@media print)
+    // 1. CSS CHO PHIẾU BÁO CÁO (ĐÃ FIX LỖI CUỘN MẤT ĐỈNH)
     const memoStyles = `
         .memo-overlay {
             position: fixed; inset: 0;
             background: rgba(15, 23, 42, 0.65);
             backdrop-filter: blur(5px);
             z-index: 999999;
-            display: none; align-items: center; justify-content: center;
-            padding: 20px; overflow-y: auto;
+            display: none;
+            overflow-y: auto;
+            padding: 40px 16px;
         }
-        .memo-overlay.active { display: flex; }
+        .memo-overlay.active { 
+            display: flex; 
+            justify-content: center;
+            align-items: flex-start; /* Fix triệt để lỗi mất đỉnh khi nội dung dài */
+        }
         
         .memo-paper {
-            width: 100%; max-width: 820px;
+            width: 100%; max-width: 840px;
             background: #ffffff;
             border-radius: 18px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -27,6 +32,7 @@
             color: #1e293b;
             overflow: hidden;
             position: relative;
+            margin-bottom: 40px; /* Đảm bảo đáy không bị sát màn hình khi cuộn hết */
         }
 
         /* ĐỊNH DẠNG CHUYÊN BIỆT KHI BẤM IN / XUẤT PDF */
@@ -41,12 +47,40 @@
             .memo-paper {
                 box-shadow: none !important; border: none !important;
                 max-width: 100% !important; border-radius: 0 !important;
+                margin: 0 !important;
             }
             .no-print { display: none !important; }
         }
     `;
 
-    // 2. TIÊM CSS VÀ MODAL VÀO TRANG
+    // 2. HÀM CHUYỂN ĐỔI NGÀY THÁNG TIẾNG VIỆT CHUẨN XÁC
+    function formatVietnameseDate(rawDate) {
+        if (!rawDate) return '--';
+        
+        // Trường hợp định dạng YYYY-MM-DD thuần túy (tránh lệch múi giờ UTC)
+        if (typeof rawDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rawDate.trim())) {
+            const parts = rawDate.trim().split('-');
+            const y = parseInt(parts[0]);
+            const m = parseInt(parts[1]) - 1;
+            const day = parseInt(parts[2]);
+            const d = new Date(y, m, day);
+            const dayNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+            return `${dayNames[d.getDay()]}, ${parts[2]}/${parts[1]}/${y}`;
+        }
+
+        const d = new Date(rawDate);
+        if (isNaN(d.getTime())) return String(rawDate);
+
+        const dayNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+        const thu = dayNames[d.getDay()];
+        const day = d.getDate().toString().padStart(2, '0');
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const year = d.getFullYear();
+
+        return `${thu}, ${day}/${month}/${year}`;
+    }
+
+    // 3. TIÊM CSS VÀ MODAL VÀO TRANG
     function injectMemoDom() {
         if (document.getElementById('executiveReportModal')) return;
 
@@ -121,7 +155,7 @@
                         </div>
                         <div>
                             <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Thời Gian Diễn Ra</p>
-                            <p class="text-xs font-semibold text-slate-700 mt-0.5" id="memoTimeline">--</p>
+                            <p class="text-xs font-bold text-slate-700 mt-0.5" id="memoTimeline">--</p>
                         </div>
                         <div>
                             <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Trạng Thái Khóa</p>
@@ -214,7 +248,7 @@
                             <p class="font-extrabold uppercase text-slate-700">Giảng Viên Đào Tạo</p>
                             <p class="text-[11px] text-slate-400 italic">(Người lập báo cáo)</p>
                             <div class="h-16 flex items-center justify-center">
-                                <span class="font-serif italic text-blue-600 text-base" id="memoSignName">Trainer</span>
+                                <span class="font-serif italic text-blue-600 text-base font-bold" id="memoSignName">Trainer</span>
                             </div>
                             <p class="font-bold text-slate-800" id="memoFooterTrainer">Trainer</p>
                         </div>
@@ -240,7 +274,7 @@
         });
     }
 
-    // 3. MỞ BÁO CÁO (HỖ TRỢ CẢ XEM TRƯỚC LẪN XEM LẠI TỪ CSDL)
+    // 4. MỞ BÁO CÁO (ĐÃ FORMAT CHUẨN THỨ, NGÀY, THÁNG, NĂM)
     window.openReportMemo = function (courseData, isPreview = false, submitCallback = null) {
         injectMemoDom();
 
@@ -253,16 +287,21 @@
         const rate = total > 0 ? Math.round((pass / total) * 100) : 0;
         const cId = courseData.courseId || 'CHƯA ĐẶT';
 
+        // Format ngày tháng chuẩn tiếng Việt: Thứ [X], DD/MM/YYYY
+        const formattedStart = formatVietnameseDate(courseData.startDate);
+        const formattedFinish = formatVietnameseDate(courseData.finishDate);
+        const formattedToday = formatVietnameseDate(new Date());
+
         // Điền dữ liệu vào form A4
         document.getElementById('memoTopTitle').innerText = isPreview ? 'XEM TRƯỚC PHIẾU BÁO CÁO (PREVIEW)' : 'PHIẾU BÁO CÁO TỔNG KẾT';
         document.getElementById('memoBadgeCourseId').innerText = `MÃ: ${cId}`;
-        document.getElementById('memoDateCreated').innerText = `Ngày lập: ${new Date().toLocaleDateString('vi-VN')}`;
+        document.getElementById('memoDateCreated').innerText = `Ngày lập: ${formattedToday}`;
         document.getElementById('memoReportHeaderTitle').innerText = `Báo Cáo Tổng Kết Khóa ${cId}`;
-        document.getElementById('memoSubHeaderInfo').innerText = `Phân hệ: ${courseData.groupName || 'Chung'} | Thời gian: ${courseData.startDate || '--'} đến ${courseData.finishDate || '--'}`;
+        document.getElementById('memoSubHeaderInfo').innerText = `Phân hệ: ${courseData.groupName || 'Chung'} | Thời gian: ${formattedStart} đến ${formattedFinish}`;
 
         document.getElementById('memoGroupName').innerText = courseData.groupName || 'Khóa học nội bộ';
         document.getElementById('memoTrainerName').innerText = `${prof.name} (${prof.title})`;
-        document.getElementById('memoTimeline').innerText = `${courseData.startDate || '--'} ➔ ${courseData.finishDate || '--'}`;
+        document.getElementById('memoTimeline').innerText = `${formattedStart} ➔ ${formattedFinish}`;
         document.getElementById('memoStatus').innerText = courseData.status || 'Hoàn thành';
 
         document.getElementById('memoTotalHV').innerText = total;
@@ -294,7 +333,7 @@
         document.getElementById('memoSignName').innerText = prof.name;
         document.getElementById('memoFooterTrainer').innerText = prof.name;
 
-        // Cập nhật thanh nút bấm (Preview có thêm nút "Xác Nhận Nộp")
+        // Cập nhật nút bấm
         const actionBox = document.getElementById('memoActionButtons');
         if (isPreview && typeof submitCallback === 'function') {
             actionBox.innerHTML = `
@@ -321,6 +360,8 @@
         }
 
         modal.classList.add('active');
+        // Tự động cuộn mượt lên đỉnh tờ giấy khi mở
+        modal.scrollTop = 0;
     };
 
     window.closeReportMemo = function () {
@@ -332,7 +373,7 @@
         window.print();
     };
 
-    // 4. TỰ ĐỘNG CHÈN NÚT "XEM TRƯỚC BÁO CÁO" TẠI CÁC TRANG ĐÓNG KHÓA
+    // 5. TỰ ĐỘNG CHÈN NÚT "XEM TRƯỚC BÁO CÁO" TẠI CÁC TRANG ĐÓNG KHÓA
     function autoInjectPreviewButtonOnClosingPages() {
         const submitBtn = document.getElementById('btnSubmit');
         if (!submitBtn || document.getElementById('btnAutoPreviewMemo')) return;
@@ -344,7 +385,6 @@
         previewBtn.innerHTML = '<i class="fas fa-eye text-blue-600"></i> Xem Trước Báo Cáo (Preview Form)';
         
         previewBtn.onclick = function () {
-            // Thu thập dữ liệu form hiện thời
             const courseId = (document.getElementById('courseId') || document.getElementById('db-code'))?.value || '';
             const total = document.getElementById('totalTrainees')?.value || '0';
             const pass = document.getElementById('passedTrainees')?.value || '0';
@@ -354,7 +394,7 @@
             const issues = document.getElementById('issues')?.value || '';
             const actionPlan = document.getElementById('actionPlan')?.value || '';
             const status = document.getElementById('status')?.value || 'Hoàn thành';
-            const start = (document.getElementById('conf-date-tue') || document.getElementById('start'))?.value || '';
+            const start = (document.getElementById('conf-date-tue') || document.getElementById('start') || document.getElementById('conf-dl1'))?.value || '';
             const finish = (document.getElementById('conf-dl2') || document.getElementById('finish'))?.value || new Date().toISOString().split('T')[0];
             const listLink = document.getElementById('listLink')?.value || '';
             const quizLink = document.getElementById('quizLink')?.value || '';
@@ -376,11 +416,10 @@
             });
         };
 
-        // Chèn nút xem trước ngay phía trên nút nộp chính thức
         submitBtn.parentElement.insertBefore(previewBtn, submitBtn);
     }
 
-    // 5. HỖ TRỢ XEM LẠI PHIẾU TỪ DASHBOARD (INDEX.HTML)
+    // 6. HỖ TRỢ XEM LẠI PHIẾU TỪ DASHBOARD (INDEX.HTML)
     window.openCourseMemoModal = function (courseId) {
         let db = [];
         try {
