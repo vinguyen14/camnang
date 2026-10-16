@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trainer OS - Master Architecture & Animated Data Flow</title>
+    
+    <!-- Tailwind CSS & FontAwesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Fira Code & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #070b14;
+            color: #94a3b8;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, #070b14 0%, #0a0f1d 100%);
+            background-size: 24px 24px, 100% 100%;
+        }
+
+        .font-mono-code {
+            font-family: 'Fira Code', monospace;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0b1120; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+        .tree-line {
+            color: #334155;
+            user-select: none;
+        }
+        
+        /* CHẤM PHÁT SÁNG NÚT CÂY THƯ MỤC */
+        .glow-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+        .glow-dot::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: inherit;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .file-item:hover .glow-dot,
+        .file-item.active-glow .glow-dot {
+            transform: scale(1.5);
+        }
+        .file-item:hover .glow-dot::after,
+        .file-item.active-glow .glow-dot::after {
+            opacity: 0.6;
+            filter: blur(5px);
+        }
+
+        /* THẺ CHỨC NĂNG (HUD CARD) */
+        .layer-card {
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(51, 65, 85, 0.6);
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+        .layer-card:hover,
+        .layer-card.active-glow {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 35px -5px var(--accent-glow), inset 0 0 15px -5px var(--accent-glow);
+            transform: translateX(4px);
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        /* ==================== HIỆU ỨNG DÂY NỐI CHUYỂN ĐỘNG XUNG ĐIỆN ==================== */
+        @keyframes electricFlow {
+            from { stroke-dashoffset: 48; }
+            to { stroke-dashoffset: 0; }
+        }
+
+        .connector-path {
+            fill: none;
+            stroke: #1e293b;
+            stroke-width: 1.5;
+            transition: stroke 0.3s, stroke-width 0.3s, opacity 0.3s;
+            stroke-dasharray: 4, 4;
+            opacity: 0.35;
+        }
+        /* KHI KÍCH HOẠT: DÂY PHÁT SÁNG VÀ CHUYỂN ĐỘNG CHẢY LIÊN TỤC */
+        .connector-path.active {
+            stroke: var(--active-stroke);
+            stroke-width: 2.5;
+            stroke-dasharray: 8, 6;
+            animation: electricFlow 1.2s linear infinite;
+            opacity: 1;
+            filter: drop-shadow(0 0 8px var(--active-stroke));
+        }
+
+        /* NÚT BẤM CỦA 4-STAGE PIPELINE */
+        .pipeline-step-btn {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            border-radius: 12px;
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: all 0.25s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+        .pipeline-step-btn:hover {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: #64748b;
+        }
+        .pipeline-step-btn.active {
+            background: rgba(15, 23, 42, 0.95);
+            border-color: var(--step-color);
+            box-shadow: 0 0 20px -3px var(--step-color);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-6 sm:p-10 select-none">
+
+    <!-- ==================== HEADER TRUNG TÂM ==================== -->
+    <header class="flex flex-wrap items-center justify-between pb-6 mb-6 border-b border-slate-800/80 gap-4">
+        <div>
+            <div class="flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full bg-rose-500 inline-block shadow-[0_0_8px_rgba(244,63,94,0.6)]"></span>
+                <span class="w-3 h-3 rounded-full bg-amber-500 inline-block shadow-[0_0_8px_rgba(245,158,11,0.6)]"></span>
+                <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
+                <span class="font-mono-code text-xs text-slate-500 ml-2">trainer-os/interactive-flow-engine.sh</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight mt-2 flex items-center gap-3">
+                <span>TRAINER OS</span>
+                <span class="text-xs px-2.5 py-1 rounded-md bg-blue-500/10 text-cyan-400 border border-cyan-500/30 font-mono-code font-bold uppercase tracking-wider">
+                    v5.2 Dynamic Data Stream
+                </span>
+            </h1>
+            <p class="text-xs text-slate-400 mt-1 font-mono-code">
+                Mô phỏng luồng di chuyển dữ liệu thời gian thực giữa 12 tệp tin và 5 tầng kiến trúc L&D.
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button onclick="toggleAllConnectors()" id="btnToggleConnectors" class="px-4 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-mono-code font-bold transition flex items-center gap-2">
+                <i class="fas fa-bolt text-amber-400"></i>
+                <span id="lblToggleConnectors">Kích Hoạt Tất Cả Dòng Điện</span>
+            </button>
+            <a href="index.html" class="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold transition shadow-lg flex items-center gap-2">
+                <i class="fas fa-columns"></i>
+                <span>Vào Dashboard</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- ==================== WORKFLOW TỔNG QUAN 4 PHA (MASTER WORKFLOW PIPELINE) ==================== -->
+    <div class="mb-8 bg-slate-900/50 p-5 rounded-2xl border border-slate-800/80 backdrop-blur-md">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-mono-code font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                <i class="fas fa-project-diagram text-cyan-400"></i> LUỒNG VẬN HÀNH TỔNG QUAN (4-STAGE MASTER PIPELINE)
+            </span>
+            <span class="text-[11px] font-mono-code text-slate-500 italic">Nhấp vào từng Pha để xem luồng dây điện di chuyển tương ứng</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-mono-code">
+            <!-- PHA 1 -->
+            <div class="pipeline-step-btn group" id="pipe-stage-1" style="--step-color: #10b981;" onclick="activatePipelineStage(1)">
+                <div class="flex items-center justify-between text-[11px] text-emerald-400 font-bold mb-1">
+                    <span>PHA 1: TIẾP NHẬN & LỌC</span>
+                    <i class="fas fa-filter"></i>
+                </div>
+                <h4 class="font-bold text-white text-[13px] mb-1">HRM Cohort Pipeline</h4>
+                <p class="text-[11px] text-slate-400 leading-snug">Lọc nhân sự tuyển dụng tháng M-2 (KV1, Thuế) & M-3 (FNB, Salon, Hotel).</p>
+                <div class="mt-2 text-[10px] text-emerald-400/80 flex items-center gap-1 font-bold">
+                    <span>tools.html ➔ Roster</span>
+                </div>
+            </div>
+
+            <!-- PHA 2 -->
+            <div class="pipeline-step-btn group" id="pipe-stage-2" style="--step-color: #f59e0b;" onclick="activatePipelineStage(2)">
+                <div class="flex items-center justify-between text-[11px] text-amber-400 font-bold mb-1">
+                    <span>PHA 2: VẬN HÀNH & THI</span>
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <h4 class="font-bold text-white text-[13px] mb-1">Class & Exam L1/L2</h4>
+                <p class="text-[11px] text-slate-400 leading-snug">Dạy Meet, kịch bản Zalo, thi LMS chuẩn >= 80%, chấm thi lại L2 thứ 7.</p>
+                <div class="mt-2 text-[10px] text-amber-400/80 flex items-center gap-1 font-bold">
+                    <span>Workflows ➔ sop-drawer.js</span>
+                </div>
+            </div>
+
+            <!-- PHA 3 -->
+            <div class="pipeline-step-btn group" id="pipe-stage-3" style="--step-color: #a855f7;" onclick="activatePipelineStage(3)">
+                <div class="flex items-center justify-between text-[11px] text-purple-400 font-bold mb-1">
+                    <span>PHA 3: BÓC TÁCH & ĐÓNG KHÓA</span>
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+                <h4 class="font-bold text-white text-[13px] mb-1">Result Parser & Memo</h4>
+                <p class="text-[11px] text-slate-400 leading-snug">Dán bảng điểm Excel tự tính Pass/Fail/CSAT, tạo phiếu A4 in PDF.</p>
+                <div class="mt-2 text-[10px] text-purple-400/80 flex items-center gap-1 font-bold">
+                    <span>report-memo.js ➔ API</span>
+                </div>
+            </div>
+
+            <!-- PHA 4 -->
+            <div class="pipeline-step-btn group" id="pipe-stage-4" style="--step-color: #06b6d4;" onclick="activatePipelineStage(4)">
+                <div class="flex items-center justify-between text-[11px] text-cyan-400 font-bold mb-1">
+                    <span>PHA 4: QUẢN TRỊ & CLOUD</span>
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h4 class="font-bold text-white text-[13px] mb-1">Analytics & MasterDB</h4>
+                <p class="text-[11px] text-slate-400 leading-snug">Nạp MasterDB (16 cột), KetQuaHocVien (14 cột), Canva AI & Backup.</p>
+                <div class="mt-2 text-[10px] text-cyan-400/80 flex items-center gap-1 font-bold">
+                    <span>code.js ➔ index & hub</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN WORKSPACE ==================== -->
+    <div class="relative flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12" id="canvas-container">
+        
+        <!-- SVG CONNECTOR CANVAS -->
+        <svg id="connectors-svg" class="absolute inset-0 pointer-events-none w-full h-full z-10 overflow-visible"></svg>
+
+        <!-- ==================== CỘT TRÁI: REAL PROJECT TREE ==================== -->
+        <div class="lg:col-span-5 bg-slate-900/60 p-6 sm:p-7 rounded-2xl border border-slate-800/80 backdrop-blur-md shadow-2xl relative z-20">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
+                <span class="text-xs font-mono-code font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fas fa-folder-tree text-blue-400"></i> REAL PROJECT TREE
+                </span>
+                <span class="text-[10px] font-mono-code text-slate-500">12 Files Structured</span>
+            </div>
+
+            <div class="font-mono-code text-xs sm:text-[13px] leading-relaxed space-y-1.5 text-slate-400">
+                <div class="text-white font-bold flex items-center gap-2">
+                    <i class="fas fa-folder text-amber-400"></i>
+                    <span>trainer-os/</span>
+                </div>
+
+                <!-- 1. BACKEND -->
+                <div class="pl-4">
+                    <span class="tree-line">├── </span>
+                    <span class="text-cyan-400 font-semibold"><i class="fas fa-folder-open text-xs mr-1 opacity-70"></i>backend/</span>
+                    <div class="pl-6 file-item flex items-center justify-between py-1 px-2 rounded hover:bg-slate-800/70 transition cursor-pointer group" data-file="code.js" data-layer="layer-01" onclick="inspectElement('code.js')" onmouseenter="highlightPair('code.js', 'layer-01')" onmouseleave="clearHighlight()">
+                        <span class="text-slate-200 group-hover:text-cyan-300 font-bold">└── code.js</span>
+                        <span class="glow-dot bg-cyan-400" id="dot-code-js" style="--glow-color: #06b6d4;"></span>
+                    </div>
+                </div>
+
+                <!-- 2. SHARED -->
+                <div class="pl-4">
+                    <span class="tree-line">├── </span>
+                    <span class="text-purple-400 font-semibold"><i class="fas fa-folder-open text-xs mr-1 opacity-70"></i>shared/</span>
+                    <div class="pl-6 space-y-0.5">
+                        <div class="file-item flex items-center justify-between py-1 px-2 rounded hover:bg-slate-800/70 transition cursor-pointer group" data-file="sop-drawer.js" data-layer="layer-02" onclick="inspectElement('sop-drawer.js')" onmouseenter="highlightPair('sop-drawer.js', 'layer-02')" onmouseleave="clearHighlight()">
+                            <span class="text-slate-200 group-hover:text-purple-300 font-bold">├── sop-drawer.js</span>
+                            <span class="glow-dot bg-purple-400" id="dot-sop-drawer" style="--glow-color: #a855f7;"></span>
+                        </div>
+                        <div class="file-item flex items-center justify-between py-1 px-2 rounded hover:bg-slate-800/70 transition cursor-pointer group" data-file="report-memo.js" data-layer="layer-02" onclick="inspectElement('report-memo.js')" onmouseenter="highlightPair('report-memo.js', 'layer-02')" onmouseleave="clearHighlight()">
+                            <span class="text-slate-200 group-hover:text-purple-300 font-bold">└── report-memo.js</span>
+                            <span class="glow-dot bg-purple-400" id="dot-report-memo" style="--glow-color: #a855f7;"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. CORE GOVERNANCE -->
+                <div class="pl-4">
+                    <span class="tree-line">├── </span>
+                    <span class="text-blue-400 font-semibold"><i class="fas fa-folder-open text-xs mr-1 opacity-70"></i>core/</span>
+                    <div class="pl-6 space-y-0.5">
+                        <div class="file-item flex items-center justify-between py-1 px-2 rounded hover:bg-slate-800/70 transition cursor-pointer group" data-file="index.html" data-layer="layer-03" onclick="inspectElement('index.html')" onmouseenter="highlightPair('index.html', 'layer-03')" onmouseleave="clearHighlight()">
+                            <span class="text-slate-200 group-hover:text-blue-300 font-bold">├── index.html</span>
+                            <span class="glow-dot bg-blue-400" id="dot-index-html" style="--glow-color: #3b82f6;"></span>
+                        </div>
+                        <div class="file-item flex items-center justify-between py-1 px-2 rounded hover:bg-slate-800/70 transition cursor-pointer group" data-file="knowledge-hub.html" data-layer="layer-03" onclick="inspectElement('knowledge-hub.html')" onmouseenter="highlightPair('knowledge-hub.html', 'layer-03')" onmouseleave="clearHighlight()">
+                            <span class="text-slate-200 group-hover:text-blue-300 font-bold">├── knowledge-hub.html</span>
+                            <span class="glow-dot bg-blue-400" id="dot-knowledge-hub" style="--glow-color: #3b82f6;"></span>
+                        </div>
+                        <div class="file-item flex items-center justify-between py-1 px-2 rounded hover:bg-slate-800/70 transition cursor-pointer group" data-file="settings.html" data-layer="layer-03" onclick="inspectElement('settings.html')" onmouseenter="highlightPair('settings.html', 'layer-03')" onmouseleave="clearHighlight()">
+                            <span class="text-slate-200 group-hover:text-blue-300 font-bold">└── settings.html</span>
+                            <span class="glow-dot bg-blue-400" id="dot-settings-html" style="--glow-color: #3b82f6;"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. WORKFLOWS -->
+                <div class="pl-4">
+                    <span class="tree-line">├── </span>
+                    <span class="text-amber-400 font-semibold"><i class="fas fa-folder-open text-xs mr-1 opacity-70"></i>workflows/</span>
+                    <div class="pl-6 space-y-0.5">
+                        <div class="file-item flex items-center justify-between py-1 px-2 rounded hover:bg-slate-800/70 transition cursor-pointer group" data-file="spcb.html" data-layer="layer-04" onclick="inspectElement('spcb.html')" onmouseenter="highlightPair('spcb.html', 'layer-04')" onmouseleave="clearHighlight()">
+                            <span class="text-slate-200 group-hover:text-amber-300 font-bold">├── spcb.html</span>
+                            <span class="glow-dot bg-amber-400" id="dot-spcb-html" style="--glow-color: #f59e0b;"></span>
+                        </div>
+                        <div class="file-item flex items-center justify-between py-1 px-2 rounded hover:bg-slate-800/70 transition cursor-pointer group" data-file="kv1.html" data-layer="layer-04" onclick="inspectElement('kv1.html')" onmouseenter="highlightPair('kv1.html', 'layer-04')" onmouseleave="clearHighlight()">
+                            <span class="text-slate-200 group-hover:text-amber-300 font-bold">├── kv1.html</span>
+                            <span class="glow-dot bg-amber-400" id="dot-kv1-html" style="--glow-color: #f59e0b;"></span>
+                        </div>
+                        <div class="file-item flex items-center justify-between py-1 px-2 rounded hover:bg-slate-800/70 transition cursor-pointer group" data-file="thuehkd.html" data-layer="layer-04" onclick="inspectElement('thuehkd.html')" onmouseenter="highlightPair('thuehkd.html', 'layer-04')" onmouseleave="clearHighlight()">
+                            <span class="text-slate-200 group-hover:text-amber-300 font-bold">├── thuehkd.html</span>
+                            <span class="glow-dot bg-amber-400" id="dot-thuehkd-html" style="--glow-color: #f59e0b;"></span>
+                        </div>
+                        <div class="file-item flex items-center justify-between py-1 px-2 rounded hover:bg-slate-800/70 transition cursor-pointer group" data-file="industry.html" data-layer="layer-04" onclick="inspectElement('industry.html')" onmouseenter="highlightPair('industry.html', 'layer-04')" onmouseleave="clearHighlight()">
+                            <span class="text-slate-200 group-hover:text-amber-300 font-bold">└── industry.html</span>
+                            <span class="glow-dot bg-amber-400" id="dot-industry-html" style="--glow-color: #f59e0b;"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. TOOLS & KNOWLEDGE -->
+                <div class="pl-4">
+                    <span class="tree-line">└── </span>
+                    <span class="text-emerald-400 font-semibold"><i class="fas fa-folder-open text-xs mr-1 opacity-70"></i>tools/</span>
+                    <div class="pl-6 space-y-0.5">
+                        <div class="file-item flex items-center justify-between py-1 px-2 rounded hover:bg-slate-800/70 transition cursor-pointer group" data-file="tools.html" data-layer="layer-05" onclick="inspectElement('tools.html')" onmouseenter="highlightPair('tools.html', 'layer-05')" onmouseleave="clearHighlight()">
+                            <span class="text-slate-200 group-hover:text-emerald-300 font-bold">├── tools.html</span>
+                            <span class="glow-dot bg-emerald-400" id="dot-tools-html" style="--glow-color: #10b981;"></span>
+                        </div>
+                        <div class="file-item flex items-center justify-between py-1 px-2 rounded hover:bg-slate-800/70 transition cursor-pointer group" data-file="vault.html" data-layer="layer-05" onclick="inspectElement('vault.html')" onmouseenter="highlightPair('vault.html', 'layer-05')" onmouseleave="clearHighlight()">
+                            <span class="text-slate-200 group-hover:text-emerald-300 font-bold">├── vault.html</span>
+                            <span class="glow-dot bg-emerald-400" id="dot-vault-html" style="--glow-color: #10b981;"></span>
+                        </div>
+                        <div class="file-item flex items-center justify-between py-1 px-2 rounded hover:bg-slate-800/70 transition cursor-pointer group" data-file="knowledge.html" data-layer="layer-05" onclick="inspectElement('knowledge.html')" onmouseenter="highlightPair('knowledge.html', 'layer-05')" onmouseleave="clearHighlight()">
+                            <span class="text-slate-200 group-hover:text-emerald-300 font-bold">└── knowledge.html</span>
+                            <span class="glow-dot bg-emerald-400" id="dot-knowledge-html" style="--glow-color: #10b981;"></span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-800/80 text-[11px] text-slate-500 font-mono-code flex items-center justify-between">
+                <span><i class="fas fa-mouse-pointer text-cyan-400 mr-1"></i> Bấm vào tệp để soi chi tiết kỹ thuật</span>
+                <span class="text-slate-600">Dynamic Bézier</span>
+            </div>
+        </div>
+
+        <!-- ==================== CỘT PHẢI: 5 FUNCTIONAL LAYERS ==================== -->
+        <div class="lg:col-span-7 space-y-4 relative z-20">
+            <div class="flex items-center justify-between px-2">
+                <span class="text-xs font-mono-code font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fas fa-layer-group text-purple-400"></i> 5 FUNCTIONAL ARCHITECTURE LAYERS
+                </span>
+                <span class="text-[10px] font-mono-code text-slate-500">Separation of Concerns</span>
+            </div>
+
+            <!-- LAYER 01 -->
+            <div class="layer-card p-5 cursor-pointer group" id="layer-01" data-layer="layer-01" style="--accent-color: #06b6d4; --accent-glow: rgba(6, 182, 212, 0.4);" onclick="inspectLayer('layer-01')" onmouseenter="highlightLayer('layer-01')" onmouseleave="clearHighlight()">
+                <div class="flex items-start justify-between gap-3 mb-2">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-6 h-6 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 flex items-center justify-center font-mono-code text-xs font-bold">01</span>
+                        <h3 class="text-sm font-bold text-white tracking-wide">BACKEND SERVER & CLOUD RELATIONAL DB</h3>
+                    </div>
+                    <span class="text-[10px] font-mono-code font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">ALWAYS LISTENING</span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed mb-3">
+                    <b class="text-cyan-300 font-mono-code">code.js</b>: REST API Gateway điều phối <span class="font-mono-code">doGet</span> / <span class="font-mono-code">doPost</span>. Cơ chế quan hệ 2 bảng: <b class="text-white">MasterDB (16 cột)</b> liên kết với <b class="text-white">KetQuaHocVien (14 cột)</b> qua khóa ngoại <span class="text-cyan-400 font-mono-code">Mã Khóa</span>, tự động chống trùng lặp, tích hợp Gemini 2.5 Flash.
+                </p>
+                <div class="flex items-center gap-2 text-[10px] font-mono-code text-cyan-400/80 bg-cyan-950/30 p-2 rounded-lg border border-cyan-900/50">
+                    <i class="fas fa-database"></i>
+                    <span>Database: Google Sheets (9 Tabs) | Serverless V8 Runtime</span>
+                </div>
+            </div>
+
+            <!-- LAYER 02 -->
+            <div class="layer-card p-5 cursor-pointer group" id="layer-02" data-layer="layer-02" style="--accent-color: #a855f7; --accent-glow: rgba(168, 85, 247, 0.4);" onclick="inspectLayer('layer-02')" onmouseenter="highlightLayer('layer-02')" onmouseleave="clearHighlight()">
+                <div class="flex items-start justify-between gap-3 mb-2">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-6 h-6 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/30 flex items-center justify-center font-mono-code text-xs font-bold">02</span>
+                        <h3 class="text-sm font-bold text-white tracking-wide">INJECTED MICRO-COMPONENTS</h3>
+                    </div>
+                    <span class="text-[10px] font-mono-code font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">AUTO-INJECTED</span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed mb-3">
+                    <b class="text-purple-300 font-mono-code">sop-drawer.js</b> + <b class="text-purple-300 font-mono-code">report-memo.js</b>: Tự động tiêm UI vào 10 trang. Bóc tách kết quả thi Excel thành chỉ số báo cáo, tạo phiếu A4 xuất PDF, cẩm nang SOP tự hiểu ngữ cảnh và bộ đệm Offline cứu sinh.
+                </p>
+                <div class="flex items-center gap-2 text-[10px] font-mono-code text-purple-400/80 bg-purple-950/30 p-2 rounded-lg border border-purple-900/50">
+                    <i class="fas fa-syringe"></i>
+                    <span>Tự động can thiệp window.fetch để đính kèm traineeDetails lên Cloud</span>
+                </div>
+            </div>
+
+            <!-- LAYER 03 -->
+            <div class="layer-card p-5 cursor-pointer group" id="layer-03" data-layer="layer-03" style="--accent-color: #3b82f6; --accent-glow: rgba(59, 130, 246, 0.4);" onclick="inspectLayer('layer-03')" onmouseenter="highlightLayer('layer-03')" onmouseleave="clearHighlight()">
+                <div class="flex items-start justify-between gap-3 mb-2">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-6 h-6 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/30 flex items-center justify-center font-mono-code text-xs font-bold">03</span>
+                        <h3 class="text-sm font-bold text-white tracking-wide">EXECUTIVE CONTROL & GOVERNANCE</h3>
+                    </div>
+                    <span class="text-[10px] font-mono-code font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">COMMAND CENTER</span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed mb-3">
+                    <b class="text-blue-300 font-mono-code">index.html</b>, <b class="text-blue-300 font-mono-code">knowledge-hub.html</b>, <b class="text-blue-300 font-mono-code">settings.html</b>: Bộ ba điều hành: Lọc thời gian 4 cấp, biểu đồ kép (Cột + Trendline 12 tháng), xuất Excel (.xls) 17 cột chuẩn đẹp, Split-Screen đa Sheet, Canva AI Slide và cơ chế xóa an toàn 3 lớp bảo mật (<span class="font-mono-code text-blue-300">014023</span>).
+                </p>
+                <div class="flex items-center gap-2 text-[10px] font-mono-code text-blue-400/80 bg-blue-950/30 p-2 rounded-lg border border-blue-900/50">
+                    <i class="fas fa-sliders"></i>
+                    <span>Thẩm quyền: Giám Đốc L&D, Trainer Trưởng | Quản trị CSDL</span>
+                </div>
+            </div>
+
+            <!-- LAYER 04 -->
+            <div class="layer-card p-5 cursor-pointer group" id="layer-04" data-layer="layer-04" style="--accent-color: #f59e0b; --accent-glow: rgba(245, 158, 11, 0.4);" onclick="inspectLayer('layer-04')" onmouseenter="highlightLayer('layer-04')" onmouseleave="clearHighlight()">
+                <div class="flex items-start justify-between gap-3 mb-2">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-6 h-6 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center justify-center font-mono-code text-xs font-bold">04</span>
+                        <h3 class="text-sm font-bold text-white tracking-wide">OPERATIONAL COURSE PIPELINES</h3>
+                    </div>
+                    <span class="text-[10px] font-mono-code font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">STRICT PROTOCOLS</span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed mb-3">
+                    4 cỗ máy tác nghiệp: <b class="text-amber-300 font-mono-code">spcb.html</b> (Onboard 6 bước), <b class="text-amber-300 font-mono-code">kv1.html</b> (Bán lẻ nâng cao M-2), <b class="text-amber-300 font-mono-code">thuehkd.html</b> (Thuế M-2), <b class="text-amber-300 font-mono-code">industry.html</b> (FNB/Salon/Hotel M-3). Tự động chấm điểm thi LMS L1/L2, kịch bản Zalo động, tạo nhóm chat và nộp báo cáo 16 cột.
+                </p>
+                <div class="flex items-center gap-2 text-[10px] font-mono-code text-amber-400/80 bg-amber-950/30 p-2 rounded-lg border border-amber-900/50">
+                    <i class="fas fa-clock"></i>
+                    <span>Nhịp vận hành tuần: T7 mời học ➔ T2-T5 dạy ➔ T6 thi L1 ➔ T7 chốt L2</span>
+                </div>
+            </div>
+
+            <!-- LAYER 05 -->
+            <div class="layer-card p-5 cursor-pointer group" id="layer-05" data-layer="layer-05" style="--accent-color: #10b981; --accent-glow: rgba(16, 185, 129, 0.4);" onclick="inspectLayer('layer-05')" onmouseenter="highlightLayer('layer-05')" onmouseleave="clearHighlight()">
+                <div class="flex items-start justify-between gap-3 mb-2">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-6 h-6 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-mono-code text-xs font-bold">05</span>
+                        <h3 class="text-sm font-bold text-white tracking-wide">KNOWLEDGE BASE & RUNNER ARSENAL</h3>
+                    </div>
+                    <span class="text-[10px] font-mono-code font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">SECOND BRAIN</span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed mb-3">
+                    Vũ khí năng suất hàng ngày: <b class="text-emerald-300 font-mono-code">tools.html</b> (Lọc HRM tách tân binh M-2 & M-3, tra cứu nhân sự có thùng rác, Điểm danh AI Meet/Zoom, Tồn kho quà, Lịch 12 tháng), <b class="text-emerald-300 font-mono-code">vault.html</b> (Second Brain cây thư mục kéo thả, Ctrl+F), và <b class="text-emerald-300 font-mono-code">knowledge.html</b> (Ma trận 3D Sơ đồ Vận hành vẽ Mindmap tự động).
+                </p>
+                <div class="flex items-center gap-2 text-[10px] font-mono-code text-emerald-400/80 bg-emerald-950/30 p-2 rounded-lg border border-emerald-900/50">
+                    <i class="fas fa-toolbox"></i>
+                    <span>Thư viện: localforage (IndexedDB), Fabric.js, D3 / Markmap</span>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ==================== FOOTER: INSTRUCTION ROUTER ==================== -->
+    <footer class="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-8 border-t border-slate-800/80">
+        <div class="lg:col-span-4 bg-slate-900/40 p-5 rounded-2xl border border-slate-800">
+            <span class="text-xs font-mono-code font-bold text-slate-400 uppercase tracking-wider block mb-3 flex items-center gap-2">
+                <i class="fas fa-database text-cyan-400"></i> LOCAL STORAGE REGISTRY
+            </span>
+            <div class="space-y-1.5 text-[11px] font-mono-code text-slate-400">
+                <p class="text-slate-300 font-bold mb-1">Các khóa bộ nhớ cốt lõi (16 Keys):</p>
+                <div class="flex flex-wrap gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300 border border-slate-700">kv_api_url</span>
+                    <span class="px-1.5 py-0.5 rounded bg-slate-800 text-blue-300 border border-slate-700">kv_master_db</span>
+                    <span class="px-1.5 py-0.5 rounded bg-slate-800 text-purple-300 border border-slate-700">kv_vault_*</span>
+                    <span class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 border border-slate-700">kv_employee_*</span>
+                    <span class="px-1.5 py-0.5 rounded bg-slate-800 text-emerald-300 border border-slate-700">kv_dynamic_calendar</span>
+                    <span class="px-1.5 py-0.5 rounded bg-slate-800 text-rose-300 border border-slate-700">kv_roster_*</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-8 bg-slate-900/40 p-5 rounded-2xl border border-slate-800">
+            <span class="text-xs font-mono-code font-bold text-slate-400 uppercase tracking-wider block mb-3 flex items-center gap-2">
+                <i class="fas fa-compass text-amber-400"></i> INSTRUCTION ROUTER (ĐỊNH TUYẾN NGHIỆP VỤ L&D)
+            </span>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-xs font-mono-code">
+                <div class="p-3 rounded-xl bg-slate-800/40 border border-slate-700/40 flex flex-col justify-between">
+                    <p class="text-cyan-400 text-[11px] mb-1 font-bold">01. ĐÓNG KHÓA?</p>
+                    <p class="text-[11px] text-slate-300 leading-relaxed mb-2">Dán bảng điểm Excel vào form đóng khóa</p>
+                    <span class="text-[10px] text-cyan-400 font-bold mt-auto">➔ report-memo.js</span>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-800/40 border border-slate-700/40 flex flex-col justify-between">
+                    <p class="text-purple-400 text-[11px] mb-1 font-bold">02. ĐỨNG LỚP?</p>
+                    <p class="text-[11px] text-slate-300 leading-relaxed mb-2">Bấm nút nổi SOP mép phải màn hình</p>
+                    <span class="text-[10px] text-purple-400 font-bold mt-auto">➔ sop-drawer.js</span>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-800/40 border border-slate-700/40 flex flex-col justify-between">
+                    <p class="text-blue-400 text-[11px] mb-1 font-bold">03. ĐA SHEET?</p>
+                    <p class="text-[11px] text-slate-300 leading-relaxed mb-2">Khám phá đa sheet & chia đôi màn hình</p>
+                    <span class="text-[10px] text-blue-400 font-bold mt-auto">➔ knowledge-hub</span>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-800/40 border border-slate-700/40 flex flex-col justify-between">
+                    <p class="text-amber-400 text-[11px] mb-1 font-bold">04. ĐỔI MÁY?</p>
+                    <p class="text-[11px] text-slate-300 leading-relaxed mb-2">Backup Cloud hoặc kéo data về máy</p>
+                    <span class="text-[10px] text-amber-400 font-bold mt-auto">➔ settings.html</span>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-800/40 border border-slate-700/40 flex flex-col justify-between">
+                    <p class="text-emerald-400 text-[11px] mb-1 font-bold">05. TÂN BINH?</p>
+                    <p class="text-[11px] text-slate-300 leading-relaxed mb-2">Pipeline lọc nhân sự M-2 và M-3</p>
+                    <span class="text-[10px] text-emerald-400 font-bold mt-auto">➔ tools.html</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==================== TECHNICAL INSPECTOR MODAL ==================== -->
+    <div id="inspector-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[99999] hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden font-mono-code text-xs">
+            <div class="px-6 py-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center text-white">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-terminal text-cyan-400"></i>
+                    <span id="insp-title" class="font-bold text-sm">Technical Inspector</span>
+                </div>
+                <button onclick="closeInspector()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-sm"></i></button>
+            </div>
+            <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto custom-scrollbar" id="insp-body"></div>
+            <div class="px-6 py-3 bg-slate-950 border-t border-slate-800 text-right">
+                <button onclick="closeInspector()" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold transition">Đóng Tra Cứu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== JAVASCRIPT ENGINE ==================== -->
+    <script>
+        const FILE_LAYER_MAPPING = [
+            { fileId: 'dot-code-js', fileName: 'code.js', layerId: 'layer-01', stroke: '#06b6d4', stage: 4 },
+            { fileId: 'dot-sop-drawer', fileName: 'sop-drawer.js', layerId: 'layer-02', stroke: '#a855f7', stage: 2 },
+            { fileId: 'dot-report-memo', fileName: 'report-memo.js', layerId: 'layer-02', stroke: '#a855f7', stage: 3 },
+            { fileId: 'dot-index-html', fileName: 'index.html', layerId: 'layer-03', stroke: '#3b82f6', stage: 4 },
+            { fileId: 'dot-knowledge-hub', fileName: 'knowledge-hub.html', layerId: 'layer-03', stroke: '#3b82f6', stage: 4 },
+            { fileId: 'dot-settings-html', fileName: 'settings.html', layerId: 'layer-03', stroke: '#3b82f6', stage: 4 },
+            { fileId: 'dot-spcb-html', fileName: 'spcb.html', layerId: 'layer-04', stroke: '#f59e0b', stage: 2 },
+            { fileId: 'dot-kv1-html', fileName: 'kv1.html', layerId: 'layer-04', stroke: '#f59e0b', stage: 2 },
+            { fileId: 'dot-thuehkd-html', fileName: 'thuehkd.html', layerId: 'layer-04', stroke: '#f59e0b', stage: 2 },
+            { fileId: 'dot-industry-html', fileName: 'industry.html', layerId: 'layer-04', stroke: '#f59e0b', stage: 2 },
+            { fileId: 'dot-tools-html', fileName: 'tools.html', layerId: 'layer-05', stroke: '#10b981', stage: 1 },
+            { fileId: 'dot-vault-html', fileName: 'vault.html', layerId: 'layer-05', stroke: '#10b981', stage: 4 },
+            { fileId: 'dot-knowledge-html', fileName: 'knowledge.html', layerId: 'layer-05', stroke: '#10b981', stage: 4 }
+        ];
+
+        let showAllConnectors = false;
+        let activeStage = null;
+
+        // VẼ DÂY NỐI BÉZIER TỰ ĐỘNG
+        function drawAllConnectors() {
+            const svg = document.getElementById('connectors-svg');
+            const container = document.getElementById('canvas-container');
+            if (!svg || !container) return;
+
+            const containerRect = container.getBoundingClientRect();
+            let pathsHtml = '';
+
+            if (window.innerWidth < 1024) {
+                svg.innerHTML = '';
+                return;
+            }
+
+            FILE_LAYER_MAPPING.forEach((item) => {
+                const dot = document.getElementById(item.fileId);
+                const layer = document.getElementById(item.layerId);
+
+                if (dot && layer) {
+                    const dotRect = dot.getBoundingClientRect();
+                    const layerRect = layer.getBoundingClientRect();
+
+                    const x1 = dotRect.right - containerRect.left + 8;
+                    const y1 = dotRect.top + (dotRect.height / 2) - containerRect.top;
+
+                    const x2 = layerRect.left - containerRect.left - 4;
+                    const y2 = layerRect.top + 32 - containerRect.top;
+
+                    const deltaX = Math.max((x2 - x1) * 0.45, 60);
+                    const cp1x = x1 + deltaX;
+                    const cp1y = y1;
+                    const cp2x = x2 - deltaX;
+                    const cp2y = y2;
+
+                    const d = `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`;
+                    const pathId = `connector-${item.fileId}-${item.layerId}`;
+                    
+                    const isFlowActive = showAllConnectors || (activeStage !== null && item.stage === activeStage);
+                    const activeCls = isFlowActive ? 'active' : '';
+
+                    pathsHtml += `
+                        <path id="${pathId}" class="connector-path ${activeCls}" 
+                              data-file-dot="${item.fileId}" data-layer="${item.layerId}" data-stage="${item.stage}"
+                              d="${d}" style="--active-stroke: ${item.stroke};">
+                        </path>
+                    `;
+                }
+            });
+
+            svg.innerHTML = pathsHtml;
+        }
+
+        // TƯƠNG TÁC RÊ CHUỘT
+        function highlightPair(fileName, layerId) {
+            if (activeStage !== null || showAllConnectors) return;
+            clearHighlight();
+
+            const matching = FILE_LAYER_MAPPING.find(m => m.layerId === layerId && m.fileName === fileName);
+            if (!matching) return;
+
+            document.getElementById(layerId)?.classList.add('active-glow');
+            const path = document.querySelector(`path[data-file-dot="${matching.fileId}"][data-layer="${layerId}"]`);
+            if (path) path.classList.add('active');
+            document.querySelector(`[data-file="${fileName}"]`)?.classList.add('active-glow');
+        }
+
+        function highlightLayer(layerId) {
+            if (activeStage !== null || showAllConnectors) return;
+            clearHighlight();
+
+            document.getElementById(layerId)?.classList.add('active-glow');
+            FILE_LAYER_MAPPING.filter(m => m.layerId === layerId).forEach(m => {
+                document.querySelector(`path[data-file-dot="${m.fileId}"][data-layer="${layerId}"]`)?.classList.add('active');
+                document.getElementById(m.fileId)?.closest('.file-item')?.classList.add('active-glow');
+            });
+        }
+
+        function clearHighlight() {
+            if (showAllConnectors || activeStage !== null) return;
+            document.querySelectorAll('.layer-card').forEach(el => el.classList.remove('active-glow'));
+            document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active-glow'));
+            document.querySelectorAll('.connector-path').forEach(p => p.classList.remove('active'));
+        }
+
+        // KÍCH HOẠT TỪNG PHA TRÊN MASTER PIPELINE (CHẠY DÂY ĐIỆN THEO PHA)
+        function activatePipelineStage(stageNum) {
+            const btn = document.getElementById(`pipe-stage-${stageNum}`);
+            const wasActive = activeStage === stageNum;
+
+            document.querySelectorAll('.pipeline-step-btn').forEach(b => b.classList.remove('active'));
+            clearHighlight();
+
+            if (wasActive) {
+                activeStage = null;
+                showAllConnectors = false;
+                drawAllConnectors();
+                return;
+            }
+
+            activeStage = stageNum;
+            btn.classList.add('active');
+
+            // Kích hoạt đường nối và file thuộc stage
+            FILE_LAYER_MAPPING.forEach(item => {
+                if (item.stage === stageNum) {
+                    document.getElementById(item.layerId)?.classList.add('active-glow');
+                    document.getElementById(item.fileId)?.closest('.file-item')?.classList.add('active-glow');
+                }
+            });
+
+            drawAllConnectors();
+        }
+
+        function toggleAllConnectors() {
+            showAllConnectors = !showAllConnectors;
+            activeStage = null;
+            document.querySelectorAll('.pipeline-step-btn').forEach(b => b.classList.remove('active'));
+
+            const btn = document.getElementById('btnToggleConnectors');
+            const lbl = document.getElementById('lblToggleConnectors');
+
+            if (showAllConnectors) {
+                btn.classList.add('bg-amber-500/20', 'border-amber-500', 'text-amber-400');
+                lbl.innerText = 'Tắt Tất Cả Dòng Điện';
+                document.querySelectorAll('.connector-path').forEach(p => p.classList.add('active'));
+            } else {
+                btn.classList.remove('bg-amber-500/20', 'border-amber-500', 'text-amber-400');
+                lbl.innerText = 'Kích Hoạt Tất Cả Dòng Điện';
+                document.querySelectorAll('.connector-path').forEach(p => p.classList.remove('active'));
+            }
+        }
+
+        // BẢNG TRA CỨU KỸ THUẬT (TECHNICAL INSPECTOR)
+        const FILE_DETAILS = {
+            'code.js': { title: 'Backend: code.js', desc: 'Google Apps Script V8 Engine xử lý REST API.', inputs: 'HTTP POST (text/plain JSON), HTTP GET', outputs: 'MasterDB (16 cột), KetQuaHocVien (14 cột), TrainerSOPs, KhoQua', tech: 'SpreadsheetApp, GmailApp, UrlFetchApp, Gemini 2.5 Flash' },
+            'sop-drawer.js': { title: 'Shared: sop-drawer.js', desc: 'Micro-component tự động tiêm cẩm nang SOP và nhận diện ngữ cảnh.', inputs: 'window.location.pathname, radio industryType', outputs: 'DOM Drawer, Action Checklist, Offline Cache', tech: 'SessionStorage, Regex parser, Self-Healing Fallback' },
+            'report-memo.js': { title: 'Shared: report-memo.js', desc: 'Bộ bóc tách bảng điểm Excel học viên và tạo phiếu báo cáo A4.', inputs: 'TSV Excel paste, courseId, totalTrainees, pass/fail', outputs: 'Phiếu A4 in PDF, payload.traineeDetails gửi lên Cloud', tech: 'Fetch Interceptor, CSS @media print, TSV Smart Parser' },
+            'index.html': { title: 'Core: index.html', desc: 'Trung tâm chỉ huy Dashboard & Báo cáo L&D toàn diện.', inputs: 'kv_master_db, kv_gift_db, kv_trainer_profile', outputs: 'Biểu đồ kép (Bar + Trendline 12 tháng), File Excel .xls 17 cột, Canva AI Slide', tech: 'Chart.js, Fabric.js, LocalForage, Gemini AI' },
+            'knowledge-hub.html': { title: 'Core: knowledge-hub.html', desc: 'Master Executive Hub khám phá đa sheet và chia đôi màn hình.', inputs: 'API Multi-sheet scan, MasterDB, Trainer Backlog', outputs: 'Split-Screen Iframe, Rada lỗ hổng, Ma trận số hóa', tech: 'Col-resize divider, Infographic Lightbox zoom, Fuzzy mapping' },
+            'settings.html': { title: 'Core: settings.html', desc: 'Quản trị hệ thống, sao lưu đám mây và xóa CSDL an toàn 3 lớp.', inputs: 'kv_api_url, kv_dynamic_calendar, mật khẩu 014023', outputs: 'Sync Up (Backup Google Sheets), Sync Down (Restore về máy)', tech: 'Cloud Backup 2 chiều, Info-tooltips (i), Safe client wipe' },
+            'spcb.html': { title: 'Workflow: spcb.html', desc: 'Quy trình Onboarding 6 bước cho tân binh tuần đầu gia nhập.', inputs: 'Roster tân binh, kết quả thi LMS L1/L2', outputs: 'Tự động tính Pass/Fail, nộp 16 cột MasterDB & KetQuaHocVien', tech: 'AI Daily Grader, Dynamic templates, Confetti' },
+            'kv1.html': { title: 'Workflow: kv1.html', desc: 'Quy trình 7 bước khóa Retail nâng cao dành cho nhân sự tháng M-2.', inputs: 'Danh sách M-2 từ HRM, bài thi LMS 40 câu', outputs: 'Đóng khóa mã KV1-MM-YY 16 cột lên MasterDB', tech: 'Stepper UI, Auto-grader L1/L2, Mail/Zalo automation' },
+            'thuehkd.html': { title: 'Workflow: thuehkd.html', desc: 'Quy trình Chuyên đề Hóa đơn điện tử & Thuế HKD (Tháng M-2).', inputs: 'Lớp tập trung Thứ 6 đầu tháng + tự học LMS', outputs: 'Đóng khóa mã TAX-MM-YY (groupName: TAX) 16 cột', tech: 'Specialist workflow, điểm danh AI, Chatbot Kevin' },
+            'industry.html': { title: 'Workflow: industry.html', desc: 'Quy trình đào tạo chuyên ngành FNB, Salon, Hotel (Tháng M-3).', inputs: 'Nhân sự M-3 tự chọn 1 trong 3 ngành', outputs: 'Đóng khóa riêng từng phân hệ FNB/SALON/HOTEL 16 cột', tech: 'Multi-track radio, LMS auto-grader, Kịch bản đa ngành' },
+            'tools.html': { title: 'Tools: tools.html', desc: 'Bộ 7 công cụ tự động hóa tác nghiệp hàng ngày của Trainer.', inputs: 'Dữ liệu Excel thô, Meet/Zoom chat log', outputs: 'Pipeline lọc M-2/M-3, điểm danh AI, quản lý kho quà, lịch 12 tháng', tech: 'Regex extractor, GSheet-style filter, Trash recovery' },
+            'vault.html': { title: 'Tools: vault.html', desc: 'Kho lưu trữ tri thức cá nhân Second Brain dạng cây thư mục.', inputs: 'Links, files, prompts AI, ghi chú', outputs: 'Hệ thống cây thư mục đa cấp, kéo thả tài nguyên, thùng rác phục hồi', tech: 'Split-pane resizer, Phím tắt Ctrl+F, Multi-select trash' },
+            'knowledge.html': { title: 'Tools: knowledge.html', desc: 'Sơ đồ Vận hành & Ma trận Tri thức 3D tự động vẽ Mindmap.', inputs: 'URL bài viết hướng dẫn WordPress', outputs: 'Mindmap phân quyền vai trò tự động, tóm tắt AI', tech: 'Markmap, D3.js, Fabric.js Whiteboard, Web scraping' }
+        };
+
+        function inspectElement(fileKey) {
+            const data = FILE_DETAILS[fileKey];
+            if (!data) return;
+
+            document.getElementById('insp-title').innerText = data.title;
+            document.getElementById('insp-body').innerHTML = `
+                <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700">
+                    <p class="text-slate-300 leading-relaxed font-semibold mb-2">${data.desc}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-[11px]">
+                    <div class="p-3 rounded-lg bg-blue-950/30 border border-blue-900/50">
+                        <span class="text-blue-400 font-bold block mb-1 uppercase">📥 Đầu Vào (Inputs)</span>
+                        <p class="text-slate-300 leading-relaxed">${data.inputs}</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-emerald-950/30 border border-emerald-900/50">
+                        <span class="text-emerald-400 font-bold block mb-1 uppercase">📤 Đầu Ra (Outputs)</span>
+                        <p class="text-slate-300 leading-relaxed">${data.outputs}</p>
+                    </div>
+                </div>
+                <div class="p-3 rounded-lg bg-purple-950/30 border border-purple-900/50 text-[11px]">
+                    <span class="text-purple-400 font-bold block mb-1 uppercase">⚡ Công Nghệ & Khóa Liên Quan</span>
+                    <p class="text-slate-300 font-mono">${data.tech}</p>
+                </div>
+                <div class="pt-2 flex justify-end">
+                    <a href="${fileKey}" target="_blank" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition flex items-center gap-2">
+                        <i class="fas fa-external-link-alt text-xs"></i> Mở File Này Ngay
+                    </a>
+                </div>
+            `;
+            document.getElementById('inspector-modal').classList.remove('hidden');
+        }
+
+        function inspectLayer(layerId) {
+            const layerEl = document.getElementById(layerId);
+            const title = layerEl.querySelector('h3').innerText;
+            const desc = layerEl.querySelector('p').innerText;
+
+            document.getElementById('insp-title').innerText = title;
+            document.getElementById('insp-body').innerHTML = `
+                <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700">
+                    <p class="text-slate-200 leading-relaxed">${desc}</p>
+                </div>
+            `;
+            document.getElementById('inspector-modal').classList.remove('hidden');
+        }
+
+        function closeInspector() {
+            document.getElementById('inspector-modal').classList.add('hidden');
+        }
+
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(drawAllConnectors, 40);
+        });
+
+        window.addEventListener('load', () => {
+            setTimeout(drawAllConnectors, 150);
+        });
+    </script>
+</body>
+</html>
