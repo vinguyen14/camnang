@@ -185,7 +185,7 @@
             <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight mt-2 flex items-center gap-3">
                 <span>TRAINER OS</span>
                 <span class="text-xs px-2.5 py-1 rounded-md bg-blue-500/10 text-cyan-400 border border-cyan-500/30 font-mono-code font-bold uppercase tracking-wider">
-                    v6.2 Live Architecture Observer
+                    v6.5 Live Architecture Observer
                 </span>
             </h1>
         </div>
@@ -220,7 +220,7 @@
     </header>
 
     <!-- ========================================================================= -->
-    <!-- VIEW 1: SƠ ĐỒ KHỐI TOPOLOGY 2D (TỰ SINH ĐỘNG TỪ GITHUB REPO & GOOGLE SHEETS) -->
+    <!-- VIEW 1: SƠ ĐỒ KHỐI TOPOLOGY 2D (ĐÃ GHIM CỐ ĐỊNH CODE.JS VÀ DÂY API)        -->
     <!-- ========================================================================= -->
     <div id="view-topology" class="flex-1 flex flex-col mb-10">
         <div class="bg-slate-900/70 p-4 rounded-2xl border border-slate-800 mb-6 space-y-3">
@@ -277,7 +277,7 @@
                 </defs>
             </svg>
 
-            <!-- CỤM 1 (ĐỈNH) -->
+            <!-- CỤM 1 (ĐỈNH): BACKEND SERVER CODE.JS GHIM VĨNH VIỄN -->
             <div class="flex justify-center mb-20 relative z-20">
                 <div class="topology-cluster w-full max-w-lg border-cyan-500/40 shadow-[0_0_35px_-10px_rgba(6,182,212,0.25)]">
                     <p class="text-[11px] font-mono-code font-bold uppercase text-cyan-400 tracking-wider mb-2.5 flex items-center justify-between">
@@ -317,7 +317,7 @@
                     <div id="topo-cluster-4" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5"></div>
                 </div>
 
-                <div class="lg:col-span-5 topology-cluster border-emerald-500/40 shadow-[0_0_30px_-10px_rgba(168,85,247,0.2)]">
+                <div class="lg:col-span-5 topology-cluster border-emerald-500/40 shadow-[0_0_30px_-10px_rgba(16,185,129,0.2)]">
                     <p class="text-[11px] font-mono-code font-bold uppercase text-emerald-400 tracking-wider mb-3 flex items-center justify-between">
                         <span>5. Công Cụ & Kho Tri Thức</span>
                         <span class="text-[9px] px-2 py-0.5 rounded bg-emerald-950 border border-emerald-800">TOOLS & VAULT</span>
@@ -410,7 +410,7 @@
 
     <!-- ==================== JAVASCRIPT LIVE TELEMETRY ENGINE ==================== -->
     <script>
-        // CƠ SỞ DỮ LIỆU ĐỆM NỘI BỘ (FALLBACK KHI CHƯA KẾT NỐI ĐƯỢC GITHUB)
+        // CSDL ĐỆM MẶC ĐỊNH
         const DEFAULT_SYSTEM_REGISTRY = {
             modules: [
                 { id: 'code.js', name: 'code.js', folder: 'backend', cluster: 1, color: '#06b6d4', icon: 'fa-server', subtitle: 'API & Database Handler', desc: 'REST API Serverless xử lý kết nối Google Sheets, ghi nhận MasterDB 16 cột và KetQuaHocVien 14 cột, chống trùng lặp, tích hợp Gemini AI.', inputs: 'POST (text/plain JSON), GET', outputs: 'MasterDB, KetQuaHocVien, TrainerSOPs, KhoQua', tech: 'SpreadsheetApp, GmailApp, UrlFetchApp' },
@@ -472,7 +472,7 @@
         }
 
         // ==========================================
-        // 1. THUẬT TOÁN TỰ ĐỘNG PHÂN LOẠI FILE (AUTO-CLASSIFIER)
+        // 1. THUẬT TOÁN PHÂN LOẠI FILE
         // ==========================================
         function classifyModule(filename) {
             const f = filename.toLowerCase();
@@ -492,7 +492,7 @@
         }
 
         // ==========================================
-        // 2. TỰ ĐỘNG QUÉT REPO GITHUB & COMMITS (ZERO-TOUCH)
+        // 2. TỰ ĐỘNG QUÉT GITHUB & GHIM CỐ ĐỊNH CODE.JS
         // ==========================================
         async function autoScanLiveSystem(isManualClick = false) {
             const scanIcon = document.getElementById('scan-icon');
@@ -504,9 +504,7 @@
             if(isManualClick) showToast('<i class="fas fa-spinner fa-spin text-cyan-400"></i> Đang quét trực tiếp GitHub Repo vinguyen14/camnang...');
 
             let scannedFilesSuccess = false;
-            let scannedCommitsSuccess = false;
 
-            // 2.1. Quét danh sách file trực tiếp từ GitHub Contents API
             try {
                 const res = await fetch('https://api.github.com/repos/vinguyen14/camnang/contents');
                 if (res.ok) {
@@ -514,12 +512,16 @@
                     const discoveredFiles = contents.filter(item => item.type === 'file' && (item.name.endsWith('.html') || item.name.endsWith('.js')));
 
                     if (discoveredFiles.length > 0) {
-                        let newModules = [];
-                        let existingWires = liveSystemData.wires.slice();
+                        // 1. LUÔN LUÔN BẢO TOÀN CODE.JS TẠI CỤM 1 (CENTRAL API BACKEND)
+                        const backendAnchor = DEFAULT_SYSTEM_REGISTRY.modules.find(m => m.id === 'code.js');
+                        let newModules = [backendAnchor];
+                        let newWires = [];
 
+                        // 2. Nạp các file thực tế từ GitHub
                         discoveredFiles.forEach(file => {
+                            if (file.name === 'code.js') return; // Đã có anchor
+
                             const meta = classifyModule(file.name);
-                            // Tìm lại spec cũ nếu có
                             const oldSpec = DEFAULT_SYSTEM_REGISTRY.modules.find(m => m.id === file.name);
 
                             newModules.push({
@@ -530,7 +532,7 @@
                                 color: meta.color,
                                 icon: meta.icon,
                                 subtitle: oldSpec ? oldSpec.subtitle : meta.subtitle,
-                                desc: oldSpec ? oldSpec.desc : `File tác nghiệp thực tế trên GitHub (Kích thước: ${(file.size/1024).toFixed(1)} KB).`,
+                                desc: oldSpec ? oldSpec.desc : `File thực tế trên GitHub (Kích thước: ${(file.size/1024).toFixed(1)} KB).`,
                                 inputs: oldSpec ? oldSpec.inputs : 'HTTP / Trình duyệt',
                                 outputs: oldSpec ? oldSpec.outputs : 'Giao diện nghiệp vụ',
                                 tech: oldSpec ? oldSpec.tech : 'HTML5, Tailwind, JS',
@@ -538,14 +540,34 @@
                                 downloadUrl: file.download_url
                             });
 
-                            // Nếu là file mới chưa có trong wires, tự động nối dây API từ code.js sang file mới
-                            if (!existingWires.some(w => w.to === file.name)) {
-                                existingWires.push({ from: 'code.js', to: file.name, type: 'api' });
+                            // TỰ ĐỘNG NỐI DÂY API 2 CHIỀU TỪ CODE.JS TỚI TẤT CẢ FILE .HTML
+                            if (file.name.endsWith('.html')) {
+                                newWires.push({ from: 'code.js', to: file.name, type: 'api', label: 'API 2 Chiều' });
                             }
                         });
 
+                        // 3. Tự động nối dây Tiêm Script (Shared Components ➔ 4 Workflows)
+                        const workflowFiles = newModules.filter(m => m.cluster === 4).map(m => m.id);
+                        if (newModules.some(m => m.id === 'sop-drawer.js')) {
+                            workflowFiles.forEach(wf => {
+                                newWires.push({ from: 'sop-drawer.js', to: wf, type: 'shared', label: 'Tự động kích hoạt' });
+                            });
+                        }
+                        if (newModules.some(m => m.id === 'report-memo.js')) {
+                            workflowFiles.forEach(wf => {
+                                newWires.push({ from: 'report-memo.js', to: wf, type: 'shared', label: 'Tự động kích hoạt' });
+                            });
+                        }
+
+                        // 4. Tự động nối dây Điều Hướng từ index.html
+                        if (newModules.some(m => m.id === 'index.html')) {
+                            newModules.filter(m => m.id !== 'index.html' && m.id !== 'code.js' && !m.id.endsWith('.js')).forEach(target => {
+                                newWires.push({ from: 'index.html', to: target.id, type: 'nav', label: 'Điều hướng' });
+                            });
+                        }
+
                         liveSystemData.modules = newModules;
-                        liveSystemData.wires = existingWires;
+                        liveSystemData.wires = newWires;
                         scannedFilesSuccess = true;
                     }
                 }
@@ -553,20 +575,17 @@
                 console.warn("GitHub Contents API unreachable, using cached system registry.", err);
             }
 
-            // 2.2. Quét lịch sử Commits từ GitHub Commits API để tự động điền Backlog
+            // Quét GitHub Commits để sinh Backlog
             try {
                 const resCommits = await fetch('https://api.github.com/repos/vinguyen14/camnang/commits?per_page=10');
                 if (resCommits.ok) {
                     const commits = await resCommits.json();
                     renderLiveCommitsBacklog(commits);
-                    scannedCommitsSuccess = true;
                 }
             } catch (err) {
-                console.warn("GitHub Commits API unreachable.", err);
                 renderFallbackBacklog();
             }
 
-            // Cập nhật trạng thái hiển thị
             const nowTimeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
             if (timeLabel) timeLabel.innerText = `Cập nhật: ${nowTimeStr}`;
 
@@ -577,19 +596,18 @@
             } else {
                 indicator.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 inline-block shadow-[0_0_10px_#f59e0b]';
                 repoLabel.innerHTML = `CACHED TELEMETRY: <b class="text-slate-300">vinguyen14/camnang</b> (Offline/Rate-limit)`;
-                if(isManualClick) showToast(`⚠️ Đang hiển thị bản đệm CSDL nội bộ (GitHub API Rate limit).`);
             }
 
-            // Render lại toàn bộ DOM
+            // Render lại toàn bộ giao diện
             renderGranularTree();
             renderTopologyNodes();
-            setTimeout(drawHardwareWires, 80);
+            setTimeout(drawHardwareWires, 100);
 
             if(scanIcon) scanIcon.classList.remove('fa-spin');
         }
 
         // ==========================================
-        // 3. RENDER BẢNG SYSTEM BACKLOG TỪ GITHUB COMMITS THỰC TẾ
+        // 3. RENDER BẢNG SYSTEM BACKLOG TỪ GITHUB COMMITS
         // ==========================================
         function renderLiveCommitsBacklog(commits) {
             const tbody = document.getElementById('backlog-table-body');
@@ -604,7 +622,6 @@
                 const date = c.commit?.author?.date ? new Date(c.commit.author.date).toLocaleDateString('vi-VN') : '--';
                 const msg = c.commit?.message || 'Update system';
                 
-                // Phân loại tự động theo nội dung commit
                 let typeBadge = 'bg-cyan-950 text-cyan-400 border border-cyan-800';
                 let typeText = 'Update';
                 const lower = msg.toLowerCase();
@@ -649,7 +666,7 @@
             if (!tbody) return;
             tbody.innerHTML = `
                 <tr class="hover:bg-slate-800/40 transition">
-                    <td class="p-3.5 text-center font-bold text-cyan-400">v6.2</td>
+                    <td class="p-3.5 text-center font-bold text-cyan-400">v6.5</td>
                     <td class="p-3.5 text-slate-400">10/2026</td>
                     <td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-950 text-purple-400 border border-purple-800">Telemetry</span></td>
                     <td class="p-3.5"><b class="text-white block">Auto-Discovery GitHub Repo vinguyen14/camnang</b><span class="text-slate-400 text-[11px]">Tự động phát hiện file mới và commit history trực tiếp qua GitHub API.</span></td>
@@ -748,7 +765,7 @@
         }
 
         // ==========================================
-        // 5. TỰ ĐỘNG SINH HỘP TOPOLOGY VỚI CHÂN CẮM DOCKING PINS
+        // 5. RENDER HỘP TOPOLOGY VỚI CHÂN CẮM DOCKING PINS
         // ==========================================
         function renderTopologyNodes() {
             const modules = liveSystemData.modules;
@@ -779,7 +796,7 @@
         }
 
         // ==========================================
-        // 6. VẼ DÂY NỐI CHUẨN CHÂN CẮM DOCKING PINS (SVG DÒNG ĐIỆN)
+        // 6. VẼ DÂY NỐI CHUẨN XÁC TỪNG CHÂN CẮM DOCKING PIN
         // ==========================================
         function drawHardwareWires() {
             const svg = document.getElementById('topology-svg');
@@ -926,7 +943,7 @@
         });
 
         // ==========================================
-        // 9. KHỞI CHẠY HỆ THỐNG & TỰ ĐỘNG QUÉT LIVE
+        // 9. KHỞI CHẠY HỆ THỐNG VỚI CƠ CHẾ LIVE DISCOVERY
         // ==========================================
         window.addEventListener('load', () => {
             autoScanLiveSystem(false);
