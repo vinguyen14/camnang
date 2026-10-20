@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Code Runner & Sandbox | Trainer OS</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #1e293b; overflow: hidden; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .font-code { font-family: 'Fira Code', monospace; }
+
+        /* SIDEBAR STYLES */
+        .sidebar-saas { background-color: #ffffff; border-right: 1px solid #e5e7eb; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-x: hidden; }
+        .sidebar-logo { height: 64px; display: flex; align-items: center; padding: 0 24px; border-bottom: 1px solid #e5e7eb; }
+        .nav-group-title { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; padding: 0 24px; margin-top: 20px; margin-bottom: 8px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; margin: 2px 12px; font-size: 13.5px; font-weight: 500; color: #4b5563; cursor: pointer; transition: all 0.2s; border-radius: 8px; white-space: nowrap; }
+        .nav-item:hover { background-color: #f3f4f6; color: #1f2937; }
+        .nav-item.active { background-color: #eff6ff; color: #2563eb; font-weight: 600; }
+        .nav-item.active i { color: #2563eb; }
+        .nav-item i { width: 20px; text-align: center; color: #9ca3af; font-size: 16px; transition: color 0.2s; flex-shrink: 0; }
+
+        .sidebar-collapsed { width: 64px !important; min-width: 64px !important; }
+        .sidebar-collapsed .logo-full { display: none; }
+        .sidebar-collapsed .logo-icon { display: block !important; margin: 0 auto; text-align: center; }
+        .sidebar-collapsed .sidebar-logo { justify-content: center; padding: 0; }
+        .sidebar-collapsed .nav-group-title { display: none; }
+        .sidebar-collapsed .nav-item span:not(#tooltip-text) { display: none; }
+        .sidebar-collapsed .nav-item i.fa-chevron-right { display: none; }
+        .sidebar-collapsed .pulse-dot { display: none; }
+        .sidebar-collapsed #submenu-cn { display: none !important; }
+        .sidebar-collapsed .nav-item { justify-content: center !important; padding: 0 !important; margin: 6px auto !important; width: 40px !important; height: 40px !important; border-radius: 10px; }
+        .sidebar-collapsed .nav-item i { margin: 0 !important; font-size: 16px !important; }
+        .sidebar-collapsed .user-profile-area { justify-content: center !important; padding: 16px 0 !important; gap: 0 !important; }
+        .sidebar-collapsed .user-profile-area .flex-grow { display: none !important; }
+
+        /* WORKSPACE SPLIT */
+        .runner-container { height: calc(100vh - 64px); display: flex; overflow: hidden; background: #f8fafc; }
+        .editor-pane { width: 46%; display: flex; flex-direction: column; background: #ffffff; border-right: 1px solid #e2e8f0; }
+        .preview-pane { flex: 1; display: flex; flex-direction: column; background: #f1f5f9; overflow: hidden; position: relative; }
+
+        /* DEVICE VIEWPORT FRAMES */
+        .viewport-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+        .device-frame {
+            background: #ffffff;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #cbd5e1;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-origin: center center;
+            position: relative;
+        }
+        .device-mobile {
+            width: 375px;
+            height: 667px;
+            border-radius: 36px;
+            border: 10px solid #1e293b;
+        }
+        .device-tablet {
+            width: 768px;
+            height: 900px;
+            border-radius: 24px;
+            border: 12px solid #1e293b;
+        }
+        .device-laptop {
+            width: 1024px;
+            height: 640px;
+            border-radius: 16px;
+            border: 8px solid #1e293b;
+        }
+        .device-desktop {
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+        }
+
+        .code-textarea {
+            font-family: 'Fira Code', monospace;
+            font-size: 12.5px;
+            line-height: 1.6;
+            background: #ffffff;
+            color: #1e293b;
+            tab-size: 4;
+            resize: none;
+            outline: none;
+        }
+
+        /* FULLSCREEN SANDBOX */
+        .fullscreen-active {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 999999 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            border: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="flex h-screen">
+        <!-- SIDEBAR CHUẨN KIOTVIET L&D (COLLAPSIBLE) -->
+        <aside id="sidebar" class="sidebar-saas w-64 flex flex-col z-50 shrink-0">
+            <div class="sidebar-logo">
+                <img src="https://cdn-kvweb-website.kiotviet.vn/images/v2/giai-phap/logos/kiotviet-logo-horizontal.svg" alt="KiotViet" class="h-[28px] logo-full">
+                <div class="logo-icon hidden w-[28px] h-[28px] overflow-hidden rounded-full">
+                    <img src="https://cdn-kvweb-website.kiotviet.vn/images/v2/giai-phap/logos/kiotviet-logo-horizontal.svg" class="h-[28px] max-w-none" alt="KV">
+                </div>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4 custom-scrollbar">
+                <div class="nav-group-title">Tổng quan</div>
+                <a href="index.html" class="nav-item" data-title="Bảng điều khiển"><i class="fas fa-chart-line"></i> <span>Bảng điều khiển</span></a>
+
+                <div class="nav-group-title">Quản trị Khóa học</div>
+                <a href="spcb.html" class="nav-item" data-title="Cơ bản (TS-DS)"><i class="fas fa-box"></i> <span>Cơ bản (TS-DS)</span></a>
+                <a href="thuehkd.html" class="nav-item" data-title="Chuyên đề Thuế"><i class="fas fa-file-invoice-dollar"></i> <span>Chuyên đề Thuế</span></a>
+                
+                <div class="flex flex-col">
+                    <div class="nav-item group justify-between" onclick="toggleAccordion('submenu-cn', 'icon-cn')" data-title="Chuyên ngành">
+                        <div class="flex items-center gap-3"><i class="fas fa-laptop-code"></i> <span>Chuyên ngành</span></div>
+                        <i id="icon-cn" class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform duration-300"></i>
+                    </div>
+                    <div id="submenu-cn" class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out pl-[44px] flex flex-col gap-1 pr-4">
+                        <a href="kv1.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-blue-600 transition-colors">Sản phẩm KV1</a>
+                        <a href="industry.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-orange-500 transition-colors">KiotViet FNB</a>
+                        <a href="industry.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-pink-500 transition-colors">KV Salon</a>
+                        <a href="industry.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-emerald-500 transition-colors">KV Hotel</a>
+                    </div>
+                </div>
+                <a href="index.html" class="nav-item" data-title="Tất cả khóa học"><i class="fas fa-th-large"></i> <span>Tất cả khóa học</span></a>
+
+                <div class="nav-group-title">Công cụ & Tài nguyên</div>
+                <!-- 2 MODULE MỚI ĐÃ ĐƯỢC ĐỒNG BỘ VÀO SIDEBAR -->
+                <a href="coderunner.html" class="nav-item active" data-title="HTML Code Runner"><i class="fas fa-laptop-code text-blue-600"></i> <span>HTML Code Runner</span></a>
+                <a href="radar.html" class="nav-item relative" data-title="Radar Sản Phẩm Mới">
+                    <i class="fas fa-satellite-dish text-purple-600"></i> <span>Radar Sản Phẩm Mới</span>
+                    <span class="w-2 h-2 rounded-full bg-rose-500 absolute right-4 animate-pulse"></span>
+                </a>
+                <a href="knowledge.html" class="nav-item" data-title="Sơ đồ Vận hành"><i class="fas fa-project-diagram"></i> <span>Sơ đồ Vận hành</span></a>
+                <a href="vault.html" class="nav-item" data-title="Kho Lưu Trữ Vault"><i class="fas fa-box-open"></i> <span>Kho Lưu Trữ Vault</span></a>
+                <a href="tools.html" class="nav-item" data-title="Runner Tools"><i class="fas fa-bolt"></i> <span>Runner Tools</span></a>
+                
+                <div class="nav-group-title">Dữ liệu & Hệ thống</div>
+                <a href="knowledge-hub.html" class="nav-item" data-title="Master Data Hub"><i class="fas fa-database"></i> <span>Master Data Hub</span></a>
+                <a href="settings.html" class="nav-item" data-title="Cài đặt hệ thống"><i class="fas fa-cog"></i> <span>Cài đặt hệ thống</span></a>
+            </nav>
+
+            <div class="user-profile-area p-4 border-t border-slate-200 shrink-0 flex items-center gap-3 bg-slate-50/50 hover:bg-slate-100 transition cursor-pointer" onclick="location.href='settings.html'">
+                <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0 border border-blue-200" id="display-prof-ava">A</div>
+                <div class="overflow-hidden flex-grow">
+                    <p id="display-prof-name" class="text-[13px] font-bold text-slate-800 truncate">L&D KiotViet</p>
+                    <p id="display-prof-title" class="text-[11px] font-medium text-slate-500 truncate">Administrator</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN LAYOUT -->
+        <div class="flex-1 flex flex-col overflow-hidden relative">
+            <!-- HEADER -->
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 shrink-0 shadow-sm">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-blue-50 hover:text-blue-600 transition border border-slate-200">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="h-6 w-px bg-slate-200"></div>
+                    <div>
+                        <h1 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fas fa-laptop-code text-blue-600"></i> HTML Code Runner & Device Sandbox
+                        </h1>
+                        <p class="text-[11px] text-slate-400 font-medium">Soi mã HTML trực tiếp, giả lập đa thiết bị & bắt lỗi cú pháp</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button onclick="insertSampleTemplate('email')" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 transition">
+                        <i class="fas fa-envelope text-blue-500 mr-1"></i> Mẫu Email Mời Học
+                    </button>
+                    <button onclick="insertSampleTemplate('table')" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 transition">
+                        <i class="fas fa-table text-emerald-500 mr-1"></i> Mẫu Bảng Điểm
+                    </button>
+                </div>
+            </header>
+
+            <!-- WORKSPACE 2 CỘT: EDITOR & LIVE SANDBOX -->
+            <div class="runner-container">
+                <!-- CỘT TRÁI: CODE EDITOR & TOOLBAR -->
+                <div class="editor-pane">
+                    <!-- Toolbar Editor -->
+                    <div class="px-5 py-3 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between shrink-0">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-600 uppercase tracking-wider font-code flex items-center gap-1.5">
+                                <i class="fas fa-code text-blue-600"></i> SOURCE CODE
+                            </span>
+                            <span id="charCount" class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-code">0 chars</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="pasteCodeFromClipboard()" class="px-2.5 py-1 rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold shadow-xs transition" title="Dán mã từ Clipboard">
+                                <i class="fas fa-paste text-slate-500 mr-1"></i> Dán Code
+                            </button>
+                            <button onclick="copyCodeToClipboard()" class="px-2.5 py-1 rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold shadow-xs transition" title="Sao chép toàn bộ code">
+                                <i class="fas fa-copy text-slate-500 mr-1"></i> Copy
+                            </button>
+                            <button onclick="clearCodeEditor()" class="p-1.5 rounded hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition" title="Xóa trắng">
+                                <i class="fas fa-trash-alt text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Banner Cảnh Báo Lỗi / Sai Loại Code -->
+                    <div id="errorBanner" class="hidden px-4 py-2.5 bg-amber-50 border-b border-amber-200 text-amber-800 text-xs flex items-center justify-between shrink-0 animate-fade-up">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-exclamation-triangle text-amber-500 text-sm"></i>
+                            <span id="errorMsg" class="font-medium">Phát hiện cú pháp không hợp lệ.</span>
+                        </div>
+                        <button onclick="document.getElementById('errorBanner').classList.add('hidden')" class="text-amber-600 hover:text-amber-900"><i class="fas fa-times"></i></button>
+                    </div>
+
+                    <!-- Khung Nhập Code Textarea -->
+                    <div class="flex-1 relative overflow-hidden flex">
+                        <textarea id="codeEditor" oninput="handleCodeInput()" class="w-full h-full p-5 code-textarea custom-scrollbar" placeholder="Dán hoặc gõ mã HTML, Tailwind, CSS, JS vào đây để xem trực tiếp kết quả bên phải..."></textarea>
+                    </div>
+
+                    <!-- Footer Editor: Nút Tải Về Dạng Notepad -->
+                    <div class="px-5 py-3 border-t border-slate-200 bg-white flex items-center justify-between shrink-0">
+                        <span class="text-[11px] text-slate-400 font-medium">Hỗ trợ tự động chạy HTML & JS Sandbox</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="downloadAsFile('txt')" class="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 shadow-xs" title="Tải về file text Notepad">
+                                <i class="fas fa-file-alt text-slate-500"></i> Tải Notepad (.txt)
+                            </button>
+                            <button onclick="downloadAsFile('html')" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Tải về file trang web HTML">
+                                <i class="fas fa-download"></i> Tải File (.html)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CỘT PHẢI: PREVIEW VIEWPORT & DEVICE SWITCHER -->
+                <div class="preview-pane">
+                    <!-- Toolbar Viewport: Chuyển đổi Thiết bị & Zoom -->
+                    <div class="px-6 py-3 border-b border-slate-200 bg-white flex items-center justify-between shrink-0 shadow-xs">
+                        <!-- Bộ chọn thiết bị -->
+                        <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+                            <button onclick="switchDevice('desktop')" id="dev-desktop" class="px-3 py-1 rounded-lg font-bold bg-white text-blue-600 shadow-xs transition flex items-center gap-1.5">
+                                <i class="fas fa-desktop"></i> Desktop
+                            </button>
+                            <button onclick="switchDevice('laptop')" id="dev-laptop" class="px-3 py-1 rounded-lg font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
+                                <i class="fas fa-laptop"></i> 1024px
+                            </button>
+                            <button onclick="switchDevice('tablet')" id="dev-tablet" class="px-3 py-1 rounded-lg font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
+                                <i class="fas fa-tablet-alt"></i> Tablet
+                            </button>
+                            <button onclick="switchDevice('mobile')" id="dev-mobile" class="px-3 py-1 rounded-lg font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
+                                <i class="fas fa-mobile-alt"></i> Mobile
+                            </button>
+                        </div>
+
+                        <!-- Bộ điều khiển Zoom & Fullscreen -->
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-1 text-xs">
+                                <button onclick="changeZoom(-0.25)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-600 font-bold">-</button>
+                                <span id="zoomLabel" class="w-12 text-center font-mono font-bold text-slate-700">100%</span>
+                                <button onclick="changeZoom(0.25)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-600 font-bold">+</button>
+                                <button onclick="resetZoom()" class="px-1.5 py-0.5 text-[10px] text-blue-600 hover:underline">1:1</button>
+                            </div>
+
+                            <button onclick="toggleFullscreenPreview()" id="btnFullscreen" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Xem toàn màn hình">
+                                <i class="fas fa-expand"></i> Fullscreen
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Khung Nhúng Iframe Hiển Thị Kết Quả -->
+                    <div class="viewport-wrapper custom-scrollbar" id="viewportWrapper">
+                        <div class="device-frame device-desktop" id="deviceFrame">
+                            <iframe id="previewIframe" class="w-full h-full border-none rounded-[inherit]" sandbox="allow-scripts allow-modals allow-same-origin allow-forms"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Tooltip -->
+    <div id="global-tooltip" class="fixed bg-slate-800 text-white text-[12px] font-medium px-3 py-1.5 rounded-lg shadow-xl pointer-events-none opacity-0 transition-opacity duration-200 z-[100000] whitespace-nowrap flex items-center">
+        <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
+        <span id="tooltip-text" class="relative z-10"></span>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-5 py-2.5 rounded-xl shadow-2xl text-xs z-[100000] opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-2 border border-slate-700">
+        <span id="toast-msg"></span>
+    </div>
+
+    <!-- JAVASCRIPT ENGINE CỦA CODE RUNNER -->
+    <script>
+        let currentZoom = 1.0;
+        let currentDevice = 'desktop';
+        let isFullscreen = false;
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            if(!t) return;
+            document.getElementById('toast-msg').innerHTML = msg;
+            t.classList.replace('opacity-0', 'opacity-100');
+            t.classList.remove('pointer-events-none');
+            setTimeout(() => {
+                t.classList.replace('opacity-100', 'opacity-0');
+                t.classList.add('pointer-events-none');
+            }, 3000);
+        }
+
+        // --- SIDEBAR & TOOLTIP ---
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-collapsed'); }
+        function toggleAccordion(menuId, iconId) {
+            const menu = document.getElementById(menuId); const icon = document.getElementById(iconId);
+            if (menu.style.maxHeight && menu.style.maxHeight !== '0px') { menu.style.maxHeight = '0px'; icon.style.transform = 'rotate(0deg)'; } 
+            else { menu.style.maxHeight = menu.scrollHeight + 'px'; icon.style.transform = 'rotate(90deg)'; }
+        }
+
+        const tooltip = document.getElementById('global-tooltip');
+        const tooltipText = document.getElementById('tooltip-text');
+        document.querySelectorAll('.nav-item[data-title]').forEach(item => {
+            item.addEventListener('mouseenter', (e) => {
+                if (document.getElementById('sidebar').classList.contains('sidebar-collapsed')) {
+                    const rect = item.getBoundingClientRect();
+                    tooltipText.innerText = item.getAttribute('data-title');
+                    tooltip.style.top = (rect.top + (rect.height / 2) - 14) + 'px'; 
+                    tooltip.style.left = (rect.right + 12) + 'px'; 
+                    tooltip.style.opacity = '1';
+                }
+            });
+            item.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; });
+        });
+
+        // --- XỬ LÝ NHẬP CODE & LINTER KIỂM TRA LỖI CÚ PHÁP ---
+        let renderDebounceTimer;
+        function handleCodeInput() {
+            const code = document.getElementById('codeEditor').value;
+            document.getElementById('charCount').innerText = `${code.length} chars`;
+
+            clearTimeout(renderDebounceTimer);
+            renderDebounceTimer = setTimeout(() => {
+                validateAndRenderCode(code);
+            }, 180);
+        }
+
+        function validateAndRenderCode(code) {
+            const errorBanner = document.getElementById('errorBanner');
+            const errorMsg = document.getElementById('errorMsg');
+            const trimmed = code.trim();
+
+            if (!trimmed) {
+                renderToIframe('');
+                errorBanner.classList.add('hidden');
+                return;
+            }
+
+            // 1. Kiểm tra dán nhầm JSON thuần
+            try {
+                if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+                    JSON.parse(trimmed);
+                    showLinterWarning('⚠️ Bạn đang dán dữ liệu JSON thuần, không phải mã HTML hiển thị giao diện!');
+                    renderToIframe(`<pre style="padding:24px; font-family:monospace; color:#ef4444; background:#fef2f2; border-radius:12px; font-size:12px;">${escapeHtml(code)}</pre>`);
+                    return;
+                }
+            } catch (e) {}
+
+            // 2. Kiểm tra dán nhầm JavaScript thuần (thiếu thẻ script)
+            if ((trimmed.includes('function ') || trimmed.includes('const ') || trimmed.includes('let ')) && !trimmed.includes('<script') && !trimmed.includes('<div') && !trimmed.includes('<p')) {
+                showLinterWarning('⚠️ Phát hiện mã JavaScript thuần! Hãy bọc trong thẻ &lt;script&gt;...&lt;/script&gt; để chạy được.');
+            } 
+            // 3. Kiểm tra dán nhầm CSS thuần (thiếu thẻ style)
+            else if (trimmed.includes('{') && trimmed.includes('margin:') || trimmed.includes('padding:') && !trimmed.includes('<style') && !trimmed.includes('<div')) {
+                showLinterWarning('⚠️ Phát hiện mã CSS thuần! Hãy bọc trong thẻ &lt;style&gt;...&lt;/style&gt; để áp dụng style.');
+            }
+            // 4. Kiểm tra cấu trúc HTML với DOMParser
+            else {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(code, 'text/html');
+                const parserErrors = doc.querySelectorAll('parsererror');
+                if (parserErrors.length > 0) {
+                    showLinterWarning('⚠️ Lỗi cú pháp HTML: Phát hiện thẻ mở/đóng chưa hoàn chỉnh.');
+                } else {
+                    errorBanner.classList.add('hidden');
+                }
+            }
+
+            renderToIframe(code);
+        }
+
+        function showLinterWarning(msg) {
+            const errorBanner = document.getElementById('errorBanner');
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.innerHTML = msg;
+            errorBanner.classList.remove('hidden');
+        }
+
+        function renderToIframe(htmlCode) {
+            const iframe = document.getElementById('previewIframe');
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            doc.open();
+            doc.write(htmlCode);
+            doc.close();
+        }
+
+        // --- ĐIỀU KHIỂN VIEWPORT & THIẾT BỊ ---
+        function switchDevice(device) {
+            currentDevice = device;
+            const frame = document.getElementById('deviceFrame');
+            
+            ['desktop', 'laptop', 'tablet', 'mobile'].forEach(d => {
+                frame.classList.remove(`device-${d}`);
+                const btn = document.getElementById(`dev-${d}`);
+                btn.className = (d === device) 
+                    ? "px-3 py-1 rounded-lg font-bold bg-white text-blue-600 shadow-xs transition flex items-center gap-1.5"
+                    : "px-3 py-1 rounded-lg font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5";
+            });
+
+            frame.classList.add(`device-${device}`);
+            showToast(`Đã chuyển khung nhìn: ${device.toUpperCase()}`);
+        }
+
+        function changeZoom(delta) {
+            currentZoom = Math.min(Math.max(currentZoom + delta, 0.5), 1.5);
+            applyZoom();
+        }
+
+        function resetZoom() {
+            currentZoom = 1.0;
+            applyZoom();
+        }
+
+        function applyZoom() {
+            const frame = document.getElementById('deviceFrame');
+            const label = document.getElementById('zoomLabel');
+            frame.style.transform = `scale(${currentZoom})`;
+            label.innerText = `${Math.round(currentZoom * 100)}%`;
+        }
+
+        function toggleFullscreenPreview() {
+            const frame = document.getElementById('deviceFrame');
+            isFullscreen = !isFullscreen;
+            
+            if (isFullscreen) {
+                frame.classList.add('fullscreen-active');
+                document.getElementById('btnFullscreen').innerHTML = '<i class="fas fa-compress"></i> Thu nhỏ';
+            } else {
+                frame.classList.remove('fullscreen-active');
+                document.getElementById('btnFullscreen').innerHTML = '<i class="fas fa-expand"></i> Fullscreen';
+            }
+        }
+
+        // --- TẢI VỀ DẠNG NOTEPAD (.HTML / .TXT) ---
+        function downloadAsFile(ext) {
+            const code = document.getElementById('codeEditor').value;
+            if (!code.trim()) return alert("Khung code đang trống, không có nội dung để tải về!");
+
+            const mime = ext === 'html' ? 'text/html;charset=utf-8;' : 'text/plain;charset=utf-8;';
+            const blob = new Blob([code], { type: mime });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `TrainerOS_Export_${new Date().getTime()}.${ext}`;
+            link.click();
+            showToast(`Đã tải về file: .${ext}`);
+        }
+
+        function copyCodeToClipboard() {
+            const code = document.getElementById('codeEditor').value;
+            if (!code) return alert("Không có nội dung code để copy!");
+            navigator.clipboard.writeText(code).then(() => showToast("Đã copy toàn bộ code vào Clipboard!"));
+        }
+
+        async function pasteCodeFromClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    document.getElementById('codeEditor').value = text;
+                    handleCodeInput();
+                    showToast("Đã dán code thành công!");
+                }
+            } catch (err) {
+                alert("Vui lòng nhấn Ctrl + V trực tiếp vào ô soạn thảo!");
+            }
+        }
+
+        function clearCodeEditor() {
+            if (confirm("Xóa trắng toàn bộ mã trong khung soạn thảo?")) {
+                document.getElementById('codeEditor').value = '';
+                handleCodeInput();
+            }
+        }
+
+        // --- MẪU CODE SẴN DÀNH CHO TRAINER ---
+        function insertSampleTemplate(type) {
+            if (type === 'email') {
+                const sampleEmail = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 20px; }
+        .mail-card { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e1e8ed; overflow: hidden; }
+        .header { background: #0066cc; color: white; padding: 24px; text-align: center; }
+        .content { padding: 24px; line-height: 1.6; color: #333333; }
+        .btn { display: inline-block; background: #0066cc; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="mail-card">
+        <div class="header">
+            <h2>THÔNG BÁO ĐÀO TẠO KHÓA MỚI</h2>
+            <p>Phòng Đào Tạo L&D - KiotViet</p>
+        </div>
+        <div class="content">
+            <p>Chào các bạn học viên mới,</p>
+            <p>Chào mừng bạn tham gia khóa học Sản phẩm Cơ bản (Retail). Lịch học bắt đầu lúc <b>08:30 sáng Thứ 3</b> trên Google Meet.</p>
+            <p>Vui lòng bấm nút bên dưới để tham gia nhóm Zalo lớp:</p>
+            <p style="text-align: center;">
+                <a href="#" class="btn">Tham Gia Nhóm Zalo</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>`;
+                document.getElementById('codeEditor').value = sampleEmail;
+            } else if (type === 'table') {
+                const sampleTable = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"><\/script>
+</head>
+<body class="p-8 bg-slate-50 font-sans">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-6 bg-slate-900 text-white flex justify-between items-center">
+            <h3 class="font-bold text-base">BẢNG ĐIỂM SÁT HẠCH SẢN PHẨM SPCB</h3>
+            <span class="text-xs font-mono text-emerald-400 font-bold bg-emerald-950 px-2.5 py-1 rounded border border-emerald-800">100% Pass</span>
+        </div>
+        <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-100 text-slate-600 uppercase border-b">
+                <tr>
+                    <th class="p-3">Mã NV</th><th>Họ Tên</th><th>Phòng Ban</th><th class="text-center">Điểm</th><th class="text-center">Kết Quả</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y text-slate-700">
+                <tr><td class="p-3 font-mono">HN04789</td><td class="font-bold">Nguyễn Xuân Huy</td><td>DSHNI1</td><td class="text-center font-bold">100%</td><td class="text-center"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold">Pass</span></td></tr>
+                <tr><td class="p-3 font-mono">SG02713</td><td class="font-bold">Hồ Thị Duyên An</td><td>DSSGN1</td><td class="text-center font-bold">95%</td><td class="text-center"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold">Pass</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>`;
+                document.getElementById('codeEditor').value = sampleTable;
+            }
+            handleCodeInput();
+            showToast("Đã nạp mẫu template sẵn!");
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        window.onload = () => {
+            try {
+                const prof = JSON.parse(localStorage.getItem('kv_trainer_profile'));
+                if(prof) {
+                    document.getElementById('display-prof-name').innerText = prof.name || "L&D KiotViet";
+                    document.getElementById('display-prof-title').innerText = prof.title || "Administrator";
+                    document.getElementById('display-prof-ava').innerText = (prof.name || "A").charAt(0).toUpperCase();
+                }
+            } catch(e) {}
+
+            // Mặc định nạp mẫu email demo
+            insertSampleTemplate('email');
+        };
+    </script>
+</body>
+</html>
