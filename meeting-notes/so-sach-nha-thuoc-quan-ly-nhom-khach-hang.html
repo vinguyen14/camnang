@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Sổ Sách Nhà Thuốc & Quản Lý Nhóm Khách Hàng - KiotViet Retail</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a'
+                        },
+                        emerald: {
+                            500: '#10b981',
+                            600: '#059669'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html {
+            font-size: 20px;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        *, *:before, *:after {
+            caret-color: transparent !important;
+            outline: none !important;
+            box-sizing: border-box;
+        }
+
+        .gradient-text-blue {
+            color: #1d4ed8 !important;
+            -webkit-text-fill-color: #1d4ed8 !important;
+            background: none !important;
+            -webkit-background-clip: initial !important;
+            background-clip: initial !important;
+        }
+
+        #viewport {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #slide-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 4.8rem 3.2rem 2.8rem 3.2rem;
+            box-sizing: border-box;
+            background: transparent;
+            z-index: 10;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        .slide.slide-center {
+            justify-content: center !important;
+            padding: 4.5rem 3.2rem 3.8rem 3.2rem;
+        }
+
+        .slide-content {
+            width: 92%;
+            max-width: 70rem;
+            margin: 0 auto;
+        }
+
+        .heading-icon-box {
+            width: 3.1rem;
+            height: 3.1rem;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            flex-shrink: 0;
+        }
+
+        /* Glassmorphism Card Style */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(226, 232, 240, 0.85);
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+        }
+
+        .glass-card-hover {
+            transition: all 0.25s ease;
+        }
+        .glass-card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 30px -8px rgba(15, 23, 42, 0.08);
+            border-color: #bfdbfe;
+        }
+
+        /* Ambient Blobs */
+        .bg-blobs {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        /* Web Nav & Brand Header */
+        #logo-pdf-trigger {
+            position: fixed;
+            top: 1.4rem;
+            left: 3.2rem;
+            height: 34px;
+            z-index: 90;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        #logo-pdf-trigger:hover {
+            transform: scale(1.03);
+        }
+
+        #dynamic-badge {
+            position: fixed;
+            top: 1.4rem;
+            right: 3.2rem;
+            z-index: 90;
+        }
+
+        /* Minimal Dock bar */
+        .dock-bar {
+            position: fixed;
+            bottom: 1.2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 90;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.35rem 0.75rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid #e2e8f0;
+            border-radius: 9999px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .dock-btn {
+            width: 1.8rem;
+            height: 1.8rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #475569;
+            transition: all 0.15s ease;
+            background: #f1f5f9;
+            cursor: pointer;
+            border: none;
+            font-size: 0.75rem;
+        }
+        .dock-btn:hover {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .dock-counter {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #475569;
+            padding: 0 0.5rem;
+            min-width: 3.8rem;
+            text-align: center;
+        }
+
+        /* =======================================================
+           CẤU HÌNH IN PDF TỶ LỆ VÀNG 16:9 - NGĂN CHẶN LỖI GOM 1 TRANG
+           ======================================================= */
+        @page {
+            size: 16in 9in;
+            margin: 0;
+        }
+
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            #logo-pdf-trigger, #dynamic-badge, .dock-bar, .bg-blobs {
+                display: none !important;
+            }
+            
+            html { 
+                font-size: 23px !important; 
+            }
+            
+            html, body {
+                width: 16in !important;
+                height: auto !important;
+                min-height: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                background: #f8fafc !important;
+                display: block !important;
+            }
+            
+            #viewport {
+                position: static !important;
+                width: 16in !important;
+                height: auto !important;
+                overflow: visible !important;
+                display: block !important;
+                background: transparent !important;
+            }
+
+            #slide-container {
+                width: 16in !important;
+                height: auto !important;
+                position: static !important;
+                display: block !important;
+                overflow: visible !important;
+            }
+            
+            .slide {
+                display: flex !important;
+                position: relative !important;
+                inset: auto !important;
+                width: 16in !important;
+                height: 9in !important;
+                min-height: 9in !important;
+                max-height: 9in !important;
+                align-items: center !important;
+                justify-content: flex-start !important;
+                page-break-after: always !important;
+                break-after: page !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                overflow: hidden !important;
+                padding: 3.8rem 2.5rem 1.8rem 2.5rem !important;
+                background: #f8fafc !important;
+                box-sizing: border-box !important;
+                margin: 0 !important;
+            }
+
+            .slide.slide-center {
+                justify-content: center !important;
+                padding: 3.5rem 2.5rem 1.8rem 2.5rem !important;
+            }
+            
+            .slide:last-child {
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+            }
+
+            .slide-content {
+                width: 94% !important;
+                max-width: 74rem !important;
+                margin: 0 auto !important;
+            }
+            
+            .slide::before {
+                content: '';
+                position: absolute;
+                top: 1.2rem;
+                left: 2.5rem;
+                width: 135px;
+                height: 36px;
+                background: url('https://logo.kiotviet.vn/KiotViet-Logo-Horizontal.svg') no-repeat left center;
+                background-size: contain;
+                z-index: 50;
+            }
+            
+            .slide::after {
+                content: attr(data-section);
+                position: absolute;
+                top: 1.2rem;
+                right: 2.5rem;
+                background: #eff6ff !important;
+                border: 1px solid #bfdbfe !important;
+                color: #1d4ed8 !important;
+                font-weight: 800 !important;
+                font-size: 0.74rem !important;
+                padding: 4px 14px !important;
+                border-radius: 9999px !important;
+                z-index: 50;
+                letter-spacing: 0.04em !important;
+                text-transform: uppercase !important;
+            }
+        }
+    </style>
+</head>
+<body class="relative">
+
+    <!-- Brand Logo Web (Click to Print/Save PDF) -->
+    <img id="logo-pdf-trigger" src="https://logo.kiotviet.vn/KiotViet-Logo-Horizontal.svg" alt="KiotViet Logo" title="Nhấn vào đây hoặc nhấn phím P để Xuất PDF 16:9">
+
+    <!-- Category Dynamic Badge (Top Right) -->
+    <div id="dynamic-badge" class="pointer-events-none">
+        <span id="badge-text" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.68rem] font-extrabold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">
+            TỔNG QUAN
+        </span>
+    </div>
+
+    <!-- Soft Ambient Light Blobs -->
+    <div class="bg-blobs">
+        <div class="absolute -top-32 -left-32 w-96 h-96 bg-blue-200/50 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/4 -right-32 w-96 h-96 bg-cyan-200/40 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-32 left-1/3 w-96 h-96 bg-indigo-100/60 rounded-full blur-3xl"></div>
+    </div>
+
+    <!-- Viewport Container -->
+    <div id="viewport">
+        <div id="slide-container">
+
+            <!-- SLIDE 1: COVER HERO -->
+            <div class="slide slide-center active" data-section="GIỚI THIỆU">
+                <div class="slide-content text-center flex flex-col items-center">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold uppercase tracking-wider mb-4 shadow-sm">
+                        <i class="fa-solid fa-layer-group text-blue-600"></i> KiotViet Retail • Tính năng Mới
+                    </div>
+                    <h1 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight max-w-4xl mb-4">
+                        <span class="block">DEMO SỔ SÁCH NHÀ THUỐC &amp;</span>
+                        <span class="gradient-text-blue block">QUẢN LÝ NHÓM KHÁCH HÀNG</span>
+                    </h1>
+                    <p class="text-sm md:text-base text-slate-600 max-w-2xl leading-relaxed mb-6">
+                        Tổng hợp giải pháp số hóa sổ sách chuẩn GPP ngành Dược và kiến trúc phân khúc nhóm khách hàng thông minh hỗ trợ kích cầu Loyalty.
+                    </p>
+                    <div class="flex items-center gap-4 text-xs text-slate-500 font-medium">
+                        <span class="inline-flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+                            <i class="fa-regular fa-calendar-check text-blue-600"></i> Ngày: 20/10
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+                            <i class="fa-solid fa-user-tie text-blue-600"></i> Trình bày: Huy (Product Retail)
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+                            <i class="fa-solid fa-circle-check text-emerald-600"></i> Đã Golive &amp; Khảo sát thực tế
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: AGENDA / TỔNG QUAN NỘI DUNG -->
+            <div class="slide" data-section="NỘI DUNG CHÍNH">
+                <div class="slide-content">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="heading-icon-box bg-blue-600 text-white shadow-md shadow-blue-500/20">
+                            <i class="fa-solid fa-list-check"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Trọng Tâm Buổi Demo &amp; Báo Cáo</h2>
+                            <p class="text-xs text-slate-500">2 phân hệ chức năng chiến lược của phần mềm KiotViet Bán lẻ</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-5">
+                        <div class="glass-card glass-card-hover rounded-2xl p-5 border-l-4 border-l-blue-600">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-black uppercase text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">Phần I</span>
+                                <i class="fa-solid fa-prescription-bottle-medical text-blue-600 text-xl"></i>
+                            </div>
+                            <h3 class="text-base font-bold text-slate-800 mb-2">Hệ Thống Sổ Sách Nhà Thuốc GPP</h3>
+                            <ul class="text-xs text-slate-600 space-y-2">
+                                <li class="flex items-start gap-2">
+                                    <i class="fa-solid fa-check text-blue-600 mt-0.5 text-[0.7rem]"></i>
+                                    <span><strong>Tự động tổng hợp 100%:</strong> Rút dữ liệu trực tiếp từ hóa đơn, nhập hàng, kiểm kho, xuất hủy.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fa-solid fa-check text-blue-600 mt-0.5 text-[0.7rem]"></i>
+                                    <span><strong>Hoàn thiện 9/14 sổ GPP:</strong> Sổ mua bán, xuất nhập, hạn dùng, nhiệt độ - độ ẩm, thuốc kiểm soát đặc biệt.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fa-solid fa-check text-blue-600 mt-0.5 text-[0.7rem]"></i>
+                                    <span><strong>In ấn &amp; Xuất Excel chuẩn:</strong> Tự động khớp khổ giấy ngang/dọc, tích hợp máy đo nhiệt độ.</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="glass-card glass-card-hover rounded-2xl p-5 border-l-4 border-l-emerald-600">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-black uppercase text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">Phần II</span>
+                                <i class="fa-solid fa-users-gear text-emerald-600 text-xl"></i>
+                            </div>
+                            <h3 class="text-base font-bold text-slate-800 mb-2">Module Quản Lý Nhóm Khách Hàng</h3>
+                            <ul class="text-xs text-slate-600 space-y-2">
+                                <li class="flex items-start gap-2">
+                                    <i class="fa-solid fa-check text-emerald-600 mt-0.5 text-[0.7rem]"></i>
+                                    <span><strong>Tách module chuyên biệt:</strong> Giải quyết triệt để sự phức tạp và khó dùng của giao diện lọc cũ.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fa-solid fa-check text-emerald-600 mt-0.5 text-[0.7rem]"></i>
+                                    <span><strong>Gợi ý nhóm thông minh:</strong> Quét tự động khách VIP, mua gần đây, lâu chưa quay lại, sinh nhật.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fa-solid fa-check text-emerald-600 mt-0.5 text-[0.7rem]"></i>
+                                    <span><strong>Cơ chế 3 trạng thái linh hoạt:</strong> Đủ điều kiện tự động, Thêm thủ công (Whitelist), Loại trừ (Blacklist).</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: CHAPTER I BRIDGE -->
+            <div class="slide slide-center" data-section="PHẦN I: SỔ SÁCH NHÀ THUỐC">
+                <div class="slide-content text-center flex flex-col items-center">
+                    <div class="heading-icon-box bg-blue-100 text-blue-700 text-2xl w-16 h-16 rounded-2xl mb-4 shadow-inner">
+                        <i class="fa-solid fa-notes-medical"></i>
+                    </div>
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200 mb-2">Phần I</span>
+                    <h2 class="text-3xl font-black text-slate-900 mb-3">HỆ THỐNG SỔ SÁCH NHÀ THUỐC GPP</h2>
+                    <p class="text-sm text-slate-600 max-w-xl leading-relaxed">
+                        Số hóa tự động toàn diện nghiệp vụ lưu trữ sổ sách theo quy định Thực hành tốt cơ sở bán lẻ thuốc (GPP) của Bộ Y tế, giúp nhà thuốc tiết kiệm 90% thời gian chép sổ.
+                    </p>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: SỔ NHÀ THUỐC - NGUYÊN LÝ HOẠT ĐỘNG -->
+            <div class="slide" data-section="PHẦN I: SỔ SÁCH NHÀ THUỐC">
+                <div class="slide-content">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="heading-icon-box bg-blue-600 text-white shadow-md shadow-blue-500/20">
+                            <i class="fa-solid fa-gears"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Nguyên Lý Vận Hành &amp; Định Dạng Chuẩn</h2>
+                            <p class="text-xs text-slate-500">Cơ chế đồng bộ thời gian thực từ mọi giao dịch nghiệp vụ trên KiotViet</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="glass-card rounded-2xl p-4">
+                            <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-base mb-3 font-bold">1</div>
+                            <h4 class="text-sm font-bold text-slate-800 mb-1">Tự Động Điền &amp; Thu Hồi</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Dữ liệu phát sinh từ Hóa đơn, Nhập hàng, Kiểm kho, Chuyển hàng được tự động ghi nhận vào sổ tương ứng. Khi hủy giao dịch, hệ thống tự động gỡ bỏ khỏi sổ.
+                            </p>
+                        </div>
+                        <div class="glass-card rounded-2xl p-4">
+                            <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-base mb-3 font-bold">2</div>
+                            <h4 class="text-sm font-bold text-slate-800 mb-1">In Ấn Vừa Khít Tự Động</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Mẫu in được lập trình tự động nhận diện khổ ngang hoặc khổ dọc chuẩn Bộ Y tế. Người dùng không cần thiết lập lề hay căn chỉnh trang phức tạp.
+                            </p>
+                        </div>
+                        <div class="glass-card rounded-2xl p-4">
+                            <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-base mb-3 font-bold">3</div>
+                            <h4 class="text-sm font-bold text-slate-800 mb-1">Xuất Excel Đồng Bộ</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Hỗ trợ xuất file Excel đúng bố cục biểu mẫu. Người dùng có thể điền bổ sung trường cảm quan hoặc điều kiện bảo quản thực tế khi cần nộp đoàn kiểm tra.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-xl text-xs text-blue-900 flex items-center gap-3">
+                        <i class="fa-solid fa-circle-info text-blue-600 text-base shrink-0"></i>
+                        <span><strong>Phân loại hàng hóa chặt chẽ:</strong> Các sổ nhà thuốc chỉ trích xuất hàng hóa thuộc loại <strong>Thuốc</strong> (bao gồm thuốc liên thông và không liên thông CSDL Dược Quốc gia), tự động loại trừ mặt hàng thường hoặc dịch vụ.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 5: SỔ MUA BÁN & XUẤT NHẬP THUỐC -->
+            <div class="slide" data-section="PHẦN I: SỔ SÁCH NHÀ THUỐC">
+                <div class="slide-content">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="heading-icon-box bg-blue-600 text-white shadow-md shadow-blue-500/20">
+                            <i class="fa-solid fa-arrows-split-up-and-left"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Sổ Mua Bán &amp; Sổ Xuất Nhập Thuốc</h2>
+                            <p class="text-xs text-slate-500">Hai góc nhìn cốt lõi: Theo luồng giao dịch và theo từng mã hàng hóa</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-5">
+                        <div class="glass-card rounded-2xl p-4">
+                            <h3 class="text-sm font-bold text-blue-800 flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-receipt text-blue-600"></i> Sổ Mua Bán Thuốc (Góc nhìn Giao dịch)
+                            </h3>
+                            <ul class="text-xs text-slate-600 space-y-2">
+                                <li>• <strong>Cơ chế:</strong> Ghi nhận mọi giao dịch phát sinh mua/bán thuốc theo dòng thời gian thực tế.</li>
+                                <li>• <strong>Hiển thị:</strong> Ngày chứng từ, số hóa đơn/phiếu nhập, đối tác (NCC/Khách hàng), danh mục thuốc giao dịch.</li>
+                                <li>• <strong>Xử lý linh hoạt:</strong> Khi người dùng cập nhật hoặc hủy giao dịch, nội dung trong sổ tự động điều chỉnh tương ứng.</li>
+                            </ul>
+                        </div>
+
+                        <div class="glass-card rounded-2xl p-4">
+                            <h3 class="text-sm font-bold text-blue-800 flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-boxes-stacked text-blue-600"></i> Sổ Theo Dõi Xuất Nhập (Góc nhìn Hàng hóa)
+                            </h3>
+                            <ul class="text-xs text-slate-600 space-y-2">
+                                <li>• <strong>Sổ Tổng quan:</strong> Thống kê theo từng mặt hàng thuốc: Số lô, Hạn dùng, Đơn vị tính, Tồn đầu kỳ, Tổng nhập, Tổng xuất, Tồn cuối kỳ.</li>
+                                <li>• <strong>Sổ Chi tiết:</strong> Liệt kê chi tiết từng phiếu phát sinh cho 1 mã thuốc:
+                                    <div class="mt-1 pl-3 text-slate-500">
+                                        - <em>Luồng Nhập:</em> Nhập từ NCC, Khách trả hàng, Kiểm kho tăng.<br>
+                                        - <em>Luồng Xuất:</em> Bán hàng, Trả NCC, Kiểm kho giảm, Xuất hủy, Xuất dùng nội bộ, Chuyển hàng giữa các chi nhánh.
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 6: SỔ HẠN DÙNG & SỔ NHIỆT ĐỘ ĐỘ ẨM -->
+            <div class="slide" data-section="PHẦN I: SỔ SÁCH NHÀ THUỐC">
+                <div class="slide-content">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="heading-icon-box bg-blue-600 text-white shadow-md shadow-blue-500/20">
+                            <i class="fa-solid fa-temperature-half"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Sổ Hạn Dùng &amp; Sổ Nhiệt Độ - Độ Ẩm</h2>
+                            <p class="text-xs text-slate-500">Kiểm soát điều kiện bảo quản đạt chuẩn và hạn sử dụng theo từng số lô</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-5">
+                        <div class="glass-card rounded-2xl p-4">
+                            <h3 class="text-sm font-bold text-blue-800 flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-calendar-xmark text-blue-600"></i> Sổ Theo Dõi Hạn Dùng Của Thuốc
+                            </h3>
+                            <ul class="text-xs text-slate-600 space-y-2">
+                                <li>• <strong>Ma trận 12 tháng:</strong> Lọc theo từng năm, trực quan hóa thuốc nào hết hạn vào tháng nào bằng dấu tick chuẩn xác.</li>
+                                <li>• <strong>Dữ liệu tự động:</strong> Tự động bóc tách từ thông tin số lô và hạn sử dụng khi thực hiện nhập hàng trên KiotViet.</li>
+                                <li>• <strong>Hỗ trợ kiểm tra:</strong> In sổ và xuất Excel phục vụ báo cáo định kỳ kiểm kê thuốc cận hạn.</li>
+                            </ul>
+                        </div>
+
+                        <div class="glass-card rounded-2xl p-4">
+                            <h3 class="text-sm font-bold text-blue-800 flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-droplet text-blue-600"></i> Sổ Theo Dõi Nhiệt Độ &amp; Độ Ẩm (GPP)
+                            </h3>
+                            <ul class="text-xs text-slate-600 space-y-2">
+                                <li>• <strong>Khung giờ chuẩn:</strong> Tự động chia 2 ca/ngày: <strong>9:00 sáng</strong> và <strong>15:00 chiều</strong> theo công văn y tế.</li>
+                                <li>• <strong>Cảnh báo vượt ngưỡng:</strong> Tự động đổi màu đỏ cảnh báo nếu nhiệt độ &gt; 30°C hoặc độ ẩm &gt; 75%.</li>
+                                <li>• <strong>2 phương thức ghi nhận:</strong>
+                                    <div class="mt-1 pl-3 text-slate-500">
+                                        1. <em>Ghi tay nhanh:</em> Nhập trực tiếp qua icon trên thanh header hoặc mở sổ tạo theo tháng.<br>
+                                        2. <em>Import máy đo Elitech:</em> Tự động đọc dữ liệu thiết bị, gán giờ đo gần nhất về 2 mốc 9h (trước 12h) và 15h (sau 12h).
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 7: SỔ THU HỒI & KIỂM TRA CHẤT LƯỢNG -->
+            <div class="slide" data-section="PHẦN I: SỔ SÁCH NHÀ THUỐC">
+                <div class="slide-content">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="heading-icon-box bg-blue-600 text-white shadow-md shadow-blue-500/20">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Sổ Thu Hồi Thuốc &amp; Kiểm Tra Chất Lượng</h2>
+                            <p class="text-xs text-slate-500">Xử lý văn bản đình chỉ lưu hành và thanh kiểm tra chất lượng định kỳ/đột xuất</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-5">
+                        <div class="glass-card rounded-2xl p-4">
+                            <h3 class="text-sm font-bold text-amber-700 flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-ban text-amber-600"></i> Sổ Theo Dõi Thuốc Đình Chỉ / Thu Hồi
+                            </h3>
+                            <ul class="text-xs text-slate-600 space-y-2">
+                                <li>• <strong>Lập biên bản theo công văn:</strong> Nhập số công văn của Bộ Y tế/Sở Y tế hoặc thông báo từ nhà sản xuất.</li>
+                                <li>• <strong>Thông tin chi tiết:</strong> Chọn lô thuốc, ghi nhận số lượng đã mua, tồn kho hiện tại, số lượng đã bán và lượng cần thu hồi.</li>
+                                <li>• <strong>Biện pháp xử lý:</strong> Trả lại nhà cung cấp, tiêu hủy hoặc lưu kho cách ly.</li>
+                                <li class="text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200">
+                                    ⚠️ <em>Lưu ý kỹ thuật:</em> Số lượng thu hồi ở sổ này chỉ mang tính pháp lý ghi nhận, không tự trừ tồn kho hệ thống (cần lập phiếu xuất hủy/trả NCC).
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="glass-card rounded-2xl p-4">
+                            <h3 class="text-sm font-bold text-blue-800 flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-clipboard-check text-blue-600"></i> Sổ Kiểm Tra Chất Lượng Định Kỳ / Đột Xuất
+                            </h3>
+                            <ul class="text-xs text-slate-600 space-y-2">
+                                <li>• <strong>Phân loại kiểm tra:</strong> Lựa chọn rõ lý do: Kiểm tra định kỳ (theo tháng/quý) hoặc Đột xuất (khi có nghi ngờ hoặc chỉ đạo).</li>
+                                <li>• <strong>Đánh giá cảm quan:</strong> Đánh giá trạng thái bao bì, nhãn mác, màu sắc, thể chất viên thuốc (Đạt / Không đạt).</li>
+                                <li>• <strong>Nhập liệu số lượng lớn:</strong> Hỗ trợ tải file mẫu Excel và Import danh sách hàng hóa cần kiểm tra vào phiếu nhanh chóng.</li>
+                                <li>• <strong>In ấn biểu mẫu:</strong> Xuất phiếu kiểm nghiệm cảm quan phục vụ lưu trữ hồ sơ GPP tại quầy.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 8: SỔ BỆNH NHÂN, ĐƠN THUỐC & KIỂM SOÁT ĐẶC BIỆT -->
+            <div class="slide" data-section="PHẦN I: SỔ SÁCH NHÀ THUỐC">
+                <div class="slide-content">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="heading-icon-box bg-blue-600 text-white shadow-md shadow-blue-500/20">
+                            <i class="fa-solid fa-user-doctor"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Sổ Bệnh Nhân, Đơn Thuốc &amp; Thuốc Đặc Biệt</h2>
+                            <p class="text-xs text-slate-500">Giám sát kê đơn và các hoạt chất thuộc danh mục kiểm soát đặc biệt</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="glass-card rounded-2xl p-4">
+                            <h4 class="text-sm font-bold text-blue-800 mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-hospital-user text-blue-600"></i> Sổ Theo Dõi Bệnh Nhân
+                            </h4>
+                            <p class="text-xs text-slate-600 leading-relaxed mb-2">
+                                Tự động ghi nhận khi thu ngân chọn hình thức <strong>Bán thuốc theo đơn</strong>.
+                            </p>
+                            <p class="text-xs text-slate-500">
+                                Lưu trữ đầy đủ: Họ tên bệnh nhân, tuổi, cân nặng, giới tính, người giám hộ, chẩn đoán bệnh, bác sĩ kê đơn và cơ sở khám chữa bệnh.
+                            </p>
+                        </div>
+
+                        <div class="glass-card rounded-2xl p-4">
+                            <h4 class="text-sm font-bold text-blue-800 mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-file-prescription text-blue-600"></i> Sổ Bán Thuốc Theo Đơn
+                            </h4>
+                            <p class="text-xs text-slate-600 leading-relaxed mb-2">
+                                Tổng hợp toàn bộ các đơn thuốc đã bán ra theo mã hóa đơn.
+                            </p>
+                            <p class="text-xs text-slate-500">
+                                Thể hiện ngày kê đơn, ngày bán thuốc thực tế, số lượng thuốc đã xuất theo đơn vị tính nhỏ nhất được quy đổi tự động.
+                            </p>
+                        </div>
+
+                        <div class="glass-card rounded-2xl p-4">
+                            <h4 class="text-sm font-bold text-red-800 mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-shield-halved text-red-600"></i> Thuốc Kiểm Soát Đặc Biệt
+                            </h4>
+                            <p class="text-xs text-slate-600 leading-relaxed mb-2">
+                                Tự động phân loại dựa trên CSDL Dược Quốc gia (gây nghiện, hướng thần, tiền chất, thuốc độc).
+                            </p>
+                            <p class="text-xs text-slate-500">
+                                Quản lý báo cáo xuất nhập tồn nghiêm ngặt theo từng số lô; hỗ trợ xuất Excel tổng hợp tất cả các lô hoặc riêng từng lô thuốc.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-slate-100 rounded-xl text-xs text-slate-600 flex items-center justify-between">
+                        <span><strong>Tiến độ dự án:</strong> Đã triển khai <strong>9 sổ</strong>. Còn 5 sổ đang hoàn thiện trong tháng 10.</span>
+                        <span class="text-blue-700 font-bold">Phân quyền chi tiết (Xem / In / Xuất Excel) sẽ có trong đợt Golive tiếp theo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 9: CHAPTER II BRIDGE -->
+            <div class="slide slide-center" data-section="PHẦN II: NHÓM KHÁCH HÀNG">
+                <div class="slide-content text-center flex flex-col items-center">
+                    <div class="heading-icon-box bg-emerald-100 text-emerald-700 text-2xl w-16 h-16 rounded-2xl mb-4 shadow-inner">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 mb-2">Phần II</span>
+                    <h2 class="text-3xl font-black text-slate-900 mb-3">MODULE QUẢN LÝ NHÓM KHÁCH HÀNG</h2>
+                    <p class="text-sm text-slate-600 max-w-xl leading-relaxed">
+                        Nâng cấp từ bộ lọc cũ thành một module chuyên biệt với hệ thống gợi ý thông minh, cơ chế quét động tự động và công cụ thiết lập điều kiện trực quan.
+                    </p>
+                </div>
+            </div>
+
+            <!-- SLIDE 10: NHÓM KHÁCH HÀNG - VÌ SAO PHẢI THAY ĐỔI -->
+            <div class="slide" data-section="PHẦN II: NHÓM KHÁCH HÀNG">
+                <div class="slide-content">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="heading-icon-box bg-emerald-600 text-white shadow-md shadow-emerald-500/20">
+                            <i class="fa-solid fa-code-compare"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Bước Chuyển Mình Sang Quản Lý Chuyên Biệt</h2>
+                            <p class="text-xs text-slate-500">So sánh giải pháp cũ và giá trị vượt trội của module quản lý nhóm mới</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-5">
+                        <div class="glass-card rounded-2xl p-4 bg-slate-50/60 border-slate-200">
+                            <span class="inline-block text-[0.68rem] font-bold uppercase tracking-wider bg-slate-200 text-slate-700 px-2 py-0.5 rounded mb-2">Hạn chế của cơ chế cũ</span>
+                            <h3 class="text-sm font-bold text-slate-800 mb-2">Chung Đụng Với Màn Danh Sách Khách Hàng</h3>
+                            <ul class="text-xs text-slate-500 space-y-2">
+                                <li>• Không có không gian quản lý độc lập, chỉ thao tác qua thanh lọc bên trái.</li>
+                                <li>• Điều kiện thiết lập rối rắm, khách hàng phản ánh khó hiểu và dễ nhầm lẫn.</li>
+                                <li>• Gian hàng phải tự nghĩ ra điều kiện từ đầu, thiếu gợi ý nghiệp vụ chuẩn xác.</li>
+                                <li>• Chưa hỗ trợ liên kết trực tiếp với các chiến dịch khuyến mại hay Loyalty.</li>
+                            </ul>
+                        </div>
+
+                        <div class="glass-card rounded-2xl p-4 bg-emerald-50/40 border-emerald-200">
+                            <span class="inline-block text-[0.68rem] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded mb-2">Đột phá của Module Mới</span>
+                            <h3 class="text-sm font-bold text-emerald-900 mb-2">Module Riêng Biệt • Trải Nghiệm Mượt Mà</h3>
+                            <ul class="text-xs text-slate-700 space-y-2">
+                                <li>• <strong>Module độc lập:</strong> Quản lý danh sách nhóm, xem chi tiết thành viên và các ưu đãi đang hưởng.</li>
+                                <li>• <strong>Gợi ý nhóm mẫu thông minh:</strong> Đưa ra các nhóm khách hàng cốt lõi kèm số liệu thực tế ngay lập tức.</li>
+                                <li>• <strong>Bộ điều kiện trực quan:</strong> Phân nhóm điều kiện khoa học (Hành vi, Công nợ, Tích điểm, Thời gian).</li>
+                                <li>• <strong>Cơ sở cho Marketing Automation:</strong> Nền tảng để gửi tin Zalo/SMS tự động kích cầu bán lẻ.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 11: SMART GROUPS & QUÉT DỮ LIỆU ĐỘNG -->
+            <div class="slide" data-section="PHẦN II: NHÓM KHÁCH HÀNG">
+                <div class="slide-content">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="heading-icon-box bg-emerald-600 text-white shadow-md shadow-emerald-500/20">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Hệ Thống Gợi Ý Nhóm Thông Minh (Smart Groups)</h2>
+                            <p class="text-xs text-slate-500">Quét dữ liệu thực tế của gian hàng để đề xuất quy mô nhóm ngay tại form tạo</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 mb-3">
+                        <div class="glass-card glass-card-hover rounded-2xl p-4 text-center">
+                            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 mx-auto flex items-center justify-center text-lg mb-2">
+                                <i class="fa-solid fa-crown"></i>
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-800">Khách Chi Tiêu Cao (VIP)</h4>
+                            <p class="text-xs text-slate-500 mt-1">Lọc khách có tổng chi tiêu cao trong 30 ngày qua để tri ân đặc quyền.</p>
+                        </div>
+
+                        <div class="glass-card glass-card-hover rounded-2xl p-4 text-center">
+                            <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 mx-auto flex items-center justify-center text-lg mb-2">
+                                <i class="fa-solid fa-bag-shopping"></i>
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-800">Khách Mua Gần Đây</h4>
+                            <p class="text-xs text-slate-500 mt-1">Khách mới phát sinh đơn hàng, phù hợp để gửi khảo sát hoặc up-sell.</p>
+                        </div>
+
+                        <div class="glass-card glass-card-hover rounded-2xl p-4 text-center">
+                            <div class="w-10 h-10 rounded-xl bg-red-100 text-red-700 mx-auto flex items-center justify-center text-lg mb-2">
+                                <i class="fa-solid fa-user-clock"></i>
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-800">Khách Lâu Chưa Quay Lại</h4>
+                            <p class="text-xs text-slate-500 mt-1">Khách nguy cơ rời bỏ (At-risk), cần kích hoạt voucher tái kích cầu.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="glass-card rounded-2xl p-3.5 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-pink-100 text-pink-700 flex items-center justify-center text-lg shrink-0">
+                                <i class="fa-solid fa-cake-candles"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800">Sinh Nhật Trong Tháng Này (Dynamic Month)</h4>
+                                <p class="text-xs text-slate-500">Tự động bắt tháng sinh = tháng hiện tại. Hết tháng tự chuyển sang tập khách tháng mới.</p>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-2xl p-3.5 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg shrink-0">
+                                <i class="fa-solid fa-sliders"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800">Tự Tạo Nhóm Khách Theo Điều Kiện Tùy Chỉnh</h4>
+                                <p class="text-xs text-slate-500">Kết hợp tự do các tiêu chí hành vi, nhân khẩu học, tích điểm và công nợ.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 12: CƠ CHẾ 3 TRẠNG THÁI KHÁCH HÀNG -->
+            <div class="slide" data-section="PHẦN II: NHÓM KHÁCH HÀNG">
+                <div class="slide-content">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="heading-icon-box bg-emerald-600 text-white shadow-md shadow-emerald-500/20">
+                            <i class="fa-solid fa-shield-cat"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Cơ Chế Phân Loại 3 Trạng Thái Khách Hàng</h2>
+                            <p class="text-xs text-slate-500">Đảm bảo vừa quét tự động linh hoạt, vừa can thiệp thủ công theo ý chủ shop</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="glass-card rounded-2xl p-4 border-t-4 border-t-blue-600">
+                            <div class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md mb-2">
+                                <i class="fa-solid fa-rotate"></i> Khách Đủ Điều Kiện
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-800 mb-1">Cơ chế Tự Động 100%</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Khách hàng thỏa mãn bộ lọc sẽ được hệ thống tự động thêm vào nhóm. Khi không còn thỏa mãn (ví dụ sang tháng mới hoặc quá hạn mua), hệ thống tự động gỡ ra.
+                            </p>
+                        </div>
+
+                        <div class="glass-card rounded-2xl p-4 border-t-4 border-t-emerald-600">
+                            <div class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md mb-2">
+                                <i class="fa-solid fa-user-plus"></i> Thêm Thủ Công (Whitelist)
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-800 mb-1">Luôn Nằm Trong Nhóm</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Áp dụng cho khách hàng tiềm năng hoặc người quen chưa đủ điều kiện chi tiêu nhưng chủ shop vẫn muốn đưa vào để hưởng ưu đãi. Dù quét lại vẫn không bị xóa.
+                            </p>
+                        </div>
+
+                        <div class="glass-card rounded-2xl p-4 border-t-4 border-t-red-600">
+                            <div class="inline-flex items-center gap-1.5 text-xs font-bold text-red-700 bg-red-50 px-2.5 py-1 rounded-md mb-2">
+                                <i class="fa-solid fa-user-minus"></i> Loại Trừ (Blacklist)
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-800 mb-1">Luôn Không Nằm Trong Nhóm</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Áp dụng cho các khách hàng vi phạm hoặc không muốn cấp quyền ưu đãi dù họ hoàn toàn thỏa mãn điều kiện lọc. Khi quét lại vẫn kiên quyết bị loại trừ.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-slate-100 rounded-xl text-xs text-slate-600 flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-rotate-left text-blue-600"></i>
+                        <span><strong>Tính năng Khôi phục:</strong> Cho phép chuyển khách Whitelist hoặc Blacklist trở về trạng thái Khách thường để tái tham gia chu trình quét tự động.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 13: BỘ LỌC ĐIỀU KIỆN & TOÁN TỬ MỚI -->
+            <div class="slide" data-section="PHẦN II: NHÓM KHÁCH HÀNG">
+                <div class="slide-content">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="heading-icon-box bg-emerald-600 text-white shadow-md shadow-emerald-500/20">
+                            <i class="fa-solid fa-filter"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Tối Ưu Bộ Lọc &amp; Toán Tử Thời Gian Mới</h2>
+                            <p class="text-xs text-slate-500">Cấu trúc rõ ràng theo nhóm thuộc tính và toán tử so sánh linh hoạt</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-5">
+                        <div class="glass-card rounded-2xl p-4">
+                            <h3 class="text-sm font-bold text-emerald-800 flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-layer-group text-emerald-600"></i> Phân Nhóm Tiêu Chí Khoa Học
+                            </h3>
+                            <div class="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                                <div class="p-2 bg-slate-50 rounded-lg">
+                                    <span class="font-bold block text-slate-800">1. Hành vi mua hàng:</span>
+                                    Số lần mua, Tổng chi tiêu, Thời gian giao dịch.
+                                </div>
+                                <div class="p-2 bg-slate-50 rounded-lg">
+                                    <span class="font-bold block text-slate-800">2. Giá trị &amp; Công nợ:</span>
+                                    Dư nợ hiện tại, Nợ hiện tại theo mốc.
+                                </div>
+                                <div class="p-2 bg-slate-50 rounded-lg">
+                                    <span class="font-bold block text-slate-800">3. Điểm &amp; Hạng thẻ:</span>
+                                    Điểm tích lũy, Hạng thành viên hiện tại.
+                                </div>
+                                <div class="p-2 bg-slate-50 rounded-lg">
+                                    <span class="font-bold block text-slate-800">4. Nhân khẩu học:</span>
+                                    Độ tuổi, Tháng sinh nhật, Giới tính, Khu vực.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-2xl p-4">
+                            <h3 class="text-sm font-bold text-emerald-800 flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+                                <i class="fa-regular fa-clock text-emerald-600"></i> 3 Toán Tử Thời Gian Cải Tiến
+                            </h3>
+                            <ul class="text-xs text-slate-600 space-y-2">
+                                <li>• <strong>Trong vòng N ngày:</strong> Tính từ ngày (Hiện tại - N) đến ngày Hiện tại (ví dụ: giao dịch trong vòng 30 ngày gần nhất).</li>
+                                <li>• <strong>Cách đây hơn N ngày:</strong> Tính từ ngày (Hiện tại - N) trở về trước đó (ví dụ: khách chưa quay lại hơn 60 ngày).</li>
+                                <li>• <strong>Trong khoảng:</strong> Khoảng cố định từ ngày A đến ngày B (áp dụng cho các chiến dịch mùa vụ cụ thể).</li>
+                                <li>• <strong>Toán tử số lượng:</strong> Bổ sung toán tử "Trong khoảng" (ví dụ: mua từ 5 đến 10 lần).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 14: LIÊN KẾT KHUYẾN MẠI & LỘ TRÌNH MARKETING -->
+            <div class="slide" data-section="PHẦN II: NHÓM KHÁCH HÀNG">
+                <div class="slide-content">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="heading-icon-box bg-emerald-600 text-white shadow-md shadow-emerald-500/20">
+                            <i class="fa-solid fa-bullhorn"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Kích Hoạt Khuyến Mại &amp; Lộ Trình Marketing</h2>
+                            <p class="text-xs text-slate-500">Gắn kết chặt chẽ nhóm khách hàng với doanh thu bán lẻ thực tế</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-5">
+                        <div class="glass-card rounded-2xl p-4">
+                            <h3 class="text-sm font-bold text-blue-800 flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-tags text-blue-600"></i> Tích Hợp Ưu Đãi &amp; Khuyến Mại Ngay Tại Nhóm
+                            </h3>
+                            <ul class="text-xs text-slate-600 space-y-2">
+                                <li>• <strong>Tab Ưu đãi chuyên biệt:</strong> Xem tức thì danh sách tất cả các chương trình khuyến mại đang áp dụng cho nhóm khách hàng này.</li>
+                                <li>• <strong>Tạo nhanh CTKM:</strong> Nút "Tạo chương trình khuyến mại" tự động gán đối tượng áp dụng là nhóm khách vừa chọn, không cần cấu hình lại.</li>
+                                <li>• <strong>Thiết lập chiết khấu:</strong> Cài đặt giảm giá mặc định theo nhóm (tiền mặt hoặc %) khi thu ngân tính tiền.</li>
+                            </ul>
+                        </div>
+
+                        <div class="glass-card rounded-2xl p-4">
+                            <h3 class="text-sm font-bold text-emerald-800 flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-paper-plane text-emerald-600"></i> Lộ Trình Giai Đoạn Tiếp Theo (Next Phase)
+                            </h3>
+                            <ul class="text-xs text-slate-600 space-y-2">
+                                <li>• <strong>Chiến dịch gửi tin nhắn tự động:</strong> Tích hợp Zalo ZNS và SMS Brandname gửi thông báo ưu đãi trực tiếp theo từng phân khúc.</li>
+                                <li>• <strong>Nhắc nhở &amp; Tái kích cầu:</strong> Tự động gửi tin nhắn chúc mừng sinh nhật kèm mã giảm giá hoặc nhắc nhở khách lâu chưa mua hàng.</li>
+                                <li>• <strong>Bổ sung mẫu nhóm mới:</strong> Mở rộng thêm nhóm khách hàng theo ngành hàng và nhóm theo giá trị giỏ hàng trung bình.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 15: TỔNG KẾT TRIỂN KHAI & HÀNH ĐỘNG -->
+            <div class="slide" data-section="KẾ HOẠCH TRIỂN KHAI">
+                <div class="slide-content">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="heading-icon-box bg-blue-600 text-white shadow-md shadow-blue-500/20">
+                            <i class="fa-solid fa-rocket"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Kế Hoạch Triển Khai &amp; Trách Nhiệm</h2>
+                            <p class="text-xs text-slate-500">Mốc thời gian phát hành và công tác chuẩn bị hỗ trợ khách hàng</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 mb-4">
+                        <div class="glass-card rounded-2xl p-4 border-t-4 border-t-emerald-600">
+                            <span class="text-[0.65rem] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded uppercase">Đã Hoàn Thành</span>
+                            <h4 class="text-sm font-bold text-slate-800 mt-2 mb-1">Module Nhóm Khách Hàng</h4>
+                            <p class="text-xs text-slate-600">
+                                Đã Golive và mở cho toàn bộ khách hàng. Dữ liệu các nhóm cũ đã được chuyển đổi thành công sang hệ thống mới.
+                            </p>
+                        </div>
+
+                        <div class="glass-card rounded-2xl p-4 border-t-4 border-t-blue-600">
+                            <span class="text-[0.65rem] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded uppercase">Đang Triển Khai</span>
+                            <h4 class="text-sm font-bold text-slate-800 mt-2 mb-1">9 Sổ Sách Nhà Thuốc</h4>
+                            <p class="text-xs text-slate-600">
+                                Đã mở cho tài khoản Admin trải nghiệm. Hoàn thiện nốt 5 sổ còn lại trong tháng 10 để đạt 14 sổ chuẩn GPP.
+                            </p>
+                        </div>
+
+                        <div class="glass-card rounded-2xl p-4 border-t-4 border-t-indigo-600">
+                            <span class="text-[0.65rem] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded uppercase">Kế Hoạch Tiếp Theo</span>
+                            <h4 class="text-sm font-bold text-slate-800 mt-2 mb-1">Phân Quyền &amp; Hướng Dẫn</h4>
+                            <p class="text-xs text-slate-600">
+                                Mở tính năng phân quyền chi tiết cho nhân viên. Phối hợp cập nhật tài liệu HDSD (Wiki / Trợ giúp KiotViet).
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 bg-blue-50/80 rounded-xl border border-blue-200 text-xs text-blue-900 flex items-center justify-between">
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-headset text-blue-600 text-base"></i>
+                            <strong>Hỗ trợ khách hàng:</strong> Team Hướng dẫn sử dụng sẽ cập nhật bài viết trước đợt truyền thông diện rộng.
+                        </span>
+                        <span class="text-slate-500 font-medium">Hệ thống KiotViet Bán Lẻ 2026</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 16: THANK YOU & Q&A -->
+            <div class="slide slide-center" data-section="KẾT THÚC">
+                <div class="slide-content text-center flex flex-col items-center">
+                    <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mb-4 shadow-sm">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <h2 class="text-3xl font-black text-slate-900 mb-2">Cảm Ơn Các Bạn Đã Theo Dõi!</h2>
+                    <p class="text-sm text-slate-600 max-w-lg mb-6 leading-relaxed">
+                        KiotViet cam kết không ngừng hoàn thiện sản phẩm nhằm nâng cao hiệu quả kinh doanh và chuẩn hóa vận hành cho hàng trăm nghìn cửa hàng.
+                    </p>
+
+                    <div class="w-full max-w-xl grid grid-cols-2 gap-4 text-xs text-left">
+                        <div class="p-3.5 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+                            <i class="fa-solid fa-globe text-blue-600 text-2xl"></i>
+                            <div>
+                                <span class="font-bold text-slate-800 block text-xs">Trung tâm trợ giúp</span>
+                                <span class="text-slate-500 text-[0.7rem]">hotro.kiotviet.vn</span>
+                            </div>
+                        </div>
+                        <div class="p-3.5 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+                            <i class="fa-brands fa-youtube text-red-500 text-2xl"></i>
+                            <div>
+                                <span class="font-bold text-slate-800 block text-xs">Kênh Video Hướng dẫn</span>
+                                <span class="text-slate-500 text-[0.7rem]">YouTube: KiotViet Official</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Minimal Dock Bar -->
+    <div class="dock-bar">
+        <button id="prev-btn" class="dock-btn" title="Trang trước (←)">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <span id="slide-num" class="dock-counter">1 / 16</span>
+        <button id="next-btn" class="dock-btn" title="Trang sau (→ hoặc Space)">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentSlide = 0;
+        const slideNumEl = document.getElementById('slide-num');
+        const badgeTextEl = document.getElementById('badge-text');
+        const logoTrigger = document.getElementById('logo-pdf-trigger');
+
+        function updateSlide(newIndex) {
+            if (newIndex < 0 || newIndex >= totalSlides) return;
+            slides[currentSlide].classList.remove('active');
+            currentSlide = newIndex;
+            slides[currentSlide].classList.add('active');
+
+            // Cập nhật số trang
+            slideNumEl.textContent = `${currentSlide + 1} / ${totalSlides}`;
+
+            // Cập nhật thẻ Badge góc trên phải
+            const sectionName = slides[currentSlide].getAttribute('data-section') || 'KIOTVIET';
+            badgeTextEl.textContent = sectionName;
+        }
+
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            updateSlide((currentSlide - 1 + totalSlides) % totalSlides);
+        });
+
+        document.getElementById('next-btn').addEventListener('click', () => {
+            updateSlide((currentSlide + 1) % totalSlides);
+        });
+
+        if (logoTrigger) {
+            logoTrigger.addEventListener('click', () => {
+                window.print();
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                updateSlide((currentSlide + 1) % totalSlides);
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                updateSlide((currentSlide - 1 + totalSlides) % totalSlides);
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                updateSlide(0);
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                updateSlide(totalSlides - 1);
+            } else if (e.key === 'p' || e.key === 'P') {
+                e.preventDefault();
+                window.print();
+            }
+        });
+
+        // Khởi tạo
+        updateSlide(0);
+    </script>
+</body>
+</html>
