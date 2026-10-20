@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Radar & Feature Readiness | Trainer OS</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow: hidden; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .font-mono-code { font-family: 'Fira Code', monospace; }
+
+        /* SIDEBAR STYLES */
+        .sidebar-saas { background-color: #ffffff; border-right: 1px solid #e5e7eb; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-x: hidden; }
+        .sidebar-logo { height: 64px; display: flex; align-items: center; padding: 0 24px; border-bottom: 1px solid #e5e7eb; }
+        .nav-group-title { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; padding: 0 24px; margin-top: 20px; margin-bottom: 8px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; margin: 2px 12px; font-size: 13.5px; font-weight: 500; color: #4b5563; cursor: pointer; transition: all 0.2s; border-radius: 8px; white-space: nowrap; }
+        .nav-item:hover { background-color: #f3f4f6; color: #1f2937; }
+        .nav-item.active { background-color: #eff6ff; color: #9333ea; font-weight: 600; }
+        .nav-item.active i { color: #9333ea; }
+        .nav-item i { width: 20px; text-align: center; color: #9ca3af; font-size: 16px; transition: color 0.2s; flex-shrink: 0; }
+
+        .sidebar-collapsed { width: 64px !important; min-width: 64px !important; }
+        .sidebar-collapsed .logo-full { display: none; }
+        .sidebar-collapsed .logo-icon { display: block !important; margin: 0 auto; text-align: center; }
+        .sidebar-collapsed .sidebar-logo { justify-content: center; padding: 0; }
+        .sidebar-collapsed .nav-group-title { display: none; }
+        .sidebar-collapsed .nav-item span:not(#tooltip-text) { display: none; }
+        .sidebar-collapsed .nav-item i.fa-chevron-right { display: none; }
+        .sidebar-collapsed .pulse-dot { display: none; }
+        .sidebar-collapsed #submenu-cn { display: none !important; }
+        .sidebar-collapsed .nav-item { justify-content: center !important; padding: 0 !important; margin: 6px auto !important; width: 40px !important; height: 40px !important; border-radius: 10px; }
+        .sidebar-collapsed .nav-item i { margin: 0 !important; font-size: 16px !important; }
+        .sidebar-collapsed .user-profile-area { justify-content: center !important; padding: 16px 0 !important; gap: 0 !important; }
+        .sidebar-collapsed .user-profile-area .flex-grow { display: none !important; }
+
+        /* SPLIT PANE WORKSPACE */
+        .radar-container { height: calc(100vh - 64px); display: flex; overflow: hidden; }
+        .radar-list-pane { width: 55%; display: flex; flex-direction: column; background: #ffffff; border-right: 1px solid #e2e8f0; overflow-y: auto; }
+        .radar-iframe-pane { width: 45%; display: flex; flex-direction: column; background: #0f172a; overflow: hidden; position: relative; }
+
+        /* FEATURE CARD */
+        .feature-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 18px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            cursor: pointer;
+        }
+        .feature-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+        .feature-card.selected {
+            border-color: #9333ea;
+            box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
+            background: #faf5ff;
+        }
+
+        .saas-input { width: 100%; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; transition: all 0.2s; }
+        .saas-input:focus { border-color: #9333ea; box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.15); }
+
+        .modal { display: none; opacity: 0; transition: opacity 0.2s; z-index: 99999; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+        .modal.active { display: flex; opacity: 1; }
+        .modal-content { transform: scale(0.98) translateY(10px); opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); border-radius: 16px; background: white; }
+        .modal.active .modal-content { transform: scale(1) translateY(0); opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <div class="flex h-screen">
+        <!-- SIDEBAR CHUẨN KIOTVIET L&D (COLLAPSIBLE) -->
+        <aside id="sidebar" class="sidebar-saas w-64 flex flex-col z-50 shrink-0">
+            <div class="sidebar-logo">
+                <img src="https://cdn-kvweb-website.kiotviet.vn/images/v2/giai-phap/logos/kiotviet-logo-horizontal.svg" alt="KiotViet" class="h-[28px] logo-full">
+                <div class="logo-icon hidden w-[28px] h-[28px] overflow-hidden rounded-full">
+                    <img src="https://cdn-kvweb-website.kiotviet.vn/images/v2/giai-phap/logos/kiotviet-logo-horizontal.svg" class="h-[28px] max-w-none" alt="KV">
+                </div>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4 custom-scrollbar">
+                <div class="nav-group-title">Tổng quan</div>
+                <a href="index.html" class="nav-item" data-title="Bảng điều khiển"><i class="fas fa-chart-line"></i> <span>Bảng điều khiển</span></a>
+
+                <div class="nav-group-title">Quản trị Khóa học</div>
+                <a href="spcb.html" class="nav-item" data-title="Cơ bản (TS-DS)"><i class="fas fa-box"></i> <span>Cơ bản (TS-DS)</span></a>
+                <a href="thuehkd.html" class="nav-item" data-title="Chuyên đề Thuế"><i class="fas fa-file-invoice-dollar"></i> <span>Chuyên đề Thuế</span></a>
+                
+                <div class="flex flex-col">
+                    <div class="nav-item group justify-between" onclick="toggleAccordion('submenu-cn', 'icon-cn')" data-title="Chuyên ngành">
+                        <div class="flex items-center gap-3"><i class="fas fa-laptop-code"></i> <span>Chuyên ngành</span></div>
+                        <i id="icon-cn" class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform duration-300"></i>
+                    </div>
+                    <div id="submenu-cn" class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out pl-[44px] flex flex-col gap-1 pr-4">
+                        <a href="kv1.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-blue-600 transition-colors">Sản phẩm KV1</a>
+                        <a href="industry.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-orange-500 transition-colors">KiotViet FNB</a>
+                        <a href="industry.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-pink-500 transition-colors">KV Salon</a>
+                        <a href="industry.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-emerald-500 transition-colors">KV Hotel</a>
+                    </div>
+                </div>
+                <a href="index.html" class="nav-item" data-title="Tất cả khóa học"><i class="fas fa-th-large"></i> <span>Tất cả khóa học</span></a>
+
+                <div class="nav-group-title">Công cụ & Tài nguyên</div>
+                <a href="coderunner.html" class="nav-item" data-title="HTML Code Runner"><i class="fas fa-laptop-code"></i> <span>HTML Code Runner</span></a>
+                <!-- MENU RADAR HOẠT ĐỘNG -->
+                <a href="radar.html" class="nav-item active relative" data-title="Radar Sản Phẩm Mới">
+                    <i class="fas fa-satellite-dish text-purple-600"></i> <span>Radar Sản Phẩm Mới</span>
+                    <span id="sidebar-alert-dot" class="w-2 h-2 rounded-full bg-rose-500 absolute right-4 animate-pulse hidden"></span>
+                </a>
+                <a href="knowledge.html" class="nav-item" data-title="Sơ đồ Vận hành"><i class="fas fa-project-diagram"></i> <span>Sơ đồ Vận hành</span></a>
+                <a href="vault.html" class="nav-item" data-title="Kho Lưu Trữ Vault"><i class="fas fa-box-open"></i> <span>Kho Lưu Trữ Vault</span></a>
+                <a href="tools.html" class="nav-item" data-title="Runner Tools"><i class="fas fa-bolt"></i> <span>Runner Tools</span></a>
+                
+                <div class="nav-group-title">Dữ liệu & Hệ thống</div>
+                <a href="knowledge-hub.html" class="nav-item" data-title="Master Data Hub"><i class="fas fa-database"></i> <span>Master Data Hub</span></a>
+                <a href="settings.html" class="nav-item" data-title="Cài đặt hệ thống"><i class="fas fa-cog"></i> <span>Cài đặt hệ thống</span></a>
+            </nav>
+
+            <div class="user-profile-area p-4 border-t border-slate-200 shrink-0 flex items-center gap-3 bg-slate-50/50 hover:bg-slate-100 transition cursor-pointer" onclick="location.href='settings.html'">
+                <div class="w-9 h-9 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-sm shrink-0 border border-purple-200" id="display-prof-ava">A</div>
+                <div class="overflow-hidden flex-grow">
+                    <p id="display-prof-name" class="text-[13px] font-bold text-slate-800 truncate">L&D KiotViet</p>
+                    <p id="display-prof-title" class="text-[11px] font-medium text-slate-500 truncate">Administrator</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN LAYOUT -->
+        <div class="flex-1 flex flex-col overflow-hidden relative">
+            <!-- TOP BAR -->
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 shrink-0 shadow-sm">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-purple-50 hover:text-purple-600 transition border border-slate-200">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="h-6 w-px bg-slate-200"></div>
+                    <div>
+                        <h1 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fas fa-satellite-dish text-purple-600"></i> Trạm Radar Cập Nhật Sản Phẩm & L&D Readiness
+                        </h1>
+                        <p class="text-[11px] text-slate-400 font-medium">Theo dõi phát hành tính năng mới, live demo test và kiểm soát mức độ sẵn sàng giảng dạy</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <!-- BỘ 3 CHỈ BÁO CẢNH BÁO NHANH -->
+                    <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200 text-xs font-mono-code font-bold">
+                        <span id="badge-urgent" class="px-2.5 py-0.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1 shadow-xs" title="Đã Launching khách dùng nhưng Trainer chưa Clear hoặc Video chưa sửa">
+                            <i class="fas fa-exclamation-triangle text-rose-500 animate-pulse"></i> 0 Khẩn cấp
+                        </span>
+                        <span id="badge-upcoming" class="px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1 shadow-xs" title="Sắp Demo trong 7 ngày tới">
+                            <i class="fas fa-clock text-amber-500"></i> 0 Sắp Demo
+                        </span>
+                        <span id="badge-cleared" class="px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1 shadow-xs" title="Đã Clear và hoàn tất 100%">
+                            <i class="fas fa-check-circle text-emerald-500"></i> 0 Đã Clear
+                        </span>
+                    </div>
+
+                    <button onclick="openFeatureModal()" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5">
+                        <i class="fas fa-plus"></i> Thêm Tính Năng Mới
+                    </button>
+                </div>
+            </header>
+
+            <!-- WORKSPACE 2 CỘT: DANH SÁCH CHECKLIST & LIVE IFRAME TEST -->
+            <div class="radar-container">
+                <!-- CỘT TRÁI: CHECKLIST & BỘ LỌC TÍNH NĂNG -->
+                <div class="radar-list-pane custom-scrollbar p-6 space-y-4">
+                    <!-- THANH TÌM KIẾM & BỘ LỌC PHÂN HỆ -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <button onclick="filterRadar('all')" id="btn-fl-all" class="px-3 py-1 rounded-lg text-xs font-bold bg-white text-purple-700 border border-purple-200 shadow-xs">Tất Cả</button>
+                            <button onclick="filterRadar('Retail')" id="btn-fl-retail" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-white hover:text-slate-900 transition">Retail</button>
+                            <button onclick="filterRadar('FNB')" id="btn-fl-fnb" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-white hover:text-slate-900 transition">FNB</button>
+                            <button onclick="filterRadar('TAX')" id="btn-fl-tax" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-white hover:text-slate-900 transition">Thuế</button>
+                            <button onclick="filterRadar('Salon')" id="btn-fl-salon" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-white hover:text-slate-900 transition">Salon</button>
+                            <button onclick="filterRadar('Hotel')" id="btn-fl-hotel" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-white hover:text-slate-900 transition">Hotel</button>
+                        </div>
+                        <div class="relative w-48">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="text" id="radarSearchInput" oninput="searchRadarFeatures(this.value)" placeholder="Tìm tính năng..." class="w-full pl-8 pr-3 py-1 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-purple-400">
+                        </div>
+                    </div>
+
+                    <!-- DANH SÁCH THẺ TÍNH NĂNG (RENDER TẠI ĐÂY) -->
+                    <div id="radarFeatureList" class="space-y-3.5"></div>
+                </div>
+
+                <!-- CỘT PHẢI: MÀN HÌNH LIVE DEMO IFRAME TEST -->
+                <div class="radar-iframe-pane">
+                    <!-- Toolbar Iframe -->
+                    <div class="px-4 py-2.5 bg-slate-900 text-slate-300 flex items-center justify-between text-xs font-mono-code shrink-0 border-b border-slate-800 select-none">
+                        <div class="flex items-center gap-2 truncate pr-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            <span class="font-bold text-white truncate" id="iframeLiveTitle">Live Test Staging</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="reloadLiveIframe()" class="p-1 hover:text-white transition" title="Tải lại trang demo"><i class="fas fa-sync-alt text-[11px]"></i></button>
+                            <a id="iframeExtLink" href="#" target="_blank" class="p-1 hover:text-cyan-400 transition" title="Mở trang web trong tab mới"><i class="fas fa-external-link-alt text-[11px]"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Khung Nhúng Iframe Test -->
+                    <div class="flex-1 w-full h-full relative bg-white">
+                        <iframe id="liveDemoIframe" src="" class="w-full h-full border-none" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+                        
+                        <!-- Empty State khi chưa chọn tính năng có link -->
+                        <div id="iframeEmptyState" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-8 text-center text-slate-500">
+                            <div class="w-16 h-16 rounded-2xl bg-slate-800 text-slate-400 flex items-center justify-center text-2xl mb-4 border border-slate-700 shadow-inner">
+                                <i class="fas fa-laptop-code"></i>
+                            </div>
+                            <h4 class="font-bold text-sm text-slate-300 mb-1">Màn Hình Test Trực Tiếp</h4>
+                            <p class="text-xs text-slate-500 max-w-xs leading-relaxed">Chọn một tính năng ở danh sách bên trái có gắn liên kết Demo để trải nghiệm trực tiếp trên màn hình này.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: THÊM / CHỈNH SỬA TÍNH NĂNG ==================== -->
+    <div id="featureModal" class="modal fixed inset-0 items-center justify-center p-4">
+        <div class="modal-content w-full max-w-2xl max-h-[90vh] flex flex-col border border-purple-200 shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-purple-700 to-indigo-700 text-white flex justify-between items-center shrink-0">
+                <h3 id="modalFeatureTitle" class="font-bold text-sm flex items-center gap-2">
+                    <i class="fas fa-satellite-dish text-amber-300"></i> Thêm Cập Nhật Tính Năng Mới
+                </h3>
+                <button onclick="closeFeatureModal()" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition"><i class="fas fa-times text-xs"></i></button>
+            </div>
+
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4 bg-white text-xs text-slate-700">
+                <input type="hidden" id="featId">
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="col-span-2">
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Tên Tính Năng Mới <span class="text-rose-500">*</span></label>
+                        <input type="text" id="featName" placeholder="VD: Xuất HĐĐT theo từng mặt hàng trên POS" class="saas-input font-bold text-slate-900">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Phân Hệ</label>
+                        <select id="featGroup" class="saas-input font-bold text-purple-700 bg-purple-50">
+                            <option value="Retail">Retail (Bán Lẻ)</option>
+                            <option value="FNB">KiotViet FNB</option>
+                            <option value="TAX">Chuyên đề Thuế</option>
+                            <option value="Salon">KiotViet Salon</option>
+                            <option value="Hotel">KiotViet Hotel</option>
+                            <option value="Core">Toàn Hệ Thống</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Link Iframe Demo / Staging Web</label>
+                    <input type="url" id="featIframeUrl" placeholder="https://demo.kiotviet.vn/... hoặc link staging test" class="saas-input font-mono-code text-blue-600">
+                    <p class="text-[10px] text-slate-400 mt-1 italic">Dán đường dẫn để nhúng màn hình test trực tiếp vào cột bên phải.</p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                    <div>
+                        <label class="block font-bold text-slate-600 uppercase text-[10px] mb-1">Ngày Cập Nhật</label>
+                        <input type="date" id="featUpdateDate" class="saas-input py-1.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-amber-700 uppercase text-[10px] mb-1">Dự Kiến Demo</label>
+                        <input type="date" id="featDemoDate" class="saas-input py-1.5 text-xs border-amber-200">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-emerald-700 uppercase text-[10px] mb-1">Ngày Launching</label>
+                        <input type="date" id="featLaunchDate" class="saas-input py-1.5 text-xs border-emerald-200">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Trạng Thái Phát Hành</label>
+                        <select id="featStatus" class="saas-input font-bold">
+                            <option value="Mới Demo">🟡 Mới Demo (Môi trường Test)</option>
+                            <option value="Sắp Launching">🟠 Sắp Launching</option>
+                            <option value="Đã Launching">🟢 Đã Launching (Khách Dùng Thật)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Trạng Thái Tài Liệu HDSD</label>
+                        <select id="featHdsdStatus" class="saas-input font-bold">
+                            <option value="Chưa có bài">Chưa có bài trên web</option>
+                            <option value="Đang viết">Đang soạn thảo bài viết</option>
+                            <option value="Đã cập nhật HDSD">Đã cập nhật lên HDSD KiotViet</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bg-rose-50/60 p-4 rounded-xl border border-rose-200 space-y-2">
+                    <label class="block font-bold text-rose-800 uppercase text-[11px]">
+                        <i class="fas fa-video text-rose-600 mr-1"></i> Hậu Kiểm Video Bài Giảng Bị Ảnh Hưởng
+                    </label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="col-span-2">
+                            <input type="text" id="featVideoName" placeholder="Tên video bị ảnh hưởng giao diện (VD: Video B2 Retail - Tạo Hóa Đơn)" class="saas-input bg-white text-xs">
+                        </div>
+                        <div>
+                            <select id="featVideoStatus" class="saas-input bg-white font-bold text-xs">
+                                <option value="Không ảnh hưởng">Không ảnh hưởng</option>
+                                <option value="Cần quay lại gấp">Cần quay lại gấp</option>
+                                <option value="Đã cập nhật video">Đã cập nhật video mới</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 uppercase mb-1">Ghi Chú Nghiệp Vụ / Kịch Bản Hướng Dẫn</label>
+                    <textarea id="featNote" placeholder="Điểm học viên hay thắc mắc, mẹo demo, kịch bản thuyết phục..." class="saas-input h-20 resize-none custom-scrollbar text-xs"></textarea>
+                </div>
+
+                <div class="p-3.5 bg-purple-50 rounded-xl border border-purple-200 flex items-center justify-between">
+                    <div>
+                        <span class="font-bold text-purple-900 block text-xs">Xác nhận Trainer Readiness:</span>
+                        <p class="text-[11px] text-purple-700 mt-0.5">Đánh dấu bạn đã thực hành thông thấu và tự tin dạy học viên</p>
+                    </div>
+                    <label class="flex items-center gap-2 cursor-pointer font-bold text-purple-800 text-xs">
+                        <input type="checkbox" id="featCleared" class="w-4 h-4 accent-purple-600 cursor-pointer">
+                        <span>ĐÃ CLEAR 100%</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-end gap-3 shrink-0">
+                <button onclick="closeFeatureModal()" class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold rounded-xl border border-slate-300 text-xs transition">Hủy Bỏ</button>
+                <button onclick="saveFeatureFromModal()" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs transition shadow-md flex items-center gap-1.5">
+                    <i class="fas fa-save"></i> Lưu Thông Tin
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Tooltip -->
+    <div id="global-tooltip" class="fixed bg-slate-800 text-white text-[12px] font-medium px-3 py-1.5 rounded-lg shadow-xl pointer-events-none opacity-0 transition-opacity duration-200 z-[100000] whitespace-nowrap flex items-center">
+        <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
+        <span id="tooltip-text" class="relative z-10"></span>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-5 py-2.5 rounded-xl shadow-2xl font-mono-code text-xs z-[100000] opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-2 border border-slate-700">
+        <span id="toast-msg"></span>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC CỦA TRẠM RADAR -->
+    <script>
+        // CSDL MẪU THỰC TẾ
+        const DEFAULT_RADAR_DATA = [
+            {
+                id: 'rad-1',
+                name: 'Xuất HĐĐT trực tiếp theo từng mặt hàng trên POS',
+                group: 'Retail',
+                iframeUrl: 'https://demo.kiotviet.vn',
+                updateDate: '2026-10-10',
+                demoDate: '2026-10-14',
+                launchDate: '2026-10-18',
+                status: 'Đã Launching',
+                hdsdStatus: 'Đã cập nhật HDSD',
+                videoName: 'Video B2 Retail - Tạo Hóa Đơn & Thu Ngân',
+                videoStatus: 'Cần quay lại gấp',
+                cleared: false,
+                note: 'Khách hàng có thể xuất hóa đơn cho riêng 1 món trong đơn hàng thay vì bắt buộc xuất cả đơn.'
+            },
+            {
+                id: 'rad-2',
+                name: 'Tính năng Tách bàn & Gộp bàn thông minh qua mã QR',
+                group: 'FNB',
+                iframeUrl: 'https://fnb.kiotviet.vn',
+                updateDate: '2026-10-12',
+                demoDate: '2026-10-22',
+                launchDate: '2026-10-30',
+                status: 'Mới Demo',
+                hdsdStatus: 'Đang viết',
+                videoName: 'Video B1 FNB - Order & Bếp Bar',
+                videoStatus: 'Không ảnh hưởng',
+                cleared: true,
+                note: 'Thu ngân có thể tách hóa đơn theo từng người ngồi cùng 1 bàn mà không cần reset phòng bàn.'
+            },
+            {
+                id: 'rad-3',
+                name: 'Tự động tính thuế Hộ kinh doanh theo biểu mẫu mới',
+                group: 'TAX',
+                iframeUrl: '',
+                updateDate: '2026-10-08',
+                demoDate: '2026-10-15',
+                launchDate: '2026-10-25',
+                status: 'Sắp Launching',
+                hdsdStatus: 'Chưa có bài',
+                videoName: 'Video Khóa Thuế - Kê Khai Quý',
+                videoStatus: 'Cần quay lại gấp',
+                cleared: false,
+                note: 'Áp dụng biểu thuế lũy tiến mới cho hộ kinh doanh quy mô trên 500 triệu/năm.'
+            }
+        ];
+
+        let radarFeatures = [];
+        let currentFilterGroup = 'all';
+        let currentSearchQuery = '';
+        let activeSelectedFeatureId = null;
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            if(!t) return;
+            document.getElementById('toast-msg').innerHTML = msg;
+            t.classList.replace('opacity-0', 'opacity-100');
+            t.classList.remove('pointer-events-none');
+            setTimeout(() => {
+                t.classList.replace('opacity-100', 'opacity-0');
+                t.classList.add('pointer-events-none');
+            }, 3000);
+        }
+
+        // --- SIDEBAR COLLAPSIBLE ---
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-collapsed'); }
+        function toggleAccordion(menuId, iconId) {
+            const menu = document.getElementById(menuId); const icon = document.getElementById(iconId);
+            if (menu.style.maxHeight && menu.style.maxHeight !== '0px') { menu.style.maxHeight = '0px'; icon.style.transform = 'rotate(0deg)'; } 
+            else { menu.style.maxHeight = menu.scrollHeight + 'px'; icon.style.transform = 'rotate(90deg)'; }
+        }
+
+        const tooltip = document.getElementById('global-tooltip');
+        const tooltipText = document.getElementById('tooltip-text');
+        document.querySelectorAll('.nav-item[data-title]').forEach(item => {
+            item.addEventListener('mouseenter', (e) => {
+                if (document.getElementById('sidebar').classList.contains('sidebar-collapsed')) {
+                    const rect = item.getBoundingClientRect();
+                    tooltipText.innerText = item.getAttribute('data-title');
+                    tooltip.style.top = (rect.top + (rect.height / 2) - 14) + 'px'; 
+                    tooltip.style.left = (rect.right + 12) + 'px'; 
+                    tooltip.style.opacity = '1';
+                }
+            });
+            item.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; });
+        });
+
+        // --- CƠ SỞ DỮ LIỆU & TÍNH TOÁN BỘ 3 CẢNH BÁO ---
+        function loadRadarData() {
+            const saved = localStorage.getItem('kv_product_radar');
+            if (saved) {
+                try { radarFeatures = JSON.parse(saved); } catch (e) { radarFeatures = DEFAULT_RADAR_DATA; }
+            } else {
+                radarFeatures = DEFAULT_RADAR_DATA;
+                saveRadarData();
+            }
+            updateAlertBadges();
+            renderFeatureList();
+
+            // Chọn tự động item đầu tiên có link
+            const firstWithLink = radarFeatures.find(f => f.iframeUrl && f.iframeUrl.startsWith('http'));
+            if (firstWithLink) selectFeatureToTest(firstWithLink.id);
+        }
+
+        function saveRadarData() {
+            localStorage.setItem('kv_product_radar', JSON.stringify(radarFeatures));
+            updateAlertBadges();
+        }
+
+        function updateAlertBadges() {
+            let urgentCount = 0;
+            let upcomingCount = 0;
+            let clearedCount = 0;
+
+            const today = new Date();
+
+            radarFeatures.forEach(f => {
+                // 1. Khẩn cấp: Đã Launching thực tế nhưng Trainer CHƯA CLEAR hoặc VIDEO CHƯA SỬA
+                const isUrgent = (f.status === 'Đã Launching') && (!f.cleared || f.videoStatus === 'Cần quay lại gấp');
+                if (isUrgent) urgentCount++;
+
+                // 2. Sắp Demo trong 7 ngày tới
+                if (f.demoDate) {
+                    const diffDays = Math.ceil((new Date(f.demoDate) - today) / (1000 * 60 * 60 * 24));
+                    if (diffDays >= 0 && diffDays <= 7 && f.status !== 'Đã Launching') upcomingCount++;
+                }
+
+                // 3. Đã Clear hoàn tất
+                if (f.cleared) clearedCount++;
+            });
+
+            document.getElementById('badge-urgent').innerHTML = `<i class="fas fa-exclamation-triangle ${urgentCount > 0 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}"></i> ${urgentCount} Khẩn cấp`;
+            document.getElementById('badge-upcoming').innerHTML = `<i class="fas fa-clock text-amber-500"></i> ${upcomingCount} Sắp Demo`;
+            document.getElementById('badge-cleared').innerHTML = `<i class="fas fa-check-circle text-emerald-500"></i> ${clearedCount} Đã Clear`;
+
+            // Bật tắt chấm đỏ cảnh báo trên Sidebar
+            const dot = document.getElementById('sidebar-alert-dot');
+            if (dot) dot.classList.toggle('hidden', urgentCount === 0);
+        }
+
+        // --- RENDER DANH SÁCH TÍNH NĂNG ---
+        function renderFeatureList() {
+            const container = document.getElementById('radarFeatureList');
+            if (!container) return;
+
+            let filtered = radarFeatures.slice();
+
+            if (currentFilterGroup !== 'all') {
+                filtered = filtered.filter(f => f.group === currentFilterGroup);
+            }
+
+            if (currentSearchQuery) {
+                const q = currentSearchQuery.toLowerCase();
+                filtered = filtered.filter(f => f.name.toLowerCase().includes(q) || (f.note && f.note.toLowerCase().includes(q)) || (f.videoName && f.videoName.toLowerCase().includes(q)));
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 px-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                        <i class="fas fa-satellite-dish text-3xl text-slate-300 mb-2 block"></i>
+                        <h4 class="text-xs font-bold text-slate-700">Không tìm thấy tính năng phù hợp</h4>
+                        <p class="text-[11px] text-slate-400 mt-1">Bấm "+ Thêm Tính Năng Mới" để ghi nhận tính năng vừa cập nhật.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sắp xếp: Khẩn cấp lên đầu tiên
+            filtered.sort((a, b) => {
+                const aUrgent = (a.status === 'Đã Launching') && (!a.cleared || a.videoStatus === 'Cần quay lại gấp');
+                const bUrgent = (b.status === 'Đã Launching') && (!b.cleared || b.videoStatus === 'Cần quay lại gấp');
+                if (aUrgent && !bUrgent) return -1;
+                if (!aUrgent && bUrgent) return 1;
+                return new Date(b.updateDate || 0) - new Date(a.updateDate || 0);
+            });
+
+            container.innerHTML = filtered.map(f => {
+                const isSelected = f.id === activeSelectedFeatureId ? 'selected' : '';
+                const isUrgent = (f.status === 'Đã Launching') && (!f.cleared || f.videoStatus === 'Cần quay lại gấp');
+
+                // Badge Trạng thái Launch
+                let statusBadge = '';
+                if (f.status === 'Đã Launching') statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><i class="fas fa-rocket mr-1"></i>Đã Launching (Khách dùng)</span>';
+                else if (f.status === 'Sắp Launching') statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-orange-700 border border-orange-200"><i class="fas fa-hourglass-half mr-1"></i>Sắp Launch</span>';
+                else statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200"><i class="fas fa-flask mr-1"></i>Mới Demo (Test)</span>';
+
+                // Badge HDSD
+                let hdsdBadge = f.hdsdStatus === 'Đã cập nhật HDSD'
+                    ? '<span class="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200"><i class="fas fa-book mr-1"></i>Đã có HDSD</span>'
+                    : '<span class="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded border border-slate-200"><i class="fas fa-exclamation mr-1"></i>Chưa HDSD</span>';
+
+                // Badge Video
+                let videoBadge = '';
+                if (f.videoStatus === 'Cần quay lại gấp') videoBadge = '<span class="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200"><i class="fas fa-video mr-1"></i>Cần quay lại video</span>';
+                else if (f.videoStatus === 'Đã cập nhật video') videoBadge = '<span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200"><i class="fas fa-check mr-1"></i>Video đã cập nhật</span>';
+                else videoBadge = '<span class="text-[10px] font-medium text-slate-400">Video không đổi</span>';
+
+                return `
+                    <div class="feature-card ${isSelected} ${isUrgent ? 'border-l-4 border-l-rose-500' : ''}" onclick="selectFeatureToTest('${f.id}')">
+                        <div class="flex items-start justify-between gap-3 mb-2">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase bg-purple-100 text-purple-700 border border-purple-200">${f.group}</span>
+                                ${statusBadge}
+                                ${isUrgent ? '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-600 text-white animate-pulse">CẦN HẬU KIỂM GẤP</span>' : ''}
+                            </div>
+                            <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
+                                <button onclick="editFeature('${f.id}')" class="p-1 text-slate-400 hover:text-blue-600 transition" title="Chỉnh sửa"><i class="fas fa-edit text-xs"></i></button>
+                                <button onclick="deleteFeature('${f.id}')" class="p-1 text-slate-400 hover:text-rose-600 transition" title="Xóa"><i class="fas fa-trash-alt text-xs"></i></button>
+                            </div>
+                        </div>
+
+                        <h3 class="text-sm font-bold text-slate-900 leading-snug mb-1.5">${escapeHtml(f.name)}</h3>
+                        
+                        <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-3">${escapeHtml(f.note || 'Không có ghi chú thêm.')}</p>
+
+                        <!-- CHECKLIST TRẠNG THÁI HDSD VÀ VIDEO BÀI GIẢNG -->
+                        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 mb-3 space-y-1.5 text-xs">
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-500 text-[11px]">Trang HDSD:</span>
+                                ${hdsdBadge}
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-500 text-[11px] truncate max-w-[200px]" title="${escapeHtml(f.videoName || '')}">Video: <b class="text-slate-700">${escapeHtml(f.videoName || 'Chung')}</b></span>
+                                ${videoBadge}
+                            </div>
+                        </div>
+
+                        <!-- FOOTER THẺ: THỜI GIAN & TOGGLE TRAINER ĐÃ CLEAR -->
+                        <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between" onclick="event.stopPropagation()">
+                            <div class="text-[10px] font-mono-code text-slate-400 space-x-2">
+                                <span>Demo: <b>${f.demoDate || '--'}</b></span>
+                                <span>Launch: <b>${f.launchDate || '--'}</b></span>
+                            </div>
+
+                            <label class="flex items-center gap-1.5 cursor-pointer font-bold text-xs select-none ${f.cleared ? 'text-emerald-700' : 'text-slate-400'}">
+                                <input type="checkbox" onchange="toggleFeatureCleared('${f.id}', this.checked)" ${f.cleared ? 'checked' : ''} class="w-4 h-4 accent-purple-600 cursor-pointer">
+                                <span>${f.cleared ? 'ĐÃ CLEAR' : 'Chưa Clear'}</span>
+                            </label>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- CHỌN TÍNH NĂNG ĐỂ BẬT LIVE TEST TRÊN IFRAME ---
+        function selectFeatureToTest(featId) {
+            activeSelectedFeatureId = featId;
+            renderFeatureList();
+
+            const feat = radarFeatures.find(f => f.id === featId);
+            const iframe = document.getElementById('liveDemoIframe');
+            const emptyState = document.getElementById('iframeEmptyState');
+            const titleEl = document.getElementById('iframeLiveTitle');
+            const extLink = document.getElementById('iframeExtLink');
+
+            if (!feat || !feat.iframeUrl || !feat.iframeUrl.startsWith('http')) {
+                iframe.src = '';
+                emptyState.classList.remove('hidden');
+                titleEl.innerText = feat ? feat.name : 'Chưa có link Demo';
+                extLink.href = '#';
+                return;
+            }
+
+            titleEl.innerText = `${feat.group}: ${feat.name}`;
+            extLink.href = feat.iframeUrl;
+            iframe.src = feat.iframeUrl;
+            emptyState.classList.add('hidden');
+        }
+
+        function reloadLiveIframe() {
+            const iframe = document.getElementById('liveDemoIframe');
+            if (iframe.src) iframe.src = iframe.src;
+        }
+
+        // --- BỘ LỌC PHÂN HỆ VÀ TÌM KIẾM ---
+        function filterRadar(group) {
+            currentFilterGroup = group;
+            ['all', 'retail', 'fnb', 'tax', 'salon', 'hotel'].forEach(g => {
+                const btn = document.getElementById(`btn-fl-${g}`);
+                if (btn) {
+                    btn.className = (g === group.toLowerCase() || (g==='all' && group==='all'))
+                        ? "px-3 py-1 rounded-lg text-xs font-bold bg-white text-purple-700 border border-purple-200 shadow-xs"
+                        : "px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-white hover:text-slate-900 transition";
+                }
+            });
+            renderFeatureList();
+        }
+
+        function searchRadarFeatures(query) {
+            currentSearchQuery = query;
+            renderFeatureList();
+        }
+
+        function toggleFeatureCleared(featId, isChecked) {
+            const feat = radarFeatures.find(f => f.id === featId);
+            if (feat) {
+                feat.cleared = isChecked;
+                saveRadarData();
+                renderFeatureList();
+                showToast(isChecked ? '🎉 Đã xác nhận: Trainer đã Clear tính năng này!' : 'Đã chuyển về trạng thái: Chưa Clear');
+            }
+        }
+
+        // --- THÊM & SỬA TÍNH NĂNG QUA MODAL ---
+        function openFeatureModal(id = null) {
+            const modal = document.getElementById('featureModal');
+            document.getElementById('modalFeatureTitle').innerHTML = id 
+                ? '<i class="fas fa-edit text-amber-300"></i> Chỉnh Sửa Tính Năng' 
+                : '<i class="fas fa-satellite-dish text-amber-300"></i> Thêm Cập Nhật Tính Năng Mới';
+
+            if (id) {
+                const f = radarFeatures.find(x => x.id === id);
+                document.getElementById('featId').value = f.id;
+                document.getElementById('featName').value = f.name;
+                document.getElementById('featGroup').value = f.group;
+                document.getElementById('featIframeUrl').value = f.iframeUrl || '';
+                document.getElementById('featUpdateDate').value = f.updateDate || '';
+                document.getElementById('featDemoDate').value = f.demoDate || '';
+                document.getElementById('featLaunchDate').value = f.launchDate || '';
+                document.getElementById('featStatus').value = f.status || 'Mới Demo';
+                document.getElementById('featHdsdStatus').value = f.hdsdStatus || 'Chưa có bài';
+                document.getElementById('featVideoName').value = f.videoName || '';
+                document.getElementById('featVideoStatus').value = f.videoStatus || 'Không ảnh hưởng';
+                document.getElementById('featNote').value = f.note || '';
+                document.getElementById('featCleared').checked = !!f.cleared;
+            } else {
+                document.getElementById('featId').value = '';
+                document.getElementById('featName').value = '';
+                document.getElementById('featGroup').value = 'Retail';
+                document.getElementById('featIframeUrl').value = '';
+                document.getElementById('featUpdateDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('featDemoDate').value = '';
+                document.getElementById('featLaunchDate').value = '';
+                document.getElementById('featStatus').value = 'Mới Demo';
+                document.getElementById('featHdsdStatus').value = 'Chưa có bài';
+                document.getElementById('featVideoName').value = '';
+                document.getElementById('featVideoStatus').value = 'Không ảnh hưởng';
+                document.getElementById('featNote').value = '';
+                document.getElementById('featCleared').checked = false;
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeFeatureModal() { document.getElementById('featureModal').classList.remove('active'); }
+
+        function saveFeatureFromModal() {
+            const id = document.getElementById('featId').value;
+            const name = document.getElementById('featName').value.trim();
+            const group = document.getElementById('featGroup').value;
+            const iframeUrl = document.getElementById('featIframeUrl').value.trim();
+            const updateDate = document.getElementById('featUpdateDate').value;
+            const demoDate = document.getElementById('featDemoDate').value;
+            const launchDate = document.getElementById('featLaunchDate').value;
+            const status = document.getElementById('featStatus').value;
+            const hdsdStatus = document.getElementById('featHdsdStatus').value;
+            const videoName = document.getElementById('featVideoName').value.trim();
+            const videoStatus = document.getElementById('featVideoStatus').value;
+            const note = document.getElementById('featNote').value.trim();
+            const cleared = document.getElementById('featCleared').checked;
+
+            if (!name) return alert("Vui lòng nhập Tên Tính Năng Mới!");
+
+            if (id) {
+                const f = radarFeatures.find(x => x.id === id);
+                Object.assign(f, { name, group, iframeUrl, updateDate, demoDate, launchDate, status, hdsdStatus, videoName, videoStatus, note, cleared });
+            } else {
+                const newId = 'rad-' + Date.now();
+                radarFeatures.unshift({
+                    id: newId, name, group, iframeUrl, updateDate, demoDate, launchDate, status, hdsdStatus, videoName, videoStatus, note, cleared
+                });
+                activeSelectedFeatureId = newId;
+            }
+
+            saveRadarData();
+            closeFeatureModal();
+            renderFeatureList();
+            if (iframeUrl) selectFeatureToTest(id || radarFeatures[0].id);
+            showToast("Đã lưu thông tin tính năng thành công!");
+        }
+
+        function editFeature(id) { openFeatureModal(id); }
+
+        function deleteFeature(id) {
+            if (confirm("Bạn có chắc chắn muốn xóa theo dõi tính năng này?")) {
+                radarFeatures = radarFeatures.filter(f => f.id !== id);
+                if (activeSelectedFeatureId === id) activeSelectedFeatureId = null;
+                saveRadarData();
+                renderFeatureList();
+                showToast("Đã xóa tính năng!");
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        window.onload = () => {
+            try {
+                const prof = JSON.parse(localStorage.getItem('kv_trainer_profile'));
+                if(prof) {
+                    document.getElementById('display-prof-name').innerText = prof.name || "L&D KiotViet";
+                    document.getElementById('display-prof-title').innerText = prof.title || "Administrator";
+                    document.getElementById('display-prof-ava').innerText = (prof.name || "A").charAt(0).toUpperCase();
+                }
+            } catch(e) {}
+            loadRadarData();
+        };
+    </script>
+</body>
+</html>
