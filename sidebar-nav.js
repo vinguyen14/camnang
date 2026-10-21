@@ -12,8 +12,8 @@
 (function () {
   'use strict';
 
-  const KIOTVIET_LOGO_URL = 'https://i.postimg.cc/Y9sjBhYn/kiotviet-logo-horizontal.jpg';
-  const BONGHOA_LOGO_URL = 'https://i.postimg.cc/DZJ5T4R8/Bong-Hoa-Logo.png';
+  const KIOTVIET_LOGO_URL = 'https://i.postimg.cc/xjKmwPcn/1.jpg';
+  const BONGHOA_LOGO_URL = 'https://i.postimg.cc/yxQsM5RD/Bong-Hoa-Logo.png';
 
   // 1. TỰ ĐỘNG TIÊM FAVICON BÔNG HOA VÀO TAB TRÌNH DUYỆT
   function injectFavicon() {
