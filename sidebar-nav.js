@@ -1,16 +1,16 @@
 /**
- * TRAINER OS v5.5 ENTERPRISE - HIGH PERFORMANCE SIDEBAR COMPONENT
- * - Khôi phục 100% Danh mục & Tên mục theo chuẩn thiết kế Ảnh 1
- * - Logo đỉnh: Logo KiotViet (https://i.postimg.cc/Y9sjBhYn/kiotviet-logo-horizontal.jpg)
- * - Avatar đáy: Logo Vie (https://i.postimg.cc/13fmPWCq/Logo-Vie.png)
- * - Sơ đồ Vận hành -> knowledge.html | system-workflow.html ẩn bảo mật
- * - Hiệu năng cao: Chuyển trạng thái bằng CSS class toggle (0ms lag, không vẽ lại DOM)
+ * TRAINER OS v5.5 ENTERPRISE - UNIVERSAL SIDEBAR & LAYOUT PUSHER
+ * - Tự động đẩy lề (Universal Layout Pusher): Chống đè 100% nội dung trên mọi file
+ * - Header 64px thông minh: Căn giữa Logo KiotViet, triệt tiêu lỗi chém cụt logo
+ * - Danh mục & Tên chuẩn 100% Ảnh 1: Sơ đồ Vận hành -> knowledge.html
+ * - Avatar: Logo Vie (https://i.postimg.cc/13fmPWCq/Logo-Vie.png)
+ * - Trang ẩn: Nhấp đúp Logo/Avatar/API mở system-workflow.html
  */
 
 (function () {
   'use strict';
 
-  // 1. TỰ ĐỘNG TIÊM FAVICON LOGO VIE VÀO TAB TRÌNH DUYỆT (Xóa icon wifi/lỗi tab)
+  // 1. TỰ ĐỘNG TIÊM FAVICON LOGO VIE VÀO TAB TRÌNH DUYỆT
   function injectVieFavicon() {
     const vieFaviconUrl = 'https://i.postimg.cc/13fmPWCq/Logo-Vie.png';
     let link = document.querySelector("link[rel*='icon']");
@@ -23,7 +23,7 @@
     link.href = vieFaviconUrl;
   }
 
-  // 2. DANH MỤC 100% CHUẨN TỪ ẢNH 1
+  // 2. DANH MỤC 100% CHUẨN XÁC TỪ ẢNH 1
   const SIDEBAR_STRUCTURE = [
     {
       group: 'TỔNG QUAN',
@@ -120,7 +120,7 @@
     }
   ];
 
-  // 3. TIÊM CSS HIỆU NĂNG CAO (Không Reflow layout, ẩn scrollbar khi đóng)
+  // 3. TIÊM CSS HIỆU NĂNG CAO & GIAO DIỆN HEADER COLLAPSED CHUẨN
   function injectStyles() {
     if (document.getElementById('sidebar-fast-styles')) return;
     const style = document.createElement('style');
@@ -128,12 +128,20 @@
     style.innerHTML = `
       #sidebar {
         transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 1px 0 3px 0 rgba(0, 0, 0, 0.05);
       }
       #sidebar.is-collapsed {
         width: 4rem !important; /* 64px */
       }
       #sidebar:not(.is-collapsed) {
         width: 15rem !important; /* 240px */
+      }
+      /* Header Switching thông minh: Chống cắt xén Logo KiotViet */
+      #sidebar.is-collapsed .sb-header-expanded {
+        display: none !important;
+      }
+      #sidebar:not(.is-collapsed) .sb-header-collapsed {
+        display: none !important;
       }
       #sidebar.is-collapsed .sb-text,
       #sidebar.is-collapsed .sb-group-title,
@@ -160,15 +168,6 @@
       #sidebar:not(.is-collapsed) .sb-tooltip {
         display: none !important;
       }
-      /* Đồng bộ lề nội dung chính */
-      body.sb-expanded main, body.sb-expanded #main-content, body.sb-expanded .main-layout {
-        margin-left: 15rem !important;
-        transition: margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-      body.sb-collapsed main, body.sb-collapsed #main-content, body.sb-collapsed .main-layout {
-        margin-left: 4rem !important;
-        transition: margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      }
     `;
     document.head.appendChild(style);
   }
@@ -182,7 +181,37 @@
     return localStorage.getItem('kv_sidebar_expanded') !== 'false'; // Mặc định mở
   }
 
-  // 4. KHỞI TẠO DOM SIDEBAR DUY NHẤT 1 LẦN
+  // 4. THUẬT TOÁN ĐẨY LỀ ĐỘNG TOÀN NĂNG (UNIVERSAL LAYOUT PUSHER)
+  // Quét tìm phần tử giao diện chính và ép lề chuẩn, không bao giờ bị đè chữ
+  function syncContentOffset(expanded) {
+    const sidebarEl = document.getElementById('sidebar');
+    if (!sidebarEl) return;
+
+    // Tìm phần tử nội dung liền kề
+    let contentEl = sidebarEl.nextElementSibling;
+    while (contentEl && (contentEl.tagName === 'SCRIPT' || contentEl.tagName === 'STYLE' || contentEl.id === 'sop-drawer-root' || contentEl.id === 'report-memo-root')) {
+      contentEl = contentEl.nextElementSibling;
+    }
+    if (!contentEl) {
+      contentEl = document.querySelector('main') || document.querySelector('#main-content') || document.querySelector('.flex-1') || document.querySelector('#app');
+    }
+
+    const marginWidth = expanded ? '15rem' : '4rem'; // 240px hoặc 64px
+
+    if (contentEl) {
+      contentEl.style.setProperty('transition', 'margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1), width 0.2s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.2s cubic-bezier(0.4, 0, 0.2, 1)', 'important');
+      contentEl.style.setProperty('margin-left', marginWidth, 'important');
+      contentEl.style.setProperty('width', `calc(100vw - ${marginWidth})`, 'important');
+      contentEl.style.setProperty('max-width', `calc(100vw - ${marginWidth})`, 'important');
+      contentEl.style.setProperty('box-sizing', 'border-box', 'important');
+    }
+
+    // Đánh dấu class trên body để đồng bộ CSS toàn cục
+    document.body.classList.toggle('sb-expanded', expanded);
+    document.body.classList.toggle('sb-collapsed', !expanded);
+  }
+
+  // 5. RENDER DOM SIDEBAR DUY NHẤT 1 LẦN
   function buildSidebarDOM() {
     injectStyles();
 
@@ -197,40 +226,48 @@
     const currentFile = getCurrentFile();
     const expanded = isSidebarExpanded();
 
-    sidebarEl.className = `fixed left-0 top-0 h-screen bg-white border-r border-slate-200 z-50 flex flex-col justify-between py-3.5 select-none ${
+    sidebarEl.className = `fixed left-0 top-0 h-screen bg-white border-r border-slate-200 z-50 flex flex-col justify-between py-3 select-none ${
       expanded ? '' : 'is-collapsed'
     }`;
-    document.body.classList.toggle('sb-expanded', expanded);
-    document.body.classList.toggle('sb-collapsed', !expanded);
 
-    // 4.1 TOP: LOGO KIOTVIET CHÍNH HÃNG (Xanh dương + Xanh lá) + NÚT TOGGLE
+    // SVG Logo KiotViet chính hãng chuẩn vector (Giọt nước Xanh dương + Cánh cung Xanh lá)
+    const kiotVietLogoSVG = `
+      <svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 36 36" fill="none">
+        <path d="M7 18C7 11.925 11.925 7 18 7C18 13.075 13.075 18 7 18Z" fill="#0070F3"/>
+        <path d="M7 18C7 24.075 11.925 29 18 29C18 22.925 13.075 18 7 18Z" fill="#0070F3"/>
+        <path d="M19 8C24.523 8 29 12.477 29 18C23.477 18 19 13.523 19 8Z" fill="#22C55E"/>
+      </svg>
+    `;
+
+    // 5.1 HEADER TÁCH BIỆT: MỞ RỘNG (DÀN NGANG) / THU GỌN (CĂN GIỮA ĐẸP MẮT)
     let html = `
-      <div class="flex flex-col w-full px-3">
-        <div class="flex items-center justify-between h-10 w-full">
-          <!-- Logo KiotViet chuẩn Ảnh 1 (Nhấp đúp mở System Workflow ẩn) -->
-          <div id="btn-secret-logo" class="cursor-pointer group flex items-center gap-2.5 overflow-hidden" title="Nhấp đúp: Mở System Workflow">
-            <!-- Icon KiotViet Giọt Nước Xanh Dương & Cánh Cung Xanh Lá -->
-            <svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 36 36" fill="none">
-              <path d="M7 18C7 11.925 11.925 7 18 7C18 13.075 13.075 18 7 18Z" fill="#0070F3"/>
-              <path d="M7 18C7 24.075 11.925 29 18 29C18 22.925 13.075 18 7 18Z" fill="#0070F3"/>
-              <path d="M19 8C24.523 8 29 12.477 29 18C23.477 18 19 13.523 19 8Z" fill="#22C55E"/>
-            </svg>
-            <span class="sb-text font-black text-slate-800 text-[19px] tracking-tight">KiotViet</span>
+      <div class="flex flex-col w-full px-2.5">
+        <!-- Khi Mở Rộng: Logo + Text KiotViet + Nút << -->
+        <div class="sb-header-expanded flex items-center justify-between h-10 w-full px-1">
+          <div id="btn-secret-logo-exp" class="cursor-pointer group flex items-center gap-2.5 overflow-hidden" title="Nhấp đúp: Mở System Workflow">
+            ${kiotVietLogoSVG}
+            <span class="font-black text-slate-800 text-[19px] tracking-tight">KiotViet</span>
           </div>
+          <button class="btn-toggle-action p-1 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 transition-colors" title="Thu gọn menu">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+          </button>
+        </div>
 
-          <!-- Nút Toggle thu gọn/mở rộng -->
-          <button id="btn-sidebar-toggle" class="p-1 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 transition-colors" title="Đóng / Mở menu">
-            <svg id="icon-toggle" class="w-4 h-4 transition-transform duration-200 ${expanded ? '' : 'rotate-180'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
-            </svg>
+        <!-- Khi Thu Gọn: Logo KiotViet căn giữa hoàn hảo + Nút >> nhỏ gọn ngay dưới -->
+        <div class="sb-header-collapsed flex flex-col items-center justify-center w-full gap-1 pt-0.5">
+          <div id="btn-secret-logo-col" class="cursor-pointer p-0.5 rounded-lg hover:bg-slate-100 transition-colors flex items-center justify-center" title="Nhấp đúp: Mở System Workflow">
+            ${kiotVietLogoSVG}
+          </div>
+          <button class="btn-toggle-action p-1 rounded-md text-slate-400 hover:text-blue-600 hover:bg-slate-100 transition-colors" title="Mở rộng menu">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
           </button>
         </div>
       </div>
       <div class="w-full h-[1px] bg-slate-100 my-2"></div>
     `;
 
-    // 4.2 BODY: DANH MỤC MENU CHUẨN ẢNH 1
-    html += `<div class="flex-1 w-full overflow-x-hidden sb-scroll px-2.5 space-y-3 custom-scrollbar">`;
+    // 5.2 BODY: DANH MỤC MENU CHUẨN ẢNH 1
+    html += `<div class="flex-1 w-full overflow-x-hidden sb-scroll px-2.5 space-y-2.5 custom-scrollbar">`;
 
     SIDEBAR_STRUCTURE.forEach((sec) => {
       html += `<div class="space-y-0.5">`;
@@ -262,9 +299,9 @@
 
     html += `</div>`;
 
-    // 4.3 BOTTOM: CLOUD API ACTIVE + AVATAR LOGO VIE (Nhấp đúp mở Workflow ẩn)
+    // 5.3 BOTTOM: CLOUD API ACTIVE + AVATAR LOGO VIE (Nhấp đúp mở Workflow ẩn)
     html += `
-      <div class="w-full px-2.5 pt-2 flex flex-col gap-1.5">
+      <div class="w-full px-2.5 pt-1.5 flex flex-col gap-1.5">
         <div class="w-full h-[1px] bg-slate-100"></div>
 
         <!-- Trạng thái Cloud API -->
@@ -298,41 +335,32 @@
 
     sidebarEl.innerHTML = html;
 
-    // GẮN SỰ KIỆN TOGGLE (Chỉ đổi class, không chạy lại DOM)
-    const toggleBtn = document.getElementById('btn-sidebar-toggle');
-    const toggleIcon = document.getElementById('icon-toggle');
-
-    if (toggleBtn) {
-      toggleBtn.addEventListener('click', (e) => {
+    // GẮN SỰ KIỆN TOGGLE CHO CẢ 2 NÚT THU GỌN VÀ MỞ RỘNG
+    document.querySelectorAll('.btn-toggle-action').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const currentlyCollapsed = sidebarEl.classList.contains('is-collapsed');
         const willExpand = currentlyCollapsed;
 
         sidebarEl.classList.toggle('is-collapsed', !willExpand);
-        document.body.classList.toggle('sb-expanded', willExpand);
-        document.body.classList.toggle('sb-collapsed', !willExpand);
-
-        if (toggleIcon) {
-          toggleIcon.classList.toggle('rotate-180', !willExpand);
-        }
+        syncContentOffset(willExpand);
         localStorage.setItem('kv_sidebar_expanded', String(willExpand));
       });
-    }
+    });
 
-    // GẮN SỰ KIỆN MỞ SYSTEM WORKFLOW ẨN (Nhấp đúp vào Logo, Avatar hoặc API)
+    // KÍCH HOẠT ĐẨY LỀ NGAY KHI TẢI TRANG
+    syncContentOffset(expanded);
+
+    // GẮN SỰ KIỆN NHẤP ĐÚP MỞ SYSTEM WORKFLOW ẨN
     const openWorkflow = (e) => {
       e.preventDefault();
       window.location.href = 'system-workflow.html';
     };
 
-    const logoSecret = document.getElementById('btn-secret-logo');
-    if (logoSecret) logoSecret.addEventListener('dblclick', openWorkflow);
-
-    const avatarSecret = document.getElementById('btn-secret-avatar');
-    if (avatarSecret) avatarSecret.addEventListener('dblclick', openWorkflow);
-
-    const apiSecret = document.getElementById('btn-secret-api');
-    if (apiSecret) apiSecret.addEventListener('dblclick', openWorkflow);
+    ['btn-secret-logo-exp', 'btn-secret-logo-col', 'btn-secret-avatar', 'btn-secret-api'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('dblclick', openWorkflow);
+    });
   }
 
   // KHỞI CHẠY TỨC THÌ
