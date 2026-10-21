@@ -1,10 +1,10 @@
 /**
- * TRAINER OS v6.1 ENTERPRISE - DUAL-ENGINE UNIVERSAL SIDEBAR
- * - Fix triệt để lỗi nuốt chửng thanh menu tiến trình của Module (industry, thuehkd, settings)
- * - Tự động nhận diện layout: Flexbox App Shell hoặc Fixed Pusher Container
- * - Bảo toàn 100% logo KiotViet & Avatar Bông hoa chính hãng
- * - Khử hoàn toàn hiện tượng FOUC, layout shift và đè header
- * - Mở bí mật system-workflow.html khi nhấp đúp Logo/Avatar/API dot
+ * TRAINER OS v6.2 ENTERPRISE - IMMUNITY UNIVERSAL SIDEBAR
+ * - Miễn nhiễm hoàn toàn với lỗi document.body.className ghi đè (system-workflow.html)
+ * - Tự động dời lề chuẩn xác bằng CSS Variables trên :root và <html>
+ * - Dual-Logo: Logo chữ KiotViet khi mở rộng, Icon Bông hoa khi thu gọn
+ * - Tự động phát tín hiệu resize để vẽ lại dây nối SVG trên system-workflow.html
+ * - Giữ nguyên vẹn 100% menu module con của settings, industry, thuehkd
  */
 
 (function () {
@@ -122,60 +122,66 @@
     }
   ];
 
-  // 3. CSS TỐC ĐỘ CAO CHO SIDEBAR
+  // 3. CSS ĐỘC QUYỀN MIỄN NHIỄM GHI ĐÈ BẰNG BIẾN :root
   function injectStyles() {
     if (document.getElementById('sidebar-fast-styles')) return;
     const style = document.createElement('style');
     style.id = 'sidebar-fast-styles';
     style.innerHTML = `
+      :root {
+        --sb-width: 15rem; /* 240px */
+      }
+      :root.sb-collapsed {
+        --sb-width: 4rem; /* 64px */
+      }
+
       #sidebar {
-        transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 2px 0 8px 0 rgba(0, 0, 0, 0.04) !important;
+        width: var(--sb-width) !important;
+        min-width: var(--sb-width) !important;
+        transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 2px 0 10px 0 rgba(0, 0, 0, 0.05) !important;
       }
-      #sidebar.is-collapsed {
-        width: 4rem !important; /* 64px */
-        min-width: 4rem !important;
-      }
-      #sidebar:not(.is-collapsed) {
-        width: 15rem !important; /* 240px */
-        min-width: 15rem !important;
-      }
-      #sidebar.is-collapsed .sb-text,
-      #sidebar.is-collapsed .sb-group-title,
-      #sidebar.is-collapsed .sb-arrow {
+      
+      :root.sb-collapsed #sidebar .sb-text,
+      :root.sb-collapsed #sidebar .sb-group-title,
+      :root.sb-collapsed #sidebar .sb-arrow {
         display: none !important;
       }
-      #sidebar:not(.is-collapsed) .sb-divider {
-        display: none !important;
-      }
-      #sidebar.is-collapsed .sb-divider {
+      :root.sb-collapsed #sidebar .sb-divider {
         display: block !important;
       }
-      #sidebar.is-collapsed .sb-scroll {
-        overflow-y: hidden !important;
+      :root:not(.sb-collapsed) #sidebar .sb-divider {
+        display: none !important;
       }
-      #sidebar:not(.is-collapsed) .sb-scroll {
-        overflow-y: auto !important;
+
+      /* DUAL-LOGO: Chuyển đổi êm dịu */
+      :root.sb-collapsed #sb-logo-full {
+        display: none !important;
       }
-      #sidebar.is-collapsed .group:hover .sb-tooltip {
+      :root.sb-collapsed #sb-logo-icon {
+        display: block !important;
+        margin: 0 auto !important;
+      }
+      :root:not(.sb-collapsed) #sb-logo-full {
+        display: block !important;
+      }
+      :root:not(.sb-collapsed) #sb-logo-icon {
+        display: none !important;
+      }
+
+      /* Nút Toggle: Khi thu gọn thì căn giữa ngay dưới logo */
+      :root.sb-collapsed #btn-sidebar-toggle {
+        margin: 4px auto 0 auto !important;
+      }
+
+      :root.sb-collapsed #sidebar .group:hover .sb-tooltip {
         opacity: 1 !important;
         pointer-events: auto !important;
       }
-      #sidebar:not(.is-collapsed) .sb-tooltip {
+      :root:not(.sb-collapsed) #sidebar .sb-tooltip {
         display: none !important;
       }
-      #sidebar.is-collapsed #sb-logo-img {
-        width: 2.25rem !important;
-        height: 2.25rem !important;
-        object-fit: cover !important;
-        object-position: left center !important;
-        border-radius: 0.375rem !important;
-      }
-      #sidebar:not(.is-collapsed) #sb-logo-img {
-        max-height: 2rem !important;
-        max-width: 8.5rem !important;
-        object-fit: contain !important;
-      }
+
       .sb-scroll::-webkit-scrollbar {
         width: 4px;
       }
@@ -184,23 +190,24 @@
         border-radius: 4px;
       }
 
-      /* CSS DÀNH RIÊNG CHO CÁC TRANG TRUYỀN THỐNG (settings, industry, thuehkd) */
-      body.has-fixed-sidebar {
-        padding-left: 15rem !important;
-        transition: padding-left 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      /* ========================================================
+         CƠ CHẾ DỜI LỀ MIỄN NHIỄM (GẮN TRỰC TIẾP TRÊN THẺ <html>)
+         Không thể bị ghi đè bởi document.body.className = ...
+         ======================================================== */
+      html.has-standalone-sidebar body {
+        margin-left: var(--sb-width) !important;
+        width: calc(100vw - var(--sb-width)) !important;
+        max-width: calc(100vw - var(--sb-width)) !important;
+        min-width: calc(100vw - var(--sb-width)) !important;
+        transition: margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1), width 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
         box-sizing: border-box !important;
       }
-      body.has-fixed-sidebar.sb-collapsed {
-        padding-left: 4rem !important;
-      }
-      body.has-fixed-sidebar > header {
-        left: 15rem !important;
-        width: calc(100vw - 15rem) !important;
-        transition: left 0.2s cubic-bezier(0.4, 0, 0.2, 1), width 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-      }
-      body.has-fixed-sidebar.sb-collapsed > header {
-        left: 4rem !important;
-        width: calc(100vw - 4rem) !important;
+
+      /* Giữ nguyên vị trí các Topbar Sticky/Fixed của trang độc lập */
+      html.has-standalone-sidebar body > header.fixed {
+        left: var(--sb-width) !important;
+        width: calc(100vw - var(--sb-width)) !important;
+        transition: left 0.22s cubic-bezier(0.4, 0, 0.2, 1), width 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
       }
     `;
     document.head.appendChild(style);
@@ -215,65 +222,58 @@
     return localStorage.getItem('kv_sidebar_expanded') !== 'false';
   }
 
-  // 4. DUAL-ENGINE LAYOUT PUSHER
+  // 4. KÍCH HOẠT DỜI LỀ & PHÁT TÍN HIỆU RESIZE CHO SVG TOPOLOGY
   function syncContentOffset(expanded) {
-    const sidebarEl = document.getElementById('sidebar');
-    if (!sidebarEl) return;
-
-    // Nếu trang thuộc dạng Fixed Sidebar (settings, industry, thuehkd)
-    if (document.body.classList.contains('has-fixed-sidebar')) {
-      document.body.classList.toggle('sb-collapsed', !expanded);
-    }
-  }
-
-  // 5. HÀM CHUYỂN ĐỔI TRẠNG THÁI TOÀN CỤC (Gắn trực tiếp vào window để mọi nút đều gọi được)
-  window.toggleSidebar = function () {
-    const sidebarEl = document.getElementById('sidebar');
-    if (!sidebarEl) return;
-
-    const currentlyCollapsed = sidebarEl.classList.contains('is-collapsed');
-    const willExpand = currentlyCollapsed;
-
-    sidebarEl.classList.toggle('is-collapsed', !willExpand);
-    syncContentOffset(willExpand);
-    localStorage.setItem('kv_sidebar_expanded', String(willExpand));
+    document.documentElement.classList.toggle('sb-collapsed', !expanded);
 
     const toggleIcon = document.getElementById('icon-toggle');
     if (toggleIcon) {
-      toggleIcon.classList.toggle('rotate-180', !willExpand);
+      toggleIcon.classList.toggle('rotate-180', !expanded);
     }
+
+    // Tự động phát tín hiệu resize để vẽ lại dây cáp vi mạch trên system-workflow.html
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 240);
+  }
+
+  // 5. HÀM CHUYỂN ĐỔI TRẠNG THÁI TOÀN CỤC
+  window.toggleSidebar = function () {
+    const willExpand = document.documentElement.classList.contains('sb-collapsed');
+    syncContentOffset(willExpand);
+    localStorage.setItem('kv_sidebar_expanded', String(willExpand));
   };
 
   // 6. XÂY DỰNG DOM AN TOÀN TUYỆT ĐỐI
   function buildSidebarDOM() {
     injectStyles();
 
+    const expanded = isSidebarExpanded();
+    document.documentElement.classList.toggle('sb-collapsed', !expanded);
+
     // 6.1. TÌM DUY NHẤT ID="SIDEBAR" - TUYỆT ĐỐI KHÔNG DÙNG querySelector('aside')
     let sidebarEl = document.getElementById('sidebar');
     let isStandalonePage = false;
 
+    // Kiểm tra xem trang có cấu trúc Flex App Shell hay là trang độc lập
+    const isFlexShell = !!document.querySelector('.flex.h-screen, .flex.h-full');
+
     if (!sidebarEl) {
-      // Nếu trang không có #sidebar (như settings.html, industry.html, thuehkd.html):
-      // Tạo mới và gắn thẳng vào body với chế độ Fixed Sidebar độc lập!
       sidebarEl = document.createElement('aside');
       sidebarEl.id = 'sidebar';
       document.body.prepend(sidebarEl);
       isStandalonePage = true;
+    } else {
+      if (!isFlexShell) isStandalonePage = true;
     }
 
-    const expanded = isSidebarExpanded();
-
     if (isStandalonePage) {
-      document.body.classList.add('has-fixed-sidebar');
-      document.body.classList.toggle('sb-collapsed', !expanded);
-      sidebarEl.className = `fixed left-0 top-0 h-screen bg-white border-r border-slate-200 z-[999] flex flex-col justify-between select-none ${
-        expanded ? '' : 'is-collapsed'
-      }`;
+      // Gắn class miễn nhiễm lên thẻ <html> (Không lo bị script nào xóa mất)
+      document.documentElement.classList.add('has-standalone-sidebar');
+      sidebarEl.className = `fixed left-0 top-0 h-screen bg-white border-r border-slate-200 z-[9999] flex flex-col justify-between select-none`;
     } else {
-      // Dành cho các trang dạng Flexbox App Shell (index, spcb, kv1, tools, vault...)
-      sidebarEl.className = `relative h-screen bg-white border-r border-slate-200 z-40 flex flex-col justify-between shrink-0 select-none ${
-        expanded ? '' : 'is-collapsed'
-      }`;
+      // Dành cho trang Flexbox App Shell (index, spcb, kv1, tools, vault...)
+      sidebarEl.className = `relative h-screen bg-white border-r border-slate-200 z-40 flex flex-col justify-between shrink-0 select-none`;
     }
 
     const currentFile = getCurrentFile();
@@ -289,13 +289,14 @@
       }
     } catch (e) {}
 
-    // 6.2. HEADER LOGO KHÉP KÍN (NỀN TRẮNG 100%, ĐÈ BẢO VỆ PHÍA SAU)
+    // 6.2. HEADER DUAL-LOGO (KHÔNG BỊ MÉO HÌNH, NỀN TRẮNG CHE PHỦ TUYỆT ĐỐI)
     let html = `
-      <div class="flex flex-col w-full px-3 bg-white">
-        <div class="flex items-center justify-between h-14 w-full bg-white">
-          <!-- Logo KiotViet (Nhấp đúp mở System Workflow) -->
-          <div id="btn-secret-logo" class="cursor-pointer group flex items-center overflow-hidden flex-1 bg-white" title="Nhấp đúp: Mở System Architecture Workflow">
-            <img id="sb-logo-img" src="${KIOTVIET_LOGO_URL}" alt="KiotViet" class="transition-all duration-200 bg-white" />
+      <div class="flex flex-col w-full bg-white shrink-0">
+        <div class="flex items-center justify-between h-14 w-full px-3 bg-white">
+          <!-- Logo Container (Nhấp đúp: Mở System Workflow) -->
+          <div id="btn-secret-logo" class="cursor-pointer flex items-center overflow-hidden flex-1 bg-white select-none" title="Nhấp đúp: Mở System Architecture Workflow">
+            <img id="sb-logo-full" src="${KIOTVIET_LOGO_URL}" alt="KiotViet" class="h-7 max-w-[130px] object-contain bg-white" />
+            <img id="sb-logo-icon" src="${BONGHOA_LOGO_URL}" alt="KV" class="h-8 w-8 object-contain bg-white hidden" />
           </div>
 
           <!-- Nút thu gọn / mở rộng menu -->
@@ -344,8 +345,8 @@
 
     // 6.4. CHÂN MENU: TRẠNG THÁI CLOUD VÀ AVATAR BÔNG HOA
     html += `
-      <div class="w-full px-2.5 py-2.5 flex flex-col gap-1 border-t border-slate-200 bg-white">
-        <!-- Đèn trạng thái Cloud API -->
+      <div class="w-full px-2.5 py-2.5 flex flex-col gap-1 border-t border-slate-200 bg-white shrink-0">
+        <!-- Đèn trạng thái Cloud API (Nhấp đúp mở System Workflow) -->
         <div id="btn-secret-api" class="cursor-pointer group flex items-center h-7 px-2 rounded-lg hover:bg-slate-50 transition-colors" title="Nhấp đúp: Mở System Architecture Workflow">
           <span class="flex h-2 w-2 relative flex-shrink-0">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -354,7 +355,7 @@
           <span class="sb-text ml-2 text-[11px] font-semibold text-slate-500 truncate">Cloud API Active</span>
         </div>
 
-        <!-- Avatar Người Dùng Bông Hoa -->
+        <!-- Avatar Người Dùng: Bông Hoa KiotViet -->
         <div id="btn-secret-avatar" class="cursor-pointer group flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-50 transition-colors" title="Nhấp đúp: Mở System Architecture Workflow">
           <div class="w-8 h-8 rounded-full ring-2 ring-blue-500/20 bg-blue-50/50 p-0.5 overflow-hidden flex-shrink-0 shadow-sm flex items-center justify-center">
             <img src="${BONGHOA_LOGO_URL}" alt="Bông Hoa Logo" class="w-full h-full object-contain" />
@@ -393,7 +394,7 @@
       }
     }, 150);
 
-    // Kích hoạt Layout Pusher
+    // Kích hoạt dời lề và bắn tín hiệu vẽ lại dây vi mạch
     syncContentOffset(expanded);
 
     // Bắt sự kiện nhấp đúp mở System Workflow
