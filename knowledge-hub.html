@@ -8,10 +8,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Font Inter -->
+    <!-- Google Font Inter & Fira Code -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
@@ -21,7 +21,7 @@
                         brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' },
                         kiot: { blue: '#0066cc', navy: '#004c99', orange: '#f37021', green: '#28a745', dark: '#1e293b' }
                     },
-                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['Fira Code', 'monospace'] }
                 }
             }
         }
@@ -48,7 +48,7 @@
             color: #ffffff;
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
-            font-weight: 500;
+            font-weight: 600;
             transition: all 0.15s ease-in-out;
             display: inline-flex;
             align-items: center;
@@ -110,19 +110,22 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans h-screen flex overflow-hidden">
 
-    <!-- ==================== SIDEBAR ==================== -->
-    <aside class="w-80 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-30 border-r border-slate-800 select-none">
-        <div class="h-16 flex items-center justify-between px-5 bg-slate-950 border-b border-slate-800">
-            <div class="flex items-center gap-3">
-                <a href="index.html" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition" title="Trở về Bảng điều khiển">
-                    <i class="fa-solid fa-arrow-left text-xs"></i>
-                </a>
+    <!-- ==================== SIDEBAR CHÍNH KIOTVIET ĐƯỢC TỰ ĐỘNG GẮN BỞI sidebar-nav.js ==================== -->
+    <aside id="sidebar"></aside>
+
+    <!-- ==================== SIDEBAR NỘI BỘ: CÂY DANH SÁCH BẢNG DỮ LIỆU (SHEETS) ==================== -->
+    <aside id="hub-sidebar" class="w-72 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-30 border-r border-slate-800 select-none">
+        <div class="h-14 flex items-center justify-between px-4 bg-slate-950 border-b border-slate-800">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-blue-600/20 text-kiot-blue flex items-center justify-center font-bold text-sm border border-blue-500/30">
+                    <i class="fa-solid fa-database text-xs"></i>
+                </div>
                 <div>
-                    <h1 class="font-bold text-white text-sm tracking-wide">MASTER HUB</h1>
-                    <p class="text-[11px] text-slate-400 font-medium">Executive Control</p>
+                    <h1 class="font-bold text-white text-xs tracking-wide uppercase">MASTER HUB</h1>
+                    <p class="text-[10px] text-slate-400 font-medium">Kho Dữ Liệu E-Learning</p>
                 </div>
             </div>
-            <button onclick="openConfigModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-all" title="Cấu hình Google Sheets API">
+            <button onclick="openConfigModal()" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-all" title="Cấu hình Google Sheets API">
                 <i class="fa-solid fa-gear text-xs"></i>
             </button>
         </div>
@@ -130,21 +133,21 @@
         <!-- Search in Sidebar -->
         <div class="p-3 border-b border-slate-800">
             <button onclick="openGlobalSearch()" class="w-full flex items-center justify-between px-3 py-2 text-xs bg-slate-800/80 hover:bg-slate-800 text-slate-400 rounded-lg border border-slate-700/60 transition-all">
-                <span class="flex items-center gap-2">
-                    <i class="fa-solid fa-magnifying-glass text-slate-500"></i>
-                    <span>Tìm nhanh mọi tài liệu...</span>
+                <span class="flex items-center gap-2 truncate">
+                    <i class="fa-solid fa-magnifying-glass text-slate-500 text-xs"></i>
+                    <span class="truncate">Tìm kiếm tài nguyên...</span>
                 </span>
                 <kbd class="px-1.5 py-0.5 text-[10px] bg-slate-900 text-slate-400 rounded border border-slate-700 font-mono">Ctrl K</kbd>
             </button>
         </div>
 
         <!-- Sync Toolbar -->
-        <div class="px-4 py-2.5 bg-slate-950/60 border-b border-slate-800/80 flex items-center justify-between text-xs">
+        <div class="px-3.5 py-2 bg-slate-950/60 border-b border-slate-800/80 flex items-center justify-between text-xs">
             <div class="flex items-center gap-2 min-w-0">
                 <span id="sync-indicator" class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></span>
-                <span id="sync-time-label" class="text-[11px] text-slate-400 truncate">Chưa đồng bộ</span>
+                <span id="sync-time-label" class="text-[10px] text-slate-400 truncate">Chưa đồng bộ</span>
             </div>
-            <button onclick="syncGoogleSheetsData()" id="btn-sync-now" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-kiot-blue hover:text-white font-medium text-[11px] flex items-center gap-1.5 transition-all">
+            <button onclick="syncGoogleSheetsData()" id="btn-sync-now" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-kiot-blue hover:text-white font-bold text-[11px] flex items-center gap-1.5 transition-all shadow-2xs">
                 <i class="fa-solid fa-rotate text-[10px]" id="sync-icon"></i> Đồng bộ
             </button>
         </div>
@@ -153,10 +156,10 @@
         <div class="px-3 pt-3">
             <button onclick="activateTab('tab-home')" id="sidebar-btn-home" class="w-full flex items-center justify-between px-3 py-2.5 text-xs font-bold rounded-lg bg-kiot-blue text-white shadow-sm transition-all text-left">
                 <span class="flex items-center gap-2.5">
-                    <i class="fa-solid fa-gauge-high text-sm"></i>
+                    <i class="fa-solid fa-gauge-high text-xs"></i>
                     <span>Trang Quản Trị Tổng Quan</span>
                 </span>
-                <span class="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono">Master</span>
+                <span class="text-[9px] bg-white/20 px-1.5 py-0.5 rounded font-mono">Master</span>
             </button>
         </div>
 
@@ -169,10 +172,10 @@
         <!-- Sidebar Footer Status -->
         <div class="p-3 bg-slate-950 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
             <div class="flex items-center gap-2">
-                <i class="fa-solid fa-table text-emerald-400"></i>
-                <span id="total-sheets-badge">0 Sheet kết nối</span>
+                <i class="fa-solid fa-table text-emerald-400 text-xs"></i>
+                <span id="total-sheets-badge" class="font-semibold">0 Sheet kết nối</span>
             </div>
-            <span class="text-slate-500 font-mono">v4.8 Enterprise</span>
+            <span class="text-slate-500 font-mono text-[10px]">v6.0 Enterprise</span>
         </div>
     </aside>
 
@@ -180,18 +183,18 @@
     <main class="flex-1 flex flex-col min-w-0 bg-slate-100 overflow-hidden">
         
         <!-- Top Workspace Bar -->
-        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 flex-shrink-0">
+        <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 flex-shrink-0 shadow-xs">
             <div class="flex items-center gap-3 min-w-0">
-                <div id="section-icon" class="w-8 h-8 rounded-lg bg-blue-50 text-kiot-blue flex items-center justify-center font-bold text-sm">
+                <div id="section-icon" class="w-8 h-8 rounded-lg bg-blue-50 text-kiot-blue flex items-center justify-center font-bold text-sm border border-blue-100 shadow-2xs">
                     <i class="fa-solid fa-gauge-high"></i>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2 text-xs text-slate-400">
-                        <a href="index.html" class="hover:text-blue-600 transition">Trainer OS</a>
-                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                        <span id="breadcrumb-category" class="font-medium text-slate-600">Tổng Quan Điều Hành</span>
+                    <div class="flex items-center gap-2 text-[11px] text-slate-400">
+                        <span>Master Data Hub</span>
+                        <i class="fa-solid fa-chevron-right text-[8px]"></i>
+                        <span id="breadcrumb-category" class="font-bold text-slate-600">Tổng Quan Điều Hành</span>
                     </div>
-                    <h2 id="section-title" class="text-sm font-bold text-slate-900 truncate">Bảng Chỉ Huy Quản Trị Khảo Thí & Tri Thức L&D</h2>
+                    <h2 id="section-title" class="text-xs font-bold text-slate-900 truncate">Bảng Chỉ Huy Quản Trị Khảo Thí & Tri Thức L&D</h2>
                 </div>
             </div>
 
@@ -199,19 +202,19 @@
             <div class="flex items-center gap-3">
                 <div class="relative w-64" id="local-search-wrapper">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text" id="local-search-input" oninput="handleLocalSearch(this.value)" placeholder="Lọc trong bảng này..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-kiot-blue focus:outline-none transition-all">
+                    <input type="text" id="local-search-input" oninput="handleLocalSearch(this.value)" placeholder="Lọc nhanh trong bảng này..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-kiot-blue focus:outline-none transition-all">
                 </div>
 
                 <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs" id="view-mode-controls">
-                    <button onclick="switchViewMode('grid')" id="view-mode-grid" class="px-2.5 py-1 rounded text-slate-600 bg-white shadow-sm font-medium transition-all" title="Chế độ Lưới">
+                    <button onclick="switchViewMode('grid')" id="view-mode-grid" class="px-2.5 py-1 rounded text-slate-600 bg-white shadow-sm font-bold transition-all" title="Chế độ Lưới Thẻ">
                         <i class="fa-solid fa-grip"></i>
                     </button>
-                    <button onclick="switchViewMode('table')" id="view-mode-table" class="px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all" title="Chế độ Bảng">
+                    <button onclick="switchViewMode('table')" id="view-mode-table" class="px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all font-semibold" title="Chế độ Bảng Danh Sách">
                         <i class="fa-solid fa-table-list"></i>
                     </button>
-                    <button onclick="toggleSplitScreen()" id="view-mode-split" class="px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all flex items-center gap-1.5" title="Bật/Tắt Chia Đôi Màn Hình">
+                    <button onclick="toggleSplitScreen()" id="view-mode-split" class="px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all flex items-center gap-1.5 font-semibold" title="Bật/Tắt Chia Đôi Màn Hình">
                         <i class="fa-solid fa-columns"></i>
-                        <span class="text-[11px] font-medium hidden sm:inline">Chia đôi</span>
+                        <span class="text-[11px] font-bold hidden sm:inline">Split-Screen</span>
                     </button>
                 </div>
             </div>
@@ -221,7 +224,7 @@
         <div id="workspace-tab-bar" class="h-10 bg-slate-200/80 border-b border-slate-300/80 flex items-center px-2 gap-1 overflow-x-auto custom-scrollbar select-none z-10 flex-shrink-0">
             <div onclick="activateTab('tab-home')" id="tab-home" class="workspace-tab active h-9 px-3.5 rounded-t-lg bg-white flex items-center gap-2 text-xs text-slate-700 cursor-pointer border-t border-x border-slate-300 flex-shrink-0">
                 <i class="fa-solid fa-gauge-high text-kiot-blue text-[11px]"></i>
-                <span class="font-semibold">Trang Quản Trị</span>
+                <span class="font-bold">Trang Quản Trị</span>
             </div>
         </div>
 
@@ -231,8 +234,8 @@
             <!-- PRIMARY PANE -->
             <div id="pane-primary" class="flex-1 flex flex-col min-w-[300px] h-full overflow-hidden bg-white relative">
                 
-                <!-- Sub-Filter Bar -->
-                <div id="sub-filter-bar" class="px-6 py-2.5 bg-slate-50/70 border-b border-slate-200 flex items-center gap-2 overflow-x-auto custom-scrollbar flex-shrink-0 hidden"></div>
+                <!-- Sub-Filter Bar (Phân hệ khóa học) -->
+                <div id="sub-filter-bar" class="px-6 py-2.5 bg-slate-50/80 border-b border-slate-200 flex items-center gap-2 overflow-x-auto custom-scrollbar flex-shrink-0 hidden"></div>
 
                 <!-- Scrollable Content Area -->
                 <div id="items-scroll-container" class="flex-1 overflow-y-auto custom-scrollbar p-6">
@@ -243,22 +246,22 @@
                     <!-- 2. SHEET CONTENT -->
                     <div id="sheet-content-view" class="hidden space-y-4">
                         <div id="items-grid" class="auto-responsive-grid"></div>
-                        <div id="items-table-container" class="overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
+                        <div id="items-table-container" class="overflow-x-auto border border-slate-200 rounded-xl shadow-xs">
                             <table class="w-full text-left text-xs text-slate-600">
-                                <thead class="bg-slate-100 text-slate-700 uppercase font-semibold border-b border-slate-200" id="table-head"></thead>
-                                <tbody class="divide-y divide-slate-200 bg-white" id="table-body"></tbody>
+                                <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-200" id="table-head"></thead>
+                                <tbody class="divide-y divide-slate-100 bg-white" id="table-body"></tbody>
                             </table>
                         </div>
                     </div>
 
                     <!-- 3. EMPTY STATE -->
                     <div id="empty-state" class="hidden py-16 flex flex-col items-center justify-center text-center">
-                        <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mb-3 shadow-inner">
+                        <div class="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mb-3 shadow-inner">
                             <i class="fa-solid fa-folder-open"></i>
                         </div>
                         <h4 class="text-sm font-bold text-slate-700 mb-1">Không tìm thấy tài liệu phù hợp</h4>
                         <p class="text-xs text-slate-400 max-w-sm mb-4">Dữ liệu chưa được nạp hoặc bộ lọc không khớp kết quả.</p>
-                        <button onclick="resetFilters()" class="px-3 py-1.5 text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium rounded-md transition-all">
+                        <button onclick="resetFilters()" class="px-3 py-1.5 text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition-all">
                             Làm mới bộ lọc
                         </button>
                     </div>
@@ -272,15 +275,15 @@
             <!-- DRAGGABLE RESIZER DIVIDER -->
             <div id="split-resizer" class="resizer-divider hidden" title="Kéo chuột sang trái/phải để điều chỉnh tỷ lệ chia đôi"></div>
 
-            <!-- RIGHT PANE (SPLIT-SCREEN) -->
-            <div id="pane-secondary" class="w-1/2 flex flex-col min-w-[300px] border-l border-slate-300 bg-slate-900 hidden transition-all duration-75">
+            <!-- RIGHT PANE (SPLIT-SCREEN PREVIEW CHO VIDEO & QUIZ) -->
+            <div id="pane-secondary" class="w-1/2 flex flex-col min-w-[320px] border-l border-slate-300 bg-slate-900 hidden transition-all duration-75">
                 <div class="h-10 bg-slate-950 border-b border-slate-800 flex items-center justify-between px-4 text-xs text-slate-300 select-none flex-shrink-0">
                     <div class="flex items-center gap-2 truncate">
-                        <i id="split-type-icon" class="fa-solid fa-table text-emerald-400"></i>
-                        <span id="split-pane-title" class="font-medium text-white truncate">Google Sheets Viewer</span>
+                        <i id="split-type-icon" class="fa-solid fa-play text-rose-500"></i>
+                        <span id="split-pane-title" class="font-bold text-white truncate">Trình Chiếu Bài Giảng</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <a id="split-external-link" href="#" target="_blank" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded text-[11px] font-medium flex items-center gap-1 transition-all" title="Mở trong tab trình duyệt mới">
+                        <a id="split-external-link" href="#" target="_blank" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded text-[11px] font-bold flex items-center gap-1 transition-all" title="Mở trong tab trình duyệt mới">
                             <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Mở Tab Mới ↗
                         </a>
                         <button onclick="toggleSplitScreen()" class="p-1 hover:text-white text-slate-400 transition-all ml-1" title="Đóng màn hình phụ">
@@ -290,7 +293,7 @@
                 </div>
 
                 <div id="split-pane-content" class="flex-1 overflow-hidden relative bg-white flex flex-col">
-                    <iframe id="split-iframe" src="" class="w-full h-full border-0" allowfullscreen></iframe>
+                    <iframe id="split-iframe" src="" class="w-full h-full border-0" allowfullscreen sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
                 </div>
             </div>
 
@@ -308,7 +311,7 @@
                 <button onclick="zoomLightboxImage(-0.25)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1" title="Thu nhỏ">
                     <i class="fa-solid fa-magnifying-glass-minus"></i>
                 </button>
-                <span id="lightbox-zoom-val" class="font-mono text-xs px-2 text-slate-300 min-w-[50px] text-center">100%</span>
+                <span id="lightbox-zoom-val" class="font-mono text-xs px-2 text-slate-300 min-w-[50px] text-center font-bold">100%</span>
                 <button onclick="zoomLightboxImage(0.25)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1" title="Phóng to">
                     <i class="fa-solid fa-magnifying-glass-plus"></i>
                 </button>
@@ -334,25 +337,9 @@
         </div>
     </div>
 
-    <!-- ==================== FLOATING DETAILS MODAL ==================== -->
-    <div id="floating-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4 sm:p-8">
-        <div class="w-full max-w-4xl max-h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
-            <div class="h-12 bg-slate-900 text-white px-5 flex items-center justify-between flex-shrink-0 select-none">
-                <div class="flex items-center gap-3 min-w-0">
-                    <span id="modal-badge" class="px-2 py-0.5 text-[10px] font-bold rounded bg-kiot-blue text-white uppercase tracking-wider">CHI TIẾT</span>
-                    <h3 id="modal-title" class="font-bold text-sm truncate">Tiêu đề tài liệu</h3>
-                </div>
-                <button onclick="closeFloatingModal()" class="hover:text-white transition-all text-sm p-1 text-slate-400">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <div id="modal-rich-details" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-white"></div>
-        </div>
-    </div>
-
     <!-- ==================== CONFIGURATION MODAL ==================== -->
     <div id="config-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4">
-        <div class="w-full max-w-lg bg-white rounded-xl shadow-2xl overflow-hidden border border-slate-200">
+        <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
             <div class="h-14 bg-slate-900 text-white px-5 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-plug text-kiot-blue"></i>
@@ -366,13 +353,13 @@
                     <input type="text" id="cfg-api-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full saas-input font-mono text-xs">
                     <p class="text-[11px] text-slate-400 mt-1">Dán đường dẫn Web App URL sau khi Deploy từ Google Sheet.</p>
                 </div>
-                <div class="p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-800 space-y-1">
+                <div class="p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-800 space-y-1">
                     <div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> Tự động nhận diện Đa Sheet & Quét Lỗ Hổng:</div>
                     <p class="text-[11px] leading-relaxed">Hệ thống tự động đồng bộ CSDL tập trung và vẽ ma trận điều hành cho Tình Huống, Bài Tập và Đề Thi.</p>
                 </div>
             </div>
             <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                <button onclick="testAndSaveApiUrl()" id="btn-save-cfg" class="btn-primary text-xs w-full">
+                <button onclick="testAndSaveApiUrl()" id="btn-save-cfg" class="btn-primary text-xs w-full py-2.5">
                     <i class="fa-solid fa-floppy-disk"></i> Lưu & Đồng Bộ Ngay
                 </button>
             </div>
@@ -381,28 +368,27 @@
 
     <!-- ==================== GLOBAL COMMAND PALETTE (CTRL + K) ==================== -->
     <div id="global-search-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 hidden flex items-start justify-center pt-20 p-4" onclick="closeGlobalSearchOnBackdrop(event)">
-        <div class="w-full max-w-2xl bg-white rounded-xl shadow-2xl overflow-hidden border border-slate-200" onclick="event.stopPropagation()">
+        <div class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200" onclick="event.stopPropagation()">
             <div class="p-4 border-b border-slate-200 flex items-center gap-3 bg-slate-50">
                 <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm"></i>
                 <input type="text" id="global-search-input" oninput="handleGlobalSearch(this.value)" placeholder="Tìm nhanh trong toàn bộ các Sheet..." class="flex-1 bg-transparent border-0 text-sm font-medium text-slate-800 focus:outline-none placeholder:text-slate-400">
-                <kbd class="px-2 py-0.5 text-[10px] bg-slate-200 text-slate-600 rounded border border-slate-300 font-mono font-medium">ESC</kbd>
+                <kbd class="px-2 py-0.5 text-[10px] bg-slate-200 text-slate-600 rounded border border-slate-300 font-mono font-bold">ESC</kbd>
             </div>
             <div id="global-search-results" class="max-h-96 overflow-y-auto custom-scrollbar p-2 divide-y divide-slate-100"></div>
-            <div class="p-3 bg-slate-50 border-t border-slate-200 text-[11px] text-slate-400 flex items-center justify-between px-4">
-                <span>Click để mở tài liệu</span>
+            <div class="p-3 bg-slate-50 border-t border-slate-200 text-[11px] text-slate-400 flex items-center justify-between px-4 font-semibold">
+                <span>Click để mở tài nguyên</span>
                 <span id="search-total-counter">0 tài nguyên</span>
             </div>
         </div>
     </div>
 
     <!-- TOAST NOTIFICATION -->
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-2xl font-medium text-sm z-[100000] opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-3">
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-2xl font-medium text-sm z-[100000] opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-3 border border-slate-700">
         <span id="toast-msg"></span>
     </div>
 
     <!-- ==================== JAVASCRIPT MASTER ENGINE ==================== -->
     <script>
-        // --- 1. GLOBAL STATE ---
         const AppState = {
             sheetsData: {},       
             sheetList: [],        
@@ -410,7 +396,7 @@
             currentSubFilter: 'all',      
             currentSecondaryFilter: 'all',
             masterDomainFilter: 'all', 
-            currentFilterGap: null, // Hỗ trợ Smart Deep-Link từ Rada
+            currentFilterGap: null,
             viewMode: 'grid',    
             isSplitOpen: false,
             activeTabId: 'tab-home',
@@ -432,22 +418,6 @@
             }, 3000);
         }
 
-        // --- 2. MULTI-FORMAT EMBED CONVERTER ---
-        function formatGoogleSheetEmbedUrl(url) {
-            if (!url) return '';
-            const trimmed = String(url).trim();
-            if (trimmed.includes('docs.google.com/spreadsheets')) {
-                const idMatch = trimmed.match(/\/d\/([a-zA-Z0-9-_]+)/);
-                if (idMatch) {
-                    const id = idMatch[1];
-                    const gidMatch = trimmed.match(/gid=([0-9]+)/);
-                    const gidParam = gidMatch ? `&gid=${gidMatch[1]}` : '';
-                    return `https://docs.google.com/spreadsheets/d/${id}/htmlembed?widget=true${gidParam}`;
-                }
-            }
-            return trimmed;
-        }
-
         function extractYouTubeId(url) {
             if (!url) return null;
             const str = String(url).trim();
@@ -463,33 +433,30 @@
                 return `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`;
             }
             if (trimmed.includes('docs.google.com/spreadsheets')) {
-                return formatGoogleSheetEmbedUrl(trimmed);
+                const idMatch = trimmed.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (idMatch) {
+                    const id = idMatch[1];
+                    const gidMatch = trimmed.match(/gid=([0-9]+)/);
+                    const gidParam = gidMatch ? `&gid=${gidMatch[1]}` : '';
+                    return `https://docs.google.com/spreadsheets/d/${id}/htmlembed?widget=true${gidParam}`;
+                }
             }
             return trimmed;
         }
 
-        // --- 3. LỌC BỎ DÒNG TIÊU ĐỀ RÁC TRONG DỮ LIỆU ---
+        // LỌC RÁC TIÊU ĐỀ & CÁC CỘT RỖNG TRONG MASTERDATA E-LEARNING
         function isGarbageRow(item) {
             if (!item) return true;
             const values = Object.values(item).map(v => String(v).trim().toLowerCase());
-            
             if (values.every(v => v === '')) return true;
 
-            const dayVal = String(item['Day'] || '').trim().toLowerCase();
-            const typeVal = String(item['Type'] || '').trim().toLowerCase();
-            const titleVal = String(item['Title'] || '').trim().toLowerCase();
-            const nganhVal = String(item['NganhHang'] || '').trim().toLowerCase();
-            const maVal = String(item['Mã'] || '').trim().toLowerCase();
-
-            if (dayVal === 'day' && typeVal === 'type') return true;
-            if (titleVal === 'title' && String(item['Question'] || '').trim().toLowerCase() === 'question') return true;
-            if (nganhVal === 'nganhhang' && String(item['MaBuoi'] || '').trim().toLowerCase() === 'mabuoi') return true;
-            if (maVal === 'mã' || maVal === 'ma') return true;
+            const contentVal = String(item['Nội dung'] || item['Title'] || '').trim().toLowerCase();
+            const courseVal = String(item['Khóa học'] || item['Khóa'] || '').trim().toLowerCase();
+            if (contentVal === 'nội dung' || courseVal === 'khóa học') return true;
 
             return false;
         }
 
-        // --- 4. INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             setupKeyboardShortcuts();
             setupSplitResizer();
@@ -533,7 +500,6 @@
             renderMasterDashboard();
         }
 
-        // --- 5. DATASET & SIDEBAR ---
         function applyDataset(data) {
             AppState.sheetsData = data.sheets || {};
             AppState.sheetList = data.sheetList || Object.keys(data.sheets || {});
@@ -581,12 +547,10 @@
 
         function getSheetIcon(name) {
             const n = name.toLowerCase();
-            if (n.includes('app') || n.includes('link')) return 'fa-cube';
             if (n.includes('elearning') || n.includes('masterdata')) return 'fa-graduation-cap';
-            if (n.includes('mcq') || n.includes('trắc nghiệm')) return 'fa-list-check';
-            if (n.includes('tình huống') || n.includes('tái ký')) return 'fa-comments-dollar';
-            if (n.includes('bài tập') || n.includes('exercise')) return 'fa-tasks';
-            if (n.includes('video')) return 'fa-video';
+            if (n.includes('mcq') || n.includes('đề thi')) return 'fa-list-check';
+            if (n.includes('tình huống')) return 'fa-comments-dollar';
+            if (n.includes('bài tập')) return 'fa-tasks';
             return 'fa-table';
         }
 
@@ -611,13 +575,12 @@
             activateTab(catalogTabId);
         }
 
-        // --- 6. TAB BAR SYSTEM ---
         function renderTabs() {
             const bar = document.getElementById('workspace-tab-bar');
             let html = `
                 <div onclick="activateTab('tab-home')" id="tab-home" class="workspace-tab ${AppState.activeTabId === 'tab-home' ? 'active' : ''} h-9 px-3.5 rounded-t-lg bg-white flex items-center gap-2 text-xs text-slate-700 cursor-pointer border-t border-x border-slate-300 flex-shrink-0">
                     <i class="fa-solid fa-gauge-high text-kiot-blue text-[11px]"></i>
-                    <span class="font-semibold">Trang Quản Trị</span>
+                    <span class="font-bold">Trang Quản Trị</span>
                 </div>
             `;
 
@@ -699,7 +662,7 @@
                         </div>
                     </div>
                     <div class="flex-1 w-full h-[calc(100%-44px)] bg-white relative">
-                        <iframe src="${escapeHtml(currentTab.url)}" class="w-full h-full border-0" allowfullscreen></iframe>
+                        <iframe src="${escapeHtml(currentTab.url)}" class="w-full h-full border-0" allowfullscreen sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
                     </div>
                 `;
             }
@@ -712,26 +675,6 @@
                 AppState.activeTabId = AppState.openTabs.length > 0 ? AppState.openTabs[AppState.openTabs.length - 1].id : 'tab-home';
             }
             activateTab(AppState.activeTabId);
-        }
-
-        function openResource(url, title, sourceSheet) {
-            const tabId = 'tab-doc-' + Math.random().toString(36).substr(2, 8);
-            AppState.openTabs.push({
-                id: tabId,
-                title: title,
-                type: 'document',
-                sheetName: sourceSheet || AppState.currentSheet,
-                url: url
-            });
-            activateTab(tabId);
-        }
-
-        function goBackToCatalog(sheetName) {
-            if (sheetName) {
-                selectSheet(sheetName);
-            } else {
-                activateTab('tab-home');
-            }
         }
 
         function updateSidebarHighlight(sheetName) {
@@ -751,7 +694,7 @@
             }
         }
 
-        // --- 7. MASTER EXECUTIVE DASHBOARD (ĐÃ SỬA TOÀN DIỆN LOGIC SỐ LIỆU) ---
+        // ==================== DASHBOARD TỔNG QUAN & RADA TIẾN ĐỘ ====================
         function matchDomain(courseOrBranch) {
             if (AppState.masterDomainFilter === 'all') return true;
             return String(courseOrBranch || '').toLowerCase().includes(AppState.masterDomainFilter.toLowerCase());
@@ -776,11 +719,9 @@
             document.getElementById('empty-state').classList.add('hidden');
 
             let totalElearning = 0, elearningWithVideo = 0, elearningWithQuiz = 0;
-            let totalMcqRows = 0, mcqWithLink = 0;
-            let missingVideoList = [], missingQuizList = [], unlinkedMcqList = [];
+            let missingVideoList = [], missingQuizList = [];
             const courseMatrix = {};
 
-            // 1. Duyệt dữ liệu E-Learning (Chỉ khởi tạo khóa học từ Sheet E-Learning)
             Object.keys(AppState.sheetsData).forEach(sName => {
                 const sheet = AppState.sheetsData[sName];
                 if (!sheet || !sheet.items) return;
@@ -795,7 +736,7 @@
                     if (!matchDomain(course)) return;
 
                     if (!courseMatrix[course]) {
-                        courseMatrix[course] = { course, total: 0, video: 0, quiz: 0, mcqLinked: false, mcqCode: '' };
+                        courseMatrix[course] = { course, total: 0, video: 0, quiz: 0 };
                     }
 
                     totalElearning++;
@@ -820,50 +761,10 @@
                 });
             });
 
-            // 2. Duyệt dữ liệu MCQ & Fuzzy Mapping sang Khóa học
-            Object.keys(AppState.sheetsData).forEach(sName => {
-                const sheet = AppState.sheetsData[sName];
-                if (!sheet || !sheet.items) return;
-
-                const isMcq = sName.toLowerCase().includes('mcq') || (sheet.headers && sheet.headers.some(h => h.toLowerCase().includes('mã bộ đề')));
-                if (!isMcq) return;
-
-                const cleanItems = sheet.items.filter(item => !isGarbageRow(item));
-
-                cleanItems.forEach(item => {
-                    const mcqCourse = (item['Khóa học'] || item['Khóa'] || item['NganhHang'] || '').trim();
-                    if (!matchDomain(mcqCourse)) return;
-
-                    totalMcqRows++;
-
-                    let linkVal = '';
-                    for (let k of Object.keys(item)) {
-                        if (String(item[k]).trim().startsWith('http')) { linkVal = String(item[k]).trim(); break; }
-                    }
-                    const codeTitle = item['Mã bộ đề / Tên file ngân hàng câu hỏi'] || item['Tên bộ đề'] || 'Bộ đề';
-
-                    if (linkVal) {
-                        mcqWithLink++;
-                        // Ánh xạ linh hoạt: Đề thi khớp với các phân hệ khóa học tương ứng
-                        Object.keys(courseMatrix).forEach(cName => {
-                            const cLower = cName.toLowerCase();
-                            const mLower = mcqCourse.toLowerCase();
-                            if ((mLower && (cLower.includes(mLower) || mLower.includes(cLower))) || mcqCourse === '') {
-                                courseMatrix[cName].mcqLinked = true;
-                                courseMatrix[cName].mcqCode = codeTitle;
-                            }
-                        });
-                    } else {
-                        unlinkedMcqList.push({ code: codeTitle, course: mcqCourse || 'Chưa phân ngành', sheetName: sName });
-                    }
-                });
-            });
-
             const videoPct = totalElearning ? Math.round((elearningWithVideo / totalElearning) * 100) : 0;
             const quizPct = totalElearning ? Math.round((elearningWithQuiz / totalElearning) * 100) : 0;
-            const mcqPct = totalMcqRows ? Math.round((mcqWithLink / totalMcqRows) * 100) : 0;
-            const overallHealth = (totalElearning || totalMcqRows) ? Math.round((videoPct * 0.4) + (quizPct * 0.3) + (mcqPct * 0.3)) : 0;
-            const totalGaps = unlinkedMcqList.length + missingVideoList.length + missingQuizList.length;
+            const overallHealth = totalElearning ? Math.round((videoPct * 0.5) + (quizPct * 0.5)) : 0;
+            const totalGaps = missingVideoList.length + missingQuizList.length;
 
             const dash = document.getElementById('master-dashboard-view');
             dash.innerHTML = `
@@ -874,31 +775,28 @@
                             <i class="fa-solid fa-sliders"></i>
                         </div>
                         <div>
-                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Bộ Lọc Master Toàn Cục</h3>
-                            <p class="text-[11px] text-slate-400">Kiểm soát tiến độ số hóa theo từng ngành hàng & lỗ hổng tài nguyên</p>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Bộ Lọc Phân Hệ Ngành Hàng</h3>
+                            <p class="text-[11px] text-slate-400">Kiểm soát tiến độ số hóa bài học theo từng phân hệ</p>
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="text-[11px] text-slate-400 font-semibold uppercase mr-1">Ngành:</span>
-                        <div class="flex items-center gap-1">
-                            ${['all', 'Retail', 'FNB', 'Salon', 'Hotel', 'Kế toán'].map(d => `
-                                <button onclick="setMasterDomainFilter('${d}')" class="px-2.5 py-1 rounded-md text-[11px] font-bold ${AppState.masterDomainFilter === d ? 'bg-kiot-blue text-white shadow-sm' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'} transition-all">
-                                    ${d === 'all' ? 'Tất cả ngành' : d}
-                                </button>
-                            `).join('')}
-                        </div>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        ${['all', 'Retail', 'FNB', 'Salon', 'Hotel', 'Kế toán'].map(d => `
+                            <button onclick="setMasterDomainFilter('${d}')" class="px-3 py-1 rounded-lg text-xs font-bold ${AppState.masterDomainFilter === d ? 'bg-kiot-blue text-white shadow-sm' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'} transition-all">
+                                ${d === 'all' ? 'Tất cả ngành' : d}
+                            </button>
+                        `).join('')}
                     </div>
                 </div>
 
-                <!-- 2. KPI METRICS (ĐỒNG BỘ 100% THEO NGÀNH ĐƯỢC CHỌN) -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- 2. KPI METRICS -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div class="saas-card p-5 border-l-4 border-l-emerald-500">
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-bold text-slate-500 uppercase">Sức Khỏe Hệ Thống</span>
-                            <span class="text-xs px-2 py-0.5 rounded-full font-bold ${overallHealth >= 80 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}">${overallHealth}% Chuẩn</span>
+                            <span class="text-xs font-bold text-slate-500 uppercase">Mức Độ Sẵn Sàng</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full font-bold ${overallHealth >= 80 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}">${overallHealth}% Hoàn Thiện</span>
                         </div>
-                        <div class="text-2xl font-extrabold text-slate-900 mb-2">${overallHealth}<span class="text-sm font-normal text-slate-400">/100</span></div>
+                        <div class="text-2xl font-black text-slate-900 mb-2">${overallHealth}<span class="text-sm font-normal text-slate-400">/100</span></div>
                         <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                             <div class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: ${overallHealth}%"></div>
                         </div>
@@ -909,7 +807,7 @@
                             <span class="text-xs font-bold text-slate-500 uppercase">Tỷ Lệ Phủ Video</span>
                             <i class="fa-brands fa-youtube text-rose-500 text-base"></i>
                         </div>
-                        <div class="text-2xl font-extrabold text-slate-900 mb-2">${videoPct}% <span class="text-xs font-normal text-slate-400">(${elearningWithVideo}/${totalElearning})</span></div>
+                        <div class="text-2xl font-black text-slate-900 mb-2">${videoPct}% <span class="text-xs font-normal text-slate-400">(${elearningWithVideo}/${totalElearning})</span></div>
                         <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                             <div class="bg-rose-500 h-2 rounded-full transition-all duration-500" style="width: ${videoPct}%"></div>
                         </div>
@@ -920,143 +818,91 @@
                             <span class="text-xs font-bold text-slate-500 uppercase">Tỷ Lệ Phủ Quiz</span>
                             <i class="fa-solid fa-circle-question text-indigo-500 text-base"></i>
                         </div>
-                        <div class="text-2xl font-extrabold text-slate-900 mb-2">${quizPct}% <span class="text-xs font-normal text-slate-400">(${elearningWithQuiz}/${totalElearning})</span></div>
+                        <div class="text-2xl font-black text-slate-900 mb-2">${quizPct}% <span class="text-xs font-normal text-slate-400">(${elearningWithQuiz}/${totalElearning})</span></div>
                         <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                             <div class="bg-indigo-500 h-2 rounded-full transition-all duration-500" style="width: ${quizPct}%"></div>
                         </div>
                     </div>
-
-                    <div class="saas-card p-5 border-l-4 border-l-purple-500">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-bold text-slate-500 uppercase">Bộ Đề Đã Gán Link</span>
-                            <i class="fa-solid fa-file-excel text-purple-500 text-base"></i>
-                        </div>
-                        <div class="text-2xl font-extrabold text-slate-900 mb-2">${mcqPct}% <span class="text-xs font-normal text-slate-400">(${mcqWithLink}/${totalMcqRows})</span></div>
-                        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                            <div class="bg-purple-500 h-2 rounded-full transition-all duration-500" style="width: ${mcqPct}%"></div>
-                        </div>
-                    </div>
                 </div>
 
-                <!-- 3. RADA LỖ HỔNG (ĐỒNG BỘ 100% THEO NGÀNH) -->
+                <!-- 3. RADA LỖ HỔNG -->
                 <div class="saas-card p-5 border-l-4 border-l-amber-500">
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
                             <i class="fa-solid fa-triangle-exclamation text-amber-500 text-base"></i>
-                            <h3 class="text-sm font-bold text-slate-900">Rada Cảnh Báo: Hạng Mục Cần Bổ Sung</h3>
+                            <h3 class="text-sm font-bold text-slate-900">Rada Cảnh Báo: Hạng Mục Cần Quay Video / Bổ Sung Quiz</h3>
                         </div>
                         <span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                            Cần xử lý: ${totalGaps} hạng mục ${AppState.masterDomainFilter !== 'all' ? `(${AppState.masterDomainFilter})` : ''}
+                            Cần xử lý: ${totalGaps} bài học
                         </span>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div class="p-3.5 rounded-lg bg-rose-50/70 border border-rose-200 flex flex-col justify-between">
-                            <div>
-                                <div class="flex items-center gap-2 text-rose-700 font-bold text-xs mb-1">
-                                    <i class="fa-solid fa-circle-xmark"></i> ${unlinkedMcqList.length} Đề thi chưa gán Link Sheet
-                                </div>
-                                <p class="text-[11px] text-slate-600 leading-relaxed mb-3">
-                                    ${unlinkedMcqList.slice(0, 3).map(x => `<span class="inline-block bg-white px-1.5 py-0.5 rounded border border-rose-200 font-mono text-[10px] mr-1 mb-1 font-bold text-rose-600">${escapeHtml(x.code)}</span>`).join('')}
-                                    ${unlinkedMcqList.length > 3 ? `<span class="text-[10px] text-slate-500">+${unlinkedMcqList.length - 3} đề khác...</span>` : ''}
-                                </p>
-                            </div>
-                            <button onclick="navigateToGap('mcq')" class="w-full py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded text-xs font-semibold transition-all flex items-center justify-center gap-1 shadow-sm">
-                                <i class="fa-solid fa-arrow-right"></i> Mở Bảng MCQ Để Bổ Sung
-                            </button>
-                        </div>
-
-                        <div class="p-3.5 rounded-lg bg-amber-50/70 border border-amber-200 flex flex-col justify-between">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 flex flex-col justify-between">
                             <div>
                                 <div class="flex items-center gap-2 text-amber-800 font-bold text-xs mb-1">
                                     <i class="fa-brands fa-youtube text-rose-500"></i> ${missingVideoList.length} Bài E-Learning thiếu Video
                                 </div>
                                 <p class="text-[11px] text-slate-600 leading-relaxed mb-3">Các bài học này chưa có link YouTube minh họa.</p>
                             </div>
-                            <button onclick="navigateToGap('video')" class="w-full py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-semibold transition-all flex items-center justify-center gap-1 shadow-sm">
+                            <button onclick="navigateToGap('video')" class="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-sm">
                                 <i class="fa-solid fa-arrow-right"></i> Xem Danh Sách Thiếu Video
                             </button>
                         </div>
 
-                        <div class="p-3.5 rounded-lg bg-indigo-50/70 border border-indigo-200 flex flex-col justify-between">
+                        <div class="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200 flex flex-col justify-between">
                             <div>
                                 <div class="flex items-center gap-2 text-indigo-800 font-bold text-xs mb-1">
                                     <i class="fa-solid fa-circle-question text-indigo-500"></i> ${missingQuizList.length} Bài E-Learning thiếu Quiz
                                 </div>
-                                <p class="text-[11px] text-slate-600 leading-relaxed mb-3">Chưa có link GitHub Quiz để học viên làm bài test.</p>
+                                <p class="text-[11px] text-slate-600 leading-relaxed mb-3">Chưa có link GitHub Quiz để học viên làm bài test thực hành.</p>
                             </div>
-                            <button onclick="navigateToGap('quiz')" class="w-full py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold transition-all flex items-center justify-center gap-1 shadow-sm">
+                            <button onclick="navigateToGap('quiz')" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-sm">
                                 <i class="fa-solid fa-arrow-right"></i> Xem Danh Sách Thiếu Quiz
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- 4. MA TRẬN TIẾN ĐỘ & BACKLOG -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2 saas-card p-5">
-                        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-                            <div>
-                                <h3 class="text-sm font-bold text-slate-900">Ma Trận Tiến Độ Số Hóa Khóa Học</h3>
-                                <p class="text-[11px] text-slate-400">Đo lường mức độ sẵn sàng đào tạo của từng phân hệ</p>
-                            </div>
-                            <span class="text-xs font-bold text-slate-500 font-mono">${Object.keys(courseMatrix).length} Khóa</span>
+                <!-- 4. MA TRẬN TIẾN ĐỘ -->
+                <div class="saas-card p-5">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900">Ma Trận Tiến Độ Số Hóa Khóa Học</h3>
+                            <p class="text-[11px] text-slate-400">Đo lường mức độ sẵn sàng đào tạo của từng phân hệ</p>
                         </div>
-
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs text-slate-600">
-                                <thead>
-                                    <tr class="bg-slate-50 text-[11px] uppercase text-slate-500 font-semibold border-b border-slate-200">
-                                        <th class="px-3 py-2.5">Phân Hệ Khóa Học</th>
-                                        <th class="px-3 py-2.5 text-center">Tổng Bài</th>
-                                        <th class="px-3 py-2.5 text-center">Video HDSD</th>
-                                        <th class="px-3 py-2.5 text-center">Quiz Đánh Giá</th>
-                                        <th class="px-3 py-2.5 text-center">Sheet Đề Thi</th>
-                                        <th class="px-3 py-2.5 text-right">Mức Sẵn Sàng</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100 font-medium">
-                                    ${renderCourseMatrixRows(courseMatrix)}
-                                </tbody>
-                            </table>
-                        </div>
+                        <span class="text-xs font-bold text-slate-500 font-mono">${Object.keys(courseMatrix).length} Phân Hệ</span>
                     </div>
 
-                    <div class="saas-card p-5 flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-                                <div>
-                                    <h3 class="text-sm font-bold text-slate-900">Backlog Công Việc Trainer</h3>
-                                    <p class="text-[11px] text-slate-400">Ghi chú & việc cần làm</p>
-                                </div>
-                                <button onclick="addNewBacklogPrompt()" class="px-2 py-1 bg-blue-50 text-kiot-blue hover:bg-blue-100 rounded text-xs font-bold">
-                                    <i class="fa-solid fa-plus"></i> Thêm việc
-                                </button>
-                            </div>
-
-                            <div id="backlog-checklist-container" class="space-y-2 max-h-72 overflow-y-auto custom-scrollbar"></div>
-                        </div>
-
-                        <div class="pt-3 border-t border-slate-100 mt-4 text-[11px] text-slate-400 flex items-center justify-between">
-                            <span><i class="fa-solid fa-clock-rotate-left mr-1"></i>Đồng bộ gần nhất:</span>
-                            <span class="font-mono text-slate-600 font-bold" id="dash-last-sync">${localStorage.getItem('kv_doc_hub_last_sync') || 'Chưa đồng bộ'}</span>
-                        </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead>
+                                <tr class="bg-slate-50 text-[11px] uppercase text-slate-500 font-bold border-b border-slate-200">
+                                    <th class="px-4 py-3">Phân Hệ Khóa Học</th>
+                                    <th class="px-4 py-3 text-center">Tổng Số Bài</th>
+                                    <th class="px-4 py-3 text-center">Video HDSD</th>
+                                    <th class="px-4 py-3 text-center">Quiz Thực Hành</th>
+                                    <th class="px-4 py-3 text-right">Mức Sẵn Sàng</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 font-medium">
+                                ${renderCourseMatrixRows(courseMatrix)}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             `;
-
-            renderBacklogTasks();
         }
 
         function renderCourseMatrixRows(matrix) {
             const keys = Object.keys(matrix);
-            if (keys.length === 0) return `<tr><td colspan="6" class="p-6 text-center text-slate-400 italic">Không tìm thấy phân hệ đào tạo phù hợp</td></tr>`;
+            if (keys.length === 0) return `<tr><td colspan="5" class="p-6 text-center text-slate-400 italic">Không tìm thấy phân hệ đào tạo phù hợp</td></tr>`;
 
             return keys.map(k => {
                 const c = matrix[k];
                 const vidRatio = c.total ? Math.round((c.video / c.total) * 100) : 0;
                 const qzRatio = c.total ? Math.round((c.quiz / c.total) * 100) : 0;
-                const score = Math.round((vidRatio * 0.45) + (qzRatio * 0.35) + (c.mcqLinked ? 20 : 0));
+                const score = Math.round((vidRatio * 0.5) + (qzRatio * 0.5));
 
                 let badgeColor = 'bg-rose-50 text-rose-700 border-rose-200';
                 if (score >= 80) badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
@@ -1064,33 +910,24 @@
 
                 return `
                     <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-3 py-3 font-bold text-slate-800 flex items-center gap-1.5">
+                        <td class="px-4 py-3.5 font-bold text-slate-800 flex items-center gap-2">
                             <i class="fa-solid fa-book-bookmark text-kiot-blue text-xs"></i> ${escapeHtml(c.course)}
                         </td>
-                        <td class="px-3 py-3 text-center font-mono font-bold text-slate-700">${c.total} bài</td>
-                        <td class="px-3 py-3 text-center">
-                            <span class="font-mono text-[11px]">${c.video}/${c.total}</span>
+                        <td class="px-4 py-3.5 text-center font-mono font-bold text-slate-700">${c.total} bài</td>
+                        <td class="px-4 py-3.5 text-center">
+                            <span class="font-mono text-[11px] font-bold">${c.video}/${c.total}</span>
                             <div class="w-16 bg-slate-100 rounded-full h-1.5 mx-auto mt-1 overflow-hidden">
                                 <div class="bg-rose-500 h-1.5 rounded-full" style="width: ${vidRatio}%"></div>
                             </div>
                         </td>
-                        <td class="px-3 py-3 text-center">
-                            <span class="font-mono text-[11px]">${c.quiz}/${c.total}</span>
+                        <td class="px-4 py-3.5 text-center">
+                            <span class="font-mono text-[11px] font-bold">${c.quiz}/${c.total}</span>
                             <div class="w-16 bg-slate-100 rounded-full h-1.5 mx-auto mt-1 overflow-hidden">
                                 <div class="bg-indigo-500 h-1.5 rounded-full" style="width: ${qzRatio}%"></div>
                             </div>
                         </td>
-                        <td class="px-3 py-3 text-center">
-                            ${c.mcqLinked ? `
-                                <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-50 text-emerald-700 border border-emerald-200" title="${escapeHtml(c.mcqCode)}">
-                                    <i class="fa-solid fa-check"></i> Đã có Sheet
-                                </span>` : `
-                                <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-400 border border-slate-200">
-                                    Thiếu Sheet
-                                </span>`}
-                        </td>
-                        <td class="px-3 py-3 text-right">
-                            <span class="px-2 py-1 text-xs font-extrabold rounded-md border ${badgeColor}">
+                        <td class="px-4 py-3.5 text-right">
+                            <span class="px-2.5 py-1 text-xs font-black rounded-lg border ${badgeColor}">
                                 ${score}%
                             </span>
                         </td>
@@ -1104,16 +941,10 @@
             renderMasterDashboard();
         }
 
-        // SMART DEEP-LINK TỪ RADA: TỰ ĐỘNG CHUYỂN SHEET VÀ BẬT BỘ LỌC LỖ HỔNG
         function navigateToGap(gapType) {
             AppState.currentFilterGap = gapType;
-            if (gapType === 'mcq') {
-                const mcqSheet = AppState.sheetList.find(s => s.toLowerCase().includes('mcq'));
-                if (mcqSheet) selectSheet(mcqSheet);
-            } else if (gapType === 'video' || gapType === 'quiz') {
-                const elearningSheet = AppState.sheetList.find(s => s.toLowerCase().includes('elearning') || s.toLowerCase().includes('masterdata'));
-                if (elearningSheet) selectSheet(elearningSheet);
-            }
+            const elearningSheet = AppState.sheetList.find(s => s.toLowerCase().includes('elearning') || s.toLowerCase().includes('masterdata'));
+            if (elearningSheet) selectSheet(elearningSheet);
         }
 
         function clearFilterGap() {
@@ -1122,69 +953,7 @@
             renderItems();
         }
 
-        // --- BACKLOG TO-DO LOGIC ---
-        function getBacklogTasks() {
-            const raw = localStorage.getItem('kv_doc_hub_backlog');
-            if (raw) {
-                try { return JSON.parse(raw); } catch (e) { return []; }
-            }
-            return [
-                { id: 1, text: 'Gán link Google Sheet cho các đề thi chưa kết nối', done: false },
-                { id: 2, text: 'Quay bổ sung Video cho các bài Retail 02 còn thiếu', done: false },
-                { id: 3, text: 'Soạn bộ câu hỏi trắc nghiệm cập nhật đợt tháng mới', done: true }
-            ];
-        }
-
-        function saveBacklogTasks(tasks) {
-            localStorage.setItem('kv_doc_hub_backlog', JSON.stringify(tasks));
-            renderBacklogTasks();
-        }
-
-        function renderBacklogTasks() {
-            const container = document.getElementById('backlog-checklist-container');
-            if (!container) return;
-            const tasks = getBacklogTasks();
-
-            if (tasks.length === 0) {
-                container.innerHTML = `<div class="p-4 text-center text-xs text-slate-400 italic">Chưa có công việc tồn đọng</div>`;
-                return;
-            }
-
-            container.innerHTML = tasks.map(t => `
-                <div class="p-2 rounded-lg border border-slate-200/80 bg-slate-50/70 hover:bg-slate-100 flex items-start justify-between gap-2 text-xs transition-colors">
-                    <label class="flex items-start gap-2 cursor-pointer select-none flex-1 min-w-0">
-                        <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleBacklogTask(${t.id})" class="mt-0.5 rounded text-kiot-blue focus:ring-0">
-                        <span class="${t.done ? 'line-through text-slate-400' : 'text-slate-700 font-medium'} truncate">${escapeHtml(t.text)}</span>
-                    </label>
-                    <button onclick="deleteBacklogTask(${t.id})" class="text-slate-300 hover:text-red-500 p-1" title="Xóa">
-                        <i class="fa-solid fa-trash text-[10px]"></i>
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        function toggleBacklogTask(id) {
-            const tasks = getBacklogTasks();
-            const found = tasks.find(t => t.id === id);
-            if (found) found.done = !found.done;
-            saveBacklogTasks(tasks);
-        }
-
-        function deleteBacklogTask(id) {
-            const tasks = getBacklogTasks().filter(t => t.id !== id);
-            saveBacklogTasks(tasks);
-        }
-
-        function addNewBacklogPrompt() {
-            const text = prompt('Nhập nội dung công việc / backlog cần theo dõi:');
-            if (text && text.trim()) {
-                const tasks = getBacklogTasks();
-                tasks.unshift({ id: Date.now(), text: text.trim(), done: false });
-                saveBacklogTasks(tasks);
-            }
-        }
-
-        // --- 8. SUB-FILTER LOGIC (CÓ BANNER BÁO LỖ HỔNG THÔNG MINH) ---
+        // ==================== SUB-FILTERS & CONTENT RENDERER ====================
         function renderDynamicSubFilters(sheetName) {
             const bar = document.getElementById('sub-filter-bar');
             bar.classList.remove('hidden');
@@ -1195,19 +964,12 @@
             }
 
             const cleanItems = sheetMeta.items.filter(item => !isGarbageRow(item));
-            const isCaseSheet = sheetName.toLowerCase().includes('tình huống') || sheetName.toLowerCase().includes('tái ký');
-            const isExerciseSheet = sheetName.toLowerCase().includes('exercise') || sheetName.toLowerCase().includes('bài tập');
-            const isELearningSheet = sheetName.toLowerCase().includes('elearning') || sheetName.toLowerCase().includes('masterdata');
+            const courses = [...new Set(cleanItems.map(i => (i['Khóa học'] || i['Khóa'] || 'Chung').trim()))].filter(Boolean);
 
             let html = '';
 
-            // Nếu đang trong chế độ lọc lỗ hổng từ Rada
             if (AppState.currentFilterGap) {
-                let gapLabel = '';
-                if (AppState.currentFilterGap === 'video') gapLabel = 'Các bài E-Learning thiếu Video';
-                if (AppState.currentFilterGap === 'quiz') gapLabel = 'Các bài E-Learning thiếu Quiz';
-                if (AppState.currentFilterGap === 'mcq') gapLabel = 'Các Đề thi MCQ chưa gán link Sheet';
-
+                let gapLabel = AppState.currentFilterGap === 'video' ? 'Các bài thiếu Video' : 'Các bài thiếu Quiz';
                 html += `
                     <div class="flex items-center gap-2 mr-3 px-3 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold flex-shrink-0 animate-pulse">
                         <i class="fa-solid fa-filter-circle-xmark text-amber-600"></i>
@@ -1217,113 +979,16 @@
                 `;
             }
 
-            if (isCaseSheet) {
-                const roadmaps = [...new Set(cleanItems.map(i => (i['Roadmap'] || 'Chung').trim()))].filter(Boolean);
-                const days = [...new Set(cleanItems.map(i => (i['Day'] || '').trim()))].filter(Boolean);
+            html += `<span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Khóa học:</span>`;
+            html += `<button onclick="applySubFilter('all')" class="px-3 py-1 rounded-lg text-xs font-bold ${AppState.currentSubFilter === 'all' ? 'bg-kiot-blue text-white shadow-sm' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">Tất cả (${cleanItems.length})</button>`;
 
-                html += `<div class="flex items-center gap-1 mr-3 border-r border-slate-300 pr-3 flex-shrink-0">
-                    <span class="text-[11px] font-bold text-slate-500 uppercase"><i class="fa-solid fa-filter mr-1"></i>Lộ trình:</span>
-                    <select onchange="applySecondaryFilter(this.value)" class="text-xs bg-white border border-slate-300 rounded px-2 py-0.5 font-semibold text-slate-700 outline-none">
-                        <option value="all">Tất cả các Day</option>
-                        ${days.map(d => `<option value="${d}" ${AppState.currentSecondaryFilter === d ? 'selected' : ''}>${d.toUpperCase()}</option>`).join('')}
-                    </select>
-                </div>`;
-
-                html += `<span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">Ngành:</span>`;
-                html += `<button onclick="applySubFilter('all')" class="px-3 py-1 rounded-full text-xs font-medium ${AppState.currentSubFilter === 'all' ? 'bg-kiot-blue text-white shadow-sm font-semibold' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">Tất cả (${cleanItems.length})</button>`;
-
-                roadmaps.forEach(rm => {
-                    const count = cleanItems.filter(i => (i['Roadmap'] || '').trim() === rm).length;
-                    const isActive = (AppState.currentSubFilter === rm);
-                    html += `<button onclick="applySubFilter('${escapeHtml(rm)}')" class="px-3 py-1 rounded-full text-xs font-medium ${isActive ? 'bg-kiot-blue text-white shadow-sm font-semibold' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">${escapeHtml(rm)} (${count})</button>`;
-                });
-
-                bar.innerHTML = html;
-                return;
-            }
-
-            if (isExerciseSheet) {
-                const branches = [...new Set(cleanItems.map(i => (i['NganhHang'] || 'Chung').trim()))].filter(Boolean);
-                const sessions = [...new Set(cleanItems.map(i => (i['TenBuoi'] || i['MaBuoi'] || '').trim()))].filter(Boolean);
-
-                html += `<div class="flex items-center gap-1 mr-3 border-r border-slate-300 pr-3 flex-shrink-0">
-                    <span class="text-[11px] font-bold text-slate-500 uppercase"><i class="fa-solid fa-calendar-day mr-1"></i>Buổi:</span>
-                    <select onchange="applySecondaryFilter(this.value)" class="text-xs bg-white border border-slate-300 rounded px-2 py-0.5 font-semibold text-slate-700 outline-none max-w-[200px] truncate">
-                        <option value="all">Tất cả các buổi</option>
-                        ${sessions.map(s => `<option value="${s}" ${AppState.currentSecondaryFilter === s ? 'selected' : ''}>${s}</option>`).join('')}
-                    </select>
-                </div>`;
-
-                html += `<span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">Ngành:</span>`;
-                html += `<button onclick="applySubFilter('all')" class="px-3 py-1 rounded-full text-xs font-medium ${AppState.currentSubFilter === 'all' ? 'bg-kiot-blue text-white shadow-sm font-semibold' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">Tất cả (${cleanItems.length})</button>`;
-
-                branches.forEach(br => {
-                    const count = cleanItems.filter(i => (i['NganhHang'] || '').trim() === br).length;
-                    const isActive = (AppState.currentSubFilter === br);
-                    html += `<button onclick="applySubFilter('${escapeHtml(br)}')" class="px-3 py-1 rounded-full text-xs font-medium ${isActive ? 'bg-kiot-blue text-white shadow-sm font-semibold' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">${escapeHtml(br)} (${count})</button>`;
-                });
-
-                bar.innerHTML = html;
-                return;
-            }
-
-            if (isELearningSheet) {
-                const courses = [...new Set(cleanItems.map(i => (i['Khóa học'] || i['Khóa'] || i['NganhHang'] || 'Chung').trim()))].filter(Boolean);
-                const sessions = [...new Set(cleanItems.map(i => (i['Buổi'] || i['Bài'] || i['MaBuoi'] || '').trim()))].filter(Boolean);
-
-                if (sessions.length > 0) {
-                    html += `<div class="flex items-center gap-1 mr-3 border-r border-slate-300 pr-3 flex-shrink-0">
-                        <span class="text-[11px] font-bold text-slate-500 uppercase"><i class="fa-solid fa-layer-group mr-1"></i>Buổi:</span>
-                        <select onchange="applySecondaryFilter(this.value)" class="text-xs bg-white border border-slate-300 rounded px-2 py-0.5 font-semibold text-slate-700 outline-none max-w-[180px] truncate">
-                            <option value="all">Tất cả buổi học</option>
-                            ${sessions.map(s => `<option value="${s}" ${AppState.currentSecondaryFilter === s ? 'selected' : ''}>${s}</option>`).join('')}
-                        </select>
-                    </div>`;
-                }
-
-                html += `<span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">Khóa học:</span>`;
-                html += `<button onclick="applySubFilter('all')" class="px-3 py-1 rounded-full text-xs font-medium ${AppState.currentSubFilter === 'all' ? 'bg-kiot-blue text-white shadow-sm font-semibold' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">Tất cả (${cleanItems.length})</button>`;
-
-                courses.forEach(c => {
-                    const count = cleanItems.filter(i => (i['Khóa học'] || i['Khóa'] || i['NganhHang'] || '').trim() === c).length;
-                    const isActive = (AppState.currentSubFilter === c);
-                    html += `<button onclick="applySubFilter('${escapeHtml(c)}')" class="px-3 py-1 rounded-full text-xs font-medium ${isActive ? 'bg-kiot-blue text-white shadow-sm font-semibold' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">${escapeHtml(c)} (${count})</button>`;
-                });
-
-                bar.innerHTML = html;
-                return;
-            }
-
-            const groupCol = detectGroupingColumn(sheetMeta.headers);
-            const courseCounts = {};
-            let totalCount = 0;
-
-            cleanItems.forEach(item => {
-                totalCount++;
-                const val = (item[groupCol] || 'Chung').trim();
-                courseCounts[val] = (courseCounts[val] || 0) + 1;
-            });
-
-            html += `<span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">Khóa:</span>`;
-            html += `<button onclick="applySubFilter('all')" class="px-3 py-1 rounded-full text-xs font-medium ${AppState.currentSubFilter === 'all' ? 'bg-kiot-blue text-white shadow-sm font-semibold' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">Tất cả (${totalCount})</button>`;
-
-            Object.keys(courseCounts).forEach(val => {
-                const count = courseCounts[val];
-                const isActive = (AppState.currentSubFilter === val);
-                html += `<button onclick="applySubFilter('${escapeHtml(val)}')" class="px-3 py-1 rounded-full text-xs font-medium ${isActive ? 'bg-kiot-blue text-white shadow-sm font-semibold' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">${escapeHtml(val)} (${count})</button>`;
+            courses.forEach(c => {
+                const count = cleanItems.filter(i => (i['Khóa học'] || i['Khóa'] || '').trim() === c).length;
+                const isActive = (AppState.currentSubFilter === c);
+                html += `<button onclick="applySubFilter('${escapeHtml(c)}')" class="px-3 py-1 rounded-lg text-xs font-bold ${isActive ? 'bg-kiot-blue text-white shadow-sm' : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'} transition-all whitespace-nowrap">${escapeHtml(c)} (${count})</button>`;
             });
 
             bar.innerHTML = html;
-        }
-
-        function detectGroupingColumn(headers) {
-            if (!headers || headers.length === 0) return null;
-            const priorityKeys = ['nganhhang', 'roadmap', 'khóa học', 'khóa', 'nhãn', 'ngành', 'nhóm', 'day', 'mabuoi'];
-            for (let p of priorityKeys) {
-                const found = headers.find(h => h.toLowerCase().replace(/[\s_]/g, '') === p.replace(/[\s_]/g, ''));
-                if (found) return found;
-            }
-            return headers[0];
         }
 
         function applySubFilter(val) {
@@ -1332,59 +997,20 @@
             renderItems();
         }
 
-        function applySecondaryFilter(val) {
-            AppState.currentSecondaryFilter = val;
-            renderItems();
-        }
-
-        // --- 9. GET FILTERED ITEMS (TÍCH HỢP BỘ LỌC LỖ HỔNG RADA) ---
         function getFilteredItems() {
             const sheetMeta = AppState.sheetsData[AppState.currentSheet];
             if (!sheetMeta || !sheetMeta.items) return [];
 
             let data = sheetMeta.items.filter(item => !isGarbageRow(item));
 
-            const isCaseSheet = AppState.currentSheet.toLowerCase().includes('tình huống') || AppState.currentSheet.toLowerCase().includes('tái ký');
-            const isExerciseSheet = AppState.currentSheet.toLowerCase().includes('exercise') || AppState.currentSheet.toLowerCase().includes('bài tập');
-            const isELearningSheet = AppState.currentSheet.toLowerCase().includes('elearning') || AppState.currentSheet.toLowerCase().includes('masterdata');
-            const isMcqSheet = AppState.currentSheet.toLowerCase().includes('mcq');
-
-            // 1. Áp dụng cờ lọc lỗ hổng từ Rada nếu có
-            if (AppState.currentFilterGap === 'video' && isELearningSheet) {
+            if (AppState.currentFilterGap === 'video') {
                 data = data.filter(item => !item['YouTube'] || !String(item['YouTube']).trim().startsWith('http'));
-            } else if (AppState.currentFilterGap === 'quiz' && isELearningSheet) {
+            } else if (AppState.currentFilterGap === 'quiz') {
                 data = data.filter(item => !item['Github'] || !String(item['Github']).trim().startsWith('http'));
-            } else if (AppState.currentFilterGap === 'mcq' && isMcqSheet) {
-                data = data.filter(item => !Object.values(item).some(v => String(v).trim().startsWith('http')));
             }
 
-            // 2. Bộ lọc con thường quy
-            if (isCaseSheet) {
-                if (AppState.currentSubFilter !== 'all') {
-                    data = data.filter(item => (item['Roadmap'] || '').trim() === AppState.currentSubFilter);
-                }
-                if (AppState.currentSecondaryFilter !== 'all') {
-                    data = data.filter(item => (item['Day'] || '').trim() === AppState.currentSecondaryFilter);
-                }
-            } else if (isExerciseSheet) {
-                if (AppState.currentSubFilter !== 'all') {
-                    data = data.filter(item => (item['NganhHang'] || '').trim() === AppState.currentSubFilter);
-                }
-                if (AppState.currentSecondaryFilter !== 'all') {
-                    data = data.filter(item => (item['TenBuoi'] || item['MaBuoi'] || '').trim() === AppState.currentSecondaryFilter);
-                }
-            } else if (isELearningSheet) {
-                if (AppState.currentSubFilter !== 'all') {
-                    data = data.filter(item => (item['Khóa học'] || item['Khóa'] || item['NganhHang'] || '').trim() === AppState.currentSubFilter);
-                }
-                if (AppState.currentSecondaryFilter !== 'all') {
-                    data = data.filter(item => (item['Buổi'] || item['Bài'] || item['MaBuoi'] || '').trim() === AppState.currentSecondaryFilter);
-                }
-            } else {
-                const groupCol = detectGroupingColumn(sheetMeta.headers);
-                if (AppState.currentSubFilter !== 'all' && groupCol) {
-                    data = data.filter(item => (item[groupCol] || '').trim() === AppState.currentSubFilter);
-                }
+            if (AppState.currentSubFilter !== 'all') {
+                data = data.filter(item => (item['Khóa học'] || item['Khóa'] || '').trim() === AppState.currentSubFilter);
             }
 
             if (AppState.searchQuery.trim() !== '') {
@@ -1395,14 +1021,11 @@
             return data;
         }
 
-        // --- 10. DISPATCH RENDERER ---
         function renderItems() {
             document.getElementById('master-dashboard-view').classList.add('hidden');
             document.getElementById('sheet-content-view').classList.remove('hidden');
 
             const data = getFilteredItems();
-            window.currentFilteredData = data;
-
             const gridContainer = document.getElementById('items-grid');
             const tableContainer = document.getElementById('items-table-container');
             const emptyState = document.getElementById('empty-state');
@@ -1417,97 +1040,38 @@
 
             emptyState.classList.add('hidden');
 
-            const isELearningSheet = AppState.currentSheet.toLowerCase().includes('elearning') || AppState.currentSheet.toLowerCase().includes('masterdata');
-            const isMcqSheet = AppState.currentSheet.toLowerCase().includes('mcq');
-            const isCaseSheet = AppState.currentSheet.toLowerCase().includes('tình huống') || AppState.currentSheet.toLowerCase().includes('tái ký');
-            const isExerciseSheet = AppState.currentSheet.toLowerCase().includes('exercise') || AppState.currentSheet.toLowerCase().includes('bài tập');
-
-            if (isELearningSheet) {
-                if (AppState.viewMode === 'table') {
-                    gridContainer.classList.add('hidden');
-                    tableContainer.classList.remove('hidden');
-                    renderElearningTable(data, sheetMeta.headers);
-                } else {
-                    gridContainer.classList.remove('hidden');
-                    tableContainer.classList.add('hidden');
-                    renderElearningCards(data, sheetMeta.headers, gridContainer);
-                }
-                return;
-            }
-
-            if (isCaseSheet) {
-                if (AppState.viewMode === 'table') {
-                    gridContainer.classList.add('hidden');
-                    tableContainer.classList.remove('hidden');
-                    renderCaseAdminTable(data);
-                } else {
-                    gridContainer.classList.remove('hidden');
-                    tableContainer.classList.add('hidden');
-                    renderCaseAdminCards(data, gridContainer);
-                }
-                return;
-            }
-
-            if (isExerciseSheet) {
-                if (AppState.viewMode === 'table') {
-                    gridContainer.classList.add('hidden');
-                    tableContainer.classList.remove('hidden');
-                    renderExerciseAdminTable(data);
-                } else {
-                    gridContainer.classList.remove('hidden');
-                    tableContainer.classList.add('hidden');
-                    renderExerciseAdminCards(data, gridContainer);
-                }
-                return;
-            }
-
-            if (isMcqSheet) {
-                if (AppState.viewMode === 'table') {
-                    gridContainer.classList.add('hidden');
-                    tableContainer.classList.remove('hidden');
-                    renderMcqAdminTable(data, sheetMeta.headers);
-                } else {
-                    gridContainer.classList.remove('hidden');
-                    tableContainer.classList.add('hidden');
-                    renderMcqAdminCards(data, sheetMeta.headers, gridContainer);
-                }
-                return;
-            }
-
-            if (AppState.viewMode === 'grid') {
-                gridContainer.classList.remove('hidden');
-                tableContainer.classList.add('hidden');
-                renderStandardGrid(data, sheetMeta.headers, gridContainer);
-            } else {
+            if (AppState.viewMode === 'table') {
                 gridContainer.classList.add('hidden');
                 tableContainer.classList.remove('hidden');
-                renderStandardTable(data, sheetMeta.headers);
+                renderElearningTable(data);
+            } else {
+                gridContainer.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+                renderElearningCards(data, gridContainer);
             }
         }
 
-        // --- 11. BẢNG & LƯỚI E-LEARNING (PASTEL + LIGHTBOX) ---
-        function getDomainVisualTheme(domainName) {
-            const d = String(domainName || '').toLowerCase();
+        function getDomainVisualTheme(courseName) {
+            const d = String(courseName || '').toLowerCase();
             if (d.includes('retail')) return { gradient: 'from-sky-500 via-indigo-500 to-slate-800', icon: 'fa-shop', badge: 'bg-sky-50 text-sky-700 border-sky-200' };
             if (d.includes('fnb')) return { gradient: 'from-amber-400 via-orange-500 to-slate-800', icon: 'fa-utensils', badge: 'bg-amber-50 text-amber-800 border-amber-200' };
             if (d.includes('salon')) return { gradient: 'from-rose-400 via-pink-500 to-slate-800', icon: 'fa-scissors', badge: 'bg-rose-50 text-rose-700 border-rose-200' };
             if (d.includes('hotel')) return { gradient: 'from-emerald-400 via-teal-500 to-slate-800', icon: 'fa-hotel', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
-            if (d.includes('kế toán') || d.includes('ketoan')) return { gradient: 'from-violet-400 via-purple-500 to-slate-800', icon: 'fa-calculator', badge: 'bg-purple-50 text-purple-700 border-purple-200' };
+            if (d.includes('kế toán') || d.includes('thue')) return { gradient: 'from-violet-400 via-purple-500 to-slate-800', icon: 'fa-file-invoice-dollar', badge: 'bg-purple-50 text-purple-700 border-purple-200' };
             return { gradient: 'from-slate-600 via-slate-700 to-slate-900', icon: 'fa-graduation-cap', badge: 'bg-slate-100 text-slate-700 border-slate-200' };
         }
 
-        function renderElearningCards(data, headers, container) {
+        function renderElearningCards(data, container) {
             let html = '';
             data.forEach((row, idx) => {
-                const title = row['Nội dung'] || row['Title'] || row['Tên bài'] || `Bài học #${idx + 1}`;
-                const course = (row['Khóa học'] || row['Khóa'] || row['NganhHang'] || 'Chung').trim();
-                const session = (row['Buổi'] || row['Bài'] || row['MaBuoi'] || '').trim();
-                const desc = row['Mô tả'] || row['Description'] || 'Nội dung đào tạo thực chiến chuẩn nghiệp vụ KiotViet.';
+                const title = row['Nội dung'] || row['Title'] || `Bài học #${idx + 1}`;
+                const course = (row['Khóa học'] || row['Khóa'] || 'Chung').trim();
+                const desc = row['Mô tả'] || 'Nội dung đào tạo thực chiến chuẩn nghiệp vụ KiotViet.';
 
                 const ytUrl = (row['YouTube'] || '').trim();
                 const quizUrl = (row['Github'] || '').trim();
-                const docUrl = (row['HDSD'] || row['Tài liệu'] || row['Link doc'] || '').trim();
-                const customImg = (row['Hình ảnh'] || row['Infographic'] || row['Thumbnail'] || row['Banner'] || '').trim();
+                const docUrl = (row['HDSD'] || '').trim();
+                const customImg = (row['Infographic'] || '').trim();
 
                 const ytId = extractYouTubeId(ytUrl);
                 const theme = getDomainVisualTheme(course);
@@ -1520,10 +1084,10 @@
                 if (customImg && customImg.startsWith('http')) {
                     bannerHtml = `
                         <div class="relative h-44 overflow-hidden rounded-t-xl bg-slate-900 group/banner cursor-pointer" onclick="openLightboxModal('${escapeHtml(customImg)}', '${escapeHtml(title)}')">
-                            <img src="${escapeHtml(customImg)}" alt="${escapeHtml(title)}" class="w-full h-full object-cover group-hover/banner:scale-105 transition-transform duration-500" onerror="this.parentElement.innerHTML=getFallbackInfographicHtml('${escapeHtml(course)}', '${escapeHtml(title)}', '${theme.icon}', '${theme.gradient}')">
+                            <img src="${escapeHtml(customImg)}" alt="${escapeHtml(title)}" class="w-full h-full object-cover group-hover/banner:scale-105 transition-transform duration-500">
                             <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-black/20"></div>
                             
-                            <div class="absolute top-2.5 right-2.5 px-2 py-1 rounded-md bg-slate-900/60 hover:bg-slate-900 text-white backdrop-blur-sm text-[10px] font-semibold flex items-center gap-1 transition shadow-sm" title="Bấm để phóng to Infographic">
+                            <div class="absolute top-2.5 right-2.5 px-2 py-1 rounded-md bg-slate-900/60 hover:bg-slate-900 text-white backdrop-blur-sm text-[10px] font-bold flex items-center gap-1 transition shadow-sm" title="Phóng to Infographic">
                                 <i class="fa-solid fa-up-right-and-down-left-from-center text-[9px]"></i> Phóng to
                             </div>
 
@@ -1541,16 +1105,12 @@
                             <img src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" alt="${escapeHtml(title)}" class="w-full h-full object-cover group-hover/banner:scale-105 transition-transform duration-500">
                             <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-black/20"></div>
                             
-                            <div class="absolute top-2.5 right-2.5 px-2 py-1 rounded-md bg-slate-900/60 hover:bg-slate-900 text-white backdrop-blur-sm text-[10px] font-semibold flex items-center gap-1 transition shadow-sm" title="Bấm để xem ảnh chi tiết">
-                                <i class="fa-solid fa-up-right-and-down-left-from-center text-[9px]"></i> Phóng to
-                            </div>
-
                             <button onclick="event.stopPropagation(); openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="absolute inset-0 flex items-center justify-center group/btn" title="Bấm để phát video">
                                 <span class="w-12 h-12 rounded-full bg-rose-500/90 text-white flex items-center justify-center shadow-lg backdrop-blur-sm group-hover/btn:scale-110 group-hover/btn:bg-rose-600 transition-all">
                                     <i class="fa-solid fa-play text-sm ml-0.5"></i>
                                 </span>
                             </button>
-                            <span class="absolute bottom-2.5 right-2.5 px-2 py-0.5 bg-slate-950/70 text-white text-[10px] font-mono rounded font-medium backdrop-blur-sm">
+                            <span class="absolute bottom-2.5 right-2.5 px-2 py-0.5 bg-slate-950/70 text-white text-[10px] font-mono rounded font-bold backdrop-blur-sm">
                                 <i class="fa-brands fa-youtube text-rose-400 mr-1"></i>HD Video
                             </span>
                         </div>
@@ -1558,20 +1118,15 @@
                 } else {
                     bannerHtml = `
                         <div class="relative h-44 overflow-hidden rounded-t-xl bg-gradient-to-br ${theme.gradient} p-4 flex flex-col justify-between text-white">
-                            <div class="absolute right-[-15px] bottom-[-20px] text-white/10 text-8xl pointer-events-none select-none">
-                                <i class="fa-solid ${theme.icon}"></i>
-                            </div>
                             <div class="flex items-center justify-between z-10">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white/20 backdrop-blur-md uppercase tracking-wider">
-                                    ${escapeHtml(course)}
-                                </span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white/20 backdrop-blur-md uppercase tracking-wider">${escapeHtml(course)}</span>
                                 <span class="text-[10px] font-mono opacity-60">#${idx + 1}</span>
                             </div>
                             <div class="z-10">
                                 <div class="w-9 h-9 rounded-lg bg-white/15 backdrop-blur-md flex items-center justify-center text-white mb-2 shadow-inner">
                                     <i class="fa-solid ${theme.icon} text-sm"></i>
                                 </div>
-                                <p class="text-xs font-bold text-white line-clamp-1">${escapeHtml(session || 'Bài giảng nghiệp vụ')}</p>
+                                <p class="text-xs font-bold text-white line-clamp-1">${escapeHtml(title)}</p>
                             </div>
                         </div>
                     `;
@@ -1587,7 +1142,6 @@
                                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${theme.badge}">
                                     ${escapeHtml(course)}
                                 </span>
-                                ${session ? `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">${escapeHtml(session)}</span>` : ''}
                             </div>
 
                             <h3 class="text-xs font-bold text-slate-900 leading-snug line-clamp-2 mb-2 group-hover:text-kiot-blue transition-colors" title="${escapeHtml(title)}">
@@ -1599,10 +1153,10 @@
                             </p>
 
                             <div class="flex items-center gap-2 pt-2 border-t border-slate-100 text-[10px] font-bold">
-                                <span class="inline-flex items-center gap-1 ${hasVideo ? 'text-rose-700 bg-rose-50/80 border-rose-200/70' : 'text-slate-400 bg-slate-50 border-slate-200'} px-2 py-0.5 rounded-md border">
+                                <span class="inline-flex items-center gap-1 ${hasVideo ? 'text-rose-700 bg-rose-50/80 border-rose-200' : 'text-slate-400 bg-slate-50 border-slate-200'} px-2 py-0.5 rounded-md border">
                                     <i class="fa-brands fa-youtube ${hasVideo ? 'text-rose-500' : ''}"></i> ${hasVideo ? 'Có Video' : 'Thiếu Video'}
                                 </span>
-                                <span class="inline-flex items-center gap-1 ${hasQuiz ? 'text-indigo-700 bg-indigo-50/80 border-indigo-200/70' : 'text-slate-400 bg-slate-50 border-slate-200'} px-2 py-0.5 rounded-md border">
+                                <span class="inline-flex items-center gap-1 ${hasQuiz ? 'text-indigo-700 bg-indigo-50/80 border-indigo-200' : 'text-slate-400 bg-slate-50 border-slate-200'} px-2 py-0.5 rounded-md border">
                                     <i class="fa-solid fa-circle-question ${hasQuiz ? 'text-indigo-500' : ''}"></i> ${hasQuiz ? 'Có Quiz' : 'Thiếu Quiz'}
                                 </span>
                             </div>
@@ -1612,24 +1166,24 @@
                     <div class="px-5 py-3 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between gap-2">
                         <div class="flex items-center gap-2 flex-1">
                             ${hasVideo ? `
-                            <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="flex-1 py-1.5 px-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs" title="Xem video bài học">
+                            <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="flex-1 py-1.5 px-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs">
                                 <i class="fa-solid fa-play text-[10px]"></i> Video
                             </button>` : `
-                            <button disabled class="flex-1 py-1.5 px-2 bg-slate-100 text-slate-400 rounded-lg text-xs font-medium cursor-not-allowed border border-slate-200/60">
+                            <button disabled class="flex-1 py-1.5 px-2 bg-slate-100 text-slate-400 rounded-lg text-xs font-medium cursor-not-allowed border border-slate-200">
                                 <i class="fa-solid fa-play text-[10px]"></i> Video
                             </button>`}
 
                             ${hasQuiz ? `
-                            <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(quizUrl))}', 'Quiz: ${escapeHtml(title)}')" class="flex-1 py-1.5 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs" title="Làm bài kiểm tra Quiz">
+                            <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(quizUrl))}', 'Quiz: ${escapeHtml(title)}')" class="flex-1 py-1.5 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs">
                                 <i class="fa-solid fa-circle-question text-[10px]"></i> Quiz
                             </button>` : `
-                            <button disabled class="flex-1 py-1.5 px-2 bg-slate-100 text-slate-400 rounded-lg text-xs font-medium cursor-not-allowed border border-slate-200/60">
+                            <button disabled class="flex-1 py-1.5 px-2 bg-slate-100 text-slate-400 rounded-lg text-xs font-medium cursor-not-allowed border border-slate-200">
                                 <i class="fa-solid fa-circle-question text-[10px]"></i> Quiz
                             </button>`}
                         </div>
 
                         ${hasDoc ? `
-                        <button onclick="openResource('${escapeHtml(docUrl)}', '${escapeHtml(title)}', '${escapeHtml(AppState.currentSheet)}')" class="p-1.5 bg-slate-50 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg text-xs font-bold transition-all" title="Mở tài liệu HDSD đính kèm">
+                        <button onclick="openResource('${escapeHtml(docUrl)}', '${escapeHtml(title)}', '${escapeHtml(AppState.currentSheet)}')" class="p-1.5 bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg text-xs font-bold transition-all shadow-2xs" title="Mở tài liệu HDSD đính kèm">
                             <i class="fa-solid fa-book-open"></i>
                         </button>` : ''}
                     </div>
@@ -1639,23 +1193,7 @@
             container.innerHTML = html;
         }
 
-        function getFallbackInfographicHtml(course, title, icon, gradient) {
-            return `
-                <div class="relative h-44 overflow-hidden rounded-t-xl bg-gradient-to-br ${gradient} p-4 flex flex-col justify-between text-white">
-                    <div class="flex items-center justify-between z-10">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white/20 backdrop-blur-md uppercase tracking-wider">${escapeHtml(course)}</span>
-                    </div>
-                    <div class="z-10">
-                        <div class="w-9 h-9 rounded-lg bg-white/15 backdrop-blur-md flex items-center justify-center text-white mb-2 shadow-inner">
-                            <i class="fa-solid ${icon} text-sm"></i>
-                        </div>
-                        <p class="text-xs font-bold text-white line-clamp-1">${escapeHtml(title)}</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderElearningTable(data, headers) {
+        function renderElearningTable(data) {
             const thead = document.getElementById('table-head');
             const tbody = document.getElementById('table-body');
 
@@ -1663,23 +1201,22 @@
                 <tr class="bg-slate-900 text-white text-[11px] uppercase tracking-wider">
                     <th class="px-4 py-3 text-center w-12">STT</th>
                     <th class="px-4 py-3 w-28 text-center">Infographic</th>
-                    <th class="px-4 py-3 whitespace-nowrap">Phân Hệ & Buổi</th>
+                    <th class="px-4 py-3 whitespace-nowrap">Khóa Học</th>
                     <th class="px-4 py-3">Nội Dung Bài Học</th>
                     <th class="px-4 py-3 text-center">Trạng Thái Số Hóa</th>
-                    <th class="px-4 py-3 text-right whitespace-nowrap">Hành Động Trực Tiếp</th>
+                    <th class="px-4 py-3 text-right whitespace-nowrap">Thao Tác</th>
                 </tr>
             `;
 
             tbody.innerHTML = data.map((row, idx) => {
-                const title = row['Nội dung'] || row['Title'] || row['Tên bài'] || `Bài học #${idx + 1}`;
-                const course = (row['Khóa học'] || row['Khóa'] || row['NganhHang'] || 'Chung').trim();
-                const session = (row['Buổi'] || row['Bài'] || row['MaBuoi'] || '').trim();
-                const desc = row['Mô tả'] || row['Description'] || '';
+                const title = row['Nội dung'] || row['Title'] || `Bài học #${idx + 1}`;
+                const course = (row['Khóa học'] || row['Khóa'] || 'Chung').trim();
+                const desc = row['Mô tả'] || '';
 
                 const ytUrl = (row['YouTube'] || '').trim();
                 const quizUrl = (row['Github'] || '').trim();
-                const docUrl = (row['HDSD'] || row['Tài liệu'] || row['Link doc'] || '').trim();
-                const customImg = (row['Hình ảnh'] || row['Infographic'] || row['Thumbnail'] || '').trim();
+                const docUrl = (row['HDSD'] || '').trim();
+                const customImg = (row['Infographic'] || '').trim();
 
                 const ytId = extractYouTubeId(ytUrl);
                 const theme = getDomainVisualTheme(course);
@@ -1690,8 +1227,8 @@
                 const previewImg = customImg && customImg.startsWith('http') ? customImg : (ytId ? `https://img.youtube.com/vi/${ytId}/default.jpg` : '');
 
                 return `
-                <tr class="hover:bg-blue-50/30 transition-colors">
-                    <td class="px-4 py-3 text-center font-mono text-slate-400 text-xs font-semibold">${idx + 1}</td>
+                <tr class="hover:bg-blue-50/40 transition-colors">
+                    <td class="px-4 py-3 text-center font-mono text-slate-400 text-xs font-bold">${idx + 1}</td>
                     
                     <td class="px-4 py-3 text-center">
                         <div class="w-20 h-12 rounded-lg overflow-hidden bg-slate-900 border border-slate-200 relative mx-auto group cursor-pointer" onclick="${previewImg ? `openLightboxModal('${escapeHtml(previewImg)}', '${escapeHtml(title)}')` : ''}" title="Nhấp để phóng to">
@@ -1707,10 +1244,7 @@
                     </td>
 
                     <td class="px-4 py-3 whitespace-nowrap">
-                        <div class="flex items-center gap-1.5 mb-1">
-                            <span class="px-2 py-0.5 rounded-full text-xs font-bold border ${theme.badge}">${escapeHtml(course)}</span>
-                        </div>
-                        ${session ? `<span class="text-[11px] font-semibold text-slate-500">${escapeHtml(session)}</span>` : ''}
+                        <span class="px-2 py-0.5 rounded-full text-xs font-bold border ${theme.badge}">${escapeHtml(course)}</span>
                     </td>
 
                     <td class="px-4 py-3">
@@ -1720,10 +1254,10 @@
 
                     <td class="px-4 py-3 text-center whitespace-nowrap">
                         <div class="inline-flex items-center gap-1.5">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${hasVideo ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-100 text-slate-400'}" title="${hasVideo ? ytUrl : 'Chưa có Video'}">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${hasVideo ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-100 text-slate-400'}">
                                 <i class="fa-brands fa-youtube"></i> Video
                             </span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${hasQuiz ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-400'}" title="${hasQuiz ? quizUrl : 'Chưa có Quiz'}">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${hasQuiz ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-400'}">
                                 <i class="fa-solid fa-circle-question"></i> Quiz
                             </span>
                         </div>
@@ -1731,17 +1265,17 @@
 
                     <td class="px-4 py-3 text-right whitespace-nowrap space-x-1.5">
                         ${hasVideo ? `
-                        <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold shadow-xs transition-all inline-flex items-center gap-1">
+                        <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(ytUrl))}', '${escapeHtml(title)}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold shadow-2xs transition-all inline-flex items-center gap-1">
                             <i class="fa-solid fa-play text-[10px]"></i> Video
                         </button>` : ''}
 
                         ${hasQuiz ? `
-                        <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(quizUrl))}', 'Quiz: ${escapeHtml(title)}')" class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold shadow-xs transition-all inline-flex items-center gap-1">
+                        <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(quizUrl))}', 'Quiz: ${escapeHtml(title)}')" class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold shadow-2xs transition-all inline-flex items-center gap-1">
                             <i class="fa-solid fa-circle-question text-[10px]"></i> Quiz
                         </button>` : ''}
 
                         ${hasDoc ? `
-                        <button onclick="openResource('${escapeHtml(docUrl)}', '${escapeHtml(title)}', '${escapeHtml(AppState.currentSheet)}')" class="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-xs transition-all inline-flex items-center gap-1">
+                        <button onclick="openResource('${escapeHtml(docUrl)}', '${escapeHtml(title)}', '${escapeHtml(AppState.currentSheet)}')" class="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold shadow-2xs transition-all inline-flex items-center gap-1">
                             <i class="fa-solid fa-book-open"></i> HDSD
                         </button>` : ''}
                     </td>
@@ -1749,7 +1283,7 @@
             }).join('');
         }
 
-        // --- 12. INFOGRAPHIC LIGHTBOX ZOOM CONTROLLER ---
+        // ==================== LIGHTBOX INFOGRAPHIC ZOOM ====================
         function openLightboxModal(imgUrl, title) {
             if (!imgUrl) return;
             const modal = document.getElementById('image-lightbox-modal');
@@ -1763,7 +1297,6 @@
 
             AppState.lightboxZoom = 1.0;
             updateLightboxZoomDisplay();
-
             modal.classList.remove('hidden');
         }
 
@@ -1794,464 +1327,7 @@
             valEl.innerText = `${Math.round(AppState.lightboxZoom * 100)}%`;
         }
 
-        // --- 13. BẢNG TÌNH HUỐNG TÁI KÝ ---
-        function renderCaseAdminTable(data) {
-            const thead = document.getElementById('table-head');
-            const tbody = document.getElementById('table-body');
-
-            thead.innerHTML = `
-                <tr class="bg-slate-900 text-white text-[11px] uppercase tracking-wider">
-                    <th class="px-4 py-3 text-center w-12">STT</th>
-                    <th class="px-4 py-3 whitespace-nowrap">Ngành</th>
-                    <th class="px-4 py-3 whitespace-nowrap">Lộ Trình</th>
-                    <th class="px-4 py-3">Chủ Đề / Tình Huống Tái Ký</th>
-                    <th class="px-4 py-3">Khách Hàng Từ Chối (Nút Thắt)</th>
-                    <th class="px-4 py-3 text-right whitespace-nowrap">Hành Động Quản Trị</th>
-                </tr>
-            `;
-
-            tbody.innerHTML = data.map((row, idx) => {
-                const roadmap = (row['Roadmap'] || 'Retail').trim();
-                const day = (row['Day'] || 'day1').trim();
-                const type = (row['Type'] || 'morning').trim() === 'morning' ? 'Sáng' : 'Chiều';
-                const title = row['Title'] || `Tình huống #${idx + 1}`;
-                const question = row['Question'] || '';
-
-                return `
-                <tr class="hover:bg-blue-50/40 transition-colors">
-                    <td class="px-4 py-3 text-center font-mono text-slate-400 text-xs font-semibold">${idx + 1}</td>
-                    
-                    <td class="px-4 py-3 whitespace-nowrap">
-                        <span class="px-2.5 py-1 rounded text-xs font-bold ${roadmap === 'Retail' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-orange-50 text-orange-700 border border-orange-200'}">
-                            ${escapeHtml(roadmap)}
-                        </span>
-                    </td>
-
-                    <td class="px-4 py-3 whitespace-nowrap">
-                        <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                            ${escapeHtml(day)} • ${type}
-                        </span>
-                    </td>
-
-                    <td class="px-4 py-3">
-                        <div class="font-bold text-slate-900 text-xs leading-snug max-w-sm">
-                            ${escapeHtml(title)}
-                        </div>
-                    </td>
-
-                    <td class="px-4 py-3">
-                        <p class="text-xs text-slate-600 line-clamp-2 max-w-md leading-relaxed italic">
-                            "${escapeHtml(question)}"
-                        </p>
-                    </td>
-
-                    <td class="px-4 py-3 text-right whitespace-nowrap space-x-2">
-                        <button onclick="openCaseModal(${idx})" class="px-3 py-1.5 bg-kiot-blue hover:bg-kiot-navy text-white rounded-md text-xs font-bold shadow-sm transition-all inline-flex items-center gap-1.5">
-                            <i class="fa-solid fa-eye"></i> Xem Kịch Bản
-                        </button>
-                        <button onclick="copyCaseText(${idx})" class="p-1.5 text-slate-400 hover:text-slate-800 rounded hover:bg-slate-100" title="Sao chép kịch bản">
-                            <i class="fa-regular fa-copy"></i>
-                        </button>
-                    </td>
-                </tr>`;
-            }).join('');
-        }
-
-        function renderCaseAdminCards(data, container) {
-            let html = '';
-            data.forEach((item, idx) => {
-                const roadmap = (item['Roadmap'] || 'Retail').trim();
-                const day = item['Day'] || '';
-                const title = item['Title'] || `Tình huống #${idx + 1}`;
-                const question = item['Question'] || '';
-
-                html += `
-                <div class="saas-card p-5 flex flex-col justify-between group hover:border-kiot-blue hover:shadow-md transition-all">
-                    <div>
-                        <div class="flex items-start justify-between gap-3 mb-2.5">
-                            <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full ${roadmap === 'Retail' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-orange-50 text-orange-700 border border-orange-200'}">
-                                ${escapeHtml(roadmap)} • ${escapeHtml(day)}
-                            </span>
-                            <span class="text-[10px] font-mono text-slate-400 font-bold">#${idx + 1}</span>
-                        </div>
-
-                        <h3 class="text-xs font-bold text-slate-900 mb-2 leading-snug line-clamp-2">${escapeHtml(title)}</h3>
-
-                        <div class="p-3 bg-slate-50 rounded-lg border border-slate-200/80 mb-3 text-xs leading-relaxed text-slate-700">
-                            <span class="font-bold text-red-600 block mb-1">Khách từ chối:</span>
-                            <p class="line-clamp-3 italic">"${escapeHtml(question)}"</p>
-                        </div>
-                    </div>
-
-                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <button onclick="openCaseModal(${idx})" class="btn-primary text-xs flex-1 py-1.5">
-                            <i class="fa-solid fa-eye"></i> Xem Kịch Bản
-                        </button>
-                        <button onclick="copyCaseText(${idx})" class="p-1.5 text-slate-400 hover:text-slate-800 rounded hover:bg-slate-100" title="Sao chép">
-                            <i class="fa-regular fa-copy"></i>
-                        </button>
-                    </div>
-                </div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        // --- 14. BẢNG BÀI TẬP THỰC HÀNH ---
-        function renderExerciseAdminTable(data) {
-            const thead = document.getElementById('table-head');
-            const tbody = document.getElementById('table-body');
-
-            thead.innerHTML = `
-                <tr class="bg-slate-900 text-white text-[11px] uppercase tracking-wider">
-                    <th class="px-4 py-3 text-center w-16">Mã Bài</th>
-                    <th class="px-4 py-3 whitespace-nowrap">Ngành</th>
-                    <th class="px-4 py-3">Buổi Học & Nhóm Bài Tập</th>
-                    <th class="px-4 py-3">Yêu Cầu Thực Hành (Đề Bài)</th>
-                    <th class="px-4 py-3">Tiêu Chí Nghiệm Thu (Ảnh)</th>
-                    <th class="px-4 py-3 text-right whitespace-nowrap">Hành Động</th>
-                </tr>
-            `;
-
-            tbody.innerHTML = data.map((row, idx) => {
-                const code = row['Mã'] || `BT-${idx + 1}`;
-                const branch = row['NganhHang'] || 'Retail';
-                const session = row['TenBuoi'] || 'Bài tập thực hành';
-                const group = row['NhomBaiTap'] || row['NhomCon'] || 'Cơ bản';
-                const requirement = row['YeuCau'] || '';
-                const verify = row['XacNhan'] || '';
-
-                return `
-                <tr class="hover:bg-amber-50/30 transition-colors">
-                    <td class="px-4 py-3 text-center whitespace-nowrap">
-                        <span class="px-2 py-1 rounded text-xs font-mono font-extrabold bg-amber-50 text-amber-900 border border-amber-300 shadow-sm">
-                            ${escapeHtml(code)}
-                        </span>
-                    </td>
-
-                    <td class="px-4 py-3 whitespace-nowrap">
-                        <span class="px-2.5 py-1 rounded text-xs font-bold ${branch === 'Retail' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-orange-50 text-orange-700 border border-orange-200'}">
-                            ${escapeHtml(branch)}
-                        </span>
-                    </td>
-
-                    <td class="px-4 py-3">
-                        <div class="font-bold text-slate-900 text-xs leading-snug">${escapeHtml(session)}</div>
-                        <div class="text-[11px] text-slate-400 mt-0.5">${escapeHtml(group)}</div>
-                    </td>
-
-                    <td class="px-4 py-3">
-                        <p class="text-xs text-slate-700 line-clamp-2 max-w-md leading-relaxed">
-                            ${escapeHtml(requirement)}
-                        </p>
-                    </td>
-
-                    <td class="px-4 py-3">
-                        ${verify ? `
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-semibold bg-purple-50 text-purple-800 border border-purple-200">
-                            <i class="fa-solid fa-camera text-purple-600 text-[10px]"></i>
-                            <span class="line-clamp-1 max-w-[200px]" title="${escapeHtml(verify)}">${escapeHtml(verify)}</span>
-                        </span>` : `<span class="text-slate-400 text-xs italic">Không yêu cầu</span>`}
-                    </td>
-
-                    <td class="px-4 py-3 text-right whitespace-nowrap space-x-2">
-                        <button onclick="openExerciseModal(${idx})" class="px-3 py-1.5 bg-kiot-blue hover:bg-kiot-navy text-white rounded-md text-xs font-bold shadow-sm transition-all inline-flex items-center gap-1.5">
-                            <i class="fa-solid fa-book-open"></i> Hướng Dẫn
-                        </button>
-                        <button onclick="copyExerciseText(${idx})" class="p-1.5 text-slate-400 hover:text-slate-800 rounded hover:bg-slate-100" title="Sao chép đề">
-                            <i class="fa-regular fa-copy"></i>
-                        </button>
-                    </td>
-                </tr>`;
-            }).join('');
-        }
-
-        function renderExerciseAdminCards(data, container) {
-            let html = '';
-            data.forEach((item, idx) => {
-                const code = item['Mã'] || `BT-${idx + 1}`;
-                const session = item['TenBuoi'] || 'Bài tập';
-                const requirement = item['YeuCau'] || '';
-
-                html += `
-                <div class="saas-card p-5 flex flex-col justify-between group hover:border-kiot-blue hover:shadow-md transition-all border-l-4 border-l-amber-500">
-                    <div>
-                        <div class="flex items-start justify-between gap-3 mb-2.5">
-                            <span class="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-amber-50 text-amber-800 border border-amber-200">${escapeHtml(code)}</span>
-                            <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">${escapeHtml(item['NganhHang'] || '')}</span>
-                        </div>
-                        <h3 class="text-xs font-bold text-slate-900 mb-2 leading-snug line-clamp-2">${escapeHtml(session)}</h3>
-                        <p class="text-[11px] text-slate-600 line-clamp-3 leading-relaxed mb-3">${escapeHtml(requirement)}</p>
-                    </div>
-                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <button onclick="openExerciseModal(${idx})" class="btn-primary text-xs flex-1 py-1.5">
-                            <i class="fa-solid fa-book-open"></i> Xem Hướng Dẫn
-                        </button>
-                        <button onclick="copyExerciseText(${idx})" class="p-1.5 text-slate-400 hover:text-slate-800 rounded hover:bg-slate-100" title="Sao chép">
-                            <i class="fa-regular fa-copy"></i>
-                        </button>
-                    </div>
-                </div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        // --- 15. BẢNG MCQ MASTER & TIÊU CHUẨN ---
-        function renderMcqAdminTable(data, headers) {
-            const thead = document.getElementById('table-head');
-            const tbody = document.getElementById('table-body');
-
-            thead.innerHTML = `
-                <tr class="bg-slate-900 text-white text-[11px] uppercase tracking-wider">
-                    <th class="px-4 py-3 text-center w-12">STT</th>
-                    <th class="px-4 py-3">Mã Bộ Đề / Tên File Ngân Hàng Câu Hỏi</th>
-                    <th class="px-4 py-3 text-center">Khóa Học</th>
-                    <th class="px-4 py-3 text-center">Liên Kết Sheet</th>
-                    <th class="px-4 py-3 text-right">Thao Tác</th>
-                </tr>
-            `;
-
-            tbody.innerHTML = data.map((row, idx) => {
-                const title = row['Mã bộ đề / Tên file ngân hàng câu hỏi'] || row['Tên bộ đề'] || row[headers[0]] || `Đề #${idx + 1}`;
-                const course = row['Khóa học'] || row['Khóa'] || '-';
-                let linkVal = '';
-                for (let k of Object.keys(row)) {
-                    if (String(row[k]).trim().startsWith('http')) { linkVal = String(row[k]).trim(); break; }
-                }
-
-                return `
-                <tr class="hover:bg-purple-50/40 transition-colors">
-                    <td class="px-4 py-3 text-center font-mono text-slate-400 text-xs font-semibold">${idx + 1}</td>
-                    <td class="px-4 py-3 font-bold text-slate-900 text-xs">${escapeHtml(title)}</td>
-                    <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700">${escapeHtml(course)}</span></td>
-                    <td class="px-4 py-3 text-center">
-                        ${linkVal ? `
-                        <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(linkVal))}', '${escapeHtml(title)}')" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded text-xs font-bold transition-all">
-                            <i class="fa-solid fa-table mr-1"></i> Xem Sheet
-                        </button>` : `<span class="text-xs text-red-500 font-semibold italic">Chưa gán link</span>`}
-                    </td>
-                    <td class="px-4 py-3 text-right">
-                        ${linkVal ? `
-                        <a href="${escapeHtml(linkVal)}" target="_blank" class="px-2 py-1 text-slate-500 hover:text-blue-600 font-bold text-xs">
-                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở ngoài
-                        </a>` : ''}
-                    </td>
-                </tr>`;
-            }).join('');
-        }
-
-        function renderMcqAdminCards(data, headers, container) {
-            let html = '';
-            data.forEach((row, idx) => {
-                const title = row['Mã bộ đề / Tên file ngân hàng câu hỏi'] || row['Tên bộ đề'] || `Đề #${idx + 1}`;
-                const course = row['Khóa học'] || row['Khóa'] || '-';
-                let linkVal = '';
-                for (let k of Object.keys(row)) {
-                    if (String(row[k]).trim().startsWith('http')) { linkVal = String(row[k]).trim(); break; }
-                }
-
-                html += `
-                <div class="saas-card p-5 flex flex-col justify-between group hover:border-purple-400">
-                    <div>
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">${escapeHtml(course)}</span>
-                            <span class="text-xs font-mono text-slate-400">#${idx+1}</span>
-                        </div>
-                        <h4 class="text-xs font-bold text-slate-800 line-clamp-2 mb-4">${escapeHtml(title)}</h4>
-                    </div>
-                    <div>
-                        ${linkVal ? `
-                        <button onclick="openInSplitMode('${escapeHtml(formatUniversalEmbedUrl(linkVal))}', '${escapeHtml(title)}')" class="btn-primary w-full text-xs py-1.5">
-                            <i class="fa-solid fa-table"></i> Xem Bảng Tính
-                        </button>` : `
-                        <span class="block text-center text-xs text-red-500 font-semibold italic bg-red-50 py-1.5 rounded">Chưa gán liên kết</span>`}
-                    </div>
-                </div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        function renderStandardTable(data, headers) {
-            const thead = document.getElementById('table-head');
-            const tbody = document.getElementById('table-body');
-
-            thead.innerHTML = `
-                <tr class="bg-slate-900 text-white text-[11px] uppercase tracking-wider">
-                    <th class="px-4 py-3 text-center w-12">STT</th>
-                    ${headers.slice(0, 5).map(h => `<th class="px-4 py-3">${escapeHtml(h)}</th>`).join('')}
-                    <th class="px-4 py-3 text-right">Thao Tác</th>
-                </tr>
-            `;
-
-            tbody.innerHTML = data.map((row, idx) => {
-                let firstLink = '';
-                for (let k of Object.keys(row)) {
-                    if (String(row[k]).trim().startsWith('http')) { firstLink = String(row[k]).trim(); break; }
-                }
-
-                return `
-                <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-4 py-3 text-center font-mono text-slate-400 text-xs">${idx + 1}</td>
-                    ${headers.slice(0, 5).map(h => `<td class="px-4 py-3 text-xs max-w-xs truncate">${escapeHtml(String(row[h] || ''))}</td>`).join('')}
-                    <td class="px-4 py-3 text-right whitespace-nowrap">
-                        ${firstLink ? `
-                        <button onclick="openResource('${escapeHtml(firstLink)}', '${escapeHtml(row[headers[0]] || 'Tài liệu')}')" class="px-2.5 py-1 bg-kiot-blue hover:bg-kiot-navy text-white text-xs font-bold rounded">
-                            Xem Ngay
-                        </button>` : `<span class="text-slate-300 text-xs italic">-</span>`}
-                    </td>
-                </tr>`;
-            }).join('');
-        }
-
-        function renderStandardGrid(data, headers, container) {
-            let html = '';
-            data.forEach((row, idx) => {
-                let firstLink = '';
-                for (let k of Object.keys(row)) {
-                    if (String(row[k]).trim().startsWith('http')) { firstLink = String(row[k]).trim(); break; }
-                }
-
-                html += `
-                <div class="saas-card p-5 flex flex-col justify-between">
-                    <div>
-                        <span class="text-xs font-mono text-slate-400 mb-2 block">#${idx + 1}</span>
-                        <h4 class="text-xs font-bold text-slate-800 line-clamp-2 mb-2">${escapeHtml(String(row[headers[0]] || 'Tài liệu'))}</h4>
-                        <p class="text-[11px] text-slate-500 line-clamp-3 mb-4">${escapeHtml(String(row[headers[1]] || ''))}</p>
-                    </div>
-                    <div>
-                        ${firstLink ? `
-                        <button onclick="openResource('${escapeHtml(firstLink)}', '${escapeHtml(row[headers[0]] || 'Tài liệu')}')" class="btn-primary w-full text-xs py-1.5">
-                            Mở Tài Liệu
-                        </button>` : ''}
-                    </div>
-                </div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        // --- 16. MODAL BÓC TÁCH TÌNH HUỐNG ---
-        function openCaseModal(idx) {
-            const item = window.currentFilteredData[idx];
-            if (!item) return;
-
-            const title = item['Title'] || 'Tình huống tái ký';
-            const question = item['Question'] || '';
-            const answer = item['Answer'] || '';
-
-            const modal = document.getElementById('floating-modal');
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-badge').innerText = 'CASE STUDY';
-            document.getElementById('modal-badge').className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-600 text-white';
-            
-            const rich = document.getElementById('modal-rich-details');
-            rich.innerHTML = `
-                <div class="space-y-4">
-                    <div class="p-4 bg-red-50 rounded-xl border border-red-200">
-                        <h4 class="text-xs font-bold text-red-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <i class="fa-solid fa-circle-question text-red-600 text-sm"></i> Lời Từ Chối / Câu Hỏi Của Khách Hàng:
-                        </h4>
-                        <p class="text-sm font-semibold text-slate-900 leading-relaxed italic">"${escapeHtml(question)}"</p>
-                    </div>
-
-                    <div class="p-5 bg-white rounded-xl border border-slate-200 space-y-3">
-                        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-                            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                                <i class="fa-solid fa-lightbulb text-amber-500 text-sm"></i> Kịch Bản 4 Bước Thuyết Phục Tái Ký:
-                            </h4>
-                            <button onclick="copyCaseText(${idx})" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded text-xs transition-all flex items-center gap-1">
-                                <i class="fa-regular fa-copy"></i> Sao chép kịch bản
-                            </button>
-                        </div>
-                        ${formatCaseAnswerHtml(answer)}
-                    </div>
-                </div>
-            `;
-            modal.classList.remove('hidden');
-        }
-
-        function formatCaseAnswerHtml(answer) {
-            if (!answer) return '';
-            const ntMatch = answer.match(/-\s*Nhận diện nút thắt:?\s*([\s\S]*?)(?=-\s*Gợi ý giải pháp:?|$)/i);
-            const gpMatch = answer.match(/-\s*Gợi ý giải pháp:?\s*([\s\S]*?)(?=-\s*Phân biệt bản chất:?|$)/i);
-            const bcMatch = answer.match(/-\s*Phân biệt bản chất:?\s*([\s\S]*?)(?=-\s*Lợi ích thuyết phục gia hạn:?|$)/i);
-            const liMatch = answer.match(/-\s*Lợi ích thuyết phục gia hạn:?\s*([\s\S]*?)$/i);
-
-            if (ntMatch || gpMatch || bcMatch || liMatch) {
-                return `
-                    <div class="space-y-3 pt-1">
-                        ${ntMatch ? `<div class="p-3 bg-red-50/70 rounded-lg border border-red-200 text-xs"><strong class="text-red-700 block mb-1 text-[11px] uppercase tracking-wider">🎯 1. Nhận diện nút thắt:</strong><span class="text-slate-800 leading-relaxed font-medium">${escapeHtml(ntMatch[1].trim())}</span></div>` : ''}
-                        ${gpMatch ? `<div class="p-3 bg-blue-50/70 rounded-lg border border-blue-200 text-xs"><strong class="text-blue-700 block mb-1 text-[11px] uppercase tracking-wider">💡 2. Gợi ý giải pháp KiotViet:</strong><span class="text-slate-800 leading-relaxed font-medium">${escapeHtml(gpMatch[1].trim())}</span></div>` : ''}
-                        ${bcMatch ? `<div class="p-3 bg-purple-50/70 rounded-lg border border-purple-200 text-xs"><strong class="text-purple-700 block mb-1 text-[11px] uppercase tracking-wider">⚖️ 3. Phân biệt bản chất kỹ thuật:</strong><span class="text-slate-800 leading-relaxed font-medium">${escapeHtml(bcMatch[1].trim())}</span></div>` : ''}
-                        ${liMatch ? `<div class="p-3 bg-emerald-50/70 rounded-lg border border-emerald-200 text-xs"><strong class="text-emerald-700 block mb-1 text-[11px] uppercase tracking-wider">💰 4. Lợi ích thuyết phục gia hạn:</strong><span class="text-slate-800 leading-relaxed font-medium">${escapeHtml(liMatch[1].trim())}</span></div>` : ''}
-                    </div>
-                `;
-            }
-            return `<div class="text-xs text-slate-700 whitespace-pre-line leading-relaxed">${escapeHtml(answer)}</div>`;
-        }
-
-        function copyCaseText(idx) {
-            const item = window.currentFilteredData[idx];
-            if (!item) return;
-            const text = `=== TÌNH HUỐNG: ${item['Title']} ===\nKhách từ chối: "${item['Question']}"\n\nKịch bản xử lý:\n${item['Answer']}`;
-            copyToClipboardText(text, 'Đã sao chép kịch bản tình huống vào clipboard!');
-        }
-
-        // --- 17. MODAL BÀI TẬP THỰC HÀNH ---
-        function openExerciseModal(idx) {
-            const item = window.currentFilteredData[idx];
-            if (!item) return;
-
-            const code = item['Mã'] || `BT-${idx + 1}`;
-            const session = item['TenBuoi'] || 'Bài tập';
-            const req = item['YeuCau'] || '';
-            const guide = item['HuongDan'] || '';
-            const verify = item['XacNhan'] || '';
-
-            const modal = document.getElementById('floating-modal');
-            document.getElementById('modal-title').innerText = `${code}: ${session}`;
-            document.getElementById('modal-badge').innerText = 'BÀI TẬP THỰC HÀNH';
-            document.getElementById('modal-badge').className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-amber-600 text-white';
-
-            const rich = document.getElementById('modal-rich-details');
-            rich.innerHTML = `
-                <div class="space-y-4">
-                    <div class="p-4 bg-blue-50 rounded-xl border border-blue-200">
-                        <h4 class="text-xs font-bold text-blue-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <i class="fa-solid fa-list-check text-blue-600"></i> Yêu Cầu Bài Tập:
-                        </h4>
-                        <div class="text-xs leading-relaxed text-slate-800 whitespace-pre-line font-medium">${escapeHtml(req)}</div>
-                    </div>
-
-                    <div class="p-5 bg-white rounded-xl border border-slate-200">
-                        <h4 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                            <i class="fa-solid fa-shoe-prints text-emerald-600"></i> Hướng Dẫn Thao Tác Từng Bước:
-                        </h4>
-                        <div class="text-xs leading-loose text-slate-800 whitespace-pre-line font-medium p-3 bg-slate-50 rounded-lg border border-slate-100">${escapeHtml(guide)}</div>
-                    </div>
-
-                    ${verify ? `
-                    <div class="p-4 bg-purple-50 rounded-xl border border-purple-200">
-                        <h4 class="text-xs font-bold text-purple-800 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                            <i class="fa-solid fa-camera text-purple-600"></i> Tiêu Chí Nghiệm Thu Ảnh Chụp:
-                        </h4>
-                        <p class="text-xs text-purple-900 font-semibold">${escapeHtml(verify)}</p>
-                    </div>` : ''}
-                </div>
-            `;
-            modal.classList.remove('hidden');
-        }
-
-        function copyExerciseText(idx) {
-            const item = window.currentFilteredData[idx];
-            if (!item) return;
-            const text = `=== BÀI TẬP: ${item['Mã']} - ${item['TenBuoi']} ===\nYêu cầu:\n${item['YeuCau']}\n\nHướng dẫn:\n${item['HuongDan']}\n\nNghiệm thu ảnh chụp:\n${item['XacNhan']}`;
-            copyToClipboardText(text, 'Đã sao chép đề bài tập vào clipboard!');
-        }
-
-        function closeFloatingModal() {
-            document.getElementById('floating-modal').classList.add('hidden');
-        }
-
-        // --- 18. RESIZABLE SPLIT-SCREEN ---
+        // ==================== RESIZABLE SPLIT-SCREEN ====================
         function toggleSplitScreen() {
             AppState.isSplitOpen = !AppState.isSplitOpen;
             const pane = document.getElementById('pane-secondary');
@@ -2278,6 +1354,23 @@
             document.getElementById('split-pane-title').innerText = title;
             document.getElementById('split-external-link').href = url;
             document.getElementById('split-iframe').src = url;
+        }
+
+        function openResource(url, title, sourceSheet) {
+            const tabId = 'tab-doc-' + Math.random().toString(36).substr(2, 8);
+            AppState.openTabs.push({
+                id: tabId,
+                title: title,
+                type: 'document',
+                sheetName: sourceSheet || AppState.currentSheet,
+                url: url
+            });
+            activateTab(tabId);
+        }
+
+        function goBackToCatalog(sheetName) {
+            if (sheetName) selectSheet(sheetName);
+            else activateTab('tab-home');
         }
 
         function setupSplitResizer() {
@@ -2322,7 +1415,7 @@
             });
         }
 
-        // --- 19. SYNC API ---
+        // ==================== SYNC API ====================
         async function syncGoogleSheetsData() {
             const apiUrl = localStorage.getItem('kv_api_url') || '';
             if (!apiUrl) {
@@ -2351,7 +1444,7 @@
 
                     timeLabel.innerText = 'Đồng bộ: ' + nowStr;
                     ind.className = 'w-2 h-2 rounded-full bg-emerald-500';
-                    showToast('Đồng bộ dữ liệu thành công!');
+                    showToast('Đồng bộ dữ liệu E-Learning thành công!');
                 } else {
                     throw new Error(result.message || 'Lỗi đọc bảng tính');
                 }
@@ -2369,16 +1462,13 @@
         function closeConfigModal() { document.getElementById('config-modal').classList.add('hidden'); }
         function testAndSaveApiUrl() {
             const url = document.getElementById('cfg-api-url').value.trim();
-            if (!url) {
-                alert('Vui lòng nhập Google Apps Script Web App URL!');
-                return;
-            }
+            if (!url) return alert('Vui lòng nhập Google Apps Script Web App URL!');
             localStorage.setItem('kv_api_url', url);
             closeConfigModal();
             syncGoogleSheetsData();
         }
 
-        // --- 20. GLOBAL SEARCH (CTRL + K) ---
+        // ==================== GLOBAL SEARCH (CTRL + K) ====================
         function setupKeyboardShortcuts() {
             window.addEventListener('keydown', (e) => {
                 if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -2388,7 +1478,6 @@
                 if (e.key === 'Escape') {
                     closeGlobalSearch();
                     closeConfigModal();
-                    closeFloatingModal();
                     closeLightboxModal();
                 }
             });
@@ -2416,9 +1505,9 @@
                 if (sheet && sheet.items) {
                     sheet.items.forEach(item => {
                         if (isGarbageRow(item)) return;
-                        const title = item['Nội dung'] || item['Tên app'] || item['Title'] || item['TenBuoi'] || item['Mã bộ đề / Tên file ngân hàng câu hỏi'] || Object.values(item)[1] || Object.values(item)[0] || '';
-                        const desc = item['Mô tả'] || item['Question'] || item['YeuCau'] || '';
-                        const url = item['HDSD'] || item['Link app'] || item['Link'] || '';
+                        const title = item['Nội dung'] || item['Title'] || '';
+                        const desc = item['Mô tả'] || '';
+                        const url = item['HDSD'] || item['YouTube'] || item['Github'] || '';
                         all.push({ title, desc, url, sheetName: sName });
                     });
                 }
@@ -2434,7 +1523,7 @@
             }
 
             res.innerHTML = matched.map(m => `
-                <div onclick="selectSearchResult('${escapeHtml(m.url)}', '${escapeHtml(m.title)}', '${escapeHtml(m.sheetName)}')" class="p-3 hover:bg-slate-50 rounded-lg cursor-pointer flex items-center justify-between transition-all">
+                <div onclick="selectSearchResult('${escapeHtml(m.url)}', '${escapeHtml(m.title)}', '${escapeHtml(m.sheetName)}')" class="p-3 hover:bg-slate-50 rounded-xl cursor-pointer flex items-center justify-between transition-all">
                     <div class="min-w-0 pr-3">
                         <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 mb-1 inline-block">${escapeHtml(m.sheetName)}</span>
                         <h4 class="text-xs font-bold text-slate-800 truncate">${escapeHtml(m.title)}</h4>
@@ -2447,11 +1536,8 @@
 
         function selectSearchResult(url, title, sheetName) {
             closeGlobalSearch();
-            if (url) {
-                openResource(url, title, sheetName);
-            } else if (sheetName) {
-                selectSheet(sheetName);
-            }
+            if (url) openResource(url, title, sheetName);
+            else if (sheetName) selectSheet(sheetName);
         }
 
         function handleLocalSearch(val) {
@@ -2468,21 +1554,9 @@
 
         function switchViewMode(mode) {
             AppState.viewMode = mode;
-            document.getElementById('view-mode-grid').className = mode === 'grid' ? 'px-2.5 py-1 rounded text-slate-600 bg-white shadow-sm font-medium transition-all' : 'px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all';
-            document.getElementById('view-mode-table').className = mode === 'table' ? 'px-2.5 py-1 rounded text-slate-600 bg-white shadow-sm font-medium transition-all' : 'px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all';
+            document.getElementById('view-mode-grid').className = mode === 'grid' ? 'px-2.5 py-1 rounded text-slate-600 bg-white shadow-sm font-bold transition-all' : 'px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all font-semibold';
+            document.getElementById('view-mode-table').className = mode === 'table' ? 'px-2.5 py-1 rounded text-slate-600 bg-white shadow-sm font-bold transition-all' : 'px-2.5 py-1 rounded text-slate-500 hover:text-slate-800 transition-all font-semibold';
             renderItems();
-        }
-
-        function copyToClipboardText(url, alertMsg) {
-            if (!url) {
-                showToast('Không có nội dung để sao chép!');
-                return;
-            }
-            navigator.clipboard.writeText(url).then(() => {
-                showToast(alertMsg || 'Đã sao chép vào bộ nhớ tạm!');
-            }).catch(err => {
-                prompt('Vui lòng sao chép thủ công:', url);
-            });
         }
 
         function escapeHtml(str) {
