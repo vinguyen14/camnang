@@ -1,5 +1,6 @@
 /**
- * TRAINER OS v6.2 ENTERPRISE - IMMUNITY UNIVERSAL SIDEBAR
+ * TRAINER OS v6.3 ENTERPRISE - DUAL-ENGINE UNIVERSAL SIDEBAR
+ * - Fix triệt để nhãn "Sản phẩm KV1" (kv1.html) & "Tất cả khóa học" (index.html?tab=khoa-hoc)
  * - Miễn nhiễm hoàn toàn với lỗi document.body.className ghi đè (system-workflow.html)
  * - Tự động dời lề chuẩn xác bằng CSS Variables trên :root và <html>
  * - Dual-Logo: Logo chữ KiotViet khi mở rộng, Icon Bông hoa khi thu gọn
@@ -25,7 +26,7 @@
     link.href = BONGHOA_LOGO_URL;
   }
 
-  // 2. DANH MỤC 12 MODULE CHUẨN XÁC CỦA TRAINER OS
+  // 2. DANH MỤC 13 MODULE CHUẨN XÁC 100% CỦA TRAINER OS (ĐÃ TÁCH KV1 & TẤT CẢ KHÓA HỌC)
   const SIDEBAR_STRUCTURE = [
     {
       group: 'TỔNG QUAN',
@@ -54,6 +55,12 @@
           icon: `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>`
         },
         {
+          id: 'kv1',
+          file: 'kv1.html',
+          label: 'Sản phẩm KV1',
+          icon: `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>`
+        },
+        {
           id: 'industry',
           file: 'industry.html',
           label: 'Chuyên ngành',
@@ -61,8 +68,8 @@
           icon: `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>`
         },
         {
-          id: 'kv1',
-          file: 'kv1.html',
+          id: 'all-courses',
+          file: 'index.html?tab=khoa-hoc',
           label: 'Tất cả khóa học',
           icon: `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>`
         }
@@ -75,7 +82,7 @@
           id: 'coderunner',
           file: 'coderunner.html',
           label: 'HTML Code Studio',
-          icon: `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>`
+          icon: `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`
         },
         {
           id: 'radar',
@@ -154,7 +161,7 @@
         display: none !important;
       }
 
-      /* DUAL-LOGO: Chuyển đổi êm dịu */
+      /* DUAL-LOGO: Chuyển đổi mượt mà */
       :root.sb-collapsed #sb-logo-full {
         display: none !important;
       }
@@ -169,7 +176,6 @@
         display: none !important;
       }
 
-      /* Nút Toggle: Khi thu gọn thì căn giữa ngay dưới logo */
       :root.sb-collapsed #btn-sidebar-toggle {
         margin: 4px auto 0 auto !important;
       }
@@ -190,10 +196,7 @@
         border-radius: 4px;
       }
 
-      /* ========================================================
-         CƠ CHẾ DỜI LỀ MIỄN NHIỄM (GẮN TRỰC TIẾP TRÊN THẺ <html>)
-         Không thể bị ghi đè bởi document.body.className = ...
-         ======================================================== */
+      /* DỜI LỀ MIỄN NHIỄM CHO CÁC TRANG STANDALONE */
       html.has-standalone-sidebar body {
         margin-left: var(--sb-width) !important;
         width: calc(100vw - var(--sb-width)) !important;
@@ -203,7 +206,6 @@
         box-sizing: border-box !important;
       }
 
-      /* Giữ nguyên vị trí các Topbar Sticky/Fixed của trang độc lập */
       html.has-standalone-sidebar body > header.fixed {
         left: var(--sb-width) !important;
         width: calc(100vw - var(--sb-width)) !important;
@@ -218,11 +220,16 @@
     return raw.split('?')[0].split('#')[0] || 'index.html';
   }
 
+  function getCurrentUrl() {
+    const file = getCurrentFile();
+    const search = window.location.search || '';
+    return file + search;
+  }
+
   function isSidebarExpanded() {
     return localStorage.getItem('kv_sidebar_expanded') !== 'false';
   }
 
-  // 4. KÍCH HOẠT DỜI LỀ & PHÁT TÍN HIỆU RESIZE CHO SVG TOPOLOGY
   function syncContentOffset(expanded) {
     document.documentElement.classList.toggle('sb-collapsed', !expanded);
 
@@ -231,31 +238,25 @@
       toggleIcon.classList.toggle('rotate-180', !expanded);
     }
 
-    // Tự động phát tín hiệu resize để vẽ lại dây cáp vi mạch trên system-workflow.html
     setTimeout(() => {
       window.dispatchEvent(new Event('resize'));
     }, 240);
   }
 
-  // 5. HÀM CHUYỂN ĐỔI TRẠNG THÁI TOÀN CỤC
   window.toggleSidebar = function () {
     const willExpand = document.documentElement.classList.contains('sb-collapsed');
     syncContentOffset(willExpand);
     localStorage.setItem('kv_sidebar_expanded', String(willExpand));
   };
 
-  // 6. XÂY DỰNG DOM AN TOÀN TUYỆT ĐỐI
   function buildSidebarDOM() {
     injectStyles();
 
     const expanded = isSidebarExpanded();
     document.documentElement.classList.toggle('sb-collapsed', !expanded);
 
-    // 6.1. TÌM DUY NHẤT ID="SIDEBAR" - TUYỆT ĐỐI KHÔNG DÙNG querySelector('aside')
     let sidebarEl = document.getElementById('sidebar');
     let isStandalonePage = false;
-
-    // Kiểm tra xem trang có cấu trúc Flex App Shell hay là trang độc lập
     const isFlexShell = !!document.querySelector('.flex.h-screen, .flex.h-full');
 
     if (!sidebarEl) {
@@ -268,17 +269,15 @@
     }
 
     if (isStandalonePage) {
-      // Gắn class miễn nhiễm lên thẻ <html> (Không lo bị script nào xóa mất)
       document.documentElement.classList.add('has-standalone-sidebar');
       sidebarEl.className = `fixed left-0 top-0 h-screen bg-white border-r border-slate-200 z-[9999] flex flex-col justify-between select-none`;
     } else {
-      // Dành cho trang Flexbox App Shell (index, spcb, kv1, tools, vault...)
       sidebarEl.className = `relative h-screen bg-white border-r border-slate-200 z-40 flex flex-col justify-between shrink-0 select-none`;
     }
 
     const currentFile = getCurrentFile();
+    const currentUrl = getCurrentUrl();
 
-    // Đọc thông tin Trainer
     let profName = "L&D KiotViet";
     let profTitle = "Administrator";
     try {
@@ -289,17 +288,15 @@
       }
     } catch (e) {}
 
-    // 6.2. HEADER DUAL-LOGO (KHÔNG BỊ MÉO HÌNH, NỀN TRẮNG CHE PHỦ TUYỆT ĐỐI)
+    // Header Logo
     let html = `
       <div class="flex flex-col w-full bg-white shrink-0">
         <div class="flex items-center justify-between h-14 w-full px-3 bg-white">
-          <!-- Logo Container (Nhấp đúp: Mở System Workflow) -->
           <div id="btn-secret-logo" class="cursor-pointer flex items-center overflow-hidden flex-1 bg-white select-none" title="Nhấp đúp: Mở System Architecture Workflow">
             <img id="sb-logo-full" src="${KIOTVIET_LOGO_URL}" alt="KiotViet" class="h-7 max-w-[130px] object-contain bg-white" />
             <img id="sb-logo-icon" src="${BONGHOA_LOGO_URL}" alt="KV" class="h-8 w-8 object-contain bg-white hidden" />
           </div>
 
-          <!-- Nút thu gọn / mở rộng menu -->
           <button id="btn-sidebar-toggle" class="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 transition-colors flex-shrink-0" title="Đóng / Mở menu">
             <svg id="icon-toggle" class="w-4 h-4 transition-transform duration-200 ${expanded ? '' : 'rotate-180'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
@@ -310,7 +307,7 @@
       <div class="w-full h-[1px] bg-slate-200"></div>
     `;
 
-    // 6.3. THÂN MENU: COMPACT ĐẦY ĐỦ 12 MODULE
+    // Menu Items
     html += `<div id="sb-scroll-container" class="flex-1 w-full overflow-x-hidden sb-scroll px-2 space-y-2 py-3 bg-white">`;
 
     SIDEBAR_STRUCTURE.forEach((sec) => {
@@ -319,7 +316,14 @@
       html += `<div class="sb-divider w-6 h-[1px] bg-slate-200 mx-auto my-2 hidden"></div>`;
 
       sec.items.forEach((item) => {
-        const isActive = (currentFile === item.file);
+        // Nhận diện Active chính xác kể cả khi có tham số ?tab=khoa-hoc
+        let isActive = false;
+        if (item.file.includes('?')) {
+          isActive = (currentUrl === item.file);
+        } else {
+          isActive = (currentFile === item.file && !window.location.search.includes('tab=khoa-hoc'));
+        }
+
         const itemClass = isActive
           ? 'bg-blue-50 text-blue-600 font-bold active-menu-item shadow-2xs'
           : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50 font-medium';
@@ -330,7 +334,6 @@
             <span class="sb-text ml-2.5 text-xs tracking-tight truncate flex-1">${item.label}</span>
             ${item.hasArrow ? `<svg class="sb-arrow w-3.5 h-3.5 text-slate-400 ml-auto flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>` : ''}
 
-            <!-- Tooltip nổi khi thu gọn -->
             <div class="sb-tooltip absolute left-16 ml-2 px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-md shadow-2xl whitespace-nowrap opacity-0 pointer-events-none transition-all duration-150 z-[100000] border border-slate-700">
               ${item.label}
               ${isActive ? `<span class="block text-[10px] text-blue-400 font-normal">Đang mở</span>` : ''}
@@ -343,10 +346,9 @@
 
     html += `</div>`;
 
-    // 6.4. CHÂN MENU: TRẠNG THÁI CLOUD VÀ AVATAR BÔNG HOA
+    // Footer
     html += `
       <div class="w-full px-2.5 py-2.5 flex flex-col gap-1 border-t border-slate-200 bg-white shrink-0">
-        <!-- Đèn trạng thái Cloud API (Nhấp đúp mở System Workflow) -->
         <div id="btn-secret-api" class="cursor-pointer group flex items-center h-7 px-2 rounded-lg hover:bg-slate-50 transition-colors" title="Nhấp đúp: Mở System Architecture Workflow">
           <span class="flex h-2 w-2 relative flex-shrink-0">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -355,7 +357,6 @@
           <span class="sb-text ml-2 text-[11px] font-semibold text-slate-500 truncate">Cloud API Active</span>
         </div>
 
-        <!-- Avatar Người Dùng: Bông Hoa KiotViet -->
         <div id="btn-secret-avatar" class="cursor-pointer group flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-50 transition-colors" title="Nhấp đúp: Mở System Architecture Workflow">
           <div class="w-8 h-8 rounded-full ring-2 ring-blue-500/20 bg-blue-50/50 p-0.5 overflow-hidden flex-shrink-0 shadow-sm flex items-center justify-center">
             <img src="${BONGHOA_LOGO_URL}" alt="Bông Hoa Logo" class="w-full h-full object-contain" />
@@ -365,7 +366,6 @@
             <span class="text-[10px] text-slate-400 font-medium truncate" id="sb-profile-title">${profTitle}</span>
           </div>
 
-          <!-- Tooltip Profile khi Thu gọn -->
           <div class="sb-tooltip absolute left-16 ml-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-md shadow-2xl whitespace-nowrap opacity-0 pointer-events-none transition-opacity z-[100000] border border-slate-700">
             <div class="font-bold text-slate-100">${profName}</div>
             <div class="text-[10px] text-blue-400">${profTitle}</div>
@@ -377,7 +377,6 @@
 
     sidebarEl.innerHTML = html;
 
-    // Gắn sự kiện nút Toggle
     const toggleBtn = document.getElementById('btn-sidebar-toggle');
     if (toggleBtn) {
       toggleBtn.addEventListener('click', (e) => {
@@ -386,7 +385,6 @@
       });
     }
 
-    // Tự động cuộn đến menu đang mở
     setTimeout(() => {
       const activeEl = sidebarEl.querySelector('.active-menu-item');
       if (activeEl) {
@@ -394,10 +392,8 @@
       }
     }, 150);
 
-    // Kích hoạt dời lề và bắn tín hiệu vẽ lại dây vi mạch
     syncContentOffset(expanded);
 
-    // Bắt sự kiện nhấp đúp mở System Workflow
     const openWorkflow = (e) => {
       e.preventDefault();
       window.location.href = 'system-workflow.html';
@@ -409,7 +405,6 @@
     });
   }
 
-  // KHỞI CHẠY TỨC THÌ
   injectFavicon();
 
   if (document.readyState === 'loading') {
