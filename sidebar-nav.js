@@ -1,10 +1,10 @@
 /**
- * TRAINER OS v6.3 ENTERPRISE - DUAL-ENGINE UNIVERSAL SIDEBAR
- * - Fix triệt để nhãn "Sản phẩm KV1" (kv1.html) & "Tất cả khóa học" (index.html?tab=khoa-hoc)
- * - Miễn nhiễm hoàn toàn với lỗi document.body.className ghi đè (system-workflow.html)
+ * TRAINER OS v6.4 ENTERPRISE - DUAL-ENGINE UNIVERSAL SIDEBAR
+ * - Tích hợp Menu Accordion xổ mượt mà cho "Chuyên ngành" (FNB, Salon, Hotel)
+ * - Tách bạch: "Sản phẩm KV1" (kv1.html) & "Tất cả khóa học" (index.html?tab=khoa-hoc)
+ * - Miễn nhiễm hoàn toàn với lỗi ghi đè body.className (system-workflow.html)
  * - Tự động dời lề chuẩn xác bằng CSS Variables trên :root và <html>
  * - Dual-Logo: Logo chữ KiotViet khi mở rộng, Icon Bông hoa khi thu gọn
- * - Tự động phát tín hiệu resize để vẽ lại dây nối SVG trên system-workflow.html
  * - Giữ nguyên vẹn 100% menu module con của settings, industry, thuehkd
  */
 
@@ -14,7 +14,6 @@
   const KIOTVIET_LOGO_URL = 'https://i.postimg.cc/xjKmwPcn/1.jpg';
   const BONGHOA_LOGO_URL = 'https://i.postimg.cc/yxQsM5RD/Bong-Hoa-Logo.png';
 
-  // 1. TỰ ĐỘNG TIÊM FAVICON BÔNG HOA VÀO TAB TRÌNH DUYỆT
   function injectFavicon() {
     let link = document.querySelector("link[rel*='icon']");
     if (!link) {
@@ -26,7 +25,7 @@
     link.href = BONGHOA_LOGO_URL;
   }
 
-  // 2. DANH MỤC 13 MODULE CHUẨN XÁC 100% CỦA TRAINER OS (ĐÃ TÁCH KV1 & TẤT CẢ KHÓA HỌC)
+  // CẤU TRÚC MENU 100% CHUẨN XÁC VỚI SUBMENU ACCORDION CHO CHUYÊN NGÀNH
   const SIDEBAR_STRUCTURE = [
     {
       group: 'TỔNG QUAN',
@@ -62,10 +61,14 @@
         },
         {
           id: 'industry',
-          file: 'industry.html',
           label: 'Chuyên ngành',
-          hasArrow: true,
-          icon: `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>`
+          isAccordion: true,
+          icon: `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>`,
+          subItems: [
+            { label: 'KiotViet FNB', file: 'industry.html', color: 'hover:text-orange-500' },
+            { label: 'KV Salon', file: 'industry.html', color: 'hover:text-pink-500' },
+            { label: 'KV Hotel', file: 'industry.html', color: 'hover:text-emerald-500' }
+          ]
         },
         {
           id: 'all-courses',
@@ -129,7 +132,6 @@
     }
   ];
 
-  // 3. CSS ĐỘC QUYỀN MIỄN NHIỄM GHI ĐÈ BẰNG BIẾN :root
   function injectStyles() {
     if (document.getElementById('sidebar-fast-styles')) return;
     const style = document.createElement('style');
@@ -151,7 +153,8 @@
       
       :root.sb-collapsed #sidebar .sb-text,
       :root.sb-collapsed #sidebar .sb-group-title,
-      :root.sb-collapsed #sidebar .sb-arrow {
+      :root.sb-collapsed #sidebar .sb-arrow,
+      :root.sb-collapsed #sidebar .sb-submenu {
         display: none !important;
       }
       :root.sb-collapsed #sidebar .sb-divider {
@@ -161,7 +164,6 @@
         display: none !important;
       }
 
-      /* DUAL-LOGO: Chuyển đổi mượt mà */
       :root.sb-collapsed #sb-logo-full {
         display: none !important;
       }
@@ -196,7 +198,6 @@
         border-radius: 4px;
       }
 
-      /* DỜI LỀ MIỄN NHIỄM CHO CÁC TRANG STANDALONE */
       html.has-standalone-sidebar body {
         margin-left: var(--sb-width) !important;
         width: calc(100vw - var(--sb-width)) !important;
@@ -204,12 +205,6 @@
         min-width: calc(100vw - var(--sb-width)) !important;
         transition: margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1), width 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
         box-sizing: border-box !important;
-      }
-
-      html.has-standalone-sidebar body > header.fixed {
-        left: var(--sb-width) !important;
-        width: calc(100vw - var(--sb-width)) !important;
-        transition: left 0.22s cubic-bezier(0.4, 0, 0.2, 1), width 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
       }
     `;
     document.head.appendChild(style);
@@ -247,6 +242,21 @@
     const willExpand = document.documentElement.classList.contains('sb-collapsed');
     syncContentOffset(willExpand);
     localStorage.setItem('kv_sidebar_expanded', String(willExpand));
+  };
+
+  // HÀM XỔ / ĐÓNG MENU CON CHUYÊN NGÀNH
+  window.toggleSidebarAccordion = function (menuId, iconId) {
+    const menu = document.getElementById(menuId);
+    const icon = document.getElementById(iconId);
+    if (!menu || !icon) return;
+
+    if (menu.style.maxHeight && menu.style.maxHeight !== '0px') {
+      menu.style.maxHeight = '0px';
+      icon.style.transform = 'rotate(0deg)';
+    } else {
+      menu.style.maxHeight = menu.scrollHeight + 'px';
+      icon.style.transform = 'rotate(90deg)';
+    }
   };
 
   function buildSidebarDOM() {
@@ -288,7 +298,6 @@
       }
     } catch (e) {}
 
-    // Header Logo
     let html = `
       <div class="flex flex-col w-full bg-white shrink-0">
         <div class="flex items-center justify-between h-14 w-full px-3 bg-white">
@@ -307,7 +316,6 @@
       <div class="w-full h-[1px] bg-slate-200"></div>
     `;
 
-    // Menu Items
     html += `<div id="sb-scroll-container" class="flex-1 w-full overflow-x-hidden sb-scroll px-2 space-y-2 py-3 bg-white">`;
 
     SIDEBAR_STRUCTURE.forEach((sec) => {
@@ -316,37 +324,66 @@
       html += `<div class="sb-divider w-6 h-[1px] bg-slate-200 mx-auto my-2 hidden"></div>`;
 
       sec.items.forEach((item) => {
-        // Nhận diện Active chính xác kể cả khi có tham số ?tab=khoa-hoc
-        let isActive = false;
-        if (item.file.includes('?')) {
-          isActive = (currentUrl === item.file);
-        } else {
-          isActive = (currentFile === item.file && !window.location.search.includes('tab=khoa-hoc'));
-        }
+        if (item.isAccordion) {
+          // XỬ LÝ ACCORDION "CHUYÊN NGÀNH"
+          const isCurrentActive = (currentFile === 'industry.html');
+          html += `
+            <div class="flex flex-col">
+              <div onclick="window.toggleSidebarAccordion('sub-cn', 'icon-cn-arrow')" class="sidebar-item relative group flex items-center justify-between h-8 w-full px-2 rounded-lg cursor-pointer transition-colors duration-150 ${isCurrentActive ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50 font-medium'}">
+                <div class="flex items-center min-w-0">
+                  ${item.icon}
+                  <span class="sb-text ml-2.5 text-xs tracking-tight truncate">${item.label}</span>
+                </div>
+                <svg id="icon-cn-arrow" class="sb-arrow w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isCurrentActive ? 'rotate-90' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                
+                <div class="sb-tooltip absolute left-16 ml-2 px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-md shadow-2xl whitespace-nowrap opacity-0 pointer-events-none transition-all duration-150 z-[100000] border border-slate-700">
+                  ${item.label}
+                </div>
+              </div>
 
-        const itemClass = isActive
-          ? 'bg-blue-50 text-blue-600 font-bold active-menu-item shadow-2xs'
-          : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50 font-medium';
-
-        html += `
-          <a href="${item.file}" class="sidebar-item relative group flex items-center h-8 w-full px-2 rounded-lg transition-colors duration-150 ${itemClass}">
-            ${item.icon}
-            <span class="sb-text ml-2.5 text-xs tracking-tight truncate flex-1">${item.label}</span>
-            ${item.hasArrow ? `<svg class="sb-arrow w-3.5 h-3.5 text-slate-400 ml-auto flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>` : ''}
-
-            <div class="sb-tooltip absolute left-16 ml-2 px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-md shadow-2xl whitespace-nowrap opacity-0 pointer-events-none transition-all duration-150 z-[100000] border border-slate-700">
-              ${item.label}
-              ${isActive ? `<span class="block text-[10px] text-blue-400 font-normal">Đang mở</span>` : ''}
+              <!-- SUBMENU XỔ RA KHI CLICK -->
+              <div id="sub-cn" class="sb-submenu overflow-hidden transition-all duration-300 ease-in-out pl-8 flex flex-col gap-1 pr-2" style="max-height: ${isCurrentActive ? '120px' : '0px'};">
+                ${item.subItems.map(sub => `
+                  <a href="${sub.file}" class="py-1.5 px-2 text-[12px] font-semibold text-slate-500 ${sub.color} hover:bg-slate-50 rounded-md transition-colors flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                    <span>${sub.label}</span>
+                  </a>
+                `).join('')}
+              </div>
             </div>
-          </a>
-        `;
+          `;
+        } else {
+          let isActive = false;
+          if (item.file.includes('?')) {
+            isActive = (currentUrl === item.file);
+          } else {
+            isActive = (currentFile === item.file && !window.location.search.includes('tab=khoa-hoc'));
+          }
+
+          const itemClass = isActive
+            ? 'bg-blue-50 text-blue-600 font-bold active-menu-item shadow-2xs'
+            : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50 font-medium';
+
+          html += `
+            <a href="${item.file}" class="sidebar-item relative group flex items-center h-8 w-full px-2 rounded-lg transition-colors duration-150 ${itemClass}">
+              ${item.icon}
+              <span class="sb-text ml-2.5 text-xs tracking-tight truncate flex-1">${item.label}</span>
+
+              <div class="sb-tooltip absolute left-16 ml-2 px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-md shadow-2xl whitespace-nowrap opacity-0 pointer-events-none transition-all duration-150 z-[100000] border border-slate-700">
+                ${item.label}
+                ${isActive ? `<span class="block text-[10px] text-blue-400 font-normal">Đang mở</span>` : ''}
+              </div>
+            </a>
+          `;
+        }
       });
       html += `</div>`;
     });
 
     html += `</div>`;
 
-    // Footer
     html += `
       <div class="w-full px-2.5 py-2.5 flex flex-col gap-1 border-t border-slate-200 bg-white shrink-0">
         <div id="btn-secret-api" class="cursor-pointer group flex items-center h-7 px-2 rounded-lg hover:bg-slate-50 transition-colors" title="Nhấp đúp: Mở System Architecture Workflow">
