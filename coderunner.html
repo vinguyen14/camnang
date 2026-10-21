@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML Code Runner & Sandbox | Trainer OS</title>
+    <title>HTML Code Studio & Device Sandbox | Trainer OS</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <style>
         html { scroll-behavior: smooth; }
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #1e293b; overflow: hidden; }
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #94a3b8; overflow: hidden; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .font-code { font-family: 'Fira Code', monospace; }
+        .font-mono-code { font-family: 'Fira Code', monospace; }
 
         /* SIDEBAR STYLES */
         .sidebar-saas { background-color: #ffffff; border-right: 1px solid #e5e7eb; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-x: hidden; }
@@ -41,66 +41,152 @@
         .sidebar-collapsed .user-profile-area { justify-content: center !important; padding: 16px 0 !important; gap: 0 !important; }
         .sidebar-collapsed .user-profile-area .flex-grow { display: none !important; }
 
-        /* WORKSPACE SPLIT */
-        .runner-container { height: calc(100vh - 64px); display: flex; overflow: hidden; background: #f8fafc; }
-        .editor-pane { width: 46%; display: flex; flex-direction: column; background: #ffffff; border-right: 1px solid #e2e8f0; }
-        .preview-pane { flex: 1; display: flex; flex-direction: column; background: #f1f5f9; overflow: hidden; position: relative; }
+        /* WORKSPACE RESIZABLE SPLIT */
+        .studio-container {
+            height: calc(100vh - 64px);
+            display: flex;
+            overflow: hidden;
+            position: relative;
+            background: #090d16;
+        }
+        .editor-pane {
+            min-width: 320px;
+            max-width: 75%;
+            width: 48%;
+            display: flex;
+            flex-direction: column;
+            background: #0f172a;
+            border-right: 1px solid #1e293b;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .preview-pane {
+            flex: 1;
+            min-width: 340px;
+            display: flex;
+            flex-direction: column;
+            background: #0a0f1d;
+            overflow: hidden;
+            position: relative;
+        }
 
-        /* DEVICE VIEWPORT FRAMES */
+        /* RESIZER BAR VỚI TAY NẮM */
+        .resizer-divider {
+            width: 8px;
+            cursor: col-resize;
+            background-color: #1e293b;
+            transition: background-color 0.15s;
+            user-select: none;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .resizer-divider::after {
+            content: '';
+            width: 2px;
+            height: 32px;
+            background-color: #64748b;
+            border-radius: 9999px;
+            transition: background-color 0.15s;
+        }
+        .resizer-divider:hover, .resizer-divider.resizing {
+            background-color: #3b82f6;
+        }
+        .resizer-divider:hover::after, .resizer-divider.resizing::after {
+            background-color: #ffffff;
+        }
+
+        /* KHUNG GIẢ LẬP THIẾT BỊ (REALISTIC DEVICE SHELLS) */
         .viewport-wrapper {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: auto;
-            padding: 24px;
-            transition: all 0.3s ease;
+            padding: 32px;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 20px 20px;
         }
         .device-frame {
             background: #ffffff;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-            border: 1px solid #cbd5e1;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s;
             transform-origin: center center;
             position: relative;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
         }
+        
+        /* MOBILE IPHONE SHELL */
         .device-mobile {
             width: 375px;
-            height: 667px;
-            border-radius: 36px;
-            border: 10px solid #1e293b;
+            height: 740px;
+            border-radius: 44px;
+            border: 12px solid #1e293b;
+            outline: 2px solid #334155;
         }
+        .device-mobile.landscape {
+            width: 740px;
+            height: 375px;
+        }
+        .mobile-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 124px;
+            height: 24px;
+            background: #1e293b;
+            border-bottom-left-radius: 14px;
+            border-bottom-right-radius: 14px;
+            z-index: 40;
+            pointer-events: none;
+        }
+        .mobile-home-bar {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 130px;
+            height: 4px;
+            background: #94a3b8;
+            border-radius: 999px;
+            z-index: 40;
+            pointer-events: none;
+        }
+
+        /* TABLET SHELL */
         .device-tablet {
             width: 768px;
-            height: 900px;
-            border-radius: 24px;
-            border: 12px solid #1e293b;
+            height: 920px;
+            border-radius: 28px;
+            border: 14px solid #1e293b;
+            outline: 2px solid #334155;
         }
+        .device-tablet.landscape {
+            width: 920px;
+            height: 768px;
+        }
+
+        /* LAPTOP SHELL */
         .device-laptop {
             width: 1024px;
             height: 640px;
             border-radius: 16px;
-            border: 8px solid #1e293b;
+            border: 10px solid #1e293b;
+            outline: 2px solid #334155;
         }
+
+        /* DESKTOP FLUID */
         .device-desktop {
             width: 100%;
             height: 100%;
             border-radius: 12px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid #334155;
         }
 
-        .code-textarea {
-            font-family: 'Fira Code', monospace;
-            font-size: 12.5px;
-            line-height: 1.6;
-            background: #ffffff;
-            color: #1e293b;
-            tab-size: 4;
-            resize: none;
-            outline: none;
-        }
-
-        /* FULLSCREEN SANDBOX */
+        /* FULLSCREEN PREVIEW */
         .fullscreen-active {
             position: fixed !important;
             inset: 0 !important;
@@ -109,6 +195,19 @@
             height: 100vh !important;
             border-radius: 0 !important;
             border: none !important;
+        }
+
+        /* CODE TEXTAREA DARK THEME */
+        .code-textarea {
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            line-height: 1.65;
+            background: #0f172a;
+            color: #e2e8f0;
+            tab-size: 4;
+            resize: none;
+            outline: none;
+            border: none;
         }
     </style>
 </head>
@@ -147,11 +246,10 @@
                 <a href="index.html" class="nav-item" data-title="Tất cả khóa học"><i class="fas fa-th-large"></i> <span>Tất cả khóa học</span></a>
 
                 <div class="nav-group-title">Công cụ & Tài nguyên</div>
-                <!-- 2 MODULE MỚI ĐÃ ĐƯỢC ĐỒNG BỘ VÀO SIDEBAR -->
-                <a href="coderunner.html" class="nav-item active" data-title="HTML Code Runner"><i class="fas fa-laptop-code text-blue-600"></i> <span>HTML Code Runner</span></a>
+                <a href="coderunner.html" class="nav-item active" data-title="HTML Code Studio"><i class="fas fa-laptop-code text-blue-600"></i> <span>HTML Code Studio</span></a>
                 <a href="radar.html" class="nav-item relative" data-title="Radar Sản Phẩm Mới">
                     <i class="fas fa-satellite-dish text-purple-600"></i> <span>Radar Sản Phẩm Mới</span>
-                    <span class="w-2 h-2 rounded-full bg-rose-500 absolute right-4 animate-pulse"></span>
+                    <span id="sidebar-alert-dot" class="w-2 h-2 rounded-full bg-rose-500 absolute right-4 animate-pulse hidden"></span>
                 </a>
                 <a href="knowledge.html" class="nav-item" data-title="Sơ đồ Vận hành"><i class="fas fa-project-diagram"></i> <span>Sơ đồ Vận hành</span></a>
                 <a href="vault.html" class="nav-item" data-title="Kho Lưu Trữ Vault"><i class="fas fa-box-open"></i> <span>Kho Lưu Trữ Vault</span></a>
@@ -173,122 +271,164 @@
 
         <!-- MAIN LAYOUT -->
         <div class="flex-1 flex flex-col overflow-hidden relative">
-            <!-- HEADER -->
-            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 shrink-0 shadow-sm">
+            <!-- TOP BAR -->
+            <header class="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6 z-40 shrink-0 shadow-sm">
                 <div class="flex items-center gap-4">
-                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-blue-50 hover:text-blue-600 transition border border-slate-200">
+                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded bg-slate-800 text-slate-400 flex items-center justify-center hover:bg-slate-700 hover:text-white transition border border-slate-700">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <div class="h-6 w-px bg-slate-200"></div>
+                    <div class="h-6 w-px bg-slate-800"></div>
                     <div>
-                        <h1 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fas fa-laptop-code text-blue-600"></i> HTML Code Runner & Device Sandbox
+                        <h1 class="text-sm font-bold text-white flex items-center gap-2 font-mono-code">
+                            <i class="fas fa-terminal text-cyan-400"></i> HTML CODE STUDIO IDE & DEVICE SANDBOX
                         </h1>
-                        <p class="text-[11px] text-slate-400 font-medium">Soi mã HTML trực tiếp, giả lập đa thiết bị & bắt lỗi cú pháp</p>
+                        <p class="text-[11px] text-slate-400 font-medium">Soạn thảo, kiểm thử giao diện đa thiết bị có console logs và phím tắt chuyên nghiệp</p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3">
-                    <button onclick="insertSampleTemplate('email')" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 transition">
-                        <i class="fas fa-envelope text-blue-500 mr-1"></i> Mẫu Email Mời Học
+                <!-- Template Nạp Sẵn -->
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] text-slate-400 font-mono-code hidden lg:inline mr-1">Templates:</span>
+                    <button onclick="insertSampleTemplate('email')" class="px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition">
+                        <i class="fas fa-envelope text-blue-400 mr-1"></i> Email Mời Học
                     </button>
-                    <button onclick="insertSampleTemplate('table')" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 transition">
-                        <i class="fas fa-table text-emerald-500 mr-1"></i> Mẫu Bảng Điểm
+                    <button onclick="insertSampleTemplate('table')" class="px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition">
+                        <i class="fas fa-table text-emerald-400 mr-1"></i> Bảng Điểm SPCB
+                    </button>
+                    <button onclick="insertSampleTemplate('quiz')" class="px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition">
+                        <i class="fas fa-gamepad text-purple-400 mr-1"></i> Widget Đố Vui JS
                     </button>
                 </div>
             </header>
 
-            <!-- WORKSPACE 2 CỘT: EDITOR & LIVE SANDBOX -->
-            <div class="runner-container">
-                <!-- CỘT TRÁI: CODE EDITOR & TOOLBAR -->
-                <div class="editor-pane">
+            <!-- WORKSPACE RESIZABLE SPLIT -->
+            <div class="studio-container" id="studioContainer">
+                
+                <!-- CỘT TRÁI: CODE EDITOR VỚI CONSOLE LOGS -->
+                <div class="editor-pane" id="editorPane">
                     <!-- Toolbar Editor -->
-                    <div class="px-5 py-3 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between shrink-0">
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-bold text-slate-600 uppercase tracking-wider font-code flex items-center gap-1.5">
-                                <i class="fas fa-code text-blue-600"></i> SOURCE CODE
+                    <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
+                        <div class="flex items-center gap-2 text-xs font-mono-code">
+                            <span class="text-slate-400 font-bold uppercase flex items-center gap-1.5">
+                                <i class="fas fa-code text-cyan-400"></i> INDEX.HTML
                             </span>
-                            <span id="charCount" class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-code">0 chars</span>
+                            <span id="charCount" class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700">0 chars</span>
+                            <span class="text-[10px] text-slate-500 hidden sm:inline">• Tab: 4 spaces • Ctrl+S: Lưu • Ctrl+Enter: Chạy</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button onclick="pasteCodeFromClipboard()" class="px-2.5 py-1 rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold shadow-xs transition" title="Dán mã từ Clipboard">
-                                <i class="fas fa-paste text-slate-500 mr-1"></i> Dán Code
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="pasteCodeFromClipboard()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition" title="Dán mã từ Clipboard">
+                                <i class="fas fa-paste text-slate-400 mr-1"></i> Dán
                             </button>
-                            <button onclick="copyCodeToClipboard()" class="px-2.5 py-1 rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold shadow-xs transition" title="Sao chép toàn bộ code">
-                                <i class="fas fa-copy text-slate-500 mr-1"></i> Copy
+                            <button onclick="copyCodeToClipboard()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition" title="Sao chép toàn bộ code">
+                                <i class="fas fa-copy text-slate-400 mr-1"></i> Copy
                             </button>
-                            <button onclick="clearCodeEditor()" class="p-1.5 rounded hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition" title="Xóa trắng">
+                            <button onclick="clearCodeEditor()" class="p-1.5 rounded hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 transition" title="Xóa trắng">
                                 <i class="fas fa-trash-alt text-xs"></i>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Banner Cảnh Báo Lỗi / Sai Loại Code -->
-                    <div id="errorBanner" class="hidden px-4 py-2.5 bg-amber-50 border-b border-amber-200 text-amber-800 text-xs flex items-center justify-between shrink-0 animate-fade-up">
+                    <!-- Banner Cảnh Báo Lỗi / Linter -->
+                    <div id="errorBanner" class="hidden px-4 py-2 bg-amber-950/40 border-b border-amber-900/60 text-amber-300 text-xs flex items-center justify-between shrink-0">
                         <div class="flex items-center gap-2">
-                            <i class="fas fa-exclamation-triangle text-amber-500 text-sm"></i>
-                            <span id="errorMsg" class="font-medium">Phát hiện cú pháp không hợp lệ.</span>
+                            <i class="fas fa-exclamation-triangle text-amber-400 text-sm"></i>
+                            <span id="errorMsg" class="font-medium font-mono-code">Phát hiện cú pháp không hợp lệ.</span>
                         </div>
-                        <button onclick="document.getElementById('errorBanner').classList.add('hidden')" class="text-amber-600 hover:text-amber-900"><i class="fas fa-times"></i></button>
+                        <button onclick="document.getElementById('errorBanner').classList.add('hidden')" class="text-amber-400 hover:text-white"><i class="fas fa-times"></i></button>
                     </div>
 
-                    <!-- Khung Nhập Code Textarea -->
-                    <div class="flex-1 relative overflow-hidden flex">
-                        <textarea id="codeEditor" oninput="handleCodeInput()" class="w-full h-full p-5 code-textarea custom-scrollbar" placeholder="Dán hoặc gõ mã HTML, Tailwind, CSS, JS vào đây để xem trực tiếp kết quả bên phải..."></textarea>
+                    <!-- Textarea Code Input -->
+                    <div class="flex-1 relative overflow-hidden flex bg-slate-900">
+                        <textarea id="codeEditor" oninput="handleCodeInput()" onkeydown="handleEditorKeyDown(event)" class="w-full h-full p-4 code-textarea custom-scrollbar" placeholder="Nhập hoặc dán mã HTML/JS vào đây để xem trực tiếp kết quả bên phải..."></textarea>
                     </div>
 
-                    <!-- Footer Editor: Nút Tải Về Dạng Notepad -->
-                    <div class="px-5 py-3 border-t border-slate-200 bg-white flex items-center justify-between shrink-0">
-                        <span class="text-[11px] text-slate-400 font-medium">Hỗ trợ tự động chạy HTML & JS Sandbox</span>
+                    <!-- CONSOLE LOGS DRAWER BÊN DƯỚI EDITOR -->
+                    <div class="border-t border-slate-800 bg-slate-950 flex flex-col shrink-0" id="consoleContainer" style="height: 140px;">
+                        <div class="px-4 py-1.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between text-xs font-mono-code select-none">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-terminal text-emerald-400 text-[11px]"></i>
+                                <span class="font-bold text-slate-300">LIVE CONSOLE LOGS</span>
+                                <span id="consoleCounter" class="text-[9px] bg-slate-800 text-emerald-400 px-1.5 py-0.2 rounded border border-slate-700">0</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="clearConsoleLogs()" class="text-slate-500 hover:text-slate-300 text-[10px]"><i class="fas fa-ban mr-1"></i>Xóa log</button>
+                                <button onclick="toggleConsoleDrawer()" id="btnToggleConsole" class="text-slate-400 hover:text-white text-xs"><i class="fas fa-chevron-down"></i></button>
+                            </div>
+                        </div>
+                        <div id="consoleBody" class="flex-1 overflow-y-auto custom-scrollbar p-3 font-mono-code text-[11px] space-y-1 text-slate-300 bg-slate-950/70">
+                            <div class="text-slate-500 italic">Sẵn sàng lắng nghe lệnh console.log(), cảnh báo và lỗi từ trang xem thử...</div>
+                        </div>
+                    </div>
+
+                    <!-- Footer Editor: Tải Về Dạng File / Notepad -->
+                    <div class="px-4 py-2.5 border-t border-slate-800 bg-slate-900 flex items-center justify-between shrink-0">
+                        <span class="text-[11px] text-slate-500 font-mono-code">UTF-8 Encoded</span>
                         <div class="flex items-center gap-2">
-                            <button onclick="downloadAsFile('txt')" class="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 shadow-xs" title="Tải về file text Notepad">
-                                <i class="fas fa-file-alt text-slate-500"></i> Tải Notepad (.txt)
+                            <button onclick="downloadAsFile('txt')" class="px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-bold transition flex items-center gap-1.5" title="Tải về file text Notepad">
+                                <i class="fas fa-file-alt text-slate-400"></i> Tải Notepad (.txt)
                             </button>
-                            <button onclick="downloadAsFile('html')" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Tải về file trang web HTML">
+                            <button onclick="downloadAsFile('html')" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md" title="Tải về file HTML chuẩn">
                                 <i class="fas fa-download"></i> Tải File (.html)
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- CỘT PHẢI: PREVIEW VIEWPORT & DEVICE SWITCHER -->
-                <div class="preview-pane">
-                    <!-- Toolbar Viewport: Chuyển đổi Thiết bị & Zoom -->
-                    <div class="px-6 py-3 border-b border-slate-200 bg-white flex items-center justify-between shrink-0 shadow-xs">
+                <!-- THANH KÉO RESIZER CHIA ĐÔI MÀN HÌNH -->
+                <div id="resizerDivider" class="resizer-divider" title="Kéo sang trái hoặc phải để điều chỉnh độ rộng Editor và Preview"></div>
+
+                <!-- CỘT PHẢI: LIVE PREVIEW & REALISTIC DEVICE SHELLS -->
+                <div class="preview-pane" id="previewPane">
+                    <!-- Toolbar Viewport: Chuyển Thiết Bị, Xoay Màn Hình & Zoom -->
+                    <div class="px-5 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0 select-none">
+                        
                         <!-- Bộ chọn thiết bị -->
-                        <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
-                            <button onclick="switchDevice('desktop')" id="dev-desktop" class="px-3 py-1 rounded-lg font-bold bg-white text-blue-600 shadow-xs transition flex items-center gap-1.5">
+                        <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-mono-code">
+                            <button onclick="switchDevice('desktop')" id="dev-desktop" class="px-3 py-1 rounded-lg font-bold bg-blue-600 text-white shadow-xs transition flex items-center gap-1.5">
                                 <i class="fas fa-desktop"></i> Desktop
                             </button>
-                            <button onclick="switchDevice('laptop')" id="dev-laptop" class="px-3 py-1 rounded-lg font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
-                                <i class="fas fa-laptop"></i> 1024px
+                            <button onclick="switchDevice('laptop')" id="dev-laptop" class="px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5">
+                                <i class="fas fa-laptop"></i> Laptop
                             </button>
-                            <button onclick="switchDevice('tablet')" id="dev-tablet" class="px-3 py-1 rounded-lg font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
+                            <button onclick="switchDevice('tablet')" id="dev-tablet" class="px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5">
                                 <i class="fas fa-tablet-alt"></i> Tablet
                             </button>
-                            <button onclick="switchDevice('mobile')" id="dev-mobile" class="px-3 py-1 rounded-lg font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
+                            <button onclick="switchDevice('mobile')" id="dev-mobile" class="px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5">
                                 <i class="fas fa-mobile-alt"></i> Mobile
                             </button>
                         </div>
 
-                        <!-- Bộ điều khiển Zoom & Fullscreen -->
+                        <!-- Kích Thước & Nút Xoay Ngang / Dọc -->
                         <div class="flex items-center gap-3">
-                            <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-1 text-xs">
-                                <button onclick="changeZoom(-0.25)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-600 font-bold">-</button>
-                                <span id="zoomLabel" class="w-12 text-center font-mono font-bold text-slate-700">100%</span>
-                                <button onclick="changeZoom(0.25)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-600 font-bold">+</button>
-                                <button onclick="resetZoom()" class="px-1.5 py-0.5 text-[10px] text-blue-600 hover:underline">1:1</button>
+                            <div class="flex items-center gap-1.5 text-xs font-mono-code text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+                                <span id="resLabel">100% x 100%</span>
+                                <button onclick="toggleOrientation()" id="btnRotate" class="ml-1 p-1 hover:text-cyan-400 transition" title="Xoay ngang / dọc màn hình">
+                                    <i class="fas fa-rotate"></i>
+                                </button>
                             </div>
 
-                            <button onclick="toggleFullscreenPreview()" id="btnFullscreen" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Xem toàn màn hình">
-                                <i class="fas fa-expand"></i> Fullscreen
+                            <!-- Điều Khiển Zoom -->
+                            <div class="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-lg p-1 text-xs">
+                                <button onclick="changeZoom(-0.25)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400 font-bold">-</button>
+                                <span id="zoomLabel" class="w-12 text-center font-mono font-bold text-slate-300">100%</span>
+                                <button onclick="changeZoom(0.25)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400 font-bold">+</button>
+                                <button onclick="resetZoom()" class="px-1.5 py-0.5 text-[10px] text-cyan-400 hover:underline">1:1</button>
+                            </div>
+
+                            <button onclick="toggleFullscreenPreview()" id="btnFullscreen" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Toàn màn hình">
+                                <i class="fas fa-expand"></i>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Khung Nhúng Iframe Hiển Thị Kết Quả -->
+                    <!-- Khung Nhúng Iframe Hiển Thị Với Khung Thiết Bị Chân Thực -->
                     <div class="viewport-wrapper custom-scrollbar" id="viewportWrapper">
                         <div class="device-frame device-desktop" id="deviceFrame">
+                            <!-- Tai thỏ iPhone Notch (Chỉ hiện khi ở Mobile) -->
+                            <div class="mobile-notch hidden" id="mobileNotch"></div>
+                            <!-- Thanh gạt Home Bar (Chỉ hiện khi ở Mobile) -->
+                            <div class="mobile-home-bar hidden" id="mobileHomeBar"></div>
+
                             <iframe id="previewIframe" class="w-full h-full border-none rounded-[inherit]" sandbox="allow-scripts allow-modals allow-same-origin allow-forms"></iframe>
                         </div>
                     </div>
@@ -304,15 +444,18 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-5 py-2.5 rounded-xl shadow-2xl text-xs z-[100000] opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-2 border border-slate-700">
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-5 py-2.5 rounded-xl shadow-2xl font-mono-code text-xs z-[100000] opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-2 border border-slate-700">
         <span id="toast-msg"></span>
     </div>
 
-    <!-- JAVASCRIPT ENGINE CỦA CODE RUNNER -->
+    <!-- JAVASCRIPT CODE STUDIO ENGINE -->
     <script>
         let currentZoom = 1.0;
         let currentDevice = 'desktop';
+        let isLandscape = false;
         let isFullscreen = false;
+        let logCount = 0;
+        let isConsoleOpen = true;
 
         function showToast(msg) {
             const t = document.getElementById('toast');
@@ -326,7 +469,7 @@
             }, 3000);
         }
 
-        // --- SIDEBAR & TOOLTIP ---
+        // --- SIDEBAR COLLAPSIBLE ---
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-collapsed'); }
         function toggleAccordion(menuId, iconId) {
             const menu = document.getElementById(menuId); const icon = document.getElementById(iconId);
@@ -349,19 +492,92 @@
             item.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; });
         });
 
-        // --- XỬ LÝ NHẬP CODE & LINTER KIỂM TRA LỖI CÚ PHÁP ---
-        let renderDebounceTimer;
+        // ==========================================
+        // 1. THANH KÉO CO GIÃN TỰ DO (DRAGGABLE RESIZER)
+        // ==========================================
+        function initSplitResizer() {
+            const resizer = document.getElementById('resizerDivider');
+            const editorPane = document.getElementById('editorPane');
+            const container = document.getElementById('studioContainer');
+            const iframe = document.getElementById('previewIframe');
+            let isDragging = false;
+
+            resizer.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                resizer.classList.add('resizing');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+                if(iframe) iframe.style.pointerEvents = 'none';
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const rect = container.getBoundingClientRect();
+                const offsetX = e.clientX - rect.left;
+                let percent = (offsetX / rect.width) * 100;
+
+                if (percent < 25) percent = 25;
+                if (percent > 75) percent = 75;
+
+                editorPane.style.width = `${percent}%`;
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    resizer.classList.remove('resizing');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                    if(iframe) iframe.style.pointerEvents = 'auto';
+                }
+            });
+        }
+
+        // ==========================================
+        // 2. PHÍM TẮT THÔNG MINH CHO LẬP TRÌNH VIÊN
+        // ==========================================
+        function handleEditorKeyDown(e) {
+            const textarea = document.getElementById('codeEditor');
+
+            // 1. Phím TAB: Thụt lề 4 khoảng trắng tự nhiên
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                textarea.value = textarea.value.substring(0, start) + "    " + textarea.value.substring(end);
+                textarea.selectionStart = textarea.selectionEnd = start + 4;
+                handleCodeInput();
+            }
+
+            // 2. Phím CTRL + S: Tải file HTML về máy
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                downloadAsFile('html');
+            }
+
+            // 3. Phím CTRL + ENTER: Ép render tức thời
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                validateAndRenderCode(textarea.value, true);
+                showToast("⚡ Đã cập nhật lại Preview!");
+            }
+        }
+
+        // ==========================================
+        // 3. NHẬP LIỆU, LINTER & RENDER IFRAME SANDBOX
+        // ==========================================
+        let renderTimer;
         function handleCodeInput() {
             const code = document.getElementById('codeEditor').value;
             document.getElementById('charCount').innerText = `${code.length} chars`;
 
-            clearTimeout(renderDebounceTimer);
-            renderDebounceTimer = setTimeout(() => {
-                validateAndRenderCode(code);
+            clearTimeout(renderTimer);
+            renderTimer = setTimeout(() => {
+                validateAndRenderCode(code, false);
             }, 180);
         }
 
-        function validateAndRenderCode(code) {
+        function validateAndRenderCode(code, force = false) {
             const errorBanner = document.getElementById('errorBanner');
             const errorMsg = document.getElementById('errorMsg');
             const trimmed = code.trim();
@@ -372,30 +588,30 @@
                 return;
             }
 
-            // 1. Kiểm tra dán nhầm JSON thuần
+            // 1. Bắt lỗi dán nhầm JSON
             try {
                 if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
                     JSON.parse(trimmed);
-                    showLinterWarning('⚠️ Bạn đang dán dữ liệu JSON thuần, không phải mã HTML hiển thị giao diện!');
+                    showLinterWarning('⚠️ Bạn đang dán cấu trúc JSON thuần, không phải mã giao diện HTML!');
                     renderToIframe(`<pre style="padding:24px; font-family:monospace; color:#ef4444; background:#fef2f2; border-radius:12px; font-size:12px;">${escapeHtml(code)}</pre>`);
                     return;
                 }
             } catch (e) {}
 
-            // 2. Kiểm tra dán nhầm JavaScript thuần (thiếu thẻ script)
-            if ((trimmed.includes('function ') || trimmed.includes('const ') || trimmed.includes('let ')) && !trimmed.includes('<script') && !trimmed.includes('<div') && !trimmed.includes('<p')) {
-                showLinterWarning('⚠️ Phát hiện mã JavaScript thuần! Hãy bọc trong thẻ &lt;script&gt;...&lt;/script&gt; để chạy được.');
+            // 2. Bắt lỗi JavaScript thuần
+            if ((trimmed.includes('function ') || trimmed.includes('const ') || trimmed.includes('let ')) && !trimmed.includes('<script') && !trimmed.includes('<div') && !trimmed.includes('<p') && !trimmed.includes('<!DOCTYPE')) {
+                showLinterWarning('⚠️ Phát hiện mã JavaScript thuần! Cần bọc trong thẻ &lt;script&gt;...&lt;/script&gt; để thực thi.');
             } 
-            // 3. Kiểm tra dán nhầm CSS thuần (thiếu thẻ style)
-            else if (trimmed.includes('{') && trimmed.includes('margin:') || trimmed.includes('padding:') && !trimmed.includes('<style') && !trimmed.includes('<div')) {
-                showLinterWarning('⚠️ Phát hiện mã CSS thuần! Hãy bọc trong thẻ &lt;style&gt;...&lt;/style&gt; để áp dụng style.');
-            }
-            // 4. Kiểm tra cấu trúc HTML với DOMParser
+            // 3. Bắt lỗi CSS thuần
+            else if (trimmed.includes('{') && (trimmed.includes('margin:') || trimmed.includes('padding:')) && !trimmed.includes('<style') && !trimmed.includes('<div') && !trimmed.includes('<!DOCTYPE')) {
+                showLinterWarning('⚠️ Phát hiện mã CSS thuần! Cần bọc trong thẻ &lt;style&gt;...&lt;/style&gt; để áp dụng giao diện.');
+            } 
+            // 4. Linter HTML
             else {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(code, 'text/html');
-                const parserErrors = doc.querySelectorAll('parsererror');
-                if (parserErrors.length > 0) {
+                const errors = doc.querySelectorAll('parsererror');
+                if (errors.length > 0) {
                     showLinterWarning('⚠️ Lỗi cú pháp HTML: Phát hiện thẻ mở/đóng chưa hoàn chỉnh.');
                 } else {
                     errorBanner.classList.add('hidden');
@@ -412,29 +628,161 @@
             errorBanner.classList.remove('hidden');
         }
 
+        // TIÊM SCRIPT BẮT TOÀN BỘ CONSOLE LOG TỪ IFRAME RA GIAO DIỆN CHÍNH
         function renderToIframe(htmlCode) {
             const iframe = document.getElementById('previewIframe');
+            
+            // Mã tiêm ngầm để hứng console.log() và window.onerror
+            const consoleInterceptor = `
+                <script>
+                    (function() {
+                        const send = (type, args) => {
+                            try {
+                                const msg = Array.from(args).map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+                                window.parent.postMessage({ source: 'coderunner_console', type: type, msg: msg }, '*');
+                            } catch(e){}
+                        };
+                        const _log = console.log, _warn = console.warn, _error = console.error;
+                        console.log = function() { send('log', arguments); _log.apply(console, arguments); };
+                        console.warn = function() { send('warn', arguments); _warn.apply(console, arguments); };
+                        console.error = function() { send('error', arguments); _error.apply(console, arguments); };
+                        window.onerror = function(msg, url, line) {
+                            send('error', ['Lỗi JS dòng ' + line + ': ' + msg]);
+                        };
+                    })();
+                <\/script>
+            `;
+
+            let finalHtml = htmlCode;
+            if (finalHtml.includes('<head>')) {
+                finalHtml = finalHtml.replace('<head>', '<head>' + consoleInterceptor);
+            } else {
+                finalHtml = consoleInterceptor + finalHtml;
+            }
+
             const doc = iframe.contentDocument || iframe.contentWindow.document;
             doc.open();
-            doc.write(htmlCode);
+            doc.write(finalHtml);
             doc.close();
         }
 
-        // --- ĐIỀU KHIỂN VIEWPORT & THIẾT BỊ ---
-        function switchDevice(device) {
-            currentDevice = device;
-            const frame = document.getElementById('deviceFrame');
+        // ==========================================
+        // 4. LIVE IN-BROWSER CONSOLE LOGS HANDLER
+        // ==========================================
+        window.addEventListener('message', (e) => {
+            if (e.data && e.data.source === 'coderunner_console') {
+                addConsoleEntry(e.data.type, e.data.msg);
+            }
+        });
+
+        function addConsoleEntry(type, msg) {
+            const consoleBody = document.getElementById('consoleBody');
+            const counter = document.getElementById('consoleCounter');
             
+            if (logCount === 0) consoleBody.innerHTML = '';
+            logCount++;
+            counter.innerText = logCount;
+
+            const time = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            let icon = '<i class="fas fa-angle-right text-cyan-400 mr-1.5"></i>';
+            let colorCls = 'text-slate-200';
+
+            if (type === 'error') {
+                icon = '<i class="fas fa-times-circle text-rose-500 mr-1.5"></i>';
+                colorCls = 'text-rose-400 bg-rose-950/20 px-1 rounded';
+            } else if (type === 'warn') {
+                icon = '<i class="fas fa-exclamation-triangle text-amber-400 mr-1.5"></i>';
+                colorCls = 'text-amber-300';
+            }
+
+            const row = document.createElement('div');
+            row.className = 'flex items-start gap-1 py-0.5 leading-snug break-all';
+            row.innerHTML = `
+                <span class="text-slate-600 text-[10px] shrink-0 font-mono select-none">${time}</span>
+                ${icon}
+                <span class="${colorCls} flex-1 font-mono">${escapeHtml(msg)}</span>
+            `;
+
+            consoleBody.appendChild(row);
+            consoleBody.scrollTop = consoleBody.scrollHeight;
+        }
+
+        function clearConsoleLogs() {
+            document.getElementById('consoleBody').innerHTML = '<div class="text-slate-500 italic">Đã xóa sạch console logs.</div>';
+            logCount = 0;
+            document.getElementById('consoleCounter').innerText = '0';
+        }
+
+        function toggleConsoleDrawer() {
+            const container = document.getElementById('consoleContainer');
+            const icon = document.querySelector('#btnToggleConsole i');
+            isConsoleOpen = !isConsoleOpen;
+
+            if (isConsoleOpen) {
+                container.style.height = '140px';
+                icon.className = 'fas fa-chevron-down';
+            } else {
+                container.style.height = '32px';
+                icon.className = 'fas fa-chevron-up';
+            }
+        }
+
+        // ==========================================
+        // 5. ĐIỀU KHIỂN VIEWPORT & KHUNG THIẾT BỊ CHÂN THỰC
+        // ==========================================
+        const DEVICE_CONFIGS = {
+            desktop: { portrait: '100% x 100%', landscape: '100% x 100%' },
+            laptop: { portrait: '1024 x 640 px', landscape: '1024 x 640 px' },
+            tablet: { portrait: '768 x 920 px', landscape: '920 x 768 px' },
+            mobile: { portrait: '375 x 740 px', landscape: '740 x 375 px' }
+        };
+
+        function switchDevice(dev) {
+            currentDevice = dev;
+            const frame = document.getElementById('deviceFrame');
+            const notch = document.getElementById('mobileNotch');
+            const homeBar = document.getElementById('mobileHomeBar');
+
             ['desktop', 'laptop', 'tablet', 'mobile'].forEach(d => {
                 frame.classList.remove(`device-${d}`);
                 const btn = document.getElementById(`dev-${d}`);
-                btn.className = (d === device) 
-                    ? "px-3 py-1 rounded-lg font-bold bg-white text-blue-600 shadow-xs transition flex items-center gap-1.5"
-                    : "px-3 py-1 rounded-lg font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5";
+                if (btn) {
+                    btn.className = (d === dev)
+                        ? "px-3 py-1 rounded-lg font-bold bg-blue-600 text-white shadow-xs transition flex items-center gap-1.5"
+                        : "px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5";
+                }
             });
 
-            frame.classList.add(`device-${device}`);
-            showToast(`Đã chuyển khung nhìn: ${device.toUpperCase()}`);
+            frame.classList.add(`device-${dev}`);
+            
+            // Hiện/Ẩn Tai thỏ và Home bar của điện thoại
+            if (dev === 'mobile') {
+                notch.classList.remove('hidden');
+                homeBar.classList.remove('hidden');
+            } else {
+                notch.classList.add('hidden');
+                homeBar.classList.add('hidden');
+            }
+
+            updateResolutionLabel();
+            showToast(`Khung nhìn: ${dev.toUpperCase()}`);
+        }
+
+        function toggleOrientation() {
+            if (currentDevice === 'desktop') return showToast("Màn hình Desktop luôn ở chế độ toàn khung.");
+
+            isLandscape = !isLandscape;
+            const frame = document.getElementById('deviceFrame');
+            frame.classList.toggle('landscape', isLandscape);
+
+            updateResolutionLabel();
+            showToast(`Đã xoay màn hình: ${isLandscape ? 'NGANG (Landscape)' : 'DỌC (Portrait)'}`);
+        }
+
+        function updateResolutionLabel() {
+            const config = DEVICE_CONFIGS[currentDevice];
+            const text = isLandscape ? config.landscape : config.portrait;
+            document.getElementById('resLabel').innerText = text;
         }
 
         function changeZoom(delta) {
@@ -449,42 +797,43 @@
 
         function applyZoom() {
             const frame = document.getElementById('deviceFrame');
-            const label = document.getElementById('zoomLabel');
             frame.style.transform = `scale(${currentZoom})`;
-            label.innerText = `${Math.round(currentZoom * 100)}%`;
+            document.getElementById('zoomLabel').innerText = `${Math.round(currentZoom * 100)}%`;
         }
 
         function toggleFullscreenPreview() {
             const frame = document.getElementById('deviceFrame');
             isFullscreen = !isFullscreen;
-            
+
             if (isFullscreen) {
                 frame.classList.add('fullscreen-active');
-                document.getElementById('btnFullscreen').innerHTML = '<i class="fas fa-compress"></i> Thu nhỏ';
+                document.getElementById('btnFullscreen').innerHTML = '<i class="fas fa-compress text-cyan-400"></i>';
             } else {
                 frame.classList.remove('fullscreen-active');
-                document.getElementById('btnFullscreen').innerHTML = '<i class="fas fa-expand"></i> Fullscreen';
+                document.getElementById('btnFullscreen').innerHTML = '<i class="fas fa-expand"></i>';
             }
         }
 
-        // --- TẢI VỀ DẠNG NOTEPAD (.HTML / .TXT) ---
+        // ==========================================
+        // 6. SAO CHÉP, DÁN VÀ TẢI VỀ NOTEPAD (.HTML / .TXT)
+        // ==========================================
         function downloadAsFile(ext) {
             const code = document.getElementById('codeEditor').value;
-            if (!code.trim()) return alert("Khung code đang trống, không có nội dung để tải về!");
+            if (!code.trim()) return alert("Khung soạn thảo đang trống!");
 
             const mime = ext === 'html' ? 'text/html;charset=utf-8;' : 'text/plain;charset=utf-8;';
             const blob = new Blob([code], { type: mime });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = `TrainerOS_Export_${new Date().getTime()}.${ext}`;
+            link.download = `TrainerOS_Source_${new Date().toISOString().slice(0,10)}_${Date.now()}.${ext}`;
             link.click();
-            showToast(`Đã tải về file: .${ext}`);
+            showToast(`Đã tải về tệp: .${ext}`);
         }
 
         function copyCodeToClipboard() {
             const code = document.getElementById('codeEditor').value;
-            if (!code) return alert("Không có nội dung code để copy!");
-            navigator.clipboard.writeText(code).then(() => showToast("Đã copy toàn bộ code vào Clipboard!"));
+            if (!code) return alert("Không có nội dung để copy!");
+            navigator.clipboard.writeText(code).then(() => showToast("Đã copy toàn bộ mã vào Clipboard!"));
         }
 
         async function pasteCodeFromClipboard() {
@@ -493,55 +842,58 @@
                 if (text) {
                     document.getElementById('codeEditor').value = text;
                     handleCodeInput();
-                    showToast("Đã dán code thành công!");
+                    showToast("Đã dán mã từ Clipboard thành công!");
                 }
             } catch (err) {
-                alert("Vui lòng nhấn Ctrl + V trực tiếp vào ô soạn thảo!");
+                alert("Vui lòng nhấn Ctrl + V trực tiếp vào khung code!");
             }
         }
 
         function clearCodeEditor() {
-            if (confirm("Xóa trắng toàn bộ mã trong khung soạn thảo?")) {
+            if (confirm("Xóa trắng toàn bộ mã nguồn đang soạn thảo?")) {
                 document.getElementById('codeEditor').value = '';
                 handleCodeInput();
+                clearConsoleLogs();
             }
         }
 
-        // --- MẪU CODE SẴN DÀNH CHO TRAINER ---
+        // ==========================================
+        // 7. CÁC MẪU TEMPLATE ĐÀO TẠO NẠP SẴN
+        // ==========================================
         function insertSampleTemplate(type) {
+            clearConsoleLogs();
             if (type === 'email') {
-                const sampleEmail = `<!DOCTYPE html>
+                document.getElementById('codeEditor').value = `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 20px; }
-        .mail-card { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e1e8ed; overflow: hidden; }
-        .header { background: #0066cc; color: white; padding: 24px; text-align: center; }
-        .content { padding: 24px; line-height: 1.6; color: #333333; }
-        .btn { display: inline-block; background: #0066cc; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; margin-top: 15px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; padding: 20px; }
+        .mail-card { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .header { background: linear-gradient(135deg, #0066cc 0%, #004c99 100%); color: white; padding: 30px; text-align: center; }
+        .content { padding: 30px; line-height: 1.65; color: #334155; }
+        .btn { display: inline-block; background: #0066cc; color: #ffffff !important; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: bold; margin-top: 20px; box-shadow: 0 4px 6px rgba(0,102,204,0.2); }
     </style>
 </head>
 <body>
     <div class="mail-card">
         <div class="header">
-            <h2>THÔNG BÁO ĐÀO TẠO KHÓA MỚI</h2>
-            <p>Phòng Đào Tạo L&D - KiotViet</p>
+            <h2 style="margin: 0; font-size: 22px;">KẾ HOẠCH ĐÀO TẠO TÂN BINH KHÓA 26KV14</h2>
+            <p style="margin: 8px 0 0 0; opacity: 0.85; font-size: 13px;">Phòng Đào Tạo & Phát Triển (L&D) - KiotViet</p>
         </div>
         <div class="content">
             <p>Chào các bạn học viên mới,</p>
-            <p>Chào mừng bạn tham gia khóa học Sản phẩm Cơ bản (Retail). Lịch học bắt đầu lúc <b>08:30 sáng Thứ 3</b> trên Google Meet.</p>
-            <p>Vui lòng bấm nút bên dưới để tham gia nhóm Zalo lớp:</p>
+            <p>Khóa học <b>Sản phẩm Cơ bản (Retail)</b> sẽ chính thức bắt đầu vào lúc <b>08:30 sáng Thứ 3</b> trên nền tảng Google Meet.</p>
+            <p>Để chuẩn bị tốt nhất, các bạn vui lòng bấm nút bên dưới để tham gia Group Zalo của lớp:</p>
             <p style="text-align: center;">
-                <a href="#" class="btn">Tham Gia Nhóm Zalo</a>
+                <a href="#" class="btn">Tham Gia Nhóm Zalo Lớp ➔</a>
             </p>
         </div>
     </div>
 </body>
 </html>`;
-                document.getElementById('codeEditor').value = sampleEmail;
             } else if (type === 'table') {
-                const sampleTable = `<!DOCTYPE html>
+                document.getElementById('codeEditor').value = `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -550,27 +902,67 @@
 <body class="p-8 bg-slate-50 font-sans">
     <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="p-6 bg-slate-900 text-white flex justify-between items-center">
-            <h3 class="font-bold text-base">BẢNG ĐIỂM SÁT HẠCH SẢN PHẨM SPCB</h3>
-            <span class="text-xs font-mono text-emerald-400 font-bold bg-emerald-950 px-2.5 py-1 rounded border border-emerald-800">100% Pass</span>
+            <div>
+                <h3 class="font-bold text-base">BẢNG ĐIỂM SÁT HẠCH SẢN PHẨM SPCB</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Khóa: 26KV14 | Điều kiện đạt: >= 80%</p>
+            </div>
+            <span class="text-xs font-mono text-emerald-400 font-bold bg-emerald-950 px-2.5 py-1 rounded-full border border-emerald-800">100% Pass</span>
         </div>
         <table class="w-full text-left text-xs border-collapse">
-            <thead class="bg-slate-100 text-slate-600 uppercase border-b">
-                <tr>
-                    <th class="p-3">Mã NV</th><th>Họ Tên</th><th>Phòng Ban</th><th class="text-center">Điểm</th><th class="text-center">Kết Quả</th>
-                </tr>
+            <thead class="bg-slate-100 text-slate-600 uppercase border-b text-[11px] font-bold">
+                <tr><th class="p-3.5">Mã NV</th><th>Họ Tên</th><th>Phòng Ban</th><th class="text-center">Lần Thi</th><th class="text-center">Điểm</th><th class="text-center">Kết Quả</th></tr>
             </thead>
-            <tbody class="divide-y text-slate-700">
-                <tr><td class="p-3 font-mono">HN04789</td><td class="font-bold">Nguyễn Xuân Huy</td><td>DSHNI1</td><td class="text-center font-bold">100%</td><td class="text-center"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold">Pass</span></td></tr>
-                <tr><td class="p-3 font-mono">SG02713</td><td class="font-bold">Hồ Thị Duyên An</td><td>DSSGN1</td><td class="text-center font-bold">95%</td><td class="text-center"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold">Pass</span></td></tr>
+            <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr class="hover:bg-slate-50"><td class="p-3.5 font-mono">HN04789</td><td class="font-bold">Nguyễn Xuân Huy</td><td>DSHNI1</td><td class="text-center">1</td><td class="text-center font-bold text-emerald-600">100%</td><td class="text-center"><span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold">Pass</span></td></tr>
+                <tr class="hover:bg-slate-50"><td class="p-3.5 font-mono">SG02713</td><td class="font-bold">Hồ Thị Duyên An</td><td>DSSGN1</td><td class="text-center">1</td><td class="text-center font-bold text-emerald-600">95%</td><td class="text-center"><span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold">Pass</span></td></tr>
             </tbody>
         </table>
     </div>
 </body>
 </html>`;
-                document.getElementById('codeEditor').value = sampleTable;
+            } else if (type === 'quiz') {
+                document.getElementById('codeEditor').value = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"><\/script>
+</head>
+<body class="p-6 bg-slate-100 flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-md bg-white p-6 rounded-2xl shadow-xl border border-slate-200">
+        <h3 class="font-bold text-base text-slate-800 mb-2">Câu hỏi nhanh: POS Retail</h3>
+        <p class="text-xs text-slate-500 mb-4">Khi khách hàng mua hàng không cần xuất hóa đơn VAT, nhân viên chọn thao tác nào?</p>
+        
+        <div class="space-y-2 text-xs font-semibold" id="quizOptions">
+            <button onclick="checkAnswer(1)" class="w-full text-left p-3 rounded-xl border border-slate-200 hover:bg-blue-50 transition">A. Tạo đơn tạm</button>
+            <button onclick="checkAnswer(2)" class="w-full text-left p-3 rounded-xl border border-slate-200 hover:bg-blue-50 transition">B. Thanh toán hóa đơn bán lẻ thường</button>
+            <button onclick="checkAnswer(3)" class="w-full text-left p-3 rounded-xl border border-slate-200 hover:bg-blue-50 transition">C. Hủy đơn hàng</button>
+        </div>
+
+        <div id="resultBox" class="mt-4 p-3 rounded-xl text-xs font-bold hidden"></div>
+    </div>
+
+    <script>
+        function checkAnswer(choice) {
+            console.log("Học viên đã chọn đáp án số: " + choice);
+            const box = document.getElementById('resultBox');
+            box.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-800', 'bg-rose-100', 'text-rose-800');
+
+            if (choice === 2) {
+                console.log("-> KẾT QUẢ: ĐÚNG CHÍNH XÁC!");
+                box.classList.add('bg-emerald-100', 'text-emerald-800');
+                box.innerText = "🎉 CHÍNH XÁC! Hóa đơn bán lẻ thường không đẩy dữ liệu sang cổng Thuế.";
+            } else {
+                console.warn("-> KẾT QUẢ: SAI!");
+                box.classList.add('bg-rose-100', 'text-rose-800');
+                box.innerText = "❌ Chưa đúng! Hãy xem lại hướng dẫn Buổi 1.";
+            }
+        }
+    <\/script>
+</body>
+</html>`;
             }
             handleCodeInput();
-            showToast("Đã nạp mẫu template sẵn!");
+            showToast("Đã nạp template sẵn!");
         }
 
         function escapeHtml(str) {
@@ -587,7 +979,7 @@
                 }
             } catch(e) {}
 
-            // Mặc định nạp mẫu email demo
+            initSplitResizer();
             insertSampleTemplate('email');
         };
     </script>
