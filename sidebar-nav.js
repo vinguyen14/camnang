@@ -422,12 +422,10 @@
       });
     }
 
-    setTimeout(() => {
-      const activeEl = sidebarEl.querySelector('.active-menu-item');
-      if (activeEl) {
-        activeEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      }
-    }, 150);
+    const activeEl = sidebarEl.querySelector('.active-menu-item');
+    if (activeEl) {
+      activeEl.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+    }
 
     syncContentOffset(expanded);
 
