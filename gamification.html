@@ -2,285 +2,1218 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>THE CHOSEN ONE V7.5 - PROBLEM SOLVING</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@300;400;600;800;italic&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE CHOSEN ONE V8.6 - CYBER LIVE DEMO ARENA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
-            --primary: #00d2ff; --secondary: #3a7bd5; --accent: #00ff88;
-            --bg: #0b0e14; --panel: rgba(23, 28, 40, 0.95); --border: rgba(0, 210, 255, 0.2);
-            --danger: #ff4757; --glass: rgba(255, 255, 255, 0.05);
+            --primary: #00f2fe;
+            --primary-glow: rgba(0, 242, 254, 0.45);
+            --secondary: #4facfe;
+            --accent: #00ff88;
+            --accent-glow: rgba(0, 255, 136, 0.4);
+            --bg: #07090e;
+            --panel: rgba(16, 21, 32, 0.9);
+            --panel-border: rgba(0, 242, 254, 0.2);
+            --danger: #ff4757;
             --warning: #fbc531;
+            --glass: rgba(255, 255, 255, 0.04);
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif; background: var(--bg); color: #fff;
-            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
-            background-image: radial-gradient(circle at 50% 50%, #1a202c 0%, #0b0e14 100%);
-        }
-        header { padding: 15px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(11, 14, 20, 0.98); }
-        .logo { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; color: var(--primary); }
-        .session-tabs { display: flex; background: var(--glass); padding: 5px; border-radius: 12px; border: 1px solid var(--border); }
-        .tab { padding: 10px 25px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 800; color: #64748b; border: none; background: none; transition: 0.3s; }
-        .tab.active { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
-        .main-grid { display: grid; grid-template-columns: 320px 1fr 450px; gap: 20px; padding: 20px; flex: 1; overflow: hidden; }
-        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 25px; display: flex; flex-direction: column; overflow: hidden; }
-        textarea { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; color: var(--accent); padding: 15px; font-size: 14px; outline: none; margin-bottom: 15px; }
-        .winner-display { font-family: 'Orbitron', sans-serif; font-size: 40px; font-weight: 900; text-align: center; margin-bottom: 20px; min-height: 60px; color: #fff; text-shadow: 0 0 20px var(--primary); }
-        .spin-btn { width: 150px; height: 150px; border-radius: 50%; border: 8px solid var(--glass); background: linear-gradient(135deg, var(--secondary), var(--primary)); color: white; font-family: 'Orbitron'; font-size: 16px; font-weight: 900; cursor: pointer; align-self: center; transition: 0.3s; box-shadow: 0 0 20px rgba(0, 210, 255, 0.3); }
-        .spin-btn:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(0, 210, 255, 0.6); }
-        .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: scale(1); box-shadow: none; }
-        #actionArea { margin-top: 15px; display: none; }
-        .comment-box { width: 100%; height: 80px; background: rgba(255,255,255,0.08); border: 1px solid var(--primary); border-radius: 12px; color: #fff; padding: 15px; font-size: 14px; margin-bottom: 10px; outline: none; resize: none; }
-        .sc-card { background: rgba(255,255,255,0.02); border-radius: 16px; padding: 20px; flex: 1; overflow-y: auto; border: 1px solid rgba(255,255,255,0.05); }
-        .sc-tag { display: inline-block; background: var(--primary); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900; font-size: 12px; margin-right: 8px; vertical-align: middle; }
-        .sc-biz { font-size: 19px; font-weight: 800; color: #fff; margin-bottom: 5px; }
-        .sc-goal { font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        
-        /* Styles for Problem Solving Approach */
-        .sc-customer-voice { background: rgba(255, 255, 255, 0.05); border-left: 4px solid var(--primary); padding: 15px; font-size: 14px; color: #e2e8f0; margin-bottom: 15px; line-height: 1.6; font-style: italic; border-radius: 0 8px 8px 0; }
-        .sc-customer-voice b { color: var(--primary); font-style: normal; display: block; margin-bottom: 5px; font-size: 12px; text-transform: uppercase;}
-        
-        .trainer-toggle { background: rgba(251, 197, 49, 0.1); border: 1px dashed var(--warning); color: var(--warning); padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; width: 100%; text-align: left; margin-top: 10px; transition: 0.3s; display: flex; justify-content: space-between; align-items: center; }
-        .trainer-toggle:hover { background: rgba(251, 197, 49, 0.2); }
-        .trainer-notes { display: none; background: rgba(0,0,0,0.5); border: 1px solid var(--warning); padding: 15px; border-radius: 8px; margin-top: 10px; font-size: 13px; line-height: 1.5; color: #dcdde1; }
-        .trainer-notes b { color: var(--warning); }
-        .trainer-notes ul { margin-left: 20px; margin-top: 5px; margin-bottom: 10px; }
-        .trainer-notes li { margin-bottom: 5px; }
 
-        .sc-step { font-size: 13px; margin-bottom: 8px; color: #cbd5e1; display: flex; gap: 10px; line-height: 1.5; }
-        .sc-step b { color: var(--primary); min-width: 15px; }
-        .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
-        .report-item { background: rgba(0, 210, 255, 0.1); border: 1px solid var(--primary); padding: 8px; border-radius: 8px; font-size: 11px; text-align: center; color: var(--primary); font-weight: 700; }
-        .history-item { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; border-radius: 8px; margin-bottom: 5px; }
-        .history-item:hover { background: rgba(0,210,255,0.1); }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         
-        /* Modals Standard */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-content { background: #171c28; width: 550px; max-height: 85vh; border-radius: 24px; border: 1px solid var(--primary); padding: 30px; position: relative; overflow-y: auto; }
-        
-        /* Bổ sung: GAME LẬT THẺ BÀI (CARD FLIP) */
-        #gameModal { flex-direction: column; z-index: 10000; perspective: 1000px; }
-        .card-scene { width: 400px; height: 550px; perspective: 1000px; margin-top: 20px; }
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: #f1f5f9;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 15%, rgba(79, 172, 254, 0.12) 0%, transparent 60%),
+                radial-gradient(circle at 10% 85%, rgba(0, 255, 136, 0.08) 0%, transparent 40%),
+                linear-gradient(180deg, #07090e 0%, #0d121d 100%);
+        }
+
+        body::before {
+            content: " ";
+            position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        header {
+            position: relative;
+            z-index: 10;
+            padding: 12px 30px;
+            background: rgba(10, 14, 22, 0.96);
+            border-bottom: 1px solid var(--panel-border);
+            backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand-box { display: flex; align-items: center; gap: 10px; }
+        .logo-tag {
+            font-family: var(--font-display);
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            background: linear-gradient(135deg, #fff 20%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .version-badge {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            background: rgba(0, 242, 254, 0.12);
+            color: var(--primary);
+            border: 1px solid var(--panel-border);
+            font-weight: 700;
+        }
+
+        .session-tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.45);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            gap: 4px;
+        }
+
+        .tab {
+            padding: 8px 22px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 800;
+            color: #94a3b8;
+            border: none;
+            background: transparent;
+            transition: all 0.3s;
+        }
+        .tab:hover { color: #fff; }
+        .tab.active {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: #050811;
+            box-shadow: 0 0 16px var(--primary-glow);
+            font-weight: 900;
+        }
+
+        .header-controls { display: flex; align-items: center; gap: 8px; }
+
+        /* Workspace Grid */
+        .main-grid {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 290px 1fr 430px;
+            gap: 16px;
+            padding: 16px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .panel-title {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        textarea#names {
+            user-select: auto;
+            flex: 1;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            color: #a7f3d0;
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            outline: none;
+            resize: none;
+            line-height: 1.6;
+            transition: border-color 0.3s;
+        }
+        textarea#names:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.2);
+        }
+
+        /* Center Arena */
+        .arena-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            height: 100%;
+            position: relative;
+        }
+
+        .slot-stage {
+            width: 100%;
+            padding: 16px 10px;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 242, 254, 0.08) 0%, transparent 75%);
+            border: 1px dashed rgba(0, 242, 254, 0.25);
+            border-radius: 16px;
+            text-align: center;
+            position: relative;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .winner-display {
+            font-family: var(--font-display);
+            font-size: 34px;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: 1px;
+            text-shadow: 0 0 25px var(--primary-glow);
+            word-break: break-word;
+        }
+
+        .winner-display.shaking {
+            animation: cyberFlicker 0.12s infinite alternate;
+            color: var(--accent);
+            text-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        @keyframes cyberFlicker {
+            0% { transform: scale(0.98) translateY(-2px); opacity: 0.9; }
+            100% { transform: scale(1.02) translateY(2px); opacity: 1; }
+        }
+
+        .status-pill {
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        /* Stopwatch HUD */
+        .timer-hud {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .timer-display {
+            font-family: var(--font-mono);
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        .spin-controller {
+            position: relative;
+            margin: 10px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spin-btn {
+            width: 145px;
+            height: 145px;
+            border-radius: 50%;
+            border: 8px solid rgba(255, 255, 255, 0.06);
+            background: radial-gradient(circle at 35% 35%, #00f2fe 0%, #1e3c72 100%);
+            color: white;
+            font-family: var(--font-display);
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 30px var(--primary-glow), inset 0 0 20px rgba(255, 255, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .spin-btn:hover:not(:disabled) {
+            transform: scale(1.08);
+            box-shadow: 0 0 50px rgba(0, 242, 254, 0.8), inset 0 0 30px #fff;
+        }
+        .spin-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        #quickBtns { display: none; gap: 8px; margin-bottom: 8px; }
+
+        /* Quick Feedback Tags Bar */
+        .quick-tags-bar {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+        }
+        .quick-tag-chip {
+            font-size: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 3px 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            color: #cbd5e1;
+            transition: 0.2s;
+        }
+        .quick-tag-chip:hover {
+            background: rgba(0, 242, 254, 0.2);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
+        /* Action & Evaluation Matrix (5 Nút Chuẩn Nghiệp Vụ) */
+        #actionArea {
+            width: 100%;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .comment-box {
+            user-select: auto;
+            width: 100%;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            border-radius: 12px;
+            color: #fff;
+            padding: 8px 12px;
+            font-size: 13px;
+            outline: none;
+            resize: none;
+            line-height: 1.4;
+        }
+        .comment-box:focus { border-color: var(--primary); }
+
+        .eval-buttons {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr 1fr 0.8fr;
+            gap: 6px;
+        }
+
+        .eval-btn {
+            padding: 9px 3px;
+            border-radius: 8px;
+            font-size: 10.5px;
+            font-weight: 800;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--glass);
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+
+        .eval-btn.best { background: rgba(0, 255, 136, 0.18); border-color: var(--accent); color: #00ff88; }
+        .eval-btn.pass { background: rgba(0, 242, 254, 0.18); border-color: var(--primary); color: #00f2fe; }
+        .eval-btn.warn { background: rgba(251, 197, 49, 0.18); border-color: var(--warning); color: #fbc531; }
+        .eval-btn.defer { background: rgba(165, 94, 234, 0.18); border-color: #a55eea; color: #d1d8e0; }
+        .eval-btn.absent { background: rgba(255, 71, 87, 0.18); border-color: var(--danger); color: #ff6b81; }
+        .eval-btn:hover { transform: translateY(-2px); filter: brightness(1.2); }
+
+        /* Right Panel: Scenario Card & History */
+        .sc-card {
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 14px;
+            padding: 14px;
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sc-tag {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: #000;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-weight: 900;
+            font-size: 11px;
+            margin-right: 8px;
+            font-family: var(--font-display);
+        }
+
+        .sc-biz { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+        .sc-goal { font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 6px; }
+
+        .sc-customer-voice {
+            user-select: auto;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid var(--primary);
+            padding: 12px;
+            font-size: 13.5px;
+            color: #e2e8f0;
+            margin-bottom: 10px;
+            line-height: 1.6;
+            font-style: italic;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .sc-customer-voice b {
+            color: var(--primary);
+            font-style: normal;
+            display: block;
+            margin-bottom: 4px;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        .trainer-toggle {
+            background: rgba(251, 197, 49, 0.1);
+            border: 1px dashed var(--warning);
+            color: var(--warning);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            margin-top: 6px;
+            transition: 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .trainer-toggle:hover { background: rgba(251, 197, 49, 0.18); }
+
+        .trainer-notes {
+            display: none;
+            background: rgba(0, 0, 0, 0.65);
+            border: 1px solid rgba(251, 197, 49, 0.4);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 6px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #cbd5e1;
+        }
+        .trainer-notes b { color: var(--warning); }
+        .trainer-notes ul { margin-left: 18px; margin-top: 4px; }
+        .trainer-notes li { margin-bottom: 3px; }
+
+        /* History Table Items */
+        .history-item {
+            padding: 9px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            cursor: pointer;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            transition: background 0.2s;
+        }
+        .history-item:hover { background: rgba(0, 242, 254, 0.08); }
+        .student-name-hist { font-weight: 700; color: #f8fafc; font-size: 13px; }
+
+        .status-badge {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        .badge-best { background: rgba(0, 255, 136, 0.15); color: #00ff88; border: 1px solid rgba(0, 255, 136, 0.3); }
+        .badge-pass { background: rgba(0, 242, 254, 0.15); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.3); }
+        .badge-warn { background: rgba(251, 197, 49, 0.15); color: #fbc531; border: 1px solid rgba(251, 197, 49, 0.3); }
+        .badge-defer { background: rgba(165, 94, 234, 0.15); color: #a55eea; border: 1px solid rgba(165, 94, 234, 0.3); }
+        .badge-absent { background: rgba(255, 71, 87, 0.15); color: #ff6b81; border: 1px solid rgba(255, 71, 87, 0.3); }
+
+        /* Universal Buttons */
+        .btn {
+            padding: 7px 13px;
+            border-radius: 8px;
+            border: 1px solid var(--panel-border);
+            background: var(--glass);
+            color: #fff;
+            cursor: pointer;
+            font-size: 11.5px;
+            font-weight: 700;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); }
+        .btn-primary { background: linear-gradient(135deg, var(--secondary), var(--primary)); color: #000; border: none; font-weight: 900; }
+        .btn-primary:hover { box-shadow: 0 0 16px var(--primary-glow); }
+        .btn-accent { border-color: var(--accent); color: var(--accent); }
+        .btn-copy { background: rgba(0, 255, 136, 0.1); border-color: var(--accent); color: var(--accent); }
+        .btn-copy:hover { background: rgba(0, 255, 136, 0.2); }
+        .btn-sm { padding: 4px 9px; font-size: 10.5px; }
+
+        /* 3D Flip Card Modal */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(3, 6, 12, 0.9);
+            display: none;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+
+        #gameModal { flex-direction: column; perspective: 1200px; }
+        .card-scene { width: 440px; height: 560px; perspective: 1200px; margin-top: 15px; }
         .game-card { width: 100%; height: 100%; position: relative; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; cursor: pointer; }
         .game-card.is-flipped { transform: rotateY(180deg); }
-        .game-card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 20px; display: flex; flex-direction: column; overflow-y: auto; border: 2px solid var(--primary); box-shadow: 0 10px 40px rgba(0,210,255,0.3); }
-        
-        .game-card-front { background: linear-gradient(145deg, #171c28 0%, #0b0e14 100%); align-items: center; justify-content: center; text-align: center; }
-        .game-card-front .card-icon { font-size: 90px; filter: drop-shadow(0 0 20px var(--primary)); margin-bottom: 20px; }
-        .game-card-front h2 { font-family: 'Orbitron', sans-serif; font-size: 26px; color: var(--primary); text-shadow: 0 0 15px var(--primary); margin-bottom: 10px; }
-        .game-card-front p { color: #64748b; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; animation: pulse 1.5s infinite; }
-        
-        .game-card-back { background: var(--panel); transform: rotateY(180deg); padding: 25px; display: block; }
-        .game-card-back::-webkit-scrollbar { width: 6px; }
-        .game-card-back::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
-        
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        .game-card-face {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden; border-radius: 24px;
+            display: flex; flex-direction: column;
+            border: 2px solid var(--primary);
+            box-shadow: 0 15px 50px rgba(0, 242, 254, 0.3);
+            overflow: hidden;
+        }
 
-        .btn-group { display: flex; gap: 10px; }
-        .btn { padding: 10px 15px; border-radius: 10px; border: 1px solid var(--border); background: var(--glass); color: #fff; cursor: pointer; font-size: 11px; font-weight: 700; transition: 0.2s; }
-        .btn-primary { background: var(--primary); color: #000; border: none; font-weight: 900; }
-        .btn-primary:hover { box-shadow: 0 0 15px var(--primary); }
-        .btn-accent { border-color: var(--accent); color: var(--accent); }
+        .game-card-front {
+            background: linear-gradient(145deg, #101624 0%, #080c14 100%);
+            align-items: center; justify-content: center; text-align: center;
+            padding: 30px;
+        }
+        .game-card-front .card-icon {
+            font-size: 85px;
+            filter: drop-shadow(0 0 25px var(--primary));
+            margin-bottom: 20px;
+            animation: floatIcon 3s ease-in-out infinite;
+        }
+
+        @keyframes floatIcon {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .game-card-back {
+            background: #0f1624;
+            transform: rotateY(180deg);
+            padding: 22px;
+            display: block;
+            overflow-y: auto;
+        }
+
+        /* MODAL KHẮC PHỤC TRIỆT ĐỂ LỖI LỆCH THANH CUỘN (SCROLLBAR FIX) */
+        .modal-content {
+            background: #101726;
+            width: 580px;
+            max-height: 85vh;
+            border-radius: 20px;
+            border: 1px solid var(--primary);
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75);
+            overflow: hidden; /* Cố định viền ngoài bo góc, chống tràn scrollbar */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-inner {
+            padding: 24px 22px 24px 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .note-content-display {
+            font-size: 13px;
+            color: #cbd5e1;
+            margin-top: 6px;
+            line-height: 1.6;
+            white-space: pre-wrap; /* Giữ nguyên các dòng Enter */
+            word-break: break-word;
+        }
+
+        /* Fullscreen Floating Emoji Shower */
+        .emoji-shower-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 10005;
+            overflow: hidden;
+        }
+
+        .floating-emoji {
+            position: absolute;
+            bottom: -50px;
+            font-size: 38px;
+            opacity: 1;
+            animation: floatUp 3.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.6) rotate(0deg); opacity: 0; }
+            15% { opacity: 1; transform: translateY(-80px) scale(1.2) rotate(15deg); }
+            80% { opacity: 0.9; }
+            100% { transform: translateY(-110vh) scale(1) rotate(-20deg); opacity: 0; }
+        }
+
+        .reaction-banner {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(16, 21, 32, 0.95);
+            border: 2px solid var(--accent);
+            border-radius: 50px;
+            padding: 12px 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 40px var(--accent-glow);
+            z-index: 10006;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+
+        .reaction-banner.active { transform: translateX(-50%) translateY(0); }
+
+        /* Custom Scrollbar Lọt Lòng Đẹp Mắt */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 242, 254, 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
     </style>
 </head>
 <body>
     <header>
-        <div class="logo">THE CHOSEN ONE V7.5</div>
+        <div class="brand-box">
+            <span class="logo-tag">THE CHOSEN ONE</span>
+            <span class="version-badge">V8.6 ARENA</span>
+        </div>
+        
         <div class="session-tabs">
             <button id="t1" class="tab active" onclick="setSess(1)">BUỔI 1: CƠ BẢN</button>
             <button id="t2" class="tab" onclick="setSess(2)">BUỔI 2: NÂNG CAO</button>
         </div>
-        <div class="btn-group">
-            <button class="btn" onclick="toggleEditModal()">⚙️ CẬP NHẬT KỊCH BẢN</button>
-            <button class="btn" onclick="exportExcel()" style="color:var(--accent)">📥 EXCEL</button>
+
+        <div class="header-controls">
+            <button id="audioToggleBtn" class="btn" onclick="toggleAudio()">🔊 ÂM THANH: BẬT</button>
+            <button class="btn" onclick="manualTriggerEmoji()">🌸 THẢ HOA & TIM</button>
+            <button class="btn" onclick="toggleFullscreen()">⛶ TOÀN MÀN HÌNH</button>
+            <button class="btn" onclick="toggleEditModal()">⚙️ KỊCH BẢN</button>
+            <button class="btn" onclick="exportExcel()" style="color:var(--accent)">📥 XUẤT EXCEL</button>
         </div>
     </header>
 
     <div class="main-grid">
+        <!-- Cột Trái: Danh sách học viên -->
         <div class="panel">
-            <h3 style="color:var(--primary); font-size:11px; margin-bottom:10px">HỌC VIÊN (<span id="c">0</span>)</h3>
-            <textarea id="names" placeholder="Dán danh sách học viên..."></textarea>
-            <button class="btn btn-primary" onclick="save()">LƯU DANH SÁCH GỐC</button>
+            <div class="panel-header">
+                <span class="panel-title" style="color:var(--primary)">👥 HỌC VIÊN (<span id="c">0</span>)</span>
+                <button class="btn btn-sm" onclick="clearNames()">Xóa</button>
+            </div>
+            <textarea id="names" placeholder="Dán danh sách học viên (Mỗi người một dòng)..."></textarea>
+            <button class="btn btn-primary" style="margin-top:10px" onclick="save()">💾 LƯU DANH SÁCH</button>
         </div>
 
-        <div class="panel" style="justify-content:center">
-            <div id="winner" class="winner-display">READY?</div>
-            <div style="display:flex; flex-direction:column; gap:15px; align-items:center">
-                <button id="spin" class="spin-btn" onclick="start('full')">TRIỆU HỒI</button>
-                <div id="quickBtns" style="display:none; gap:10px">
-                    <button class="btn btn-accent" onclick="start('script')">♻️ ĐỔI TÌNH HUỐNG</button>
-                    <button class="btn btn-accent" onclick="start('user')">👥 GỌI NGƯỜI KHÁC</button>
+        <!-- Cột Giữa: Đấu Trường & Stopwatch -->
+        <div class="panel" style="justify-content:space-between">
+            <div class="arena-container">
+                <div class="slot-stage">
+                    <div id="winner" class="winner-display">READY?</div>
+                    <div id="winnerStatus" class="status-pill">SẴN SÀNG THỰC HÀNH</div>
                 </div>
-            </div>
-            <div id="actionArea">
-                <textarea id="cmt" class="comment-box" placeholder="Nhận xét cách học viên phân tích và xử lý luồng..."></textarea>
-                <div class="btn-group">
-                    <button class="btn" style="background:var(--danger); flex:1" onclick="done('Vắng')">VẮNG</button>
-                    <button class="btn btn-primary" style="flex:2" onclick="done('Hoàn thành')">XÁC NHẬN</button>
+
+                <!-- Stopwatch HUD Tính Thời Lượng Thực Tế -->
+                <div class="timer-hud">
+                    <div>
+                        <div style="font-size:10px; color:#94a3b8; font-weight:700">⏱️ THỜI LƯỢNG DEMO</div>
+                        <div id="timerText" class="timer-display">00:00</div>
+                    </div>
+                    <div style="display:flex; gap:6px; align-items:center">
+                        <button id="timerToggleBtn" class="btn btn-sm btn-accent" onclick="toggleTimer()">BẮT ĐẦU</button>
+                        <button class="btn btn-sm" onclick="resetTimer()">ĐẶT LẠI</button>
+                    </div>
+                </div>
+
+                <div class="spin-controller">
+                    <button id="spin" class="spin-btn" onclick="start('full')">
+                        <span style="font-size:24px">⚡</span>
+                        <span>TRIỆU HỒI</span>
+                    </button>
+                </div>
+
+                <div id="quickBtns">
+                    <button class="btn btn-accent btn-sm" onclick="start('script')">♻️ ĐỔI ĐỀ BÀI</button>
+                    <button class="btn btn-accent btn-sm" onclick="start('user')">👥 GỌI NGƯỜI KHÁC</button>
+                </div>
+
+                <!-- Bảng Đánh Giá: 5 Nút Nghiệp Vụ -->
+                <div id="actionArea">
+                    <!-- Quick Feedback Tags -->
+                    <div class="quick-tags-bar">
+                        <span class="quick-tag-chip" onclick="appendTag('Thao tác mượt mà, nắm vững luồng.')">⚡ Mượt mà</span>
+                        <span class="quick-tag-chip" onclick="appendTag('Phản xạ tốt, tự tin xử lý tình huống.')">🎯 Tự tin</span>
+                        <span class="quick-tag-chip" onclick="appendTag('Cần lưu ý kiểm tra lại két tiền khi trả hàng.')">💰 Chú ý két tiền</span>
+                        <span class="quick-tag-chip" onclick="appendTag('Cần xem lại Video hướng dẫn của nghiệp vụ này.')">🎥 Xem lại video</span>
+                    </div>
+
+                    <textarea id="cmt" class="comment-box" placeholder="Góp ý phản xạ, tư duy xử lý và lời khen dành cho học viên..."></textarea>
+                    
+                    <div class="eval-buttons">
+                        <button class="eval-btn best" onclick="done('Hoàn thành tốt')">🌟 HOÀN THÀNH TỐT</button>
+                        <button class="eval-btn pass" onclick="done('Đã thực hành')">🎯 ĐÃ THỰC HÀNH</button>
+                        <button class="eval-btn warn" onclick="done('Cần góp ý thêm')">💡 CẦN GÓP Ý THÊM</button>
+                        <button class="eval-btn defer" onclick="done('Dời lượt sau')">⏳ DỜI LƯỢT SAU</button>
+                        <button class="eval-btn absent" onclick="done('Vắng mặt')">❌ VẮNG MẶT</button>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Cột Phải: Thẻ Kịch Bản & Nhật Ký -->
         <div class="panel">
-            <h3 style="color:var(--accent); font-size:11px; margin-bottom:10px">ĐỀ BÀI</h3>
-            <div id="scBox" class="sc-card"><div style="text-align:center; color:#64748b; margin-top:50px">Sẵn sàng...</div></div>
-            <h3 style="color:var(--primary); font-size:11px; margin-top:15px; margin-bottom:5px">LỊCH SỬ</h3>
-            <div id="histList" style="flex:0.8; overflow-y:auto; border-top:1px solid #333; padding-top:10px"></div>
+            <div class="panel-header">
+                <span class="panel-title" style="color:var(--accent)">📜 ĐỀ BÀI THỰC HÀNH</span>
+                <button id="copyScriptBtn" class="btn btn-copy btn-sm" onclick="copyCurrentScript()" style="display:none">📋 COPY GỬI CHAT</button>
+            </div>
+            <div id="scBox" class="sc-card">
+                <div style="text-align:center; color:#64748b; margin-top:50px">Chờ triệu hồi học viên...</div>
+            </div>
+
+            <div class="panel-header" style="margin-top:10px">
+                <span class="panel-title" style="color:var(--primary)">📊 NHẬT KÝ ĐÁNH GIÁ</span>
+            </div>
+            <div id="histList" style="flex:0.85; overflow-y:auto"></div>
         </div>
     </div>
 
-    <!-- MỚI: Modal Game Lật Thẻ Bài -->
+    <!-- Container Hiệu ứng Thả Emoji Bay -->
+    <div id="emojiContainer" class="emoji-shower-container"></div>
+    <div id="reactionBanner" class="reaction-banner">
+        <span style="font-size:24px">🎉</span>
+        <span id="reactionText" style="font-weight:700; color:#fff; font-size:13px">CHÚC MỪNG BẠN ĐÃ HOÀN THÀNH BÀI DEMO! CẢ LỚP CÙNG THẢ TIM TRÊN GOOGLE MEET NÀO! ❤️👏🌸</span>
+    </div>
+
+    <!-- MODAL 3D LẬT BÀI -->
     <div id="gameModal" class="modal">
-        <h2 id="gameWinnerName" style="font-family:'Orbitron'; color:#fff; font-size:35px; text-shadow: 0 0 20px var(--primary); letter-spacing: 2px;">TÊN HỌC VIÊN</h2>
+        <h2 id="gameWinnerName" style="font-family:var(--font-display); color:#fff; font-size:32px; text-shadow:0 0 25px var(--primary); letter-spacing:2px; margin-bottom:10px">HỌC VIÊN: VÕ VĂN A</h2>
         <div class="card-scene">
             <div class="game-card" id="theGameCard" onclick="flipCard()">
                 <div class="game-card-face game-card-front">
                     <div class="card-icon">🃏</div>
-                    <h2>THẺ TÌNH HUỐNG</h2>
-                    <p>Nhấn vào để lật thẻ</p>
+                    <h2 style="font-family:var(--font-display); color:var(--primary); font-size:24px; text-shadow:0 0 15px var(--primary); margin-bottom:8px">THẺ TÌNH HUỐNG</h2>
+                    <p style="color:#94a3b8; font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase">Nhấn để mở kịch bản</p>
                 </div>
-                <div class="game-card-face game-card-back" id="cardBackContent">
-                    <!-- Nội dung kịch bản sẽ được đẩy vào đây -->
-                </div>
+                <div class="game-card-face game-card-back" id="cardBackContent"></div>
             </div>
         </div>
-        <button id="closeGameBtn" class="btn btn-primary" style="margin-top: 30px; padding: 15px 40px; font-size: 14px; opacity: 0; pointer-events: none; transition: 0.5s;" onclick="closeGameModal()">BẮT ĐẦU</button>
+        <button id="closeGameBtn" class="btn btn-primary" style="margin-top:22px; padding:12px 35px; font-size:13px; opacity:0; pointer-events:none; transition:0.4s" onclick="closeGameModal()">BẮT ĐẦU TÍNH GIỜ DEMO</button>
     </div>
 
-    <!-- Modals Cũ (History & Cập nhật) -->
+    <!-- MODAL CHI TIẾT LỊCH SỬ (ĐÃ FIX SCROLLBAR LỌT LÒNG) -->
     <div id="historyModal" class="modal">
         <div class="modal-content">
-            <span style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:24px" onclick="closeModal()">×</span>
-            <div id="modalBody"></div>
+            <span style="position:absolute; top:18px; right:20px; cursor:pointer; font-size:24px; color:#64748b; z-index:10" onclick="closeModal()">×</span>
+            <div class="modal-inner" id="modalBody"></div>
         </div>
     </div>
 
+    <!-- MODAL CẬP NHẬT JSON -->
     <div id="editModal" class="modal">
-        <div class="modal-content" style="width: 80%; max-width: 900px;">
-            <h2 style="margin-bottom: 15px; color: var(--primary);">CẬP NHẬT DỮ LIỆU KỊCH BẢN (JSON)</h2>
-            <textarea id="jsonEditor" style="height: 450px; font-family: monospace; color: #fff;"></textarea>
-            <div class="btn-group" style="justify-content: flex-end; margin-top: 15px;">
-                <button class="btn" onclick="toggleEditModal()">HỦY</button>
-                <button class="btn btn-primary" onclick="updateScripts()">LƯU THAY ĐỔI</button>
+        <div class="modal-content" style="width:85%; max-width:920px">
+            <div class="modal-inner">
+                <h2 style="margin-bottom:12px; color:var(--primary); font-family:var(--font-display); font-size:18px">CẬP NHẬT DỮ LIỆU KỊCH BẢN (JSON)</h2>
+                <textarea id="jsonEditor" style="height:440px; font-family:var(--font-mono); color:#fff; width:100%; background:#0a0e17; border:1px solid var(--panel-border); padding:12px; border-radius:8px; font-size:12px; line-height:1.5"></textarea>
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px">
+                    <button class="btn" onclick="toggleEditModal()">HỦY BỎ</button>
+                    <button class="btn btn-primary" onclick="updateScripts()">LƯU THAY ĐỔI</button>
+                </div>
             </div>
         </div>
     </div>
-
     <script>
+        // =========================================================================
+        // 1. DATA KỊCH BẢN TINH GỌN (ĐÃ XÓA VIDEO/LƯU Ý - GIỮ 100% NGỮ CẢNH NGHIỆP VỤ)
+        // =========================================================================
         let scripts = {
             buoi1: [
                 {
-                    tag: "B1-S1", biz: "Thời trang Nem Luxury", goal: "Nhiệm vụ: Lắng nghe vấn đề và trình bày giải pháp vận hành 6 bước.", 
-                    customerVoice: "Dạo gần đây cửa hàng tôi rất lộn xộn. Có một mẫu Váy lụa mới về, nhân viên báo trên phần mềm còn hàng nhưng vô kho tìm thì toàn sai kích cỡ hoặc màu khách cần. Chưa kể hôm qua có khách mua 2 cái váy, trả 1 ít tiền mặt, còn lại chuyển khoản, nay họ lại mang 1 cái ra đòi trả lại lấy tiền. Nhân viên tôi loạn xì ngầu lên không biết ghi chép sao cho dòng tiền với kho không bị lệch. Bạn tư vấn giúp tôi phần mềm xử lý chuyện này thế nào?", 
-                    trainerNotes: { analysis: "Học viên cần nhận diện được 2 bài toán: Quản lý Thuộc tính (Size/Màu) và Quản lý thanh toán đa hình thức + Xử lý Trả hàng.", hints: ["Em sẽ thiết lập mặt hàng Váy lụa này như thế nào để kho không bị lẫn lộn giữa các màu/size?", "Khách thanh toán 2 hình thức (Tiền mặt + CK), ở màn hình bán hàng em xử lý sao?", "Khi làm thao tác Trả hàng, làm sao để hệ thống tự biết trừ tiền trong Két/Tài khoản và tự cộng lại tồn kho váy?"] }
+                    tag: "B1-S1",
+                    biz: "Thời trang Nem Luxury",
+                    goal: "Nhiệm vụ: Lắng nghe bài toán và thực hiện luồng tư vấn - thao tác 6 bước.",
+                    customerVoice: "Cửa hàng của tôi dạo này quản lý hàng hóa rất đau đầu. Đợt này có mẫu Váy lụa mới về, nhân viên kiểm tra trên phần mềm thì báo còn hàng, nhưng khi vào kho tìm lại toàn giao nhầm size hoặc sai màu cho khách. Nghiêm trọng hơn là hôm qua có khách mua 2 chiếc váy, thanh toán một phần tiền mặt và một phần chuyển khoản. Hôm nay họ mang 1 chiếc ra xin trả lại để nhận tiền mặt. Nhân viên tôi lúng túng không biết ghi nhận thế nào để sổ quỹ tiền và số lượng kho không bị lệch. Bạn hướng dẫn giúp tôi quy trình chuẩn trên phần mềm để xử lý triệt để vấn đề này?",
+                    trainerNotes: {
+                        analysis: "Học viên cần giải quyết 2 bài toán cốt lõi: 1. Quản lý hàng hóa đa Thuộc tính (Size/Màu) để kho chuẩn xác. 2. Thanh toán đa phương thức và xử lý nghiệp vụ Trả hàng tự động hoàn quỹ/cộng kho.",
+                        hints: [
+                            "Em sẽ thiết lập mặt hàng Váy lụa này như thế nào để hệ thống quản lý chi tiết từng Màu và Size?",
+                            "Khi khách vừa trả Tiền mặt vừa Chuyển khoản, tại màn hình thu ngân (POS) em thao tác ghi nhận ra sao?",
+                            "Khi làm phiếu Trả hàng, làm sao để phần mềm tự động xuất tiền trong két trả khách và tự động cộng lại số lượng tồn kho?"
+                        ]
+                    }
                 },
                 {
-                    tag: "B1-S2", biz: "Tạp hóa An Bình", goal: "Nhiệm vụ: Lắng nghe vấn đề và trình bày giải pháp vận hành 6 bước.", 
-                    customerVoice: "Tôi mở tiệm tạp hóa, bia với nước ngọt tôi nhập từ đại lý toàn tính bằng Thùng, nhưng khách ở xóm thì hay mua lẻ vài Lon. Cứ bán 1 thời gian là kho lệch tè le. Đau đầu nhất là khách quen toàn mua chịu (ghi sổ), tôi thì cũng mua thiếu của đại lý. Cuốn sổ nợ của tôi giờ chằng chịt, cuối tháng đi đối soát thu tiền với trả tiền mệt mỏi vô cùng. Phần mềm có tự động tính toán được mấy cái này không?", 
-                    trainerNotes: { analysis: "Học viên cần nhận diện bài toán: Đơn vị quy đổi và Quản lý công nợ hai chiều (Khách hàng & Nhà cung cấp).", hints: ["Làm sao để phần mềm hiểu 1 Thùng có bao nhiêu Lon để tự trừ kho dù anh Bình bán theo đơn vị nào?", "Khi nhập hàng mua chịu của đại lý, em sẽ thao tác thế nào ở Phiếu nhập kho?", "Khách mua chịu hôm nay, tuần sau ra trả tiền, luồng thao tác trên phần mềm sẽ đi như thế nào?"] }
+                    tag: "B1-S2",
+                    biz: "Tạp hóa An Bình",
+                    goal: "Nhiệm vụ: Lắng nghe bài toán và thực hiện luồng tư vấn - thao tác 6 bước.",
+                    customerVoice: "Tiệm tạp hóa của tôi nhập bia và nước ngọt từ đại lý đều tính theo Thùng, nhưng bà con quanh xóm lại hay mua lẻ từng Lon. Cứ bán được một thời gian là số lượng tồn kho lệch tùm lum. Đau đầu nhất là khách quen toàn mua chịu ghi sổ, trong khi tôi cũng đang nợ tiền gối đầu của đại lý giao hàng. Cuốn sổ tay ghi nợ của tôi giờ chằng chịt, cuối tháng đi đối soát công nợ thu - trả vô cùng mệt mỏi. Phần mềm bên mình có hỗ trợ tự động quy đổi thùng sang lon và theo dõi nợ 2 chiều rõ ràng không bạn?",
+                    trainerNotes: {
+                        analysis: "Học viên cần nhận diện và thao tác: 1. Tính năng Đơn vị tính quy đổi (Thùng <-> Lon). 2. Quản lý công nợ hai chiều (Khách hàng mua chịu & Nợ Nhà cung cấp).",
+                        hints: [
+                            "Làm thế nào để phần mềm tự động trừ đúng tồn kho dù anh Bình bán theo Thùng hay bán theo Lon?",
+                            "Khi nhập hàng mua chịu từ nhà cung cấp, em sẽ ghi nhận công nợ tại Phiếu nhập hàng như thế nào?",
+                            "Khách hàng mua chịu hôm nay, tuần sau quay lại trả nợ, em sẽ thao tác luồng thu nợ ở đâu trên hệ thống?"
+                        ]
+                    }
                 },
                 {
-                    tag: "B1-S3", biz: "Mỹ phẩm Guardian", goal: "Nhiệm vụ: Lắng nghe vấn đề và trình bày giải pháp vận hành 6 bước.", 
-                    customerVoice: "Đặc thù ngành son phấn của tôi là khách hay đổi trả. Khách hàng mua cây son 3CE màu Cánh hồng phai về mở ra xem không ưng, xong đem ra tiệm bắt trả lại tiền. Cứ mỗi lần vậy, nhân viên của tôi rút tiền mặt trong két ra thối cho khách. Cuối ngày chốt ca, đếm tiền thật trong két lúc nào cũng hụt so với doanh thu trên phần mềm. Có cách nào giải quyết dứt điểm tình trạng nhân viên thối tiền trả hàng làm lệch két không bạn?", 
-                    trainerNotes: { analysis: "Học viên cần nhận diện bài toán: Thao tác đúng nghiệp vụ Trả hàng để quản lý dòng tiền mặt (Sổ quỹ/Két tiền).", hints: ["Lý do đếm tiền thực tế bị hụt so với phần mềm là do nhân viên đã bỏ qua thao tác gì trên máy?", "Em hãy demo 1 luồng chuẩn: Bán 1 cây son thu tiền mặt -> Khách quay lại Trả hàng. Hãy chỉ cho khách thấy két tiền trên hệ thống biến động chính xác như thế nào."] }
+                    tag: "B1-S3",
+                    biz: "Mỹ phẩm Guardian",
+                    goal: "Nhiệm vụ: Lắng nghe bài toán và thực hiện luồng tư vấn - thao tác 6 bước.",
+                    customerVoice: "Đặc thù cửa hàng mỹ phẩm của tôi là khách rất hay đổi trả. Hôm qua có khách mua thỏi son 3CE về mở ra xem không ưng màu, liền mang ra tiệm đòi trả lấy lại tiền. Nhân viên của tôi tự ý rút tiền mặt trong két ra thối cho khách mà không thao tác gì trên máy. Kết quả là cuối ngày chốt ca, tiền mặt thực tế trong két luôn bị thiếu hụt so với doanh thu báo cáo trên phần mềm. Bạn có giải pháp nào giúp tôi chuẩn hóa thao tác trả hàng để két tiền không bao giờ bị lệch nữa không?",
+                    trainerNotes: {
+                        analysis: "Học viên cần giải quyết bài toán: Chuẩn hóa thao tác nghiệp vụ Đổi trả hàng gắn liền với dòng tiền mặt trong Két (Sổ quỹ).",
+                        hints: [
+                            "Nguyên nhân cốt lõi khiến tiền thực tế trong két bị hụt so với phần mềm là do nhân viên đã bỏ qua bước nào?",
+                            "Em hãy thực hiện luồng chuẩn: Bán 1 thỏi son thu tiền mặt -> Thực hiện Trả hàng -> Mở Sổ quỹ để chứng minh dòng tiền giảm chính xác."
+                        ]
+                    }
                 }
             ],
             buoi2: [
                 {
-                    tag: "B2-S1", biz: "Anh Minh (Cửa hàng Đồ chơi)", goal: "Mục tiêu: Phân quyền - Giá sỉ - Dịch vụ - Thêm hàng nhanh", 
-                    customerVoice: "Cửa hàng tôi mới tuyển bạn nhân viên tên Vân, tôi muốn bạn ấy đứng bán hàng nhưng tuyệt đối không cho xem báo cáo doanh thu. Khách sỉ đến mua nhiều tôi thường giảm 10% nhưng cứ phải bấm máy tính tay hoài. Tiện thể, thỉnh thoảng tôi có nhận gói quà hộ khách và thu thêm 30k tiền công. Và nhiều lúc lúc đang kiểm đếm nhập hàng từ xe tải xuống, có mấy món lặt vặt như Pin AA chưa có trên hệ thống, tôi muốn thêm nhanh hàng hóa khi nhập hàng luôn chứ thoát ra vào lại danh mục lâu quá. Có cách nào làm mượt mấy việc này không?", 
-                    trainerNotes: { analysis: "Học viên cần xử lý: 1. Tạo & Phân quyền nhân viên. 2. Bảng giá (Khách sỉ). 3. Hàng hóa dịch vụ. 4. Thêm hàng hóa nhanh.", hints: ["Vào đâu để phân quyền cho bạn Vân?", "Mặt hàng 'Gói quà' cài đặt sao để không bị tính tồn kho?", "Thiết lập Bảng giá Sỉ ở mục nào?", "Nút nào cho phép thêm Pin AA ngay tại phiếu nhập?"] }
+                    tag: "B2-S1",
+                    biz: "Anh Minh (Cửa hàng Đồ chơi)",
+                    goal: "Mục tiêu: Phân quyền nhân viên - Bảng giá sỉ - Hàng dịch vụ - Thêm nhanh hàng hóa.",
+                    customerVoice: "Cửa hàng tôi mới tuyển bạn nhân viên bán hàng tên Vân. Tôi muốn bạn ấy thao tác bán hàng bình thường nhưng tuyệt đối không được xem báo cáo doanh thu của quán. Ngoài ra, khách mua sỉ tôi thường giảm giá 10% nhưng hiện tại nhân viên cứ phải bấm máy tính tay thủ công rất mất thời gian. Tiện thể, cửa hàng tôi có nhận gói quà hộ khách thu thêm 30.000đ tiền công. Và nhiều khi đang kiểm hàng từ xe tải xuống, có món lặt vặt như Pin AA chưa có trong danh mục, tôi muốn thêm thật nhanh ngay trên phiếu nhập luôn. Phần mềm giải quyết các việc này như thế nào?",
+                    trainerNotes: {
+                        analysis: "Học viên cần thao tác 4 tính năng: 1. Tạo tài khoản & Phân quyền vai trò. 2. Thiết lập Bảng giá khách sỉ. 3. Tạo mặt hàng Dịch vụ (không tồn kho). 4. Phím tắt (+) thêm nhanh hàng hóa.",
+                        hints: [
+                            "Vào đâu để phân quyền nhân viên và chặn quyền xem Báo cáo doanh thu của bạn Vân?",
+                            "Mặt hàng 'Gói quà' cài đặt thuộc tính gì để hệ thống không trừ tồn kho?",
+                            "Thiết lập Bảng giá Sỉ tự động giảm 10% ở mục nào?",
+                            "Nút nào cho phép tạo nhanh mặt hàng Pin AA ngay tại giao diện Phiếu nhập?"
+                        ]
+                    }
                 },
                 {
-                    tag: "B2-S2", biz: "Chị Lan (Cửa hàng Gia dụng)", goal: "Mục tiêu: Giá vốn trung bình - Đổi giá bán - Tra cứu nâng cao", 
-                    customerVoice: "Lâu lâu tôi nhập hàng thì được giá ưu đãi từ NCC, ví dụ đợt trước tôi  nhập từ NCC 20 cái Chảo chống dính giá 1 triệu/cái, 2 Chảo tiếp theo có giá là 800k/cái. Khi đã nhập hàng xong, tôi muốn xem lại Phần mềm tính toán giá vốn của mặt hàng này như thế nào và có cần phải cài đặt thêm gì không?. Ngoài ra, nhiều khi đang làm phiếu nhập lô hàng Chảo chống dính này, tôi muốn tiện tay đổi luôn giá bán từ 1.5tr xuống 1.4tr thì có được không?. Lúc ra quầy bán, đôi khi tình trạng cửa hàng cũng đông khách, thu ngân muốn lọc theo nhóm hàng, thuộc tính, vị trí hoặc xem nhanh tồn kho thì cần thao tác như thế nào?", 
-                    trainerNotes: { analysis: "Học viên cần xử lý: 1. Giải thích Giá vốn trung bình. 2. Thay đổi giá bán trực tiếp. 3. Tra cứu POS.", hints: ["Công thức MAC hoạt động ra sao? ([20*1tr + 2*800k] / 22).", "Ở màn hình phiếu nhập, làm sao để sửa luôn giá bán?", "Khi ở thu ngân (POS), phím tắt nào để xem tồn kho?"] }
+                    tag: "B2-S2",
+                    biz: "Chị Lan (Cửa hàng Gia dụng)",
+                    goal: "Mục tiêu: Giải thích Giá vốn MAC - Đổi giá bán trực tiếp - Tra cứu nâng cao tại POS.",
+                    customerVoice: "Thỉnh thoảng tôi nhập hàng được giá ưu đãi từ nhà phân phối. Ví dụ đợt 1 tôi nhập 20 chiếc Chảo chống dính với giá 1.000.000đ/chiếc, đợt sau nhập thêm 2 chiếc với giá 800.000đ/chiếc. Sau khi nhập xong, tôi muốn hiểu phần mềm tính toán lại giá vốn của chảo như thế nào và tôi có phải cài đặt gì thêm không? Thêm nữa, khi đang làm phiếu nhập lô chảo này, tôi muốn tiện tay đổi luôn giá bán lẻ từ 1.5 triệu xuống 1.4 triệu ngay trên phiếu có được không? Cuối cùng, lúc cửa hàng đông khách, thu ngân muốn lọc nhanh theo nhóm hàng, thuộc tính hoặc kiểm tra tồn kho tại màn hình bán thì thao tác ra sao?",
+                    trainerNotes: {
+                        analysis: "Học viên cần xử lý: 1. Giải thích cơ chế Giá vốn bình quân gia quyền di động MAC = [(20*1tr + 2*800k) / 22]. 2. Sửa trực tiếp giá bán trên phiếu nhập. 3. Sử dụng bộ lọc nâng cao trên POS.",
+                        hints: [
+                            "Công thức MAC hoạt động ra sao và phần mềm tự động tính toán hay người dùng phải cài đặt?",
+                            "Tại màn hình tạo Phiếu nhập, làm thế nào để điều chỉnh luôn giá bán mới của sản phẩm?",
+                            "Ở màn hình thu ngân POS, làm thế nào để lọc sản phẩm theo nhóm và xem nhanh số lượng tồn kho?"
+                        ]
+                    }
                 },
                 {
-                    tag: "B2-S3", biz: "Anh Hoàng (Cửa hàng Phụ tùng)", goal: "Mục tiêu: Bán nhanh MHBH - Thu nợ MHBH - Đổi trả", 
-                    customerVoice: "Đang đứng ở quầy bán, khách hỏi mua cái Lốp xe chưa có trên hệ thống, tôi muốn thêm cực nhanh để in bill luôn. Khách quen ra mua sẵn tiện trả nợ cũ thì lập phiếu thu nợ khách hàng kiểu gì cho lẹ? Ác nhất là đôi khi có khách trả hàng nhưng lỡ làm mất hóa đơn gốc thì còn cách nào để giải quyết không?. Thêm nữa, tôi muốn quy định trên hệ thống chỉ cho phép trả hàng trong phạm vi 7 ngày thì hệ thống bên mình có đáp ứng được hay không?", 
-                    trainerNotes: { analysis: "Học viên cần xử lý: 1. Thêm hàng MHBH. 2. Thu nợ MHBHS. 3. Trả hàng nhanh. 4. Thiết lập hệ thống (7 ngày).", hints: ["Nút thêm hàng hóa (+) trên POS nằm ở đâu?", "Làm sao thu nợ trên POS mà không cần thoát ra?", "Thao tác trả hàng nhanh khác gì hóa đơn gốc?", "Thiết lập 'Cho phép trả hàng 7 ngày' nằm ở đâu?"] }
+                    tag: "B2-S3",
+                    biz: "Anh Hoàng (Cửa hàng Phụ tùng)",
+                    goal: "Mục tiêu: Bán nhanh MHBH - Thu nợ tại POS - Đổi trả không hóa đơn gốc - Cài đặt hạn trả hàng 7 ngày.",
+                    customerVoice: "Đang đứng ở quầy bán, khách hỏi mua cái Lốp xe mới về chưa kịp khai báo lên hệ thống, tôi muốn thêm cực nhanh để in hóa đơn luôn cho khách thì làm thế nào? Trường hợp khách quen ghé mua hàng sẵn tiện thanh toán khoản nợ cũ, tôi có thể lập phiếu thu nợ ngay tại quầy thu ngân được không? Khó xử nhất là khách mang phụ tùng đến đổi trả nhưng làm mất hóa đơn mua hàng trước đó, phần mềm có cho phép trả hàng không cần hóa đơn gốc không? Và tôi muốn giới hạn chỉ cho phép trả hàng trong vòng 7 ngày kể từ lúc mua thì cài đặt ở đâu?",
+                    trainerNotes: {
+                        analysis: "Học viên cần thao tác: 1. Nút thêm nhanh hàng hóa (+) tại POS. 2. Thu nợ khách hàng trực tiếp trên POS. 3. Trả hàng nhanh (không cần hóa đơn). 4. Cài đặt hệ thống: Giới hạn thời gian trả hàng 7 ngày.",
+                        hints: [
+                            "Nút thêm nhanh hàng hóa trên màn hình POS nằm ở vị trí nào?",
+                            "Làm thế nào để lập phiếu thu tiền nợ cũ của khách trực tiếp ngay tại màn hình thu ngân?",
+                            "Nghiệp vụ trả hàng không cần hóa đơn gốc thao tác khác gì so với trả hàng có hóa đơn?",
+                            "Thiết lập 'Chỉ cho phép đổi trả hàng trong vòng 7 ngày' nằm trong mục cài đặt nào?"
+                        ]
+                    }
                 },
                 {
-                    tag: "B2-S4", biz: "Chị Hà (Cửa hàng Nội thất)", goal: "Mục tiêu: Khách VIP (Tự động) - Kiểm kho - Sổ quỹ & Ngân hàng", 
-                    customerVoice: "Tôi muốn tự động hóa: Khách hàng mua đủ 5 triệu hệ thống tự cập nhật khách hàng này thuộc nhóm khách hàng VIP, với Khách hàng VIP mặc định giảm 10%, nếu trong trường hợp khách trả hàng làm doanh thu giảm xuống dưới 5 triệu thì khách sẽ bị loại khỏi nhóm này. Về hàng hóa trong kho, tôi nghi ngờ số 'Đèn ngủ' bị sai lệch nên muốn kiểm đếm lại và cân bằng kho, mình có tính năng nào có thể hỗ trợ được nghiệp vụ này của tôi không?. Cửa hàng bên tôi đa số thanh toán bằng chuyển khoản, nhưng tới cuối buổi tôi phải cộng lắt nhắt từng giao dịch để kiểm xem doanh thu tiền mặt là bao nhiêu, chuyển khoản là bao nhiêu, khá rắc rối, có cách nào để phần mềm tách được doanh thu bán hàng theo phương thức thanh toán không?. Ngoài ra, ở cửa hàng tôi có những khoản chi phát sinh, ví dụ như tiền điện hàng tháng, phần mềm có tính toán được khoản chi và ghi chép vụ này vào đâu để tính lãi ròng?", 
-                    trainerNotes: { analysis: "Học viên cần xử lý: 1. Nhóm KH VIP (Tự động). 2. Kiểm kho. 3. Ngân hàng. 4. Phiếu chi (Tiền điện).", hints: ["Làm sao thiết lập điều kiện 'Tự động cập nhật'?", "Phiếu kiểm kho thao tác như thế nào?", "Khai báo số tài khoản Vietcombank ở đâu?", "Lập Phiếu chi trả tiền điện chọn loại chứng từ gì?"] }
+                    tag: "B2-S4",
+                    biz: "Chị Hà (Cửa hàng Nội thất)",
+                    goal: "Mục tiêu: Nhóm khách VIP tự động - Phiếu kiểm kho - Tách doanh thu tiền mặt/CK - Phiếu chi phí vận hành.",
+                    customerVoice: "Tôi muốn tự động hóa việc chăm sóc khách: Khách mua tích lũy đủ 5 triệu thì hệ thống tự chuyển vào nhóm VIP và giảm giá 10%, nếu khách trả hàng làm tổng chi tiêu tụt xuống dưới 5 triệu thì tự động loại khỏi nhóm VIP. Về kho bãi, tôi nghi ngờ số lượng 'Đèn ngủ' trong kho bị lệch so với phần mềm nên muốn kiểm đếm thực tế và cân bằng kho lại, tính năng nào hỗ trợ việc này? Ngoài ra, cửa hàng tôi chủ yếu nhận tiền chuyển khoản, cuối ngày tôi muốn xem tách bạch doanh thu tiền mặt riêng và chuyển khoản ngân hàng riêng thì mở báo cáo nào? Cuối tháng có các khoản chi tiền điện, tiền nước thì ghi chép vào đâu để phần mềm trừ vào chi phí và tính đúng lãi ròng?",
+                    trainerNotes: {
+                        analysis: "Học viên cần demo: 1. Thiết lập Nhóm khách hàng VIP tự động theo doanh thu. 2. Phiếu kiểm kho & Cân bằng kho. 3. Báo cáo bán hàng theo phương thức thanh toán. 4. Lập Phiếu chi (Sổ quỹ).",
+                        hints: [
+                            "Vào đâu để cài đặt điều kiện tự động cập nhật nhóm khách hàng theo doanh thu tích lũy?",
+                            "Các bước thao tác một phiếu kiểm kho và cân bằng tồn kho chuẩn xác?",
+                            "Báo cáo nào giúp chủ shop xem riêng doanh thu Tiền mặt và Chuyển khoản ngân hàng?",
+                            "Lập phiếu chi tiền điện chọn loại chứng từ gì để phần mềm trừ đúng vào báo cáo Kết quả kinh doanh?"
+                        ]
+                    }
                 },
                 {
-                    tag: "B2-S5", biz: "Chị My (Cửa hàng Quà tặng)", goal: "Mục tiêu: ÔN TẬP LUỒNG TỔNG HỢP", 
-                    customerVoice: "Tôi nhập 100 chiếc lồng đèn gỗ (gốc 50k, bán 120k). Trả trước 50% tiền, còn lại ghi nợ. Chiều có khách mua 2 cái trả tiền mặt, hôm sau mang 1 cái ra trả lại vì xước, tôi thối lại tiền. Cuối tuần tôi xuất quỹ trả nốt nợ cho xưởng. Chỉ tôi cách làm từ A-Z và mở báo cáo xem lời lỗ.", 
-                    trainerNotes: { analysis: "Luồng chuẩn: Thêm mới HH -> Nhập hàng (Nợ) -> Bán hàng (Thu TM) -> Trả hàng (Hoàn TM) -> Chi thanh toán NCC -> Báo cáo.", hints: ["Làm phiếu nhập nợ 50% thao tác sao?", "Xử lý trả hàng để két tiền giảm đúng số thối cho khách?", "Trả nợ NCC vào Sổ quỹ hay Đối tác?", "Mở 3 báo cáo: Cuối ngày, Hàng hóa, Tài chính."] }
+                    tag: "B2-S5",
+                    biz: "Chị My (Cửa hàng Quà tặng)",
+                    goal: "Mục tiêu: ÔN TẬP LUỒNG TỔNG HỢP (Nhập nợ - Bán lẻ - Trả hàng - Trả nợ NCC - Báo cáo lãi lỗ)",
+                    customerVoice: "Tôi nhập 100 chiếc lồng đèn gỗ với giá vốn 50.000đ, giá bán lẻ 120.000đ. Tôi thanh toán trước cho xưởng 50% tiền hàng, 50% còn lại ghi nợ. Chiều có khách đến mua 2 chiếc trả tiền mặt. Sáng hôm sau khách mang 1 chiếc ra trả lại vì bị xước, tôi hoàn lại tiền mặt cho khách. Cuối tuần tôi xuất quỹ trả nốt tiền nợ cho xưởng gỗ. Bạn làm mẫu giúp tôi trọn vẹn luồng này từ lúc tạo hàng đến khi mở báo cáo xem chuẩn doanh thu, chi phí và lợi nhuận.",
+                    trainerNotes: {
+                        analysis: "Luồng tổng hợp chuẩn: Tạo HH -> Phiếu nhập (Thanh toán 50%, Nợ 50%) -> Bán hàng (Thu TM) -> Trả hàng (Hoàn TM) -> Chi trả nợ NCC (Sổ quỹ) -> Đối soát Báo cáo.",
+                        hints: [
+                            "Lập phiếu nhập hàng thanh toán 50% và ghi nhận nợ 50% thao tác như thế nào?",
+                            "Khi làm phiếu trả hàng, kiểm tra ở đâu để chắc chắn két tiền mặt đã trừ đúng số tiền hoàn khách?",
+                            "Chi trả nốt nợ cho NCC thực hiện tại Sổ quỹ hay tại mục Nhà cung cấp?",
+                            "Mở 3 báo cáo: Báo cáo cuối ngày, Báo cáo hàng hóa và Báo cáo tài chính để kiểm tra lợi nhuận."
+                        ]
+                    }
                 },
                 {
-                    tag: "B2-S6", biz: "Anh Long (Đại lý Tạp hóa)", goal: "Mục tiêu: LUỒNG TỔNG HỢP (Quy Đổi & Thuộc Tính)", 
-                    customerVoice: "Bánh Oishi nhập theo Lốc (20 gói), bán lẻ theo Gói. Có vị Tôm với Mực. Tôi nhập nợ 100% 50 Lốc bánh. Lát sau khách mua 5 gói (vị Tôm) tiền mặt, nhưng 1 tiếng sau mang 2 gói ra bắt đền vì rách. Tôi nhận lại, trả tiền. Sau đó, tôi CK thanh toán hết nợ cho xưởng. Bạn làm giúp tôi luồng này.", 
-                    trainerNotes: { analysis: "Luồng: Tạo HH (Quy đổi + Thuộc tính) -> Nhập nợ 100% (Lốc) -> Bán lẻ (Gói) -> Trả hàng lẻ -> Thanh toán NCC (CK) -> Báo cáo.", hints: ["Cài đặt HH thế nào để có cơ bản, quy đổi và thuộc tính?", "Nhập 50 Lốc, giá vốn là giá 1 Lốc hay 1 Gói?", "Thanh toán nợ bằng CK thay vì Tiền mặt chọn ở đâu?"] }
+                    tag: "B2-S6",
+                    biz: "Anh Long (Đại lý Tạp hóa)",
+                    goal: "Mục tiêu: LUỒNG TỔNG HỢP (Quy Đổi & Thuộc Tính Đa Dạng)",
+                    customerVoice: "Mặt hàng Bánh Oishi tôi nhập theo Lốc (mỗi lốc 20 gói), nhưng bán lẻ cho khách theo Gói. Bánh có 2 vị là Vị Tôm và Vị Mực. Tôi nhập nợ 100% lô hàng 50 Lốc bánh. Lát sau có khách đến mua 5 gói vị Tôm thanh toán tiền mặt. Một tiếng sau khách mang 2 gói ra đổi trả vì bị rách vỏ, tôi nhận lại và hoàn tiền mặt cho khách. Sau đó, tôi dùng tài khoản ngân hàng chuyển khoản trả hết nợ tiền hàng cho xưởng. Bạn làm mẫu giúp tôi toàn bộ luồng thao tác này.",
+                    trainerNotes: {
+                        analysis: "Luồng: Tạo hàng hóa kết hợp Thuộc tính + Quy đổi -> Nhập nợ 100% theo Lốc -> Bán lẻ Gói -> Trả hàng lẻ hoàn TM -> Lập phiếu chi trả nợ bằng Chuyển khoản -> Kiểm tra báo cáo.",
+                        hints: [
+                            "Cài đặt thông tin hàng hóa thế nào để vừa có đơn vị quy đổi vừa quản lý theo từng thuộc tính vị bánh?",
+                            "Khi nhập 50 Lốc, giá vốn nhập điền theo giá 1 Lốc hay 1 Gói?",
+                            "Thao tác trả nợ nhà cung cấp bằng hình thức Chuyển khoản ngân hàng chọn tài khoản ở đâu?"
+                        ]
+                    }
                 },
                 {
-                    tag: "B2-S7", biz: "Anh Tuấn (Shop Mẹ & Bé)", goal: "Mục tiêu: LUỒNG TỔNG HỢP (Thanh toán đa hình thức & Khách nợ)", 
-                    customerVoice: "Khách mua đơn 2 triệu: quẹt thẻ 1tr, tiền mặt 500k, nợ 500k. Sáng nay bả mang 1 bộ 200k ra đổi màu nhưng kho hết, bả trả hàng, tôi phải rút tiền mặt 200k đưa lại. Tuần sau bả CK trả 500k tiền nợ. Phần mềm xử lý sao cho dòng tiền khỏi loạn?", 
-                    trainerNotes: { analysis: "Luồng: Bán hàng (Thẻ + TM + Nợ) -> Trả hàng (Hoàn TM) -> Thu nợ bằng CK.", hints: ["Ghi nhận 3 hình thức thanh toán trên cùng 1 bill thế nào?", "Khách trả hàng nhận TM, phần mềm hiển thị luồng tiền ở đâu?", "Thu nợ khách hàng bằng CK chọn phương thức gì?"] }
+                    tag: "B2-S7",
+                    biz: "Anh Tuấn (Shop Mẹ & Bé)",
+                    goal: "Mục tiêu: LUỒNG TỔNG HỢP (Thanh toán đa hình thức kết hợp Khách nợ)",
+                    customerVoice: "Hôm qua có khách mua đơn hàng trị giá 2.000.000đ: Khách quẹt thẻ 1 triệu, trả tiền mặt 500k, còn thiếu 500k cho nợ lại. Sáng nay khách mang 1 bộ quần áo trị giá 200k ra muốn đổi màu nhưng trong kho đã hết mẫu đó, khách đồng ý trả hàng và tôi rút tiền mặt hoàn lại 200k cho khách. Đến tuần sau, khách chuyển khoản ngân hàng thanh toán nốt 500k nợ cũ. Bạn hướng dẫn tôi cách xử lý trên hệ thống để dòng tiền mặt, tài khoản và công nợ khách hàng luôn minh bạch, chính xác.",
+                    trainerNotes: {
+                        analysis: "Luồng: Bán hàng (Thẻ + Tiền mặt + Công nợ) -> Trả hàng (Hoàn tiền mặt) -> Lập phiếu Thu nợ bằng Chuyển khoản -> Đối chiếu Sổ quỹ & Công nợ khách hàng.",
+                        hints: [
+                            "Ghi nhận cùng lúc 3 hình thức (Quẹt thẻ, Tiền mặt, Ghi nợ) trên 1 hóa đơn tại POS thao tác ra sao?",
+                            "Khi trả hàng hoàn tiền mặt, phần mềm ghi nhận luồng tiền giảm tại két tiền nào?",
+                            "Khi khách chuyển khoản trả nợ 500k, lập phiếu thu nợ ở đâu và chọn phương thức nào?"
+                        ]
+                    }
                 }
             ]
         };
 
-        let state = { sess:1, ptr:0, names:[], logs:[], curW:"", curT:null, spinning: false };
+        // =========================================================================
+        // 2. STATE HỆ THỐNG
+        // =========================================================================
+        let state = {
+            sess: 1,
+            ptr: 0,
+            names: [],
+            logs: [],
+            curW: "",
+            curT: null,
+            spinning: false,
+            audioEnabled: true,
+            stopwatchSec: 0,
+            stopwatchInterval: null,
+            stopwatchRunning: false
+        };
 
+        // =========================================================================
+        // 3. SOUND ENGINE (WEB AUDIO API SYNTHESIZER)
+        // =========================================================================
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) audioCtx = new AudioContextClass();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playTone(freq, type, duration, gainVal = 0.15) {
+            if (!state.audioEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(gainVal, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        function soundTick() { playTone(850, 'triangle', 0.05, 0.08); }
+        function soundFlip() {
+            if (!state.audioEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(320, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1100, ctx.currentTime + 0.22);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.25);
+            } catch(e) {}
+        }
+
+        function soundFanfare() {
+            if (!state.audioEnabled) return;
+            const chords = [523.25, 659.25, 783.99, 1046.50];
+            chords.forEach((note, idx) => {
+                setTimeout(() => playTone(note, 'triangle', 0.35, 0.2), idx * 110);
+            });
+        }
+
+        function toggleAudio() {
+            state.audioEnabled = !state.audioEnabled;
+            const btn = document.getElementById('audioToggleBtn');
+            if (state.audioEnabled) {
+                btn.innerText = "🔊 ÂM THANH: BẬT";
+                btn.style.color = "#fff";
+                getAudioContext();
+            } else {
+                btn.innerText = "🔇 ÂM THANH: TẮT";
+                btn.style.color = "#94a3b8";
+            }
+        }
+
+        // =========================================================================
+        // 4. STOPWATCH ENGINE
+        // =========================================================================
+        function formatTime(totalSec) {
+            const m = Math.floor(totalSec / 60);
+            const s = totalSec % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function renderStopwatch() {
+            const el = document.getElementById('timerText');
+            if (el) el.innerText = formatTime(state.stopwatchSec);
+        }
+
+        function toggleTimer() {
+            if (state.stopwatchRunning) pauseTimer();
+            else startTimer();
+        }
+
+        function startTimer() {
+            if (state.stopwatchRunning) return;
+            state.stopwatchRunning = true;
+            const btn = document.getElementById('timerToggleBtn');
+            if (btn) {
+                btn.innerText = "TẠM DỪNG";
+                btn.classList.remove('btn-accent');
+            }
+            state.stopwatchInterval = setInterval(() => {
+                state.stopwatchSec++;
+                renderStopwatch();
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            state.stopwatchRunning = false;
+            clearInterval(state.stopwatchInterval);
+            const btn = document.getElementById('timerToggleBtn');
+            if (btn) {
+                btn.innerText = "TIẾP TỤC";
+                btn.classList.add('btn-accent');
+            }
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            state.stopwatchSec = 0;
+            renderStopwatch();
+            const btn = document.getElementById('timerToggleBtn');
+            if (btn) btn.innerText = "BẮT ĐẦU";
+        }
+
+        // =========================================================================
+        // 5. HIỆU ỨNG THẢ EMOJI TOÀN MÀN HÌNH (TIM, HOA, VỖ TAY)
+        // =========================================================================
+        function triggerEmojiShower(customWinnerName) {
+            const container = document.getElementById('emojiContainer');
+            const banner = document.getElementById('reactionBanner');
+            const bannerText = document.getElementById('reactionText');
+            
+            const emojis = ['❤️', '💖', '🌸', '💐', '👏', '⭐', '🎉', '✨', '🥳'];
+            const targetName = customWinnerName || state.curW || "Học viên";
+
+            bannerText.innerText = `CHÚC MỪNG BẠN ${targetName.toUpperCase()} ĐÃ HOÀN THÀNH DEMO! CẢ LỚP CÙNG THẢ TIM TRÊN GOOGLE MEET NÀO! ❤️👏🌸`;
+            banner.classList.add('active');
+
+            for (let i = 0; i < 35; i++) {
+                setTimeout(() => {
+                    const el = document.createElement('div');
+                    el.className = 'floating-emoji';
+                    el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                    el.style.left = `${Math.random() * 92 + 4}vw`;
+                    el.style.fontSize = `${Math.floor(Math.random() * 20) + 30}px`;
+                    el.style.animationDuration = `${(Math.random() * 1.5 + 2.5).toFixed(2)}s`;
+                    
+                    container.appendChild(el);
+                    el.addEventListener('animationend', () => el.remove());
+                }, i * 75);
+            }
+
+            setTimeout(() => {
+                banner.classList.remove('active');
+            }, 5500);
+        }
+
+        function manualTriggerEmoji() {
+            triggerEmojiShower(state.curW || "Cả lớp");
+            soundFanfare();
+        }
+
+        // =========================================================================
+        // 6. KHỞI TẠO & QUẢN LÝ DANH SÁCH
+        // =========================================================================
         window.onload = () => {
             const saved = localStorage.getItem('bk_names_v75_problem');
-            if(saved) {
+            if (saved) {
                 document.getElementById('names').value = saved;
                 updateCount();
             }
+            renderStopwatch();
         };
 
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
         function updateCount() {
-            if(state.spinning) return;
-            let n = document.getElementById('names').value.split('\n').filter(x=>x.trim()!=="");
+            if (state.spinning) return;
+            let n = document.getElementById('names').value.split('\n').filter(x => x.trim() !== "");
             document.getElementById('c').innerText = n.length;
             state.names = n;
         }
 
         setInterval(updateCount, 1000);
 
-        function setSess(n) {
-            state.sess = n; 
-            state.ptr = 0; // Đặt lại con trỏ kịch bản về 0 khi chuyển Tab
-            document.getElementById('t1').className = n==1?'tab active':'tab';
-            document.getElementById('t2').className = n==2?'tab active':'tab';
+        function clearNames() {
+            if (confirm("Bạn có chắc chắn muốn xóa danh sách học viên hiện tại không?")) {
+                document.getElementById('names').value = "";
+                updateCount();
+            }
         }
 
+        function save() { 
+            localStorage.setItem('bk_names_v75_problem', document.getElementById('names').value); 
+            alert("Đã lưu danh sách học viên thành công!"); 
+        }
+
+        function setSess(n) {
+            state.sess = n; 
+            state.ptr = 0;
+            document.getElementById('t1').className = (n == 1) ? 'tab active' : 'tab';
+            document.getElementById('t2').className = (n == 2) ? 'tab active' : 'tab';
+        }
+
+        // =========================================================================
+        // 7. CORE SPIN ENGINE
+        // =========================================================================
         function start(mode) {
-            if(state.names.length===0 && mode !== 'script') return alert("Nhập danh sách học viên!");
+            if (state.names.length === 0 && mode !== 'script') {
+                return alert("Vui lòng nhập danh sách học viên trước!");
+            }
+            
+            getAudioContext();
             state.spinning = true;
+            resetTimer();
+
             document.getElementById('cmt').value = "";
             document.getElementById('spin').disabled = true;
             document.getElementById('actionArea').style.display = 'none';
             document.getElementById('quickBtns').style.display = 'none';
+            document.getElementById('copyScriptBtn').style.display = 'none';
 
-            let i = 0;
-            let t = setInterval(() => {
-                if(mode !== 'script') {
-                    document.getElementById('winner').innerText = state.names[Math.floor(Math.random()*state.names.length)];
+            const winnerEl = document.getElementById('winner');
+            const statusEl = document.getElementById('winnerStatus');
+            winnerEl.classList.add('shaking');
+            statusEl.innerText = "ĐANG TRUY TÌM TÀI NĂNG...";
+
+            let count = 0;
+            const maxTicks = 24;
+            let speed = 40;
+
+            function rollStep() {
+                if (mode !== 'script') {
+                    const rndName = state.names[Math.floor(Math.random() * state.names.length)];
+                    winnerEl.innerText = rndName;
+                    soundTick();
                 }
-                if(++i > 15) { clearInterval(t); finalize(mode); }
-            }, 60);
+
+                count++;
+                if (count < maxTicks) {
+                    if (count > 16) speed += 25;
+                    else if (count > 10) speed += 12;
+                    setTimeout(rollStep, speed);
+                } else {
+                    winnerEl.classList.remove('shaking');
+                    finalize(mode);
+                }
+            }
+
+            rollStep();
         }
 
         function finalize(mode) {
-            // Rút danh sách người chơi (Chỉ random người chơi, không đụng đến kịch bản)
-            if(mode === 'full' || mode === 'user') {
-                let idx = Math.floor(Math.random()*state.names.length);
+            if (mode === 'full' || mode === 'user') {
+                let idx = Math.floor(Math.random() * state.names.length);
                 state.curW = state.names[idx];
                 state.names.splice(idx, 1);
                 document.getElementById('names').value = state.names.join('\n');
                 document.getElementById('c').innerText = state.names.length;
             }
 
-            // Xử lý bốc kịch bản (Fix lỗi lặp: Chạy tuần tự theo con trỏ ptr cho cả Buổi 1 và Buổi 2)
-            if(mode === 'full' || mode === 'script') {
-                if(state.sess == 1) {
+            if (mode === 'full' || mode === 'script') {
+                if (state.sess == 1) {
                     state.curT = scripts.buoi1[state.ptr];
                     state.ptr = (state.ptr + 1) % scripts.buoi1.length;
                 } else {
@@ -290,10 +1223,17 @@
             }
 
             document.getElementById('winner').innerText = state.curW;
-            
-            // Xử lý giao diện Popup Thẻ bài nếu lấy kịch bản mới
+            document.getElementById('winnerStatus').innerText = "HỌC VIÊN ĐƯỢC CHỌN";
+
+            soundFanfare();
+            confetti({
+                particleCount: 120,
+                spread: 80,
+                origin: { y: 0.55 },
+                colors: ['#00f2fe', '#4facfe', '#00ff88', '#fbc531']
+            });
+
             if (mode === 'full' || mode === 'script') {
-                // Đặt lại state cho Modal Game
                 const card = document.getElementById('theGameCard');
                 card.classList.remove('is-flipped');
                 const btn = document.getElementById('closeGameBtn');
@@ -301,63 +1241,62 @@
                 btn.style.pointerEvents = 'none';
 
                 document.getElementById('gameWinnerName').innerText = "HỌC VIÊN: " + state.curW;
-                
-                // Render vào Mặt sau của Thẻ bài
                 renderScript(state.curT, 'cardBackContent');
-                
-                // Render vào Màn hình gốc (bị ẩn dưới lớp nền) để lát tắt popup là có sẵn
                 renderScript(state.curT, 'scBox');
-                
-                // Hiện Modal Lật Thẻ
+                document.getElementById('copyScriptBtn').style.display = 'inline-flex';
                 document.getElementById('gameModal').style.display = 'flex';
-            } else {
-                // Chỉ gọi người khác, giữ nguyên đề bài cũ trên main panel
-                confetti({ particleCount:100, spread:70, origin: { y: 0.6 } });
             }
-            
+
             document.getElementById('spin').disabled = false;
-            document.getElementById('actionArea').style.display = 'block';
+            document.getElementById('actionArea').style.display = 'flex';
             document.getElementById('quickBtns').style.display = 'flex';
             state.spinning = false;
         }
 
-        // --- CÁC HÀM GAME LẬT THẺ BÀI --- //
+        // =========================================================================
+        // 8. CARD FLIP & COPY SCRIPT (GỬI GOOGLE CHAT)
+        // =========================================================================
         function flipCard() {
             const card = document.getElementById('theGameCard');
             if (!card.classList.contains('is-flipped')) {
                 card.classList.add('is-flipped');
-                // Nổ pháo hoa lúc thẻ lật ra (Cực ngầu)
-                confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 }, zIndex: 10001 });
-                
-                // Trì hoãn hiện nút Bắt đầu để học viên đọc xíu
+                soundFlip();
+
+                confetti({
+                    particleCount: 150,
+                    spread: 100,
+                    origin: { y: 0.5 },
+                    zIndex: 10002
+                });
+
                 setTimeout(() => {
                     const btn = document.getElementById('closeGameBtn');
                     btn.style.opacity = '1';
                     btn.style.pointerEvents = 'auto';
-                }, 800);
+                }, 600);
             }
         }
 
         function closeGameModal() {
             document.getElementById('gameModal').style.display = 'none';
+            resetTimer();
+            startTimer();
         }
-        // -------------------------------- //
 
-        // Truyền thêm param idSuffix để tránh trùng lặp ID khi render 2 nơi (Thẻ bài và Box màn hình chính)
         function toggleTrainerNotes(id) {
             const el = document.getElementById(id);
-            if(el) { el.style.display = (el.style.display === "none" || el.style.display === "") ? "block" : "none"; }
+            if (el) el.style.display = (el.style.display === "none" || el.style.display === "") ? "block" : "none";
         }
 
+        // Render đề bài tinh gọn (Đã cắt bỏ khối video và lưu ý)
         function renderScript(obj, containerId) {
-            if(!obj) return;
+            if (!obj) return;
             let contentHtml = "";
 
-            if(obj.customerVoice) {
+            if (obj.customerVoice) {
                 let hintsHtml = obj.trainerNotes.hints.map(h => `<li>${h}</li>`).join('');
-                // Tạo ID unique dựa trên containerId để popup thẻ bài & màn hình gốc không đụng nhau
                 let uniqueId = `tnote_${obj.tag}_${containerId}`;
-                
+
                 contentHtml = `
                     <div class="sc-biz"><span class="sc-tag">${obj.tag}</span>${obj.biz}</div>
                     <div class="sc-goal">${obj.goal}</div>
@@ -368,7 +1307,7 @@
                     </div>
 
                     <button class="trainer-toggle" onclick="toggleTrainerNotes('${uniqueId}')">
-                        <span>👁️ GÓC CỦA TRAINER (Nhấn để xem)</span>
+                        <span>👁️ GÓC CỦA TRAINER (GỢI Ý PHÂN TÍCH)</span>
                         <span>▼</span>
                     </button>
                     
@@ -379,90 +1318,250 @@
                         <ul>${hintsHtml}</ul>
                     </div>
                 `;
-            } 
-            else {
-                // Fallback cho data cũ
-                let reportsHtml = "";
-                if(obj.reports && obj.reports.length > 0) {
-                    reportsHtml = `
-                        <b style="font-size:11px; color:var(--primary); margin-top:10px; display:block">📊 BÁO CÁO CẦN XEM:</b>
-                        <div class="report-grid">
-                            ${obj.reports.map(r => `<div class="report-item">${r}</div>`).join('')}
-                        </div>`;
-                }
-
-                contentHtml = `
-                    <div class="sc-biz"><span class="sc-tag">${obj.tag}</span>${obj.biz}</div>
-                    <div class="sc-goal">${obj.goal}</div>
-                    <div class="sc-customer-voice" style="border-left-color: var(--danger)"><b>TÌNH HUỐNG:</b> ${obj.prob}</div>
-                    <div style="margin-bottom:15px">
-                        <b style="font-size:11px; color:var(--accent); text-transform:uppercase">Các bước thực hiện:</b>
-                        ${obj.steps.map((step, i) => `<div class="sc-step"><b>${i+1}.</b> ${step}</div>`).join('')}
-                    </div>
-                    ${reportsHtml}`;
             }
 
-            document.getElementById(containerId).innerHTML = contentHtml;
+            const target = document.getElementById(containerId);
+            if (target) target.innerHTML = contentHtml;
         }
 
-        function done(res) {
+        function copyCurrentScript() {
+            if (!state.curT) return;
+            const studentName = state.curW || "Học viên";
+            const textToCopy = 
+`🎯 [BÀI THỰC HÀNH DEMO] - HỌC VIÊN: ${studentName.toUpperCase()}
+🏢 Tình huống: ${state.curT.tag} - ${state.curT.biz}
+🎯 Nhiệm vụ: ${state.curT.goal}
+
+👤 LỜI KHÁCH HÀNG:
+"${state.curT.customerVoice}"`;
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(textToCopy).then(() => showCopiedSuccess());
+            } else {
+                const ta = document.createElement("textarea");
+                ta.value = textToCopy;
+                ta.style.position = "fixed";
+                ta.style.left = "-9999px";
+                document.body.appendChild(ta);
+                ta.select();
+                try {
+                    document.execCommand('copy');
+                    showCopiedSuccess();
+                } catch (e) {
+                    alert("Không thể tự sao chép, vui lòng copy thủ công!");
+                }
+                document.body.removeChild(ta);
+            }
+        }
+
+        function showCopiedSuccess() {
+            const btn = document.getElementById('copyScriptBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "✅ ĐÃ COPY ĐỀ BÀI!";
+            btn.style.background = "rgba(0, 255, 136, 0.3)";
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.background = "rgba(0, 255, 136, 0.1)";
+            }, 2000);
+        }
+
+        // =========================================================================
+        // 9. LOGIC ĐÁNH GIÁ, DỜI LƯỢT HOÀN TRẢ TÊN & KÍCH HOẠT EMOJI
+        // =========================================================================
+        function appendTag(text) {
+            const cmt = document.getElementById('cmt');
+            if (cmt.value.trim() === "") {
+                cmt.value = text;
+            } else {
+                cmt.value += "\n" + text;
+            }
+            cmt.focus();
+        }
+
+        function done(statusText) {
+            pauseTimer();
+            const elapsed = state.stopwatchSec;
+            const durationStr = formatTime(elapsed);
+            const winnerTarget = state.curW || "Chưa rõ";
+
             const entry = { 
-                id: Date.now(), time: new Date().toLocaleTimeString('vi-VN'), 
-                name: state.curW, taskObj: JSON.parse(JSON.stringify(state.curT)), 
-                res: res, note: document.getElementById('cmt').value || "Không có nhận xét" 
+                id: Date.now(),
+                time: new Date().toLocaleTimeString('vi-VN'),
+                duration: durationStr,
+                durationSec: elapsed,
+                name: winnerTarget,
+                taskObj: JSON.parse(JSON.stringify(state.curT || {})),
+                res: statusText,
+                note: document.getElementById('cmt').value || "Không có nhận xét" 
             };
+
             state.logs.unshift(entry);
             renderHistory();
+
             document.getElementById('actionArea').style.display = 'none';
             document.getElementById('quickBtns').style.display = 'none';
-            document.getElementById('winner').innerText = "XONG!";
-            document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:#64748b; margin-top:50px">Sẵn sàng...</div>';
+            document.getElementById('copyScriptBtn').style.display = 'none';
+            document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:#64748b; margin-top:50px">Sẵn sàng kịch bản tiếp theo...</div>';
+
+            // XỬ LÝ THEO TỪNG TRẠNG THÁI
+            if (['Hoàn thành tốt', 'Đã thực hành', 'Cần góp ý thêm'].includes(statusText)) {
+                // Cả 3 trường hợp đã lên mic demo đều bắn tim ❤️, hoa 🌸, vỗ tay 👏 rực rỡ
+                document.getElementById('winner').innerText = "HOÀN TẤT!";
+                document.getElementById('winnerStatus').innerText = "ĐÃ LƯU KẾT QUẢ ĐÁNH GIÁ";
+                soundFanfare();
+                triggerEmojiShower(winnerTarget);
+            } 
+            else if (statusText === 'Dời lượt sau') {
+                // KHÔNG thả emoji. Tự động hoàn trả tên học viên về danh sách chờ
+                document.getElementById('winner').innerText = "ĐÃ DỜI LƯỢT";
+                document.getElementById('winnerStatus').innerText = `ĐÃ HOÀN TRẢ ${winnerTarget.toUpperCase()} VÀO DANH SÁCH CHỜ`;
+                
+                // Đẩy tên lại vào danh sách nếu chưa có
+                if (!state.names.includes(winnerTarget) && winnerTarget !== "Chưa rõ") {
+                    state.names.push(winnerTarget);
+                    document.getElementById('names').value = state.names.join('\n');
+                    document.getElementById('c').innerText = state.names.length;
+                    localStorage.setItem('bk_names_v75_problem', document.getElementById('names').value);
+                }
+            } 
+            else if (statusText === 'Vắng mặt') {
+                // Ghi nhận vắng, KHÔNG thả emoji
+                document.getElementById('winner').innerText = "VẮNG MẶT";
+                document.getElementById('winnerStatus').innerText = `ĐÃ GHI NHẬN HỌC VIÊN ${winnerTarget.toUpperCase()} VẮNG`;
+            }
+        }
+
+        // Nút bấm hoàn lại tên học viên thủ công từ nhật ký nếu cần
+        function reAddStudent(name) {
+            if (!state.names.includes(name)) {
+                state.names.push(name);
+                document.getElementById('names').value = state.names.join('\n');
+                document.getElementById('c').innerText = state.names.length;
+                localStorage.setItem('bk_names_v75_problem', document.getElementById('names').value);
+                alert(`Đã hoàn trả [${name}] vào danh sách quay số!`);
+            } else {
+                alert(`Học viên [${name}] đã có sẵn trong danh sách chờ!`);
+            }
         }
 
         function renderHistory() { 
-            document.getElementById('histList').innerHTML = state.logs.map(l => `
+            document.getElementById('histList').innerHTML = state.logs.map(l => {
+                let badgeClass = 'badge-pass';
+                if (l.res.includes('Hoàn thành tốt')) badgeClass = 'badge-best';
+                else if (l.res.includes('Cần góp ý')) badgeClass = 'badge-warn';
+                else if (l.res.includes('Dời lượt')) badgeClass = 'badge-defer';
+                else if (l.res.includes('Vắng mặt')) badgeClass = 'badge-absent';
+
+                let reAddBtn = '';
+                if (l.res === 'Dời lượt sau') {
+                    reAddBtn = `<button class="btn btn-sm" style="font-size:9px; padding:2px 6px; margin-left:6px" onclick="event.stopPropagation(); reAddStudent('${l.name}')">♻️ Thêm lại</button>`;
+                }
+
+                return `
                 <div class="history-item" onclick="openModal(${l.id})">
-                    <div style="display:flex; justify-content:space-between">
-                        <b style="color:${l.res=='Vắng'?'#ff4757':'#00ff88'}">${l.name}</b>
-                        <span style="font-size:10px; color:var(--primary); font-weight:800">${l.taskObj.tag}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center">
+                        <span class="student-name-hist">${l.name} ${reAddBtn}</span>
+                        <span style="font-size:10px; color:var(--primary); font-weight:800; font-family:var(--font-mono)">${l.taskObj.tag || 'N/A'}</span>
                     </div>
-                </div>`).join(''); 
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; font-size:11px">
+                        <span class="status-badge ${badgeClass}">${l.res}</span>
+                        <span style="color:#94a3b8; font-family:var(--font-mono)">⏱️ ${l.duration || '00:00'} | ${l.time}</span>
+                    </div>
+                </div>`;
+            }).join(''); 
         }
 
         function openModal(id) {
             const item = state.logs.find(l => l.id === id);
-            if(!item) return;
+            if (!item) return;
+
+            let badgeClass = 'badge-pass';
+            if (item.res.includes('Hoàn thành tốt')) badgeClass = 'badge-best';
+            else if (item.res.includes('Cần góp ý')) badgeClass = 'badge-warn';
+            else if (item.res.includes('Dời lượt')) badgeClass = 'badge-defer';
+            else if (item.res.includes('Vắng mặt')) badgeClass = 'badge-absent';
+
             document.getElementById('modalBody').innerHTML = `
-                <h2 style="color:var(--primary); font-family:'Orbitron'">${item.name}</h2>
-                <div style="color:#64748b; font-size:12px; margin-bottom:15px">${item.time} | Kết quả: <b style="color:${item.res=='Vắng'?'#ff4757':'#00ff88'}">${item.res}</b></div>
+                <h2 style="color:var(--primary); font-family:var(--font-display); font-size:20px">${item.name}</h2>
+                <div style="color:#94a3b8; font-size:12px; margin-bottom:12px; margin-top:4px">
+                    ${item.time} &nbsp;|&nbsp; ⏱️ Thời gian demo: <b style="color:#fff">${item.duration || '00:00'}</b> &nbsp;|&nbsp; 
+                    Trạng thái: <span class="status-badge ${badgeClass}">${item.res}</span>
+                </div>
                 <div id="modalScript"></div>
-                <div style="margin-top:15px; padding:15px; background:rgba(255,255,255,0.05); border-radius:12px; border:1px solid var(--border)">
-                    <b style="color:var(--accent); font-size:12px">NHẬN XÉT:</b>
-                    <p style="font-size:13px; color:#cbd5e1; margin-top:5px">${item.note}</p>
+                <div style="margin-top:14px; padding:12px; background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid var(--panel-border)">
+                    <b style="color:var(--accent); font-size:11px; text-transform:uppercase">NHẬN XÉT CỦA TRAINER:</b>
+                    <div class="note-content-display">${item.note}</div>
                 </div>`;
+            
             renderScript(item.taskObj, 'modalScript');
             document.getElementById('historyModal').style.display = 'flex';
         }
 
-        function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
-        function toggleEditModal() { const m = document.getElementById('editModal'); if(m.style.display === 'flex') m.style.display = 'none'; else { document.getElementById('jsonEditor').value = JSON.stringify(scripts, null, 4); m.style.display = 'flex'; } }
-        function updateScripts() { try { scripts = JSON.parse(document.getElementById('jsonEditor').value); alert("Thành công!"); toggleEditModal(); } catch(e) { alert("Lỗi JSON!"); } }
-        
-        function exportExcel() {
-            if(state.logs.length === 0) return alert("Chưa có dữ liệu!");
-            let csv = "\uFEFFGiờ,Học viên,Mã kịch bản,Cửa hàng,Kết quả,Nhận xét\n";
-            state.logs.forEach(l => { 
-                let n = l.note.replace(/(\r\n|\n|\r)/gm, " ").replace(/,/g, ";"); 
-                csv += `${l.time},${l.name},${l.taskObj.tag},${l.taskObj.biz},${l.res},${n}\n`; 
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `Bao_cao.csv`; a.click();
+        function closeModal() { 
+            document.getElementById('historyModal').style.display = 'none'; 
         }
 
-        function save() { 
-            localStorage.setItem('bk_names_v75_problem', document.getElementById('names').value); 
-            alert("Đã lưu danh sách học viên!"); 
+        // =========================================================================
+        // 10. EXPORT EXCEL UTF-8 & JSON MANAGEMENT
+        // =========================================================================
+        function exportExcel() {
+            if (state.logs.length === 0) {
+                return alert("Chưa có lượt thực hành nào trong buổi hôm nay để xuất!");
+            }
+            
+            let csv = "\uFEFFThời gian,Học viên,Thời lượng demo,Mã tình huống,Tên cửa hàng,Đánh giá kết quả,Ghi chú của Trainer\n";
+            
+            state.logs.forEach(l => { 
+                let noteClean = (l.note || "").replace(/"/g, '""');
+                let tagClean = l.taskObj && l.taskObj.tag ? l.taskObj.tag : "";
+                let bizClean = l.taskObj && l.taskObj.biz ? l.taskObj.biz.replace(/"/g, '""') : "";
+                csv += `"${l.time}","${l.name}","${l.duration || '00:00'}","${tagClean}","${bizClean}","${l.res}","${noteClean}"\n`; 
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            const dateStr = new Date().toISOString().slice(0, 10);
+            
+            a.href = url;
+            a.download = `Danh_gia_thuc_hanh_${dateStr}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 200);
         }
+
+        function toggleEditModal() { 
+            const m = document.getElementById('editModal'); 
+            if (m.style.display === 'flex') {
+                m.style.display = 'none'; 
+            } else { 
+                document.getElementById('jsonEditor').value = JSON.stringify(scripts, null, 4); 
+                m.style.display = 'flex'; 
+            } 
+        }
+
+        function updateScripts() { 
+            try { 
+                scripts = JSON.parse(document.getElementById('jsonEditor').value); 
+                alert("Đã cập nhật dữ liệu kịch bản mới thành công!"); 
+                toggleEditModal(); 
+            } catch (e) { 
+                alert("Lỗi cú pháp JSON! Vui lòng kiểm tra lại cấu trúc dấu ngoặc kép và dấu phẩy."); 
+            } 
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === "Escape") {
+                closeModal();
+                closeGameModal();
+                const editM = document.getElementById('editModal');
+                if (editM.style.display === 'flex') editM.style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html>
