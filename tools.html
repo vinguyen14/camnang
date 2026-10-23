@@ -1564,10 +1564,17 @@
             }, 600);
         }
 
-        window.onload = async () => {
+        window.onload = () => {
             loadEmployeeDB();
             checkWeek3ComplianceReminders();
-            await fetchDatabase();
+            // Nạp dữ liệu tức thì từ LocalStorage (0ms), không gọi API ngầm gây lag
+            globalGiftsDB = JSON.parse(localStorage.getItem('kv_gift_db')) || defaultGifts;
+            const statusEl = document.getElementById('db-status-indicator');
+            if (statusEl) {
+                statusEl.innerHTML = GOOGLE_API_URL 
+                    ? `<i class="fas fa-circle text-[8px] text-emerald-500"></i> Cloud API Active` 
+                    : `<i class="fas fa-circle text-[8px] text-amber-500"></i> Local Mode`;
+            }
         };
     </script>
     <script src="sop-drawer.js"></script>
