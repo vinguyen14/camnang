@@ -87,56 +87,7 @@
 
     <div class="flex h-screen">
         <!-- SIDEBAR CHUẨN KIOTVIET L&D (COLLAPSIBLE) -->
-        <aside id="sidebar" class="sidebar-saas w-64 flex flex-col z-50 shrink-0">
-            <div class="sidebar-logo">
-                <img src="https://cdn-kvweb-website.kiotviet.vn/images/v2/giai-phap/logos/kiotviet-logo-horizontal.svg" alt="KiotViet" class="h-[28px] logo-full">
-                <div class="logo-icon hidden w-[28px] h-[28px] overflow-hidden rounded-full">
-                    <img src="https://cdn-kvweb-website.kiotviet.vn/images/v2/giai-phap/logos/kiotviet-logo-horizontal.svg" class="h-[28px] max-w-none" alt="KV">
-                </div>
-            </div>
-
-            <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4 custom-scrollbar">
-                <div class="nav-group-title">Tổng quan</div>
-                <a href="index.html" class="nav-item" data-title="Bảng điều khiển"><i class="fas fa-chart-line"></i> <span>Bảng điều khiển</span></a>
-
-                <div class="nav-group-title">Quản trị Khóa học</div>
-                <a href="spcb.html" class="nav-item" data-title="Cơ bản (TS-DS)"><i class="fas fa-box"></i> <span>Cơ bản (TS-DS)</span></a>
-                <a href="thuehkd.html" class="nav-item" data-title="Chuyên đề Thuế"><i class="fas fa-file-invoice-dollar"></i> <span>Chuyên đề Thuế</span></a>
-                
-                <div class="flex flex-col">
-                    <div class="nav-item group justify-between" onclick="toggleAccordion('submenu-cn', 'icon-cn')" data-title="Chuyên ngành">
-                        <div class="flex items-center gap-3"><i class="fas fa-laptop-code"></i> <span>Chuyên ngành</span></div>
-                        <i id="icon-cn" class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform duration-300"></i>
-                    </div>
-                    <div id="submenu-cn" class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out pl-[44px] flex flex-col gap-1 pr-4">
-                        <a href="kv1.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-blue-600 transition-colors">Sản phẩm KV1</a>
-                        <a href="industry.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-orange-500 transition-colors">KiotViet FNB</a>
-                        <a href="industry.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-pink-500 transition-colors">KV Salon</a>
-                        <a href="industry.html" class="py-2 text-[13px] font-medium text-slate-500 hover:text-emerald-500 transition-colors">KV Hotel</a>
-                    </div>
-                </div>
-                <a href="index.html" class="nav-item" data-title="Tất cả khóa học"><i class="fas fa-th-large"></i> <span>Tất cả khóa học</span></a>
-
-                <div class="nav-group-title">Công cụ & Tài nguyên</div>
-                <a href="knowledge.html" class="nav-item relative" data-title="Sơ đồ Vận hành">
-                    <i class="fas fa-project-diagram"></i> <span>Sơ đồ Vận hành</span>
-                </a>
-                <a href="vault.html" class="nav-item active" data-title="Kho Lưu Trữ Vault"><i class="fas fa-box-open"></i> <span>Kho Lưu Trữ Vault</span></a>
-                <a href="tools.html" class="nav-item" data-title="Runner Tools"><i class="fas fa-bolt"></i> <span>Runner Tools</span></a>
-                
-                <div class="nav-group-title">Dữ liệu & Hệ thống</div>
-                <a href="knowledge-hub.html" class="nav-item" data-title="Master Data Hub"><i class="fas fa-database"></i> <span>Master Data Hub</span></a>
-                <a href="settings.html" class="nav-item" data-title="Cài đặt hệ thống"><i class="fas fa-cog"></i> <span>Cài đặt hệ thống</span></a>
-            </nav>
-
-            <div class="user-profile-area p-4 border-t border-slate-200 shrink-0 flex items-center gap-3 bg-slate-50/50 hover:bg-slate-100 transition cursor-pointer" onclick="location.href='settings.html'">
-                <div class="w-9 h-9 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-sm shrink-0 border border-purple-200" id="display-prof-ava">A</div>
-                <div class="overflow-hidden flex-grow">
-                    <p id="display-prof-name" class="text-[13px] font-bold text-slate-800 truncate">L&D KiotViet</p>
-                    <p id="display-prof-title" class="text-[11px] font-medium text-slate-500 truncate">Administrator</p>
-                </div>
-            </div>
-        </aside>
+        <aside id="sidebar"></aside>
 
         <!-- KHO LƯU TRỮ CHÍNH -->
         <div class="flex-1 flex flex-col overflow-hidden relative">
@@ -382,6 +333,29 @@
         let isViewingPinnedOnly = false; 
         let selectedTrashItems = new Set();
 
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function isDescendantFolder(candidateParentId, targetFolderId) {
+            if (!candidateParentId || !targetFolderId) return false;
+            if (candidateParentId === targetFolderId) return true;
+            let curr = vaultFolders.find(f => f.id === candidateParentId);
+            const visited = new Set();
+            while (curr && curr.parentId) {
+                if (curr.parentId === targetFolderId) return true;
+                if (visited.has(curr.id)) break;
+                visited.add(curr.id);
+                curr = vaultFolders.find(f => f.id === curr.parentId);
+            }
+            return false;
+        }
+
         const ICONS_LIST = [
             'fa-folder', 'fa-folder-open', 'fa-book', 'fa-file-alt', 'fa-laptop', 
             'fa-robot', 'fa-gamepad', 'fa-brain', 'fa-chart-pie', 'fa-box',
@@ -412,14 +386,7 @@
         });
 
         window.onload = () => {
-            try {
-                const prof = JSON.parse(localStorage.getItem('kv_trainer_profile'));
-                if(prof) {
-                    document.getElementById('display-prof-name').innerText = prof.name || "L&D KiotViet";
-                    document.getElementById('display-prof-title').innerText = prof.title || "Administrator";
-                    document.getElementById('display-prof-ava').innerText = (prof.name || "A").charAt(0).toUpperCase();
-                }
-            } catch(e) {}
+            // Profile is automatically hydrated by sidebar-nav.js
             
             loadVaultData();
             initResizer();
@@ -432,19 +399,22 @@
             const iData = localStorage.getItem('kv_vault_items');
             const tData = localStorage.getItem('kv_vault_trash');
 
-            vaultFolders = fData ? JSON.parse(fData) : [
+            try { vaultFolders = fData ? JSON.parse(fData) : null; } catch(e) { vaultFolders = null; }
+            if (!Array.isArray(vaultFolders)) vaultFolders = [
                 { id: 'f-1', parentId: null, name: 'Tài nguyên Chung', icon: 'fa-folder', isExpanded: true, order: 1 },
                 { id: 'f-2', parentId: 'f-1', name: 'Mẫu Slide Giảng dạy', icon: 'fa-desktop', isExpanded: false, order: 1 },
                 { id: 'f-3', parentId: null, name: 'Prompts Trợ lý AI', icon: 'fa-robot', isExpanded: true, order: 2 },
                 { id: 'f-4', parentId: null, name: 'Games & LMS', icon: 'fa-gamepad', isExpanded: false, order: 3 }
             ];
 
-            vaultItems = iData ? JSON.parse(iData) : [
+            try { vaultItems = iData ? JSON.parse(iData) : null; } catch(e) { vaultItems = null; }
+            if (!Array.isArray(vaultItems)) vaultItems = [
                 { id: 'i-1', folderId: 'f-3', title: 'Prompt Tóm tắt Khảo sát', type: 'text', content: 'Hãy đóng vai chuyên gia L&D. Phân tích data khảo sát sau và đưa ra: 1. Đánh giá chung. 2. Điểm tốt. 3. Cần cải thiện.', note: 'Copy và paste vào ChatGPT cùng với file Excel kết quả Form', tags: 'ai, khao-sat', createdAt: new Date().getTime(), isPinned: true, order: 1 },
                 { id: 'i-2', folderId: 'f-4', title: 'Game Gamification B1', type: 'link', content: 'https://vinguyen14.github.io/camnang/gamification', note: 'Link game dùng cho Buổi 1 SP Retail', tags: 'game, kv1', createdAt: new Date().getTime(), isPinned: false, order: 2 }
             ];
 
-            vaultTrash = tData ? JSON.parse(tData) : [];
+            try { vaultTrash = tData ? JSON.parse(tData) : []; } catch(e) { vaultTrash = []; }
+            if (!Array.isArray(vaultTrash)) vaultTrash = [];
             saveData();
             renderTree();
         }
@@ -467,7 +437,8 @@
             const resizer = document.getElementById('resizer');
             const sidebar = document.getElementById('vault-sidebar');
             const resize = (e) => {
-                let newWidth = e.clientX;
+                const rect = sidebar.getBoundingClientRect();
+                let newWidth = e.clientX - rect.left;
                 if(newWidth > 200 && newWidth < 600) sidebar.style.width = newWidth + 'px';
             };
             const stopResize = () => {
@@ -496,7 +467,7 @@
                 const children = vaultFolders.filter(f => f.parentId === parentId).sort((a,b) => a.order - b.order);
                 children.forEach(f => {
                     const prefix = '&nbsp;&nbsp;'.repeat(level);
-                    html += `<option value="${f.id}">${prefix}↳ ${f.name}</option>`;
+                    html += `<option value="${escapeHtml(f.id)}">${prefix}↳ ${escapeHtml(f.name)}</option>`;
                     html += buildOptions(f.id, level + 1);
                 });
                 return html;
@@ -525,8 +496,8 @@
                         <div class="tree-node group ${isActive}" id="node-${f.id}" onclick="selectFolder('${f.id}')">
                             <div class="flex items-center flex-grow truncate">
                                 ${toggleHtml}
-                                <i class="fas ${f.icon} text-purple-400 mx-1.5 text-[14px]"></i>
-                                <span class="truncate">${f.name}</span>
+                                <i class="fas ${escapeHtml(f.icon)} text-purple-400 mx-1.5 text-[14px]"></i>
+                                <span class="truncate">${escapeHtml(f.name)}</span>
                             </div>
                             <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition pl-2">
                                 <i class="fas fa-edit text-[11px] text-slate-400 hover:text-blue-500" onclick="openFolderModal('${f.id}', event)"></i>
@@ -578,6 +549,10 @@
 
         function openFolderModal(id = null, event = null) {
             if(event) event.stopPropagation();
+            const parentSelect = document.getElementById('folderParentSelect');
+            Array.from(parentSelect.options).forEach(opt => {
+                opt.disabled = id ? isDescendantFolder(opt.value, id) : false;
+            });
             if(id) {
                 const f = vaultFolders.find(x => x.id === id);
                 document.getElementById('folderModalTitle').innerHTML = '<i class="fas fa-edit text-purple-600 mr-2"></i>Sửa Thư Mục';
@@ -601,6 +576,7 @@
             const icon = document.getElementById('folderIconInput').value.trim() || 'fa-folder';
             const parentId = document.getElementById('folderParentSelect').value || null;
             if(!name) return alert("Nhập tên thư mục!");
+            if(id && isDescendantFolder(parentId, id)) return alert("Không thể chọn chính thư mục này hoặc thư mục con làm thư mục cha!");
 
             if(id) {
                 const f = vaultFolders.find(x => x.id === id);
@@ -702,7 +678,12 @@
             const table = document.getElementById('resourceTable');
             tbody.innerHTML = '';
 
-            let items = isViewingPinnedOnly ? vaultItems.filter(i => i.isPinned) : (query ? vaultItems.filter(i => i.title.toLowerCase().includes(query.toLowerCase()) || (i.tags && i.tags.toLowerCase().includes(query.toLowerCase()))) : vaultItems.filter(i => i.folderId === currentFolderId));
+            const qLower = String(query || '').toLowerCase();
+            let items = isViewingPinnedOnly
+                ? vaultItems.filter(i => i.isPinned)
+                : (qLower
+                    ? vaultItems.filter(i => String(i.title || '').toLowerCase().includes(qLower) || String(i.tags || '').toLowerCase().includes(qLower) || String(i.note || '').toLowerCase().includes(qLower))
+                    : vaultItems.filter(i => i.folderId === currentFolderId));
 
             if(items.length === 0) {
                 table.classList.add('hidden'); emptyState.classList.replace('hidden', 'flex'); return;
@@ -711,7 +692,8 @@
 
             items.sort((a,b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0)).forEach((item, index) => {
                 let typeIcon = item.type === 'link' ? 'fa-link text-blue-500 bg-blue-50' : (item.type === 'file' ? 'fa-file-alt text-emerald-500 bg-emerald-50' : 'fa-align-left text-purple-500 bg-purple-50');
-                let tagsHtml = item.tags ? item.tags.split(',').map(t => `<span class="tag-badge">${t.trim()}</span>`).join('') : '';
+                const tagStr = String(item.tags ?? '');
+                let tagsHtml = tagStr ? tagStr.split(',').filter(t => t.trim()).map(t => `<span class="tag-badge">${escapeHtml(t.trim())}</span>`).join('') : '';
 
                 tbody.innerHTML += `
                     <tr class="group hover:bg-slate-50 transition border-l-4 border-transparent hover:border-l-purple-500">
@@ -721,8 +703,8 @@
                             <div class="flex items-start gap-3">
                                 <div class="w-8 h-8 rounded flex items-center justify-center border shrink-0 ${typeIcon}"><i class="fas ${typeIcon.split(' ')[0]} text-xs"></i></div>
                                 <div>
-                                    <h4 class="font-bold text-[13px] text-slate-800 hover:text-purple-600 cursor-pointer" onclick="openResourceDetail('${item.id}')">${item.title}</h4>
-                                    <p class="text-[11px] text-slate-500 mt-0.5 truncate max-w-md">${item.note || 'Không có mô tả'}</p>
+                                    <h4 class="font-bold text-[13px] text-slate-800 hover:text-purple-600 cursor-pointer" onclick="openResourceDetail('${item.id}')">${escapeHtml(item.title)}</h4>
+                                    <p class="text-[11px] text-slate-500 mt-0.5 truncate max-w-md">${escapeHtml(item.note || 'Không có mô tả')}</p>
                                     <div class="mt-1">${tagsHtml}</div>
                                 </div>
                             </div>
@@ -761,6 +743,19 @@
             document.getElementById('detContent').innerText = item.content;
             document.getElementById('detNote').innerText = item.note || 'Không có mô tả.';
             document.getElementById('detDate').innerText = 'Đã thêm: ' + formatDate(item.createdAt);
+            const detIcon = document.getElementById('detIcon');
+            if (detIcon) {
+                detIcon.className = item.type === 'link'
+                    ? 'fas fa-link text-blue-400'
+                    : (item.type === 'file' ? 'fas fa-file-alt text-emerald-400' : 'fas fa-align-left text-purple-400');
+            }
+            const detTags = document.getElementById('detTags');
+            if (detTags) {
+                const tagStr = String(item.tags ?? '');
+                detTags.innerHTML = tagStr
+                    ? tagStr.split(',').filter(t => t.trim()).map(t => `<span class="tag-badge">${escapeHtml(t.trim())}</span>`).join('')
+                    : '';
+            }
             document.getElementById('detCopyBtn').onclick = () => navigator.clipboard.writeText(item.content).then(() => alert("Đã copy!"));
             document.getElementById('detEditBtn').onclick = () => { closeModal('detailModal'); openResourceModal(item.id); };
             document.getElementById('detailModal').classList.add('active');
@@ -768,19 +763,23 @@
 
         function openTrashModal() {
             selectedTrashItems.clear();
+            const countEl = document.getElementById('trashSelectedCount');
+            if (countEl) countEl.innerText = '0';
+            const masterCb = document.getElementById('masterTrashCheckbox');
+            if (masterCb) masterCb.checked = false;
             const tbody = document.getElementById('trashVaultBody'); tbody.innerHTML = '';
             if(vaultTrash.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400 italic">Thùng rác trống</td></tr>`; }
             else {
                 vaultTrash.forEach(item => {
                     tbody.innerHTML += `
                         <tr class="hover:bg-rose-50/50 transition">
-                            <td class="text-center"><input type="checkbox" value="${item.id}" class="trash-cb accent-rose-500" onchange="updateSelectedTrash(this)"></td>
+                            <td class="text-center"><input type="checkbox" value="${escapeHtml(item.id)}" class="trash-cb accent-rose-500" onchange="updateSelectedTrash(this)"></td>
                             <td class="text-center"><i class="fas fa-trash text-rose-400"></i></td>
-                            <td class="font-bold text-xs">${item.title}</td>
-                            <td class="text-xs text-rose-600 italic">"${item.deleteReason}"</td>
+                            <td class="font-bold text-xs">${escapeHtml(item.title)}</td>
+                            <td class="text-xs text-rose-600 italic">"${escapeHtml(item.deleteReason)}"</td>
                             <td class="text-center text-xs text-slate-500">${formatDate(item.deletedAt)}</td>
                             <td class="text-center">
-                                <button onclick="restoreVaultItem('${item.id}')" class="btn-outline !py-1 text-xs text-emerald-600"><i class="fas fa-undo"></i></button>
+                                <button onclick="restoreVaultItem('${escapeHtml(item.id)}')" class="btn-outline !py-1 text-xs text-emerald-600"><i class="fas fa-undo"></i></button>
                             </td>
                         </tr>
                     `;
@@ -791,17 +790,27 @@
 
         function updateSelectedTrash(cb) { if(cb.checked) selectedTrashItems.add(cb.value); else selectedTrashItems.delete(cb.value); document.getElementById('trashSelectedCount').innerText = selectedTrashItems.size; }
         function toggleSelectAllTrash(m) { document.querySelectorAll('.trash-cb').forEach(cb => { cb.checked = m.checked; updateSelectedTrash(cb); }); }
+        function ensureValidFolderOnRestore(item) {
+            if (!vaultFolders.some(f => f.id === item.folderId)) {
+                item.folderId = currentFolderId || (vaultFolders[0] ? vaultFolders[0].id : 'f-1');
+            }
+            return item;
+        }
         function restoreVaultItem(id) {
             const idx = vaultTrash.findIndex(x => x.id === id);
-            if(idx > -1) { vaultItems.push(vaultTrash.splice(idx, 1)[0]); saveData(); openTrashModal(); renderResourceList(); }
+            if(idx > -1) {
+                const restored = ensureValidFolderOnRestore(vaultTrash.splice(idx, 1)[0]);
+                vaultItems.push(restored);
+                saveData(); openTrashModal(); renderTree(); renderResourceList();
+            }
         }
         function restoreSelectedTrash() {
             if(selectedTrashItems.size === 0) return alert("Chọn tài nguyên!");
             selectedTrashItems.forEach(id => {
                 const idx = vaultTrash.findIndex(x => x.id === id);
-                if(idx > -1) vaultItems.push(vaultTrash.splice(idx, 1)[0]);
+                if(idx > -1) vaultItems.push(ensureValidFolderOnRestore(vaultTrash.splice(idx, 1)[0]));
             });
-            saveData(); openTrashModal(); renderResourceList();
+            saveData(); openTrashModal(); renderTree(); renderResourceList();
         }
         function deleteSelectedTrashPermanently() {
             if(selectedTrashItems.size === 0) return alert("Chọn tài nguyên!");
