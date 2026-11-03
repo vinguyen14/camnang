@@ -304,7 +304,7 @@
         }
 
         function loadAPI() { 
-            document.getElementById('api-url').value = localStorage.getItem('kv_api_url') || ""; 
+            document.getElementById("api-url").value = typeof getGlobalApiUrl === "function" ? getGlobalApiUrl() : (localStorage.getItem("kv_api_url") || ""); 
         }
 
         function loadProfile() { 
@@ -362,7 +362,7 @@
             const profName = document.getElementById('prof-name').value.trim() || 'L&D KiotViet';
             const profTitle = document.getElementById('prof-title').value.trim() || 'Administrator';
             
-            localStorage.setItem('kv_api_url', apiUrl);
+            if (typeof setGlobalApiUrl === "function") setGlobalApiUrl(apiUrl); else localStorage.setItem("kv_api_url", apiUrl);
             localStorage.setItem('kv_trainer_profile', JSON.stringify({ name: profName, title: profTitle }));
             updateCalTemp(); 
             localStorage.setItem('kv_dynamic_calendar', JSON.stringify(dynamicCalTemp));
@@ -406,7 +406,7 @@
 
         // --- ĐẨY DỮ LIỆU LÊN CLOUD (BACKUP) ---
         async function backupToCloud() {
-            const GOOGLE_API_URL = document.getElementById('api-url').value.trim() || localStorage.getItem('kv_api_url') || "";
+            const GOOGLE_API_URL = typeof getGlobalApiUrl === "function" ? getGlobalApiUrl() : (localStorage.getItem("kv_api_url") || "");
             if (!GOOGLE_API_URL) return alert("⚠️ Lỗi: Chưa có Link API. Vui lòng dán Link ở Tab Cá Nhân & API.");
 
             const btn = document.getElementById('btnBackup');
@@ -438,6 +438,23 @@
                 });
                 const data = await res.json();
                 
+                // Đồng thời đẩy trực tiếp MasterDB vào các dòng của Sheet MasterDB nếu đang trống
+                try {
+                    const masterStr = localStorage.getItem('kv_master_db');
+                    if (masterStr) {
+                        const mList = JSON.parse(masterStr);
+                        if (Array.isArray(mList) && mList.length > 0) {
+                            for (const item of mList) {
+                                await fetch(GOOGLE_API_URL, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                    body: JSON.stringify(item)
+                                });
+                            }
+                        }
+                    }
+                } catch(errMaster) {}
+                
                 if (data.status === 'success') {
                     btn.innerHTML = '<i class="fas fa-check mr-2"></i> Backup thành công!';
                     btn.classList.replace('bg-blue-600', 'bg-emerald-500');
@@ -457,7 +474,7 @@
 
         // --- TẢI DỮ LIỆU VỀ MÁY (RESTORE) ---
         async function restoreFromCloud() {
-            const GOOGLE_API_URL = document.getElementById('api-url').value.trim() || localStorage.getItem('kv_api_url') || "";
+            const GOOGLE_API_URL = typeof getGlobalApiUrl === "function" ? getGlobalApiUrl() : (localStorage.getItem("kv_api_url") || "");
             if (!GOOGLE_API_URL) return alert("⚠️ Lỗi: Chưa có Link API. Vui lòng dán Link ở Tab Cá Nhân & API.");
 
             if (!confirm("KÉO DỮ LIỆU TỪ GOOGLE SHEETS:\nToàn bộ dữ liệu trên trình duyệt máy này sẽ được cập nhật đồng bộ từ bản sao lưu trên Cloud Database.\n\nĐồng ý tiếp tục?")) return;
@@ -476,6 +493,23 @@
                     body: JSON.stringify({ action: "sync_down" })
                 });
                 const data = await res.json();
+                
+                // Đồng thời đẩy trực tiếp MasterDB vào các dòng của Sheet MasterDB nếu đang trống
+                try {
+                    const masterStr = localStorage.getItem('kv_master_db');
+                    if (masterStr) {
+                        const mList = JSON.parse(masterStr);
+                        if (Array.isArray(mList) && mList.length > 0) {
+                            for (const item of mList) {
+                                await fetch(GOOGLE_API_URL, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                    body: JSON.stringify(item)
+                                });
+                            }
+                        }
+                    }
+                } catch(errMaster) {}
                 
                 if (data.status === 'success' && data.payload && data.payload !== "{}") {
                     const cloudData = typeof data.payload === 'string' ? JSON.parse(data.payload) : data.payload;
@@ -511,6 +545,6 @@
         }
     </script>
     <script src="sop-drawer.js"></script>
-    <script src="sidebar-nav.js"></script>
+    <script src="system-config.js"></script>`n    <script src="sidebar-nav.js"></script>
 </body>
 </html>
