@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
     <style>
         html { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow-x: hidden; }
@@ -274,7 +275,8 @@
             'kv_employee_trash', 'kv_vault_folders', 'kv_vault_items', 
             'kv_vault_trash', 'kv_master_db', 'kv_gift_db', 
             'kv_roster_SPCB', 'kv_roster_KV1', 'kv_product_radar',
-            'kv_wp_docs_v2', 'kv_survey_spcb', 'kv_survey_tax', 'kv_doc_hub_backlog'
+            'kv_wp_docs', 'kv_wp_docs_v2', 'kv_survey_spcb', 'kv_survey_tax',
+            'kv_doc_hub_backlog', 'kv_w3_compliance_done', 'kv_hrm_traceability'
         ];
 
         window.onload = () => {
@@ -283,7 +285,7 @@
             loadProfile(); 
             loadAPI();
             migrateLegacyKeys();
-            dynamicCalTemp = JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {}; 
+            try { dynamicCalTemp = JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {}; } catch(e) { dynamicCalTemp = {}; } 
             renderDynamicCalendar();
         };
 
@@ -306,7 +308,7 @@
         }
 
         function loadProfile() { 
-            const p = JSON.parse(localStorage.getItem('kv_trainer_profile')) || { name: 'Nguyễn Lê Nhật Vi', title: 'L&D Specialist' }; 
+            let p = { name: 'Nguyễn Lê Nhật Vi', title: 'L&D Specialist' }; try { const savedP = JSON.parse(localStorage.getItem('kv_trainer_profile')); if(savedP) p = savedP; } catch(e) {} 
             document.getElementById('prof-name').value = p.name || ''; 
             document.getElementById('prof-title').value = p.title || ''; 
         }
@@ -364,25 +366,41 @@
             localStorage.setItem('kv_trainer_profile', JSON.stringify({ name: profName, title: profTitle }));
             updateCalTemp(); 
             localStorage.setItem('kv_dynamic_calendar', JSON.stringify(dynamicCalTemp));
+            if (typeof window.refreshSidebarProfile === 'function') window.refreshSidebarProfile();
             
             showToast('Đã lưu toàn bộ Thiết lập Hệ thống!');
         }
 
         // --- XÓA AN TOÀN 3 LỚP (BẢO VỆ GOOGLE SHEETS & GIỮ LẠI LINK API) ---
-        function executeWipe() { 
+        async function sha256Hash(text) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode("TRAINER_OS_SALT_v64:" + text);
+            const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+        }
+
+        async function executeWipe() { 
             const pwd = prompt("🔒 XÁC THỰC BẢO MẬT (LỚP 2/3):\nBạn đang yêu cầu XÓA SẠCH bộ nhớ tạm trên trình duyệt máy này.\n(Dữ liệu trên Google Sheets hoàn toàn KHÔNG bị ảnh hưởng).\n\nNhập MẬT KHẨU HỆ THỐNG để tiếp tục:");
+            if (!pwd) return;
             
-            if (pwd === "014023") {
-                const finalConfirm = confirm("⚠️ XÁC NHẬN CUỐI CÙNG (LỚP 3/3):\nToàn bộ CSDL hiển thị trên trình duyệt này sẽ biến mất.\n(Bạn luôn có thể bấm nút 'Kéo Data Từ Google Sheets' để phục hồi lại bất cứ lúc nào).\n\nĐồng ý thực hiện?");
-                if (finalConfirm) {
-                    const currentApi = localStorage.getItem('kv_api_url');
-                    localStorage.clear();
-                    if (currentApi) localStorage.setItem('kv_api_url', currentApi); // Giữ lại link API để cứu sinh
-                    alert("✅ Đã dọn dẹp sạch bộ nhớ tạm trên trình duyệt!");
-                    location.reload(); 
+            try {
+                const hashed = await sha256Hash(pwd);
+                // Hash SHA-256 kèm salt bảo vệ tuyệt đối, không lộ plaintext trong code giao diện
+                if (hashed === "76a5dc867d536026a228e89457f43ef2c95e80f94a038080cf1206f7974d8256") {
+                    const finalConfirm = confirm("⚠️ XÁC NHẬN CUỐI CÙNG (LỚP 3/3):\nToàn bộ CSDL hiển thị trên trình duyệt này sẽ biến mất.\n(Bạn luôn có thể bấm nút 'Kéo Data Từ Google Sheets' để phục hồi lại bất cứ lúc nào).\n\nĐồng ý thực hiện?");
+                    if (finalConfirm) {
+                        const currentApi = localStorage.getItem('kv_api_url');
+                        localStorage.clear();
+                        if (currentApi) localStorage.setItem('kv_api_url', currentApi); // Giữ lại link API để cứu sinh
+                        alert("✅ Đã dọn dẹp sạch bộ nhớ tạm trên trình duyệt!");
+                        location.reload(); 
+                    }
+                } else {
+                    alert("❌ Sai mật khẩu xác thực! Thao tác xóa đã bị hủy bỏ an toàn.");
                 }
-            } else {
-                alert("❌ Sai mật khẩu xác thực! Thao tác xóa đã bị hủy bỏ an toàn.");
+            } catch (err) {
+                alert("⚠️ Trình duyệt không hỗ trợ xác thực mã hóa an toàn.");
             }
         }
 
@@ -401,6 +419,14 @@
                 KEYS_TO_SYNC.forEach(k => {
                     backupData[k] = localStorage.getItem(k) || null;
                 });
+                if (window.localforage) {
+                    try {
+                        const wbData = await localforage.getItem('kv_global_whiteboard');
+                        if (wbData) {
+                            backupData['kv_global_whiteboard'] = typeof wbData === 'object' ? JSON.stringify(wbData) : String(wbData);
+                        }
+                    } catch (err) {}
+                }
                 const payloadString = JSON.stringify(backupData);
 
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang tải lên Google Sheets...';
@@ -455,7 +481,14 @@
                     const cloudData = typeof data.payload === 'string' ? JSON.parse(data.payload) : data.payload;
                     for (let key in cloudData) {
                         if (cloudData[key] !== null && cloudData[key] !== undefined) {
-                            localStorage.setItem(key, typeof cloudData[key] === 'object' ? JSON.stringify(cloudData[key]) : cloudData[key]);
+                            const strVal = typeof cloudData[key] === 'object' ? JSON.stringify(cloudData[key]) : String(cloudData[key]);
+                            localStorage.setItem(key, strVal);
+                            if (key === 'kv_global_whiteboard' && window.localforage) {
+                                try {
+                                    const parsedWb = typeof cloudData[key] === 'string' ? JSON.parse(cloudData[key]) : cloudData[key];
+                                    await localforage.setItem('kv_global_whiteboard', parsedWb);
+                                } catch (err) {}
+                            }
                         }
                     }
                     
