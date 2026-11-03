@@ -738,6 +738,19 @@
         let globalEmployeeDB = [];
         let globalTrashDB = [];
 
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function escapeJsStr(str) {
+            return String(str ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
+
         function showToast(msg) {
             const t = document.getElementById('toast');
             if(!t) return;
@@ -752,9 +765,9 @@
 
         function loadEmployeeDB() {
             const saved = localStorage.getItem('kv_employee_db');
-            globalEmployeeDB = saved ? JSON.parse(saved) : [];
+            try { globalEmployeeDB = saved ? JSON.parse(saved) : []; } catch(e) { globalEmployeeDB = []; }
             const trash = localStorage.getItem('kv_employee_trash');
-            globalTrashDB = trash ? JSON.parse(trash) : [];
+            try { globalTrashDB = trash ? JSON.parse(trash) : []; } catch(e) { globalTrashDB = []; }
             updateTrashCount();
         }
 
@@ -793,13 +806,13 @@
             }
         }
 
-        function getDynamicCalendar() { return JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {}; }
+        function getDynamicCalendar() { try { return JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {}; } catch(e) { return {}; } }
 
         // ==================== CẢNH BÁO 4 CẤP ĐỘ: ASSIGN LỘ TRÌNH ĐẦU TUẦN 3 ====================
         function checkWeek3ComplianceReminders() {
             const now = new Date();
             const calData = getDynamicCalendar();
-            const doneRecords = JSON.parse(localStorage.getItem('kv_w3_compliance_done')) || {};
+            let doneRecords = {}; try { doneRecords = JSON.parse(localStorage.getItem('kv_w3_compliance_done')) || {}; } catch(e) { doneRecords = {}; }
             
             let pendingAlert = null;
             const year = now.getFullYear();
@@ -914,7 +927,7 @@
 
         function dismissWeek3Alert() {
             if (!window.currentActiveAlertKey) return;
-            let done = JSON.parse(localStorage.getItem('kv_w3_compliance_done')) || {};
+            let done = {}; try { done = JSON.parse(localStorage.getItem('kv_w3_compliance_done')) || {}; } catch(e) { done = {}; }
             done[window.currentActiveAlertKey] = Date.now();
             localStorage.setItem('kv_w3_compliance_done', JSON.stringify(done));
             document.getElementById('w3AlertBanner').classList.add('hidden');
@@ -997,7 +1010,7 @@
             let y3 = currentYear;
             if (m3 <= 0) { m3 += 12; y3 -= 1; }
 
-            const trace = JSON.parse(localStorage.getItem('kv_hrm_traceability')) || {};
+            let trace = {}; try { trace = JSON.parse(localStorage.getItem('kv_hrm_traceability')) || {}; } catch(e) { trace = {}; }
             const traceKey = `${currentYear}-${tMonth.toString().padStart(2, '0')}`;
             const pastData = trace[traceKey];
 
@@ -1058,7 +1071,22 @@
                 const dateStr = cols[idxDate].trim();
                 let joinMonth = -1;
                 const dateParts = dateStr.split(/[\/\-]/);
-                if(dateParts.length >= 2) joinMonth = parseInt(dateParts[0]);
+                if (dateParts.length >= 2) {
+                    const p0 = parseInt(dateParts[0], 10);
+                    const p1 = parseInt(dateParts[1], 10);
+                    if (dateParts[0].trim().length === 4) {
+                        // YYYY-MM-DD
+                        joinMonth = p1;
+                    } else if (p1 > 12 && p0 >= 1 && p0 <= 12) {
+                        // MM/DD/YYYY (nếu phần tử thứ 2 > 12)
+                        joinMonth = p0;
+                    } else if (p1 >= 1 && p1 <= 12) {
+                        // DD/MM/YYYY (chuẩn Việt Nam phổ biến nhất)
+                        joinMonth = p1;
+                    } else {
+                        joinMonth = p0;
+                    }
+                }
 
                 if (joinMonth === m2 || joinMonth === m3) {
                     const code = idxCode !== -1 && cols[idxCode] ? cols[idxCode].trim() : '';
@@ -1089,7 +1117,7 @@
             document.getElementById('hrm-count-2').innerText = countM3;
             setHrmView(1, 'raw'); setHrmView(2, 'raw');
 
-            let trace = JSON.parse(localStorage.getItem('kv_hrm_traceability')) || {};
+            let trace = {}; try { trace = JSON.parse(localStorage.getItem('kv_hrm_traceability')) || {}; } catch(e) { trace = {}; }
             const traceKey = `${currentYear}-${tMonth.toString().padStart(2, '0')}`;
             trace[traceKey] = {
                 m2_count: countM2,
@@ -1168,7 +1196,7 @@
             const filtered = getUniqueDepartments().filter(d => d.toLowerCase().includes(query.toLowerCase()));
             if(filtered.length === 0) { list.innerHTML = `<div class="text-xs text-slate-400 italic p-2">Không tìm thấy...</div>`; return; }
             filtered.forEach(d => {
-                list.innerHTML += `<label class="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 cursor-pointer rounded"><input type="checkbox" value="${d}" class="accent-emerald-600 w-3.5 h-3.5" onchange="updateTempDept(this)" ${tempSelectedDepts.has(d)?'checked':''}><span class="text-[12px] text-slate-700 truncate">${d}</span></label>`;
+                list.innerHTML += `<label class="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 cursor-pointer rounded"><input type="checkbox" value="${escapeHtml(d)}" class="accent-emerald-600 w-3.5 h-3.5" onchange="updateTempDept(this)" ${tempSelectedDepts.has(d)?'checked':''}><span class="text-[12px] text-slate-700 truncate">${escapeHtml(d)}</span></label>`;
             });
         }
 
@@ -1231,21 +1259,29 @@
             const tbody = document.getElementById('emailTableBody'); 
             tbody.innerHTML = '';
             const filtered = globalEmployeeDB.filter(e => {
-                const matchName = e.name.toLowerCase().includes(nameVal) || (e.code && e.code.toLowerCase().includes(nameVal)) || e.email.toLowerCase().includes(nameVal);
+                const matchName = (e.name || '').toLowerCase().includes(nameVal) || (e.code && e.code.toLowerCase().includes(nameVal)) || (e.email || '').toLowerCase().includes(nameVal);
                 const matchDept = globalSelectedDepts.size === 0 || globalSelectedDepts.has(e.dept);
                 return matchName && matchDept;
             });
 
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400 italic text-xs">Không tìm thấy nhân sự phù hợp</td></tr>`;
+                document.getElementById('countSelectedText').innerText = globalSelectedEmails.size;
+                return;
+            }
+
             filtered.forEach(e => {
+                const safeEmailAttr = escapeHtml(e.email);
+                const safeEmailJs = escapeJsStr(e.email);
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50 transition">
-                        <td class="text-center"><input type="checkbox" value="${e.email}" class="email-cb accent-blue-600 cursor-pointer" onchange="updateSelectedEmails(this)" ${globalSelectedEmails.has(e.email)?'checked':''}></td>
-                        <td class="text-xs text-slate-500 font-mono">${e.code || '-'}</td>
-                        <td><p class="font-semibold text-slate-800 leading-tight">${e.name}</p><p class="text-[10px] text-slate-400 mt-0.5">${e.position || 'Nhân viên'}</p></td>
-                        <td><span class="bg-slate-100 text-slate-600 px-2 py-1 rounded-md text-[10px] font-bold border border-slate-200">${e.dept}</span></td>
-                        <td class="text-xs text-blue-600 font-medium font-mono">${e.email}</td>
+                        <td class="text-center"><input type="checkbox" value="${safeEmailAttr}" class="email-cb accent-blue-600 cursor-pointer" onchange="updateSelectedEmails(this)" ${globalSelectedEmails.has(e.email)?'checked':''}></td>
+                        <td class="text-xs text-slate-500 font-mono">${escapeHtml(e.code || '-')}</td>
+                        <td><p class="font-semibold text-slate-800 leading-tight">${escapeHtml(e.name)}</p><p class="text-[10px] text-slate-400 mt-0.5">${escapeHtml(e.position || 'Nhân viên')}</p></td>
+                        <td><span class="bg-slate-100 text-slate-600 px-2 py-1 rounded-md text-[10px] font-bold border border-slate-200">${escapeHtml(e.dept)}</span></td>
+                        <td class="text-xs text-blue-600 font-medium font-mono">${escapeHtml(e.email)}</td>
                         <td class="text-center">
-                            <button onclick="deleteEmployee('${e.email}')" class="text-slate-400 hover:text-rose-500 p-1.5 transition"><i class="far fa-trash-alt"></i></button>
+                            <button onclick="deleteEmployee('${safeEmailJs}')" class="text-slate-400 hover:text-rose-500 p-1.5 transition"><i class="far fa-trash-alt"></i></button>
                         </td>
                     </tr>
                 `;
@@ -1268,7 +1304,8 @@
             tbody.innerHTML = '';
             if(globalTrashDB.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400 italic">Thùng rác trống</td></tr>`; return; }
             globalTrashDB.forEach(e => {
-                tbody.innerHTML += `<tr><td class="text-xs font-mono">${e.code}</td><td>${e.name}</td><td>${e.dept}</td><td class="text-xs text-rose-500 font-mono">${e.email}</td><td class="text-center"><button onclick="restoreEmployee('${e.email}')" class="btn-outline !py-1 text-xs text-emerald-600"><i class="fas fa-undo mr-1"></i> Khôi phục</button></td></tr>`;
+                const safeEmailJs = escapeJsStr(e.email);
+                tbody.innerHTML += `<tr><td class="text-xs font-mono">${escapeHtml(e.code)}</td><td>${escapeHtml(e.name)}</td><td>${escapeHtml(e.dept)}</td><td class="text-xs text-rose-500 font-mono">${escapeHtml(e.email)}</td><td class="text-center"><button onclick="restoreEmployee('${safeEmailJs}')" class="btn-outline !py-1 text-xs text-emerald-600"><i class="fas fa-undo mr-1"></i> Khôi phục</button></td></tr>`;
             });
         }
         function restoreEmployee(email) {
@@ -1342,7 +1379,7 @@
             attData.result.forEach(item => {
                 if(item.isPresent) pCount++; else aCount++;
                 if(search && !removeAccents(item.name).includes(search)) return;
-                list.innerHTML += `<div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 ${item.isPresent ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-800'}"><span class="text-xs font-semibold">${item.name}</span>${item.isPresent ? '<i class="fas fa-check text-emerald-500"></i>' : '<i class="fas fa-times text-rose-500"></i>'}</div>`;
+                list.innerHTML += `<div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 ${item.isPresent ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-800'}"><span class="text-xs font-semibold">${escapeHtml(item.name)}</span>${item.isPresent ? '<i class="fas fa-check text-emerald-500"></i>' : '<i class="fas fa-times text-rose-500"></i>'}</div>`;
             });
             document.getElementById('res-total').innerText = attData.result.length;
             document.getElementById('res-present').innerText = pCount;
@@ -1353,14 +1390,14 @@
         function resetAllAttendance() { document.getElementById('input-roster').value = ''; document.getElementById('input-meet').value = ''; loadRoster(); backToInput(); }
 
         // ==================== TOOL 5: QUÀ TẶNG ====================
-        function loadGiftData() { return JSON.parse(localStorage.getItem('kv_gift_db')) || globalGiftsDB || defaultGifts; }
+        function loadGiftData() { try { return JSON.parse(localStorage.getItem('kv_gift_db')) || globalGiftsDB || defaultGifts; } catch(e) { return globalGiftsDB || defaultGifts; } }
         function renderGiftTable() {
             const data = loadGiftData(); 
             const tbody = document.getElementById('giftTableBody'); 
             tbody.innerHTML = '';
             data.forEach((g, idx) => {
                 const ton = g.in - g.out;
-                tbody.innerHTML += `<tr><td class="font-semibold text-xs">${g.name}</td><td class="text-center bg-slate-50"><input type="number" class="saas-input w-20 text-center py-1 h-8 font-bold" value="${g.in}" onchange="updateGiftIn(${idx}, this.value)"></td><td class="text-center bg-rose-50 text-rose-600"><div class="flex justify-center items-center gap-1.5"><button onclick="updateGiftOut(${idx}, -1)" class="w-6 h-6 bg-white border border-rose-200 rounded text-rose-600 hover:bg-rose-100 font-bold">-</button><span class="w-8 font-bold text-xs">${g.out}</span><button onclick="updateGiftOut(${idx}, 1)" class="w-6 h-6 bg-white border border-rose-200 rounded text-rose-600 hover:bg-rose-100 font-bold">+</button></div></td><td class="text-center bg-slate-800 text-white font-bold text-sm">${ton}</td></tr>`;
+                tbody.innerHTML += `<tr><td class="font-semibold text-xs">${escapeHtml(g.name)}</td><td class="text-center bg-slate-50"><input type="number" class="saas-input w-20 text-center py-1 h-8 font-bold" value="${g.in}" onchange="updateGiftIn(${idx}, this.value)"></td><td class="text-center bg-rose-50 text-rose-600"><div class="flex justify-center items-center gap-1.5"><button onclick="updateGiftOut(${idx}, -1)" class="w-6 h-6 bg-white border border-rose-200 rounded text-rose-600 hover:bg-rose-100 font-bold">-</button><span class="w-8 font-bold text-xs">${g.out}</span><button onclick="updateGiftOut(${idx}, 1)" class="w-6 h-6 bg-white border border-rose-200 rounded text-rose-600 hover:bg-rose-100 font-bold">+</button></div></td><td class="text-center bg-slate-800 text-white font-bold text-sm">${ton}</td></tr>`;
             });
         }
         function updateGiftIn(idx, val) { let d = loadGiftData(); d[idx].in = parseInt(val) || 0; localStorage.setItem('kv_gift_db', JSON.stringify(d)); renderGiftTable(); }
@@ -1439,7 +1476,7 @@
             const isHoliday = (d) => !!holidays[`${d.getMonth()+1}-${d.getDate()}`];
             const isWeekend = (d) => d.getDay() === 0 || d.getDay() === 6;
             
-            const dynamicCal = JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {};
+            let dynamicCal = {}; try { dynamicCal = JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {}; } catch(e) { dynamicCal = {}; }
             const mNames = ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"];
 
             let html = '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">';
@@ -1555,14 +1592,63 @@
             const text = input.value.trim(); 
             if(!text) return;
             const history = document.getElementById('chatHistory');
-            history.innerHTML += `<div class="bg-blue-600 text-white p-3 rounded-xl text-[13px] self-end max-w-[85%] shadow-sm leading-relaxed">${text}</div>`;
+            history.innerHTML += `<div class="bg-blue-600 text-white p-3 rounded-xl text-[13px] self-end max-w-[85%] shadow-sm leading-relaxed">${escapeHtml(text)}</div>`;
             input.value = ''; 
             history.scrollTop = history.scrollHeight;
-            setTimeout(() => {
+
+            const apiUrl = localStorage.getItem('kv_api_url') || GOOGLE_API_URL;
+            if (!apiUrl) {
+                setTimeout(() => {
+                    history.innerHTML += `<div class="bg-white border border-slate-200 p-3 rounded-xl shadow-sm text-[13px] text-slate-700 max-w-[85%] leading-relaxed">Tôi có thể hỗ trợ bạn lọc dữ liệu HRM hoặc truy vấn tồn kho quà tặng.</div>`;
+                    history.scrollTop = history.scrollHeight;
+                }, 400);
+                return;
+            }
+
+            const loadingId = 'chat-load-' + Date.now();
+            history.innerHTML += `<div id="${loadingId}" class="bg-white border border-slate-200 p-3 rounded-xl shadow-sm text-[12px] text-slate-400 italic max-w-[85%]"><i class="fas fa-circle-notch fa-spin mr-1.5 text-blue-500"></i>AI đang phân tích dữ liệu...</div>`;
+            history.scrollTop = history.scrollHeight;
+
+            const giftSummary = (loadGiftData() || []).map(g => `${g.name}: tồn ${g.in - g.out}`).join(', ');
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    action: 'ask_ai',
+                    prompt: text,
+                    context: `Tồn kho quà tặng: ${giftSummary}. Tổng nhân sự trong DB: ${globalEmployeeDB.length}.`
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+                const loadEl = document.getElementById(loadingId);
+                if (loadEl) loadEl.remove();
+                const reply = (res && res.reply) ? escapeHtml(res.reply).replace(/\n/g, '<br>') : 'Tôi có thể hỗ trợ bạn lọc dữ liệu HRM hoặc truy vấn tồn kho quà tặng.';
+                history.innerHTML += `<div class="bg-white border border-slate-200 p-3 rounded-xl shadow-sm text-[13px] text-slate-700 max-w-[85%] leading-relaxed">${reply}</div>`;
+                history.scrollTop = history.scrollHeight;
+            })
+            .catch(() => {
+                const loadEl = document.getElementById(loadingId);
+                if (loadEl) loadEl.remove();
                 history.innerHTML += `<div class="bg-white border border-slate-200 p-3 rounded-xl shadow-sm text-[13px] text-slate-700 max-w-[85%] leading-relaxed">Tôi có thể hỗ trợ bạn lọc dữ liệu HRM hoặc truy vấn tồn kho quà tặng.</div>`;
                 history.scrollTop = history.scrollHeight;
-            }, 600);
+            });
         }
+
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('gsheetFilterPanel');
+            if (panel && !panel.classList.contains('hidden')) {
+                if (!panel.contains(e.target) && !e.target.closest('[onclick*="toggleGSheetFilter"]')) {
+                    panel.classList.add('hidden');
+                }
+            }
+            const notiDrop = document.getElementById('notiDropdown');
+            if (notiDrop && !notiDrop.classList.contains('hidden')) {
+                if (!notiDrop.contains(e.target) && !e.target.closest('[onclick*="toggleNoti"]')) {
+                    notiDrop.classList.add('hidden');
+                }
+            }
+        });
 
         window.onload = () => {
             loadEmployeeDB();
