@@ -65,9 +65,9 @@
           isAccordion: true,
           icon: `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>`,
           subItems: [
-            { label: 'KiotViet FNB', file: 'industry.html', color: 'hover:text-orange-500' },
-            { label: 'KV Salon', file: 'industry.html', color: 'hover:text-pink-500' },
-            { label: 'KV Hotel', file: 'industry.html', color: 'hover:text-emerald-500' }
+            { label: 'KiotViet FNB', file: 'industry.html?type=FNB', type: 'FNB', color: 'hover:text-orange-500' },
+            { label: 'KV Salon', file: 'industry.html?type=SALON', type: 'SALON', color: 'hover:text-pink-500' },
+            { label: 'KV Hotel', file: 'industry.html?type=HOTEL', type: 'HOTEL', color: 'hover:text-emerald-500' }
           ]
         },
         {
@@ -180,6 +180,11 @@
 
       :root.sb-collapsed #btn-sidebar-toggle {
         margin: 4px auto 0 auto !important;
+      }
+
+      #sidebar .sb-tooltip {
+        background-color: #0f172a !important;
+        color: #ffffff !important;
       }
 
       :root.sb-collapsed #sidebar .group:hover .sb-tooltip {
@@ -298,6 +303,17 @@
       }
     } catch (e) {}
 
+    function esc(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    const safeProfName = esc(profName);
+    const safeProfTitle = esc(profTitle);
+
     let html = `
       <div class="flex flex-col w-full bg-white shrink-0">
         <div class="flex items-center justify-between h-14 w-full px-3 bg-white">
@@ -366,10 +382,15 @@
             ? 'bg-blue-50 text-blue-600 font-bold active-menu-item shadow-2xs'
             : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50 font-medium';
 
+          const radarDot = item.id === 'radar'
+            ? `<span id="sidebar-alert-dot" class="w-2 h-2 rounded-full bg-rose-500 hidden ml-auto animate-pulse shrink-0"></span>`
+            : '';
+
           html += `
             <a href="${item.file}" class="sidebar-item relative group flex items-center h-8 w-full px-2 rounded-lg transition-colors duration-150 ${itemClass}">
               ${item.icon}
               <span class="sb-text ml-2.5 text-xs tracking-tight truncate flex-1">${item.label}</span>
+              ${radarDot}
 
               <div class="sb-tooltip absolute left-16 ml-2 px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-md shadow-2xl whitespace-nowrap opacity-0 pointer-events-none transition-all duration-150 z-[100000] border border-slate-700">
                 ${item.label}
@@ -399,13 +420,13 @@
             <img src="${BONGHOA_LOGO_URL}" alt="Bông Hoa Logo" class="w-full h-full object-contain" />
           </div>
           <div class="sb-text flex flex-col overflow-hidden text-left">
-            <span class="text-xs font-bold text-slate-800 truncate" id="sb-profile-name">${profName}</span>
-            <span class="text-[10px] text-slate-400 font-medium truncate" id="sb-profile-title">${profTitle}</span>
+            <span class="text-xs font-bold text-slate-800 truncate" id="sb-profile-name">${safeProfName}</span>
+            <span class="text-[10px] text-slate-400 font-medium truncate" id="sb-profile-title">${safeProfTitle}</span>
           </div>
 
           <div class="sb-tooltip absolute left-16 ml-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-md shadow-2xl whitespace-nowrap opacity-0 pointer-events-none transition-opacity z-[100000] border border-slate-700">
-            <div class="font-bold text-slate-100">${profName}</div>
-            <div class="text-[10px] text-blue-400">${profTitle}</div>
+            <div class="font-bold text-slate-100" id="sb-tooltip-name">${safeProfName}</div>
+            <div class="text-[10px] text-blue-400" id="sb-tooltip-title">${safeProfTitle}</div>
             <div class="mt-1 text-[9px] text-slate-400 border-t border-slate-700 pt-1">Nhấp đúp: Mở System Workflow</div>
           </div>
         </div>
@@ -413,6 +434,19 @@
     `;
 
     sidebarEl.innerHTML = html;
+
+    // Tự động kiểm tra cảnh báo Radar trên toàn hệ thống
+    try {
+      const radarRaw = localStorage.getItem('kv_product_radar');
+      if (radarRaw) {
+        const radarList = JSON.parse(radarRaw);
+        if (Array.isArray(radarList)) {
+          const hasUrgent = radarList.some(f => f.status !== 'Đã Launching' && (!f.isTrainerCleared || f.hdsdStatus === 'Chưa có bài' || (f.videoAction === 'Cần quay lại' && !f.isVideoDone)));
+          const dotEl = document.getElementById('sidebar-alert-dot');
+          if (dotEl) dotEl.classList.toggle('hidden', !hasUrgent);
+        }
+      }
+    } catch (e) {}
 
     const toggleBtn = document.getElementById('btn-sidebar-toggle');
     if (toggleBtn) {
@@ -439,6 +473,21 @@
       if (el) el.addEventListener('dblclick', openWorkflow);
     });
   }
+
+  window.refreshSidebarProfile = function () {
+    try {
+      const prof = JSON.parse(localStorage.getItem('kv_trainer_profile'));
+      if (!prof) return;
+      const nameEl = document.getElementById('sb-profile-name');
+      const titleEl = document.getElementById('sb-profile-title');
+      const tipNameEl = document.getElementById('sb-tooltip-name');
+      const tipTitleEl = document.getElementById('sb-tooltip-title');
+      if (nameEl) nameEl.textContent = prof.name || 'L&D KiotViet';
+      if (titleEl) titleEl.textContent = prof.title || 'Administrator';
+      if (tipNameEl) tipNameEl.textContent = prof.name || 'L&D KiotViet';
+      if (tipTitleEl) tipTitleEl.textContent = prof.title || 'Administrator';
+    } catch (e) {}
+  };
 
   injectFavicon();
 
