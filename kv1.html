@@ -334,6 +334,61 @@
         const totalSteps = 7;
         let rosterData = []; 
         let gradedStats = { total: 0, pass: 0, fail: 0 };
+        let stepSwitchTimer = null;
+
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatLocalIsoDate(d) {
+            const dt = (d instanceof Date && !isNaN(d.getTime())) ? d : new Date();
+            return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+        }
+
+        function parseKv1RosterText(raw) {
+            rosterData = [];
+            if (!raw || !raw.trim()) return;
+            const lines = raw.split('\n');
+            if (lines.length > 1) {
+                const h = lines[0].split('\t').map(x => x.toLowerCase().trim());
+                const iId = h.findIndex(x => x.includes('mã'));
+                const iName = h.findIndex(x => x.includes('tên'));
+                const iEmail = h.findIndex(x => x.includes('email công ty') || x.includes('email'));
+                const iDept = h.findIndex(x => x.includes('phòng ban'));
+                for (let i = 1; i < lines.length; i++) {
+                    const cols = lines[i].split('\t');
+                    if (cols.length >= 2 && iEmail !== -1 && cols[iEmail] && cols[iEmail].trim()) {
+                        rosterData.push({
+                            code: (iId !== -1 && cols[iId]) ? cols[iId].trim() : '',
+                            name: (iName !== -1 && cols[iName]) ? cols[iName].trim() : '',
+                            email: cols[iEmail].trim().toLowerCase(),
+                            dept: (iDept !== -1 && cols[iDept]) ? cols[iDept].trim() : '',
+                            attempt: 0,
+                            score: 0,
+                            scoreL1: 0,
+                            status: 'Miss',
+                            statusL1: 'Miss'
+                        });
+                    }
+                }
+            }
+        }
+
+        function syncKv1TraineesForCloud() {
+            window.currentParsedTrainees = (rosterData || []).map(r => ({
+                code: r.code || '',
+                name: r.name || '',
+                email: r.email || '',
+                dept: r.dept || '',
+                score: r.score !== undefined && r.score !== null ? r.score : 0,
+                status: r.status || 'Miss'
+            }));
+        }
 
         function updateStepperUI() {
             let progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
@@ -355,34 +410,52 @@
         }
 
         function jumpToStep(step) {
-            document.querySelectorAll('.step-content').forEach(el => { el.classList.remove('active'); setTimeout(() => el.style.display = 'none', 200); });
-            setTimeout(() => { 
+            if (stepSwitchTimer) clearTimeout(stepSwitchTimer);
+            document.querySelectorAll('.step-content').forEach(el => {
+                el.classList.remove('active');
+                el.style.display = 'none';
+            });
+            stepSwitchTimer = setTimeout(() => { 
                 const target = document.getElementById('step' + step); 
                 if(target) { target.style.display = 'block'; void target.offsetWidth; target.classList.add('active'); }
-            }, 210);
+            }, 30);
             
             document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
             let btn = document.getElementById('btn-step' + step);
             if(btn) btn.classList.add('active');
+            const ca = document.querySelector('.content-area');
+            if(ca) ca.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function markStepDone(stepNum) {
+            if (stepNum === 1) {
+                const rosterEl = document.getElementById('kv1-roster');
+                if (rosterEl) {
+                    localStorage.setItem('kv_roster_KV1', rosterEl.value);
+                    parseKv1RosterText(rosterEl.value);
+                    syncKv1TraineesForCloud();
+                }
+            }
             if(currentStep === stepNum && currentStep < totalSteps) {
                 currentStep++;
                 updateStepperUI();
             }
             jumpToStep(stepNum + 1);
-            window.scrollTo({top: 0, behavior: 'smooth'});
+            const ca = document.querySelector('.content-area');
+            if(ca) ca.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function skipToFinalize() {
-            document.getElementById('circle-6').parentElement.classList.add('skipped');
-            document.getElementById('circle-6').innerHTML = '<i class="fas fa-forward"></i>';
-            document.getElementById('circle-6').parentElement.querySelector('.step-label').innerText = "Bỏ qua L2";
             currentStep = 7;
             updateStepperUI();
+            const wrap6 = document.getElementById('circle-6').parentElement;
+            wrap6.classList.remove('completed');
+            wrap6.classList.add('skipped');
+            document.getElementById('circle-6').innerHTML = '<i class="fas fa-forward"></i>';
+            wrap6.querySelector('.step-label').innerText = "Bỏ qua L2";
             jumpToStep(7);
-            window.scrollTo({top: 0, behavior: 'smooth'});
+            const ca = document.querySelector('.content-area');
+            if(ca) ca.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function copyContent(elementId, btnElement) {
@@ -423,14 +496,22 @@
 
         function updateKv1Templates() {
             const y = document.getElementById('conf-year').value || "2026";
-            const m = document.getElementById('conf-month').value || "06";
+            const m = (document.getElementById('conf-month').value || "06").padStart(2, '0');
             const sDl1 = formatD(document.getElementById('conf-dl1').value); 
             const sDl2 = formatD(document.getElementById('conf-dl2').value);
             
-            let m2 = parseInt(m) - 2; if (m2 <= 0) m2 += 12;
+            let m2 = parseInt(m) - 2;
+            let joinYear = parseInt(y) || 2026;
+            if (m2 <= 0) {
+                m2 += 12;
+                joinYear -= 1;
+            }
             let sm2 = m2.toString().padStart(2, '0');
 
-            document.getElementById('s2-1').value = `Dear anh/chị,\n\nTeam LnD gửi thông tin chi tiết về Chương trình Đào tạo và Test Sản phẩm KV1 dành cho nhân viên sales gia nhập sau tháng đầu tiên (gia nhập vào Tháng ${sm2}/${y}).\n\nChi tiết như sau:\n\n1. Nội dung: Tính năng Phần mềm KiotViet Retail (KV1).\n\n2. Hình thức: Đào tạo và Test trắc nghiệm trên nền tảng LMS\n\n3. Thông tin đăng nhập:\n\nLink Tham gia khóa học KV1 trên LMS: \nhttps://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-retail-kv1/\nUser và mật khẩu: Xem chi tiết tại đây:\nDANH SÁCH TÀI KHOẢN TEST KV1\n\n4. Thời gian hoàn thành bài kiểm tra: Trước 15:00, ${sDl1}\n\n5. Số lượng câu hỏi: 40 câu\n\n6. Thời gian làm bài: 60 phút\n\n7. Tỉ lệ đạt: 80%\n\nLưu ý:\n\nTài liệu ôn tập:\nLink tài liệu ôn tập KV1 trên Github: \nhttps://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-retail\n\nGroup chat Test SP KV1 ${m}/${y} \n(Team Đào tạo sẽ add danh sách các bạn vào group chat để trao đổi về thông tin đăng nhập hệ thống LMS và nội dung bài test).\n\nAnh/chị SM/Leader và admin hỗ trợ nhắc nhở các bạn đăng nhập LMS, tham gia khóa học và hoàn thành đúng thời hạn quy định.\n\nMọi thắc mắc hoặc phát sinh: Vui lòng liên hệ daotao@kiotviet.com`;
+            const courseIdEl = document.getElementById('courseId');
+            if (courseIdEl) courseIdEl.value = `KV1-${m}-${y.slice(-2)}`;
+
+            document.getElementById('s2-1').value = `Dear anh/chị,\n\nTeam LnD gửi thông tin chi tiết về Chương trình Đào tạo và Test Sản phẩm KV1 dành cho nhân viên sales gia nhập sau tháng đầu tiên (gia nhập vào Tháng ${sm2}/${joinYear}).\n\nChi tiết như sau:\n\n1. Nội dung: Tính năng Phần mềm KiotViet Retail (KV1).\n\n2. Hình thức: Đào tạo và Test trắc nghiệm trên nền tảng LMS\n\n3. Thông tin đăng nhập:\n\nLink Tham gia khóa học KV1 trên LMS: \nhttps://daotao.kiotviet.vn/khoa-hoc/sales-dao-tao-san-pham-retail-kv1/\nUser và mật khẩu: Xem chi tiết tại đây:\nDANH SÁCH TÀI KHOẢN TEST KV1\n\n4. Thời gian hoàn thành bài kiểm tra: Trước 15:00, ${sDl1}\n\n5. Số lượng câu hỏi: 40 câu\n\n6. Thời gian làm bài: 60 phút\n\n7. Tỉ lệ đạt: 80%\n\nLưu ý:\n\nTài liệu ôn tập:\nLink tài liệu ôn tập KV1 trên Github: \nhttps://kiotvietlnd.github.io/elearning/khoa-hoc-sales/dao-tao-chuyen-nganh-retail\n\nGroup chat Test SP KV1 ${m}/${y} \n(Team Đào tạo sẽ add danh sách các bạn vào group chat để trao đổi về thông tin đăng nhập hệ thống LMS và nội dung bài test).\n\nAnh/chị SM/Leader và admin hỗ trợ nhắc nhở các bạn đăng nhập LMS, tham gia khóa học và hoàn thành đúng thời hạn quy định.\n\nMọi thắc mắc hoặc phát sinh: Vui lòng liên hệ daotao@kiotviet.com`;
 
             document.getElementById('s3-1').value = `Chào tất cả các bạn nha @all,\n\nNhư vậy là sau hơn 1 tháng gia nhập KiotViet, các bạn sẽ có bài test sản phẩm KV1 trên LMS, nội dung về KiotViet Retail.\n\nCác bạn đã nhận được mail Thông báo Đào tạo và Test Sản phẩm KV1 rồi thì cho mình 1 tym nhé! Mục tiêu đợt này là giúp mọi người nắm thật chắc tính năng để tự tin chốt khách và hoàn thành chứng chỉ theo đúng lộ trình.\n\nĐể việc học hiệu quả nhất, các bạn làm theo 2 bước sau:\nĐầu tiên, mọi người lên trang tài liệu Github xem trước lý thuyết và chơi game ôn tập. Các video và tình huống thực tế đều nằm sẵn ở đây, xem kỹ phần này sẽ giúp các bạn vượt qua bài thi cực kỳ nhanh chóng.`;
             
@@ -474,22 +555,30 @@
                 let s = lmsMap[r.email];
                 if(round === 1) {
                     if(s !== undefined) {
-                        r.score = s; r.attempt = 1;
-                        if(r.score >= 80) { r.status = 'Pass'; gradedStats.pass++; }
-                        else { r.status = 'Fail'; gradedStats.fail++; }
+                        r.score = s; r.scoreL1 = s; r.attempt = 1;
+                        if(r.score >= 80) { r.status = 'Pass'; r.statusL1 = 'Pass'; gradedStats.pass++; }
+                        else { r.status = 'Fail'; r.statusL1 = 'Fail'; gradedStats.fail++; }
                     } else {
-                        r.status = 'Miss'; gradedStats.fail++;
+                        r.score = 0; r.scoreL1 = 0; r.attempt = 0;
+                        r.status = 'Miss'; r.statusL1 = 'Miss'; gradedStats.fail++;
                     }
                 } else {
-                    if(r.status === 'Pass') {
+                    const baseStatus = r.statusL1 || r.status || 'Miss';
+                    const baseScore = typeof r.scoreL1 === 'number' ? r.scoreL1 : (r.score || 0);
+                    if(baseStatus === 'Pass') {
+                        r.status = 'Pass';
+                        r.score = baseScore;
+                        r.attempt = 1;
                         gradedStats.pass++; 
                     } else {
                         if(s !== undefined) {
-                            if(s > r.score) r.score = s; 
+                            r.score = Math.max(baseScore, s); 
                             r.attempt = 2;
                             if(r.score >= 80) { r.status = 'Pass'; gradedStats.pass++; }
                             else { r.status = 'Fail'; gradedStats.fail++; }
                         } else {
+                            r.score = baseScore;
+                            r.status = baseStatus;
                             gradedStats.fail++; 
                         }
                     }
@@ -500,12 +589,14 @@
             rosterData.forEach((r, idx) => {
                 let cColor = r.status === 'Pass' ? 'text-emerald-600 font-bold' : (r.status === 'Fail' ? 'text-rose-600 font-bold' : 'text-slate-400 italic');
                 let rowOp = (round === 2 && r.attempt === 1) ? 'opacity-60 bg-slate-50' : 'bg-white';
-                tHtml += `<tr class="${rowOp}"><td class="text-center">${idx+1}</td><td>${r.code}</td><td class="font-semibold">${r.name}</td><td>${r.email}</td><td class="text-center">${r.attempt || '-'}</td><td class="text-center ${cColor}">${r.score ? r.score + '%' : '-'}</td><td class="text-center ${cColor}">${r.status}</td></tr>`;
+                let scoreText = (r.attempt > 0 && r.score !== undefined && r.score !== null) ? (r.score + '%') : '-';
+                tHtml += `<tr class="${rowOp}"><td class="text-center">${idx+1}</td><td>${escapeHtml(r.code)}</td><td class="font-semibold">${escapeHtml(r.name)}</td><td>${escapeHtml(r.email)}</td><td class="text-center">${r.attempt || '-'}</td><td class="text-center ${cColor}">${scoreText}</td><td class="text-center ${cColor}">${escapeHtml(r.status)}</td></tr>`;
             });
             tHtml += `</tbody>`;
 
             document.getElementById(`result-table-${round}`).innerHTML = tHtml;
             document.getElementById(`grade-result-${round}`).classList.remove('hidden');
+            syncKv1TraineesForCloud();
             
             if(round === 1) {
                 if(gradedStats.fail === 0) {
@@ -546,8 +637,8 @@
                 courseId: document.getElementById('courseId').value.trim().toUpperCase(),
                 month: parseInt(document.getElementById('conf-month').value) || (new Date().getMonth() + 1),
                 status: document.getElementById('status').value,
-                startDate: document.getElementById('conf-dl1').value || new Date().toISOString().split('T')[0],
-                finishDate: document.getElementById('conf-dl2').value || new Date().toISOString().split('T')[0],
+                startDate: document.getElementById('conf-dl1').value || formatLocalIsoDate(new Date()),
+                finishDate: document.getElementById('conf-dl2').value || formatLocalIsoDate(new Date()),
                 totalTrainees: document.getElementById('totalTrainees').value || "0",
                 passedTrainees: document.getElementById('passedTrainees').value || "0",
                 failedTrainees: document.getElementById('failedTrainees').value || "0",
@@ -556,7 +647,8 @@
                 issues: document.getElementById('issues') ? document.getElementById('issues').value : "Cần rèn luyện thêm xử lý tình huống",
                 actionPlan: document.getElementById('actionPlan') ? document.getElementById('actionPlan').value : "Theo dõi sát sao học viên sau đào tạo",
                 listLink: document.getElementById('listLink').value || '',
-                quizLink: ''
+                quizLink: '',
+                trainees: window.currentParsedTrainees || []
             };
 
             const btn = document.getElementById('btnSubmit');
@@ -566,7 +658,7 @@
             let db = [];
             try { 
                 const s = localStorage.getItem('kv_master_db'); 
-                if(s) db = JSON.parse(s); 
+                if(s) { try { db = JSON.parse(s); } catch(e) { db = []; } } 
             } catch(e){}
             const ex = db.findIndex(i => i.courseId === payload.courseId);
             if(ex >= 0) db[ex] = {...db[ex], ...payload}; else db.push(payload);
@@ -598,40 +690,33 @@
         window.onload = () => {
             updateStepperUI();
 
-            const calData = JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {};
+            let calData = {}; try { calData = JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {}; } catch(e) { calData = {}; }
             const cm = new Date().getMonth() + 1; 
             const cy = new Date().getFullYear();
             const mKey = `${cy}-${cm}`;
+            document.getElementById('conf-month').value = cm.toString().padStart(2, '0');
+            document.getElementById('conf-year').value = cy.toString();
             if(calData[mKey] && calData[mKey].kv1) {
                 document.getElementById('conf-dl1').value = calData[mKey].kv1;
                 let d2 = new Date(calData[mKey].kv1); 
                 d2.setDate(d2.getDate() + 2);
-                document.getElementById('conf-dl2').value = d2.toISOString().split('T')[0];
+                document.getElementById('conf-dl2').value = formatLocalIsoDate(d2);
+            }
+
+            const rosterEl = document.getElementById('kv1-roster');
+            if (rosterEl) {
+                rosterEl.addEventListener('input', () => {
+                    localStorage.setItem('kv_roster_KV1', rosterEl.value);
+                    parseKv1RosterText(rosterEl.value);
+                    syncKv1TraineesForCloud();
+                });
             }
 
             const savedRoster = localStorage.getItem('kv_roster_KV1');
             if(savedRoster) {
                 document.getElementById('kv1-roster').value = savedRoster;
-                const lines = savedRoster.split('\n');
-                if(lines.length > 1) {
-                    const h = lines[0].split('\t').map(x => x.toLowerCase().trim());
-                    const iId = h.findIndex(x=>x.includes('mã')); 
-                    const iName = h.findIndex(x=>x.includes('tên'));
-                    const iEmail = h.findIndex(x=>x.includes('email công ty') || x.includes('email')); 
-                    const iDept = h.findIndex(x=>x.includes('phòng ban'));
-                    for(let i=1; i<lines.length; i++) {
-                        const cols = lines[i].split('\t');
-                        if(cols.length > 3) {
-                            rosterData.push({ 
-                                code: iId!==-1 ? cols[iId].trim() : '', 
-                                name: iName!==-1 ? cols[iName].trim() : '', 
-                                email: iEmail!==-1 ? cols[iEmail].trim().toLowerCase() : '', 
-                                dept: iDept!==-1 ? cols[iDept].trim() : '', 
-                                attempt: 0, score: 0, status: 'Miss' 
-                            });
-                        }
-                    }
-                }
+                parseKv1RosterText(savedRoster);
+                syncKv1TraineesForCloud();
             }
             updateKv1Templates();
         };
