@@ -178,8 +178,8 @@
         
         <div id="drawToolbar" class="bg-white border-b border-slate-200 px-4 py-3 flex flex-wrap gap-4 items-center shrink-0">
             <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg">
-                <button class="wb-tool-btn active" onclick="setWbMode('select')" title="Chọn"><i class="fas fa-mouse-pointer"></i></button>
-                <button class="wb-tool-btn" onclick="setWbMode('draw')" title="Bút vẽ"><i class="fas fa-pen"></i></button>
+                <button id="wb-btn-select" class="wb-tool-btn active" onclick="setWbMode('select', event)" title="Chọn"><i class="fas fa-mouse-pointer"></i></button>
+                <button id="wb-btn-draw" class="wb-tool-btn" onclick="setWbMode('draw', event)" title="Bút vẽ"><i class="fas fa-pen"></i></button>
                 <div class="w-px h-5 bg-slate-300 mx-1"></div>
                 <button class="wb-tool-btn" onclick="addShape('rect')" title="Ô vuông"><i class="far fa-square"></i></button>
                 <button class="wb-tool-btn" onclick="addShape('circle')" title="Hình tròn"><i class="far fa-circle"></i></button>
@@ -463,26 +463,63 @@
             }
         }
 
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function parseRecordMonthAndYear(d) {
+            let m = parseInt(d.month) || 0;
+            let y = 0;
+            if (d.startDate) {
+                const str = String(d.startDate).trim();
+                if (str.includes('-')) {
+                    const parts = str.split('-');
+                    if (parts.length >= 3) {
+                        if (parts[0].length === 4) {
+                            y = parseInt(parts[0]) || 0;
+                            if (!m) m = parseInt(parts[1]) || 0;
+                        } else {
+                            y = parseInt(parts[2]) || 0;
+                            if (!m) m = parseInt(parts[1]) || 0;
+                        }
+                    }
+                } else if (str.includes('/')) {
+                    const parts = str.split('/');
+                    if (parts.length >= 3) {
+                        y = parseInt(parts[2]) || 0;
+                        if (!m) m = parseInt(parts[1]) || 0;
+                    } else if (parts.length === 2 && !m) {
+                        m = parseInt(parts[0]) || 0;
+                        y = parseInt(parts[1]) || 0;
+                    }
+                }
+            }
+            if ((!m || !y) && d.timestamp) {
+                const dt = new Date(d.timestamp);
+                if (!isNaN(dt.getTime())) {
+                    if (!m) m = dt.getMonth() + 1;
+                    if (!y) y = dt.getFullYear();
+                }
+            }
+            if (y > 0 && y < 100) y += 2000;
+            return { m, y };
+        }
+
         function getFilteredMasterData() {
             let data = Array.isArray(globalMasterDB) ? globalMasterDB.slice() : [];
             const r = currentReportTimeRange;
             if (r === 'all') return data;
 
             return data.filter(d => {
-                let m = parseInt(d.month) || 0;
-                if (!m && d.startDate) {
-                    const str = String(d.startDate);
-                    if (str.includes('-')) {
-                        const parts = str.split('-');
-                        if (parts.length >= 2) m = parseInt(parts[1]) || 0;
-                    } else if (str.includes('/')) {
-                        const parts = str.split('/');
-                        if (parts.length >= 2) m = parseInt(parts[1]) || 0;
-                    }
-                }
-                if (!m && d.timestamp) {
-                    m = new Date(d.timestamp).getMonth() + 1;
-                }
+                const { m, y } = parseRecordMonthAndYear(d);
+                const matchYear = (!y || y === 2026);
+                if (!matchYear) return false;
 
                 if (r === 'year') return true;
                 if (r === 'q1') return m >= 1 && m <= 3;
@@ -521,11 +558,13 @@
         }
         
         function generateSmartAlerts(isDropdown = false) {
-            const today = new Date(); 
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
             const calData = getDynamicCalendar(); 
             let alertsHTML = '';
             const mKey = `${today.getFullYear()}-${today.getMonth() + 1}`;
-            const lastReadTime = localStorage.getItem('noti_read_time') || 0; 
+            const lastReadDateKey = localStorage.getItem('noti_read_date_key') || '';
+            const currentCalendarSig = `${mKey}_${today.toDateString()}_${JSON.stringify(calData[mKey] || {})}`;
             let hasUnread = false;
 
             if (!calData[mKey]) {
@@ -535,8 +574,10 @@
 
             const checkUpcoming = (dateStr, eventName, type) => {
                 if(!dateStr) return; 
-                const evDate = new Date(dateStr); 
-                const diffDays = Math.ceil((evDate - today) / (1000 * 60 * 60 * 24));
+                const parts = String(dateStr).split('-');
+                const evDate = parts.length === 3 ? new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])) : new Date(dateStr);
+                evDate.setHours(0, 0, 0, 0);
+                const diffDays = Math.round((evDate - today) / (1000 * 60 * 60 * 24));
                 if (diffDays >= 0 && diffDays <= 7) {
                     let dayTxt = diffDays === 0 ? "Hôm nay" : `Còn ${diffDays} ngày`;
                     let icon = 'fa-calendar-day'; let color = 'text-blue-500'; let bg = 'bg-blue-50'; let border = 'border-l-blue-500';
@@ -546,7 +587,7 @@
                     if(type==='salon') { icon='fa-spa'; color='text-pink-500'; bg='bg-pink-50'; border='border-l-pink-500'; }
                     if(type==='hotel') { icon='fa-hotel'; color='text-teal-500'; bg='bg-teal-50'; border='border-l-teal-500'; }
 
-                    const isUnread = (new Date().getTime() - lastReadTime) > 0; 
+                    const isUnread = (lastReadDateKey !== currentCalendarSig);
                     if(isUnread) hasUnread = true;
 
                     if(isDropdown) {
@@ -588,8 +629,14 @@
         }
 
         function markAllRead(e) {
-            e.stopPropagation(); 
+            if(e) e.stopPropagation();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const calData = getDynamicCalendar();
+            const mKey = `${today.getFullYear()}-${today.getMonth() + 1}`;
+            const currentCalendarSig = `${mKey}_${today.toDateString()}_${JSON.stringify(calData[mKey] || {})}`;
             localStorage.setItem('noti_read_time', new Date().getTime());
+            localStorage.setItem('noti_read_date_key', currentCalendarSig);
             const unreadDot = document.getElementById('unreadDot');
             if(unreadDot) unreadDot.classList.add('hidden');
             document.querySelectorAll('.noti-unread-dot').forEach(el => el.classList.add('hidden'));
@@ -650,20 +697,20 @@
                             <tr class="hover:bg-slate-50 transition">
                                 <td class="text-center font-mono font-bold text-slate-400">${idx + 1}</td>
                                 <td>
-                                    <span class="font-extrabold text-blue-600 block">${d.courseId || '-'}</span>
-                                    <span class="text-[10px] text-slate-400">${d.startDate || ''}</span>
+                                    <span class="font-extrabold text-blue-600 block">${escapeHtml(d.courseId || '-')}</span>
+                                    <span class="text-[10px] text-slate-400">${escapeHtml(d.startDate || '')}</span>
                                 </td>
-                                <td><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">${d.groupName || 'Khác'}</span></td>
+                                <td><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">${escapeHtml(d.groupName || 'Khác')}</span></td>
                                 <td class="text-center font-bold text-slate-800">${p}</td>
-                                <td class="text-center"><span class="font-bold text-emerald-600">${s}</span> / <span class="font-bold text-rose-500">${d.failedTrainees || 0}</span></td>
+                                <td class="text-center"><span class="font-bold text-emerald-600">${s}</span> / <span class="font-bold text-rose-500">${parseInt(d.failedTrainees) || 0}</span></td>
                                 <td class="text-center"><span class="px-2 py-0.5 rounded-full text-xs font-black ${rate>=80?'bg-emerald-50 text-emerald-700 border border-emerald-200':'bg-rose-50 text-rose-700 border border-rose-200'}">${rate}%</span></td>
-                                <td class="text-center font-bold text-purple-600">${d.csat || '4.8/5'}</td>
+                                <td class="text-center font-bold text-purple-600">${escapeHtml(d.csat || '4.8/5')}</td>
                                 <td>
-                                    <p class="text-[11px] text-slate-700 line-clamp-1" title="${d.highlights || ''}"><b class="text-emerald-600">Sáng:</b> ${d.highlights || '-'}</p>
-                                    <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5" title="${d.issues || ''}"><b class="text-rose-500">Tồn:</b> ${d.issues || '-'}</p>
+                                    <p class="text-[11px] text-slate-700 line-clamp-1" title="${escapeHtml(d.highlights || '')}"><b class="text-emerald-600">Sáng:</b> ${escapeHtml(d.highlights || '-')}</p>
+                                    <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5" title="${escapeHtml(d.issues || '')}"><b class="text-rose-500">Tồn:</b> ${escapeHtml(d.issues || '-')}</p>
                                 </td>
                                 <td class="text-right whitespace-nowrap">
-                                    <button onclick="openCourseMemoModal('${d.courseId}')" class="px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs">
+                                    <button data-course-id="${escapeHtml(d.courseId || '')}" onclick="openCourseMemoModal(this.dataset.courseId)" class="px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs">
                                         <i class="fas fa-file-invoice"></i> Xem Phiếu
                                     </button>
                                 </td>
@@ -798,7 +845,7 @@
                             <div class="flex items-center gap-3">
                                 <div class="relative w-64">
                                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                    <input type="text" oninput="handleMasterTableSearch(this.value)" placeholder="Tìm mã khóa, nhận xét..." class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:bg-white focus:border-blue-400 transition">
+                                    <input type="text" value="${escapeHtml(masterTableSearchKeyword)}" oninput="handleMasterTableSearch(this.value)" placeholder="Tìm mã khóa, nhận xét..." class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:bg-white focus:border-blue-400 transition">
                                 </div>
                             </div>
                         </div>
@@ -905,7 +952,7 @@
             }
 
             if(searchData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-10 text-slate-400 italic">Không tìm thấy khóa học nào phù hợp từ khóa "${val}".</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-10 text-slate-400 italic">Không tìm thấy khóa học nào phù hợp từ khóa "${escapeHtml(val)}".</td></tr>`;
                 return;
             }
 
@@ -918,20 +965,20 @@
                     <tr class="hover:bg-slate-50 transition">
                         <td class="text-center font-mono font-bold text-slate-400">${idx + 1}</td>
                         <td>
-                            <span class="font-extrabold text-blue-600 block">${d.courseId || '-'}</span>
-                            <span class="text-[10px] text-slate-400">${d.startDate || ''}</span>
+                            <span class="font-extrabold text-blue-600 block">${escapeHtml(d.courseId || '-')}</span>
+                            <span class="text-[10px] text-slate-400">${escapeHtml(d.startDate || '')}</span>
                         </td>
-                        <td><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">${d.groupName || 'Khác'}</span></td>
+                        <td><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">${escapeHtml(d.groupName || 'Khác')}</span></td>
                         <td class="text-center font-bold text-slate-800">${p}</td>
-                        <td class="text-center"><span class="font-bold text-emerald-600">${s}</span> / <span class="font-bold text-rose-500">${d.failedTrainees || 0}</span></td>
+                        <td class="text-center"><span class="font-bold text-emerald-600">${s}</span> / <span class="font-bold text-rose-500">${parseInt(d.failedTrainees) || 0}</span></td>
                         <td class="text-center"><span class="px-2 py-0.5 rounded-full text-xs font-black ${rate>=80?'bg-emerald-50 text-emerald-700 border border-emerald-200':'bg-rose-50 text-rose-700 border border-rose-200'}">${rate}%</span></td>
-                        <td class="text-center font-bold text-purple-600">${d.csat || '4.8/5'}</td>
+                        <td class="text-center font-bold text-purple-600">${escapeHtml(d.csat || '4.8/5')}</td>
                         <td>
-                            <p class="text-[11px] text-slate-700 line-clamp-1" title="${d.highlights || ''}"><b class="text-emerald-600">Sáng:</b> ${d.highlights || '-'}</p>
-                            <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5" title="${d.issues || ''}"><b class="text-rose-500">Tồn:</b> ${d.issues || '-'}</p>
+                            <p class="text-[11px] text-slate-700 line-clamp-1" title="${escapeHtml(d.highlights || '')}"><b class="text-emerald-600">Sáng:</b> ${escapeHtml(d.highlights || '-')}</p>
+                            <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5" title="${escapeHtml(d.issues || '')}"><b class="text-rose-500">Tồn:</b> ${escapeHtml(d.issues || '-')}</p>
                         </td>
                         <td class="text-right whitespace-nowrap">
-                            <button onclick="openCourseMemoModal('${d.courseId}')" class="px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs">
+                            <button data-course-id="${escapeHtml(d.courseId || '')}" onclick="openCourseMemoModal(this.dataset.courseId)" class="px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs">
                                 <i class="fas fa-file-invoice"></i> Xem Phiếu
                             </button>
                         </td>
@@ -1087,18 +1134,8 @@
             const monthlyPass = Array(12).fill(0);
 
             fullData.forEach(d => {
-                let m = parseInt(d.month) || 0;
-                if(!m && d.startDate) {
-                    const str = String(d.startDate);
-                    if (str.includes('-')) {
-                        const parts = str.split('-');
-                        if(parts.length >= 2) m = parseInt(parts[1]) || 0;
-                    } else if (str.includes('/')) {
-                        const parts = str.split('/');
-                        if(parts.length >= 2) m = parseInt(parts[1]) || 0;
-                    }
-                }
-                if(m >= 1 && m <= 12) {
+                const { m, y } = parseRecordMonthAndYear(d);
+                if((!y || y === 2026) && m >= 1 && m <= 12) {
                     monthlyHV[m - 1] += parseInt(d.totalTrainees) || 0;
                     monthlyPass[m - 1] += parseInt(d.passedTrainees) || 0;
                 }
@@ -1161,7 +1198,7 @@
             const container = document.getElementById('merchContainer'); if(!container) return;
             const filterEl = document.getElementById('filterMerch');
             const filter = filterEl ? filterEl.value : 'all';
-            const gifts = JSON.parse(localStorage.getItem('kv_gift_db')) || globalGiftsDB || [];
+            let gifts = []; try { gifts = JSON.parse(localStorage.getItem('kv_gift_db')) || globalGiftsDB || []; } catch(e) { gifts = globalGiftsDB || []; }
             
             let html = '';
             gifts.forEach(g => {
@@ -1219,7 +1256,7 @@
             document.getElementById('slide-period-title').innerText = `Kỳ Báo Cáo: ${getTimeRangeLabel()}`;
             document.getElementById('slide-sub-period').innerText = `Dữ liệu phân tích theo: ${getTimeRangeLabel()}`;
 
-            let totalHV = 0, totalPass = 0; let groupStats = {};
+            let totalHV = 0, totalPass = 0, csatSum = 0, csatCount = 0; let groupStats = {};
             data.forEach(d => {
                 let g = d.groupName || 'Other';
                 if(!groupStats[g]) groupStats[g] = { classes: 0, hv: 0, pass: 0 };
@@ -1228,11 +1265,18 @@
                 groupStats[g].pass += parseInt(d.passedTrainees) || 0;
                 totalHV += parseInt(d.totalTrainees) || 0;
                 totalPass += parseInt(d.passedTrainees) || 0;
+                const csatVal = parseFloat(String(d.csat || '4.8').replace(',', '.'));
+                if (!isNaN(csatVal) && csatVal > 0 && csatVal <= 5) {
+                    csatSum += csatVal;
+                    csatCount++;
+                }
             });
 
+            const avgCsat = csatCount > 0 ? (Math.round((csatSum / csatCount) * 10) / 10).toFixed(1) : '4.8';
             document.getElementById('sl-total-class').innerText = data.length;
             document.getElementById('sl-total-hv').innerText = totalHV;
             document.getElementById('sl-pass-rate').innerText = totalHV > 0 ? Math.round((totalPass/totalHV)*100) + '%' : '0%';
+            if (document.getElementById('sl-csat')) document.getElementById('sl-csat').innerText = `${avgCsat}/5`;
 
             let taughtHtml = '', selfHtml = '';
             for(let key in groupStats) {
@@ -1370,7 +1414,19 @@
             if(tab === 'draw') { 
                 dBtn.className = "flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500"; 
                 tBtn.className = "flex-1 py-2.5 font-semibold text-slate-500 bg-slate-50 border-b border-slate-200"; 
-                drawArea.classList.remove('hidden'); drawToolbar.classList.remove('hidden'); textArea.classList.add('hidden'); 
+                drawArea.classList.remove('hidden'); drawToolbar.classList.remove('hidden'); textArea.classList.add('hidden');
+                setTimeout(() => {
+                    if (!fCanvas) {
+                        initFabric();
+                    } else {
+                        const wrapper = document.getElementById('drawArea');
+                        if (wrapper && wrapper.clientWidth > 0 && wrapper.clientHeight > 0) {
+                            fCanvas.setWidth(wrapper.clientWidth);
+                            fCanvas.setHeight(wrapper.clientHeight);
+                            fCanvas.renderAll();
+                        }
+                    }
+                }, 50);
             } else { 
                 tBtn.className = "flex-1 py-2.5 font-bold text-purple-600 bg-white border-b-2 border-purple-500"; 
                 dBtn.className = "flex-1 py-2.5 font-semibold text-slate-500 bg-slate-50 border-b border-slate-200"; 
@@ -1386,7 +1442,7 @@
         async function initFabric() {
             if(fCanvas) return;
             const canvasEl = document.getElementById('fabricCanvas'); const wrapper = document.getElementById('drawArea');
-            if(!canvasEl || !wrapper) return;
+            if(!canvasEl || !wrapper || wrapper.clientWidth === 0) return;
             canvasEl.width = wrapper.clientWidth; canvasEl.height = wrapper.clientHeight;
             
             fCanvas = new fabric.Canvas('fabricCanvas', { isDrawingMode: false });
@@ -1396,11 +1452,16 @@
             fCanvas.on('path:created', saveDrawingToLocal);
             
             let savedData = await localforage.getItem('kv_global_whiteboard');
+            if(!savedData) savedData = localStorage.getItem('kv_global_whiteboard');
             if(savedData) fCanvas.loadFromJSON(savedData, fCanvas.renderAll.bind(fCanvas));
         }
 
         async function saveDrawingToLocal() { 
-            if(fCanvas) await localforage.setItem('kv_global_whiteboard', JSON.stringify(fCanvas.toJSON())); 
+            if(fCanvas) {
+                const jsonStr = JSON.stringify(fCanvas.toJSON());
+                await localforage.setItem('kv_global_whiteboard', jsonStr);
+                try { localStorage.setItem('kv_global_whiteboard', jsonStr); } catch(e) {}
+            }
         }
 
         function updateColorPickers(e) {
@@ -1411,9 +1472,10 @@
             else if (obj.type === 'path') { document.getElementById('shapeBgColor').value = obj.stroke; }
         }
 
-        function setWbMode(mode) {
-            document.querySelectorAll('.wb-tool-btn').forEach(b => b.classList.remove('active')); 
-            if(event && event.currentTarget) event.currentTarget.classList.add('active');
+        function setWbMode(mode, ev) {
+            document.querySelectorAll('.wb-tool-btn').forEach(b => b.classList.remove('active'));
+            const targetBtn = (ev && ev.currentTarget) ? ev.currentTarget : document.getElementById(mode === 'draw' ? 'wb-btn-draw' : 'wb-btn-select');
+            if(targetBtn) targetBtn.classList.add('active');
             if(!fCanvas) return;
             if(mode === 'draw') { 
                 fCanvas.isDrawingMode = true; 
@@ -1431,7 +1493,7 @@
             let shape;
             if(type === 'rect') shape = new fabric.Rect({ left: 100, top: 100, fill: bgColor, stroke: strokeColor, strokeWidth: 2, width: 100, height: 80, rx: 5, ry: 5 });
             else if(type === 'circle') shape = new fabric.Circle({ left: 150, top: 100, fill: bgColor, stroke: strokeColor, strokeWidth: 2, radius: 40 });
-            fCanvas.add(shape); fCanvas.setActiveObject(shape); fCanvas.isDrawingMode = false; saveDrawingToLocal();
+            fCanvas.add(shape); fCanvas.setActiveObject(shape); setWbMode('select'); saveDrawingToLocal();
         }
 
         function addStickyNote() {
@@ -1439,14 +1501,14 @@
             let bgColor = document.getElementById('shapeBgColor').value; 
             let txColor = document.getElementById('textColor').value;
             let text = new fabric.Textbox('Gõ nội dung...', { left: 100, top: 100, width: 200, fontSize: 16, fontFamily: 'Nunito', fill: txColor, backgroundColor: bgColor, padding: 12, borderColor: '#3b82f6', cornerColor: '#3b82f6' });
-            fCanvas.add(text); fCanvas.setActiveObject(text); fCanvas.isDrawingMode = false; saveDrawingToLocal();
+            fCanvas.add(text); fCanvas.setActiveObject(text); setWbMode('select'); saveDrawingToLocal();
         }
 
         function addPureText() {
             if(!fCanvas) return;
             let txColor = document.getElementById('textColor').value;
             let text = new fabric.IText('Chữ ghi chú', { left: 150, top: 150, fontFamily: 'Nunito', fill: txColor, fontSize: 20 });
-            fCanvas.add(text); fCanvas.setActiveObject(text); fCanvas.isDrawingMode = false; saveDrawingToLocal();
+            fCanvas.add(text); fCanvas.setActiveObject(text); setWbMode('select'); saveDrawingToLocal();
         }
 
         function applyWbColor(type, hex) {
@@ -1478,7 +1540,8 @@
             if(!fCanvas) return;
             if(confirm("Xóa SẠCH toàn bộ hình vẽ trên bảng này?")) { 
                 fCanvas.clear(); 
-                localforage.removeItem('kv_global_whiteboard'); 
+                localforage.removeItem('kv_global_whiteboard');
+                localStorage.removeItem('kv_global_whiteboard');
             } 
         }
 
@@ -1514,15 +1577,17 @@
 
         function formatAIResponse(text) {
             if (typeof text !== 'string') return text;
-            return text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-800">$1</strong>')
+            return escapeHtml(text)
+                       .replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-800">$1</strong>')
                        .replace(/\*(.*?)\*/g, '<em class="text-slate-600">$1</em>')
                        .replace(/\n/g, '<br>');
         }
 
         async function askAgenticAI(promptText) {
-            if(!GOOGLE_API_URL) return "⚠️ Lỗi: Vui lòng cài đặt Link API Google Sheets trong phần Cài đặt Hệ thống.";
+            const apiUrl = localStorage.getItem('kv_api_url') || GOOGLE_API_URL || "";
+            if(!apiUrl) return "⚠️ Lỗi: Vui lòng cài đặt Link API Google Sheets trong phần Cài đặt Hệ thống.";
             try {
-                const res = await fetch(GOOGLE_API_URL, {
+                const res = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action: "ask_ai", prompt: promptText })
@@ -1538,7 +1603,7 @@
             if(!text) return;
             
             const history = document.getElementById('chatHistory');
-            history.innerHTML += `<div class="bg-blue-600 text-white p-3 rounded-xl text-[13px] self-end max-w-[85%] shadow-sm ml-auto animate-fade-up">${text}</div>`;
+            history.innerHTML += `<div class="bg-blue-600 text-white p-3 rounded-xl text-[13px] self-end max-w-[85%] shadow-sm ml-auto animate-fade-up">${escapeHtml(text)}</div>`;
             input.value = ''; 
             history.scrollTop = history.scrollHeight;
 
@@ -1548,7 +1613,7 @@
 
             let giftData = "Trống";
             try {
-                const gifts = JSON.parse(localStorage.getItem('kv_gift_db')) || globalGiftsDB || [];
+                let gifts = []; try { gifts = JSON.parse(localStorage.getItem('kv_gift_db')) || globalGiftsDB || []; } catch(e) { gifts = globalGiftsDB || []; }
                 if(gifts.length > 0) {
                     giftData = gifts.map(g => `- ${g.name}: Tồn kho ${Math.max(0, g.in - g.out)} cái`).join('\n');
                 }
