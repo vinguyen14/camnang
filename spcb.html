@@ -53,6 +53,8 @@
         .step-wrap.active .step-label { color: #1e293b; font-weight: 700;}
         .step-wrap.completed .step-circle { background: #ffffff; border-color: #2563eb; color: #2563eb; }
         .step-wrap.completed .step-label { color: #3b82f6; }
+        .step-wrap.skipped .step-circle { background: #f1f5f9; border-color: #cbd5e1; color: #94a3b8; border-style: dashed; }
+        .step-wrap.skipped .step-label { color: #94a3b8; text-decoration: line-through; }
 
         .sidebar-item { padding: 12px 16px; font-size: 13px; font-weight: 500; color: #475569; border-radius: 10px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
         .sidebar-item:hover { background-color: #ffffff; color: #1e293b; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
@@ -534,15 +536,47 @@
             }
         }
 
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function toLocalIsoDate(d) {
+            const dt = d instanceof Date ? d : new Date(d);
+            if (isNaN(dt.getTime())) return '';
+            return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+        }
+
+        function scrollContentTop() {
+            const area = document.querySelector('.content-area');
+            if (area) area.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        let stepSwitchTimer = null;
         function jumpToStep(step) {
-            document.querySelectorAll('.step-content').forEach(el => { el.classList.remove('active'); setTimeout(() => el.style.display = 'none', 200); });
-            setTimeout(() => { 
-                const target = document.getElementById('step' + step); 
-                if(target) { target.style.display = 'block'; void target.offsetWidth; target.classList.add('active'); } 
-            }, 210);
+            if (stepSwitchTimer) clearTimeout(stepSwitchTimer);
+            document.querySelectorAll('.step-content').forEach(el => {
+                if (el.id !== 'step' + step) {
+                    el.classList.remove('active');
+                    el.style.display = 'none';
+                }
+            });
+            const target = document.getElementById('step' + step);
+            if (target) {
+                target.style.display = 'block';
+                void target.offsetWidth;
+                target.classList.add('active');
+            }
             document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
             let btn = document.getElementById('btn-step' + step); 
             if(btn) btn.classList.add('active');
+            scrollContentTop();
         }
 
         function markStepDone(stepNum) { 
@@ -551,7 +585,6 @@
                 updateStepperUI(); 
             } 
             jumpToStep(stepNum + 1); 
-            window.scrollTo({top: 0, behavior: 'smooth'}); 
         }
 
         function skipToFinalize() {
@@ -561,7 +594,8 @@
             currentStep = 6; 
             updateStepperUI(); 
             jumpToStep(6); 
-            window.scrollTo({top: 0, behavior: 'smooth'});
+            document.getElementById('circle-5').parentElement.classList.add('skipped');
+            document.getElementById('circle-5').innerHTML = '<i class="fas fa-forward"></i>';
         }
 
         function switchDailyTab(day) {
@@ -654,11 +688,14 @@
         function copyTableToClipboard(id, btn) { 
             const el = document.getElementById(id); 
             if(!el) return;
+            const isDailyTable = id.startsWith('table-');
             let text = ""; 
             for (let i=0; i<el.rows.length; i++) { 
                 if(el.rows[i].classList.contains('stranger-row')) continue;
                 let row = []; 
-                for (let j=0; j<el.rows[i].cells.length - 1; j++) { row.push(el.rows[i].cells[j].innerText); } 
+                const startCol = isDailyTable ? 1 : 0;
+                const endCol = isDailyTable ? (el.rows[i].cells.length - 1) : el.rows[i].cells.length;
+                for (let j=startCol; j<endCol; j++) { row.push(el.rows[i].cells[j].innerText.trim()); } 
                 text += row.join("\t") + "\n"; 
             } 
             navigator.clipboard.writeText(text).then(() => { 
@@ -722,12 +759,10 @@
             }, 3000);
         }
 
-        function saveSpcbConfig() {
-            const raw = document.getElementById('spcb-roster').value.trim();
-            localStorage.setItem('kv_roster_SPCB', raw);
+        function parseSpcbRosterText(raw) {
             rosterData = [];
             if(raw) {
-                const lines = raw.split('\n');
+                const lines = raw.split(/\r?\n/);
                 if(lines.length > 1) {
                     const h = lines[0].split('\t').map(x => x.toLowerCase().trim());
                     const iId = h.findIndex(x=>x.includes('mã')); 
@@ -738,21 +773,39 @@
                     const iReg = h.findIndex(x=>x.includes('khu vực') || x.includes('vùng'));
 
                     for(let i=1; i<lines.length; i++) {
+                        if(!lines[i].trim()) continue;
                         const cols = lines[i].split('\t');
-                        if(cols.length > Math.max(0, iEmail) && cols[iEmail].trim() !== '') {
+                        if(iEmail !== -1 && cols.length > iEmail && cols[iEmail].trim() !== '') {
                             rosterData.push({ 
-                                code: iId!==-1 ? cols[iId].trim() : '', 
-                                name: iName!==-1 ? cols[iName].trim() : '', 
-                                email: iEmail!==-1 ? cols[iEmail].trim().toLowerCase() : '', 
-                                dept: iDept!==-1 ? cols[iDept].trim() : '', 
-                                location: iLoc!==-1 ? cols[iLoc].trim() : '', 
-                                region: iReg!==-1 ? cols[iReg].trim() : '', 
+                                code: iId!==-1 && cols[iId] ? cols[iId].trim() : '', 
+                                name: iName!==-1 && cols[iName] ? cols[iName].trim() : '', 
+                                email: cols[iEmail].trim().toLowerCase(), 
+                                dept: iDept!==-1 && cols[iDept] ? cols[iDept].trim() : '', 
+                                location: iLoc!==-1 && cols[iLoc] ? cols[iLoc].trim() : '', 
+                                region: iReg!==-1 && cols[iReg] ? cols[iReg].trim() : '', 
                                 attempt: 0, score: 0, status: 'Miss' 
                             });
                         }
                     }
                 }
             }
+        }
+
+        function saveSpcbConfig() {
+            const raw = document.getElementById('spcb-roster').value.trim();
+            localStorage.setItem('kv_roster_SPCB', raw);
+            const spcbMeta = {
+                dateTue: document.getElementById('conf-date-tue').value,
+                courseCode: document.getElementById('conf-course-code').value,
+                meet1: document.getElementById('conf-meet-1').value,
+                meet2: document.getElementById('conf-meet-2').value,
+                meet3: document.getElementById('conf-meet-3').value,
+                zalo: document.getElementById('conf-zalo').value,
+                record: document.getElementById('conf-record').value
+            };
+            localStorage.setItem('kv_config_meta_SPCB', JSON.stringify(spcbMeta));
+            parseSpcbRosterText(raw);
+            renderDynamicTemplates();
             alert(`✅ Cấu hình thành công! Đã ghi nhận ${rosterData.length} học viên từ danh sách.`);
             markStepDone(1);
         }
@@ -838,7 +891,7 @@
 
             const regFilter = document.getElementById(`filter-reg-${dayKey}`);
             regFilter.innerHTML = '';
-            regionsSet.forEach(reg => { regFilter.innerHTML += `<option value="${reg}">${reg === 'ALL' ? 'Tất cả Khu vực' : reg}</option>`; });
+            regionsSet.forEach(reg => { regFilter.innerHTML += `<option value="${escapeHtml(reg)}">${reg === 'ALL' ? 'Tất cả Khu vực' : escapeHtml(reg)}</option>`; });
 
             renderDailyTable(dayKey);
 
@@ -886,7 +939,7 @@
 
             let thHtml = `<th class="w-10 text-center"><input type="checkbox" onchange="toggleSelectAllRows(this, '${dayKey}')" class="row-checkbox"></th>`;
             globalColConfig.filter(c => c.visible).forEach(c => {
-                let dragAttr = !c.locked ? `draggable="true" ondragstart="colDragStart(event, '${c.id}')" ondragover="colDragOver(event)" ondrop="colDrop(event, '${c.id}', '${dayKey}')"` : '';
+                let dragAttr = !c.locked ? `draggable="true" ondragstart="colDragStart(event, '${c.id}')" ondragover="colDragOver(event)" ondragleave="colDragLeave(event)" ondragend="colDragEnd(event)" ondrop="colDrop(event, '${c.id}', '${dayKey}')"` : '';
                 let icon = !c.locked ? `<i class="fas fa-grip-vertical col-drag-handle mr-1"></i>` : '';
                 thHtml += `<th ${dragAttr} class="${!c.locked ? 'cursor-grab' : ''}">${icon}${c.label}</th>`;
             });
@@ -898,7 +951,7 @@
             let stt = 1;
             arr.forEach((item, index) => {
                 if(item.isStranger) {
-                    htmlStranger += `<tr class="stranger-row bg-rose-50 border-rose-200"><td class="font-semibold text-rose-700">${item.name} <span class="text-[9px] bg-rose-500 text-white px-1 rounded ml-1">LẠ</span></td><td class="text-rose-500 text-xs">${item.email}</td><td class="text-center font-bold text-rose-700">${item.ans} / ${item.tq}</td><td class="text-center font-bold text-rose-700">${item.pct}%</td><td class="text-center"><button onclick="removeStrangerRow('${dayKey}', ${index})" class="w-6 h-6 bg-white border border-rose-300 text-rose-500 hover:bg-rose-500 hover:text-white rounded transition"><i class="fas fa-trash-alt"></i></button></td></tr>`;
+                    htmlStranger += `<tr class="stranger-row bg-rose-50 border-rose-200"><td class="font-semibold text-rose-700">${escapeHtml(item.name)} <span class="text-[9px] bg-rose-500 text-white px-1 rounded ml-1">LẠ</span></td><td class="text-rose-500 text-xs">${escapeHtml(item.email)}</td><td class="text-center font-bold text-rose-700">${item.ans} / ${item.tq}</td><td class="text-center font-bold text-rose-700">${item.pct}%</td><td class="text-center"><button onclick="removeStrangerRow('${dayKey}', ${index})" class="w-6 h-6 bg-white border border-rose-300 text-rose-500 hover:bg-rose-500 hover:text-white rounded transition"><i class="fas fa-trash-alt"></i></button></td></tr>`;
                 } else {
                     if(regFilter !== 'ALL' && item.region !== regFilter) return;
 
@@ -910,16 +963,16 @@
                     globalColConfig.filter(c => c.visible).forEach(c => {
                         let val = '';
                         if(c.id === 'stt') val = `<div class="text-center text-slate-400 font-bold">${stt++}</div>`;
-                        else if(c.id === 'name') val = `<div class="font-semibold">${item.name}</div>`;
-                        else if(c.id === 'dept') val = `<div>${item.dept}</div>`;
+                        else if(c.id === 'name') val = `<div class="font-semibold">${escapeHtml(item.name)}</div>`;
+                        else if(c.id === 'dept') val = `<div>${escapeHtml(item.dept)}</div>`;
                         else if(c.id === 'track') {
                             let clr = item.track === 'FNB' ? 'bg-orange-100 text-orange-700' : (item.track === 'Booking' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700');
-                            val = `<div class="text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${clr}">${item.track}</span></div>`;
+                            val = `<div class="text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${clr}">${escapeHtml(item.track)}</span></div>`;
                         }
                         else if(c.id === 'score') val = `<div class="text-center">${item.isTaken ? `<span class="font-bold text-slate-700">${item.ans} / ${item.tq}</span>` : `<span class="font-bold text-rose-500">Vắng</span>`}</div>`;
                         else if(c.id === 'pct') val = `<div class="text-center">${item.isTaken ? `<span class="font-bold text-blue-600">${item.pct}%</span>` : `<span class="font-bold text-rose-500">Vắng</span>`}</div>`;
-                        else if(c.id === 'region') val = `<div>${item.region}</div>`;
-                        else if(c.id === 'location') val = `<div>${item.location}</div>`;
+                        else if(c.id === 'region') val = `<div>${escapeHtml(item.region)}</div>`;
+                        else if(c.id === 'location') val = `<div>${escapeHtml(item.location)}</div>`;
                         
                         tdHtml += `<td>${val}</td>`;
                     });
@@ -953,6 +1006,8 @@
         let dragColId = null;
         function colDragStart(e, colId) { dragColId = colId; e.target.classList.add('dragging-col'); e.dataTransfer.effectAllowed = "move"; }
         function colDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over-col'); }
+        function colDragLeave(e) { e.currentTarget.classList.remove('drag-over-col'); }
+        function colDragEnd(e) { e.target.classList.remove('dragging-col'); document.querySelectorAll('th').forEach(th => th.classList.remove('drag-over-col', 'dragging-col')); }
         function colDrop(e, targetColId, dayKey) {
             e.preventDefault(); e.currentTarget.classList.remove('drag-over-col');
             if(dragColId === targetColId || !dragColId) return;
@@ -961,6 +1016,12 @@
             let item = globalColConfig.splice(srcIdx, 1)[0]; globalColConfig.splice(tgtIdx, 0, item);
             ['tue','wed','thu'].forEach(d => { if(!document.getElementById(`daily-res-${d}`).classList.contains('hidden')) renderDailyTable(d); });
         }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.col-config-btn')) {
+                document.querySelectorAll('.col-config-dropdown').forEach(el => el.classList.remove('active'));
+            }
+        });
 
         let dragSourceRowIdx = null;
         function rowDragStart(e, idx, dayKey) { 
@@ -978,6 +1039,7 @@
             renderDailyTable(dayKey);
         }
         function removeStrangerRow(dayKey, index) {
+            if(!confirm("Xóa học viên lạ này khỏi danh sách đối soát?")) return;
             currentDailyData[dayKey].splice(index, 1); 
             renderDailyTable(dayKey);
             if(!currentDailyData[dayKey].some(i => i.isStranger)) { 
@@ -1017,16 +1079,24 @@
                 let s = lmsMap[r.email];
                 if(round === 1) {
                     if(s !== undefined) {
-                        r.score = s; r.attempt = 1;
-                        if(r.score >= 80) { r.status = 'Pass'; gradedStats.pass++; } else { r.status = 'Fail'; gradedStats.fail++; }
-                    } else { r.status = 'Miss'; gradedStats.fail++; }
+                        r.score = s; r.scoreL1 = s; r.attempt = 1;
+                        if(r.score >= 80) { r.status = 'Pass'; r.statusL1 = 'Pass'; gradedStats.pass++; }
+                        else { r.status = 'Fail'; r.statusL1 = 'Fail'; gradedStats.fail++; }
+                    } else { r.score = 0; r.scoreL1 = 0; r.attempt = 0; r.status = 'Miss'; r.statusL1 = 'Miss'; gradedStats.fail++; }
                 } else {
-                    if(r.status === 'Pass') { gradedStats.pass++; } 
-                    else {
+                    const baseStatus = r.statusL1 !== undefined ? r.statusL1 : r.status;
+                    const baseScore = r.scoreL1 !== undefined ? r.scoreL1 : (r.score || 0);
+                    if(baseStatus === 'Pass') {
+                        r.status = 'Pass'; r.score = baseScore; r.attempt = 1;
+                        gradedStats.pass++;
+                    } else {
                         if(s !== undefined) {
-                            if(s > r.score) r.score = s; r.attempt = 2;
+                            r.score = Math.max(baseScore, s); r.attempt = 2;
                             if(r.score >= 80) { r.status = 'Pass'; gradedStats.pass++; } else { r.status = 'Fail'; gradedStats.fail++; }
-                        } else { gradedStats.fail++; }
+                        } else {
+                            r.score = baseScore; r.status = baseStatus || 'Miss';
+                            gradedStats.fail++;
+                        }
                     }
                 }
             });
@@ -1035,9 +1105,27 @@
             rosterData.forEach((r, idx) => {
                 let cColor = r.status === 'Pass' ? 'text-emerald-600 font-bold' : (r.status === 'Fail' ? 'text-rose-600 font-bold' : 'text-slate-400 italic');
                 let rowOp = (round === 2 && r.attempt === 1) ? 'opacity-60 bg-slate-50' : 'bg-white';
-                tHtml += `<tr class="${rowOp}"><td class="text-center">${idx+1}</td><td>${r.code}</td><td class="font-semibold">${r.name}</td><td>${r.email}</td><td class="text-center">${r.attempt || '-'}</td><td class="text-center ${cColor}">${r.score ? r.score + '%' : '-'}</td><td class="text-center ${cColor}">${r.status}</td></tr>`;
+                let scoreDisplay = (r.status !== 'Miss' && r.attempt > 0) ? `${r.score}%` : '-';
+                tHtml += `<tr class="${rowOp}"><td class="text-center">${idx+1}</td><td>${escapeHtml(r.code)}</td><td class="font-semibold">${escapeHtml(r.name)}</td><td>${escapeHtml(r.email)}</td><td class="text-center">${r.attempt || '-'}</td><td class="text-center ${cColor}">${scoreDisplay}</td><td class="text-center ${cColor}">${escapeHtml(r.status)}</td></tr>`;
             });
             tHtml += `</tbody>`;
+
+            // Đồng bộ danh sách học viên đã chấm vào currentParsedTrainees để lưu lên KetQuaHocVien
+            window.currentParsedTrainees = rosterData.map((r, idx) => ({
+                stt: String(idx + 1),
+                code: r.code || '',
+                name: r.name || '',
+                dept: r.dept || '',
+                email: r.email || '',
+                attempt: String(r.attempt || 1),
+                score: r.status !== 'Miss' ? String(r.score) : '-',
+                pct: r.status !== 'Miss' ? `${r.score}%` : '-',
+                result: r.status || 'Miss',
+                isPass: r.status === 'Pass',
+                username: r.email || r.code || '',
+                password: 'Tự khởi tạo',
+                attendance: r.status !== 'Miss' ? 'Có mặt' : 'Vắng'
+            }));
 
             if(round === 1) {
                 document.getElementById('result-table-1').innerHTML = tHtml;
@@ -1080,7 +1168,7 @@
                 month: parseInt(document.getElementById('conf-date-tue').value.split('-')[1]) || (new Date().getMonth() + 1),
                 status: document.getElementById('status').value,
                 startDate: document.getElementById('conf-date-tue').value,
-                finishDate: new Date().toISOString().split('T')[0],
+                finishDate: toLocalIsoDate(new Date()),
                 totalTrainees: document.getElementById('totalTrainees').value || "0",
                 passedTrainees: document.getElementById('passedTrainees').value || "0",
                 failedTrainees: document.getElementById('failedTrainees').value || "0",
@@ -1131,12 +1219,28 @@
         window.onload = async () => {
             updateStepperUI();
             const savedRoster = localStorage.getItem('kv_roster_SPCB');
-            if(savedRoster) document.getElementById('spcb-roster').value = savedRoster;
+            if(savedRoster) {
+                document.getElementById('spcb-roster').value = savedRoster;
+                parseSpcbRosterText(savedRoster);
+            }
             
             let today = new Date();
             let nextTue = new Date(today); 
             nextTue.setDate(today.getDate() + ((2 + 7 - today.getDay()) % 7));
-            document.getElementById('conf-date-tue').value = nextTue.toISOString().split('T')[0];
+            document.getElementById('conf-date-tue').value = toLocalIsoDate(nextTue);
+
+            try {
+                const savedMeta = JSON.parse(localStorage.getItem('kv_config_meta_SPCB'));
+                if (savedMeta) {
+                    if (savedMeta.dateTue) document.getElementById('conf-date-tue').value = savedMeta.dateTue;
+                    if (savedMeta.courseCode) document.getElementById('conf-course-code').value = savedMeta.courseCode;
+                    if (savedMeta.meet1) document.getElementById('conf-meet-1').value = savedMeta.meet1;
+                    if (savedMeta.meet2) document.getElementById('conf-meet-2').value = savedMeta.meet2;
+                    if (savedMeta.meet3) document.getElementById('conf-meet-3').value = savedMeta.meet3;
+                    if (savedMeta.zalo) document.getElementById('conf-zalo').value = savedMeta.zalo;
+                    if (savedMeta.record) document.getElementById('conf-record').value = savedMeta.record;
+                }
+            } catch (e) {}
             
             try {
                 const GOOGLE_API_URL = localStorage.getItem('kv_api_url');
