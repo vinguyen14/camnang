@@ -131,7 +131,7 @@
             right: 0;
             top: 50%;
             transform: translateY(-50%);
-            z-index: 99999;
+            z-index: 990;
             background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
             color: #ffffff;
             padding: 12px 8px 12px 14px;
@@ -551,7 +551,7 @@
                             </div>
                             <div class="flex items-center gap-1.5 shrink-0">
                                 ${currentFilterCourse === 'ALL' ? `<span class="text-[9px] font-mono font-bold px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded">${escapeHtml(sop.courseId)}</span>` : ''}
-                                <button onclick="window.copyStepContent('${sop.stepOrder}', '${escapeHtml(sop.courseId)}', event)" class="p-1 hover:bg-slate-100 text-slate-400 hover:text-blue-600 rounded-md text-xs transition" title="Sao chép hướng dẫn bước này">
+                                <button data-step-order="${escapeHtml(sop.stepOrder)}" data-course-id="${escapeHtml(sop.courseId)}" onclick="window.copyStepContent(this.dataset.stepOrder, this.dataset.courseId, event)" class="p-1 hover:bg-slate-100 text-slate-400 hover:text-blue-600 rounded-md text-xs transition" title="Sao chép hướng dẫn bước này">
                                     <i class="far fa-copy"></i>
                                 </button>
                             </div>
