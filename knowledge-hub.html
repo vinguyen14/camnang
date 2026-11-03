@@ -1330,6 +1330,7 @@
         // ==================== RESIZABLE SPLIT-SCREEN ====================
         function toggleSplitScreen() {
             AppState.isSplitOpen = !AppState.isSplitOpen;
+            const primary = document.getElementById('pane-primary');
             const pane = document.getElementById('pane-secondary');
             const resizer = document.getElementById('split-resizer');
             const btn = document.getElementById('view-mode-split');
@@ -1342,12 +1343,15 @@
                 pane.classList.add('hidden');
                 resizer.classList.add('hidden');
                 btn.classList.remove('bg-kiot-blue', 'text-white');
-                document.getElementById('pane-primary').style.width = '';
-                document.getElementById('pane-secondary').style.width = '';
+                primary.style.width = '';
+                primary.style.flex = '';
+                pane.style.width = '';
+                pane.style.flex = '';
             }
         }
 
         function openInSplitMode(url, title) {
+            if (!url || !/^https?:\/\//i.test(String(url).trim())) return;
             AppState.splitItem = { url, title };
             if (!AppState.isSplitOpen) toggleSplitScreen();
 
@@ -1357,6 +1361,10 @@
         }
 
         function openResource(url, title, sourceSheet) {
+            if (!url || !/^https?:\/\//i.test(String(url).trim())) {
+                if (sourceSheet) selectSheet(sourceSheet);
+                return;
+            }
             const tabId = 'tab-doc-' + Math.random().toString(36).substr(2, 8);
             AppState.openTabs.push({
                 id: tabId,
@@ -1437,7 +1445,12 @@
 
                 if (result.status === 'success') {
                     const nowStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-                    localStorage.setItem('kv_doc_hub_db', JSON.stringify(result));
+                    try {
+                        localStorage.setItem('kv_doc_hub_db', JSON.stringify(result));
+                    } catch (quotaErr) {
+                        const slimResult = { status: result.status, sheetList: result.sheetList, sheets: result.sheets };
+                        try { localStorage.setItem('kv_doc_hub_db', JSON.stringify(slimResult)); } catch (e2) {}
+                    }
                     localStorage.setItem('kv_doc_hub_last_sync', nowStr);
 
                     applyDataset(result);
@@ -1566,6 +1579,7 @@
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
+                .replace(/\\/g, '&#92;')
                 .replace(/'/g, '&#039;');
         }
     </script>
