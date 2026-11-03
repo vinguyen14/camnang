@@ -376,6 +376,15 @@
         if (document.getElementById('issues')) document.getElementById('issues').value = issues;
         if (document.getElementById('actionPlan')) document.getElementById('actionPlan').value = actionPlan;
 
+        function escMemo(s) {
+            return String(s ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         // Render Preview
         const previewContainer = document.getElementById('traineeParsedPreviewBox');
         if (previewContainer) {
@@ -392,13 +401,13 @@
                         ${trainees.map(t => `
                             <div class="py-2 flex items-center justify-between">
                                 <div class="min-w-0 pr-2">
-                                    <span class="font-bold text-slate-800">${t.name}</span>
-                                    <span class="text-slate-400 font-mono text-[10px] ml-1">(${t.dept})</span>
+                                    <span class="font-bold text-slate-800">${escMemo(t.name)}</span>
+                                    <span class="text-slate-400 font-mono text-[10px] ml-1">(${escMemo(t.dept)})</span>
                                 </div>
                                 <div class="flex items-center gap-2.5 shrink-0">
-                                    <span class="font-bold text-[11px] text-slate-700">${t.score} đ</span>
-                                    <span class="font-mono font-bold text-[11px] text-blue-600">${t.pct}</span>
-                                    <span class="px-2 py-0.5 rounded font-bold text-[10px] ${t.isPass ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">${t.result}</span>
+                                    <span class="font-bold text-[11px] text-slate-700">${escMemo(t.score)} đ</span>
+                                    <span class="font-mono font-bold text-[11px] text-blue-600">${escMemo(t.pct)}</span>
+                                    <span class="px-2 py-0.5 rounded font-bold text-[10px] ${t.isPass ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">${escMemo(t.result)}</span>
                                 </div>
                             </div>
                         `).join('')}
@@ -449,8 +458,10 @@
             const issues = document.getElementById('issues')?.value || '';
             const actionPlan = document.getElementById('actionPlan')?.value || '';
             const status = document.getElementById('status')?.value || 'Hoàn thành';
-            const start = (document.getElementById('conf-date-tue') || document.getElementById('start') || document.getElementById('conf-dl1'))?.value || '';
-            const finish = (document.getElementById('conf-dl2') || document.getElementById('finish'))?.value || new Date().toISOString().split('T')[0];
+            const nowLocal = new Date();
+            const localIsoToday = `${nowLocal.getFullYear()}-${String(nowLocal.getMonth() + 1).padStart(2, '0')}-${String(nowLocal.getDate()).padStart(2, '0')}`;
+            const start = (document.getElementById('conf-date-tue') || document.getElementById('start') || document.getElementById('conf-dl1') || document.getElementById('conf-deadline-1') || document.getElementById('conf-class-date'))?.value || '';
+            const finish = (document.getElementById('conf-dl2') || document.getElementById('conf-deadline-2') || document.getElementById('finish'))?.value || localIsoToday;
             const listLink = document.getElementById('listLink')?.value || '';
             const quizLink = document.getElementById('quizLink')?.value || '';
 
@@ -495,7 +506,7 @@
         injectMemoDom();
 
         const modal = document.getElementById('executiveReportModal');
-        const prof = JSON.parse(localStorage.getItem('kv_trainer_profile')) || { name: 'Nguyễn Lê Nhật Vi', title: 'L&D Specialist' };
+        let prof = { name: 'Nguyễn Lê Nhật Vi', title: 'L&D Specialist' }; try { const savedP = JSON.parse(localStorage.getItem('kv_trainer_profile')); if(savedP) prof = savedP; } catch(e) {}
         
         const total = parseInt(courseData.totalTrainees) || 0;
         const pass = parseInt(courseData.passedTrainees) || 0;
