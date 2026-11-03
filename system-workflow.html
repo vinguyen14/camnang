@@ -54,12 +54,21 @@
         body.theme-light header {
             border-color: #cbd5e1 !important;
         }
-        body.theme-light .text-white {
+        body.theme-light :not(#sidebar) > .text-white,
+        body.theme-light header .text-white,
+        body.theme-light #view-topology .text-white,
+        body.theme-light #view-terminal .text-white,
+        body.theme-light #view-backlog .text-white {
             color: #0f172a !important;
         }
-        body.theme-light .text-slate-400, 
-        body.theme-light .text-slate-300, 
-        body.theme-light .text-slate-200 {
+        body.theme-light #sidebar .sb-tooltip,
+        body.theme-light #sidebar .sb-tooltip * {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+        }
+        body.theme-light :not(#sidebar) > .text-slate-400, 
+        body.theme-light :not(#sidebar) > .text-slate-300, 
+        body.theme-light :not(#sidebar) > .text-slate-200 {
             color: #334155 !important;
         }
         body.theme-light .text-slate-500 {
@@ -1092,12 +1101,12 @@
                 cluster: 5, 
                 color: '#10b981', 
                 icon: 'fa-satellite-dish', 
-                statusText: 'Rada 5 nhóm kỹ năng',
-                subtitle: 'Competency Radar Analyzer', 
-                desc: 'Hệ thống Radar quét lỗ hổng năng lực: Phân tích kết quả thi của học viên theo 5 nhóm kỹ năng cốt lõi (Sản phẩm, Quy trình, Thuế, Chăm sóc khách hàng, Xử lý tình huống) dạng biểu đồ mạng nhện.', 
-                inputs: 'Bảng điểm chi tiết từng câu hỏi LMS, Mã học viên', 
-                outputs: 'Biểu đồ Radar đa chiều, Báo cáo lỗ hổng kiến thức cần đào tạo lại', 
-                tech: 'Chart.js (Radar type), Skill Matrix Engine, Gap Detector',
+                statusText: 'L&D Product Readiness',
+                subtitle: 'Product Update & L&D Readiness', 
+                desc: 'Trạm Radar giám sát tính năng sản phẩm mới: Kiểm tra tiến độ cập nhật bài HDSD, hậu kiểm video bài giảng bị ảnh hưởng bởi giao diện mới, nhúng Live Iframe Demo và chứng nhận Trainer đã Clear 100%.', 
+                inputs: 'kv_product_radar, URL Staging/Demo, Lịch Demo & Launching', 
+                outputs: 'Cảnh báo đỏ Khẩn cấp, Chấm đỏ Sidebar, Live Iframe Test', 
+                tech: 'Split-pane Resizer, 3-tier Readiness Filter, Live Sandbox',
                 skills: ['/radar-chart', '/skill-matrix', '/gap-detector', '/competency-audit']
             },
             { 
@@ -1122,12 +1131,12 @@
                 cluster: 5, 
                 color: '#10b981', 
                 icon: 'fa-terminal', 
-                statusText: 'Thử nghiệm code trực tiếp',
-                subtitle: 'Interactive Code Playground', 
-                desc: 'Môi trường thực thi mã an toàn: Cho phép Trainer chạy thử các hàm tính điểm, biểu thức Regex bóc tách danh sách HRM và kiểm tra payload API gửi lên Google Sheets mà không cần cài đặt phần mềm.', 
-                inputs: 'Đoạn mã JS thử nghiệm, Dữ liệu JSON mẫu', 
-                outputs: 'Kết quả Console log, Đo thời gian chạy, Báo lỗi cú pháp', 
-                tech: 'CodeMirror Editor, Web Worker Sandbox, AST Validator',
+                statusText: 'HTML Code Studio & Sandbox',
+                subtitle: 'HTML Code Studio & Device Sandbox', 
+                desc: 'Môi trường IDE soạn thảo & kiểm thử trực tiếp mã HTML/CSS/JS với khung giả lập đa thiết bị (Desktop, Laptop, Tablet, iPhone), bắt lỗi cú pháp và thu thập Live Console Logs thời gian thực.', 
+                inputs: 'Mã nguồn HTML/CSS/JS, 3 mẫu Template L&D nạp sẵn', 
+                outputs: 'Live Device Preview, Console Logs, Xuất file .html / .txt', 
+                tech: 'postMessage Console Interceptor, DOMParser Linter, Viewport Scaler',
                 skills: ['/code-sandbox', '/regex-tester', '/api-payload-mock', '/console-runner']
             }
         ];
@@ -1977,6 +1986,12 @@
         window.addEventListener('load', () => {
             applyTheme(currentThemeMode);
             autoScanLiveSystem(false);
+            const sb = document.getElementById('sidebar');
+            if (sb) {
+                sb.addEventListener('transitionend', () => {
+                    if (currentActiveMode === 'topology') drawHardwareWires();
+                });
+            }
         });
     </script>
     <script src="sidebar-nav.js"></script>
