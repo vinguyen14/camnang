@@ -34,11 +34,14 @@
     window.dispatchEvent(new CustomEvent('kv_api_url_changed', { detail: { url: cleanUrl } }));
   };
 
-  // 4. TỰ ĐỘNG KHỞI TẠO NẾU MÁY CHƯA CÓ LINK
+  // 4. TỰ ĐỘNG ĐỒNG BỘ NẾU MÁY CHƯA CÓ LINK HOẶC CÓ BẢN CẬP NHẬT MỚI
+  const CONFIG_VERSION = '2026.11.04.v1';
   try {
-    const existing = localStorage.getItem('kv_api_url');
-    if (!existing || !existing.trim().startsWith('http')) {
+    const existingVer = localStorage.getItem('kv_config_version');
+    const existingUrl = localStorage.getItem('kv_api_url');
+    if (!existingUrl || !existingUrl.trim().startsWith('http') || existingVer !== CONFIG_VERSION) {
       localStorage.setItem('kv_api_url', DEFAULT_API_URL);
+      localStorage.setItem('kv_config_version', CONFIG_VERSION);
     }
   } catch (e) {}
 
