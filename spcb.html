@@ -420,7 +420,7 @@
                         
                         <div class="space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div><label class="form-label text-slate-300">Mã Khóa <span class="text-rose-400">*</span></label><input type="text" id="courseId" class="saas-input uppercase font-bold text-slate-900 bg-white border-none"></div>
+                                <div><label class="form-label text-slate-300">Mã Khóa <span class="text-rose-400">*</span></label><input type="text" id="courseId" oninput="if(window.autoUpdateCsatField) window.autoUpdateCsatField(this.value)" class="saas-input uppercase font-bold text-slate-900 bg-white border-none"></div>
                                 <div><label class="form-label text-slate-300">Trạng thái</label><select id="status" class="saas-input text-slate-900 bg-white border-none"><option value="Hoàn thành" selected>Hoàn thành</option><option value="Đang diễn ra">Đang diễn ra</option><option value="Hủy">Hủy</option></select></div>
                             </div>
 
@@ -433,7 +433,13 @@
                                     <div><label class="form-label text-slate-400">Tổng HV</label><input type="number" id="totalTrainees" class="saas-input text-center font-bold text-lg bg-slate-800 text-white border-slate-600"></div>
                                     <div><label class="form-label text-emerald-400">Đạt (Pass)</label><input type="number" id="passedTrainees" class="saas-input text-center font-bold text-lg bg-emerald-900/50 text-emerald-400 border-emerald-800"></div>
                                     <div><label class="form-label text-rose-400">Fail/Miss</label><input type="number" id="failedTrainees" class="saas-input text-center font-bold text-lg bg-rose-900/50 text-rose-400 border-rose-800"></div>
-                                    <div><label class="form-label text-purple-400">CSAT Khảo sát</label><input type="text" id="csat" value="4.8/5" class="saas-input text-center font-bold text-lg bg-purple-900/40 text-purple-300 border-purple-800"></div>
+                                    <div>
+                                        <div class="flex items-center justify-between">
+                                            <label class="form-label text-purple-400">CSAT Khảo sát</label>
+                                            <button type="button" onclick="if(window.openQuickSurveyModal) window.openQuickSurveyModal()" class="text-[9px] text-purple-300 hover:text-white underline"><i class="fas fa-poll-h mr-0.5"></i>Nạp</button>
+                                        </div>
+                                        <input type="text" id="csat" value="4.8/5" class="saas-input text-center font-bold text-lg bg-purple-900/40 text-purple-300 border-purple-800">
+                                    </div>
                                 </div>
                             </div>
 
@@ -1149,6 +1155,9 @@
             document.getElementById('totalTrainees').value = gradedStats.total;
             document.getElementById('passedTrainees').value = gradedStats.pass;
             document.getElementById('failedTrainees').value = gradedStats.fail;
+            if (typeof window.autoUpdateCsatField === 'function') {
+                window.autoUpdateCsatField();
+            }
         }
 
         function triggerConfetti() {
