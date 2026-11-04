@@ -16,7 +16,7 @@
   window.getGlobalApiUrl = function () {
     try {
       const customUrl = localStorage.getItem('kv_api_url');
-      if (customUrl && typeof customUrl === 'string' && customUrl.trim().startsWith('http')) {
+      if (customUrl !== null) {
         return customUrl.trim();
       }
     } catch (e) {}
@@ -25,23 +25,18 @@
 
   // 3. HÀM CẬP NHẬT LINK API TOÀN HỆ THỐNG
   window.setGlobalApiUrl = function (newUrl) {
-    if (!newUrl || typeof newUrl !== 'string') return;
-    const cleanUrl = newUrl.trim();
+    const cleanUrl = (typeof newUrl === 'string') ? newUrl.trim() : '';
     try {
       localStorage.setItem('kv_api_url', cleanUrl);
     } catch (e) {}
-    // Phát sự kiện toàn hệ thống cho các tab/trang lắng nghe
     window.dispatchEvent(new CustomEvent('kv_api_url_changed', { detail: { url: cleanUrl } }));
   };
 
-  // 4. TỰ ĐỘNG ĐỒNG BỘ NẾU MÁY CHƯA CÓ LINK HOẶC CÓ BẢN CẬP NHẬT MỚI
-  const CONFIG_VERSION = '2026.11.04.v1';
+  // 4. KHỞI TẠO NẾU CHƯA CÓ TRONG BỘ NHỚ
   try {
-    const existingVer = localStorage.getItem('kv_config_version');
-    const existingUrl = localStorage.getItem('kv_api_url');
-    if (!existingUrl || !existingUrl.trim().startsWith('http') || existingVer !== CONFIG_VERSION) {
+    const existing = localStorage.getItem('kv_api_url');
+    if (existing === null) {
       localStorage.setItem('kv_api_url', DEFAULT_API_URL);
-      localStorage.setItem('kv_config_version', CONFIG_VERSION);
     }
   } catch (e) {}
 
