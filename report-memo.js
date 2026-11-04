@@ -371,7 +371,14 @@
         if (document.getElementById('totalTrainees')) document.getElementById('totalTrainees').value = totalHV;
         if (document.getElementById('passedTrainees')) document.getElementById('passedTrainees').value = countPass;
         if (document.getElementById('failedTrainees')) document.getElementById('failedTrainees').value = countFail;
-        if (document.getElementById('csat')) document.getElementById('csat').value = '4.8/5';
+        
+        // Tự động tính toán điểm CSAT từ data khảo sát thực tế của khóa này
+        if (typeof window.autoUpdateCsatField === 'function') {
+            window.autoUpdateCsatField();
+        } else if (document.getElementById('csat')) {
+            document.getElementById('csat').value = '4.8/5';
+        }
+
         if (document.getElementById('highlights')) document.getElementById('highlights').value = highlights;
         if (document.getElementById('issues')) document.getElementById('issues').value = issues;
         if (document.getElementById('actionPlan')) document.getElementById('actionPlan').value = actionPlan;
@@ -434,9 +441,12 @@
                 <span class="text-[10px] text-slate-500 font-medium">Hỗ trợ nhận diện cột Đơn vị, tự sửa điểm 30,0 và lỗi 10000%</span>
             </div>
             <textarea id="rawTraineeExcelInput" class="w-full h-24 p-3 bg-white border border-slate-200 rounded-xl text-[11px] font-mono outline-none focus:border-blue-500 focus:bg-white custom-scrollbar resize-none" placeholder="Copy từ LMS/Excel (có cột Họ tên, Đơn vị, Điểm, Điểm %, Kết quả...) dán vào đây..."></textarea>
-            <div class="mt-2.5 flex justify-between items-center">
+            <div class="mt-2.5 flex justify-between items-center gap-2 flex-wrap">
                 <button type="button" onclick="window.parseTraineeExcelResults()" class="btn-primary py-2 px-4 text-xs font-bold bg-blue-600 hover:bg-blue-700 border-none shadow-sm flex items-center gap-1.5">
                     <i class="fas fa-bolt text-amber-300"></i> Phân Tích & Chuẩn Hóa Số Liệu Tự Động
+                </button>
+                <button type="button" onclick="window.openQuickSurveyModal()" class="px-3.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+                    <i class="fas fa-poll-h text-purple-600"></i> Nạp / Đồng Bộ Khảo Sát
                 </button>
             </div>
             <div id="traineeParsedPreviewBox" class="hidden"></div>
@@ -484,7 +494,285 @@
 
         submitBtn.parentElement.insertBefore(parserWrapper, submitBtn.parentElement.firstChild);
         submitBtn.parentElement.insertBefore(previewBtn, submitBtn);
+
+        // Tự động lắng nghe thay đổi Mã Khóa để tính CSAT tức thời
+        const courseIdInput = document.getElementById('courseId') || document.getElementById('db-code');
+        if (courseIdInput) {
+            courseIdInput.addEventListener('input', function () { window.autoUpdateCsatField(this.value); });
+            courseIdInput.addEventListener('change', function () { window.autoUpdateCsatField(this.value); });
+            setTimeout(() => { window.autoUpdateCsatField(courseIdInput.value); }, 400);
+        }
     }
+
+    // ==================== BỘ TỰ ĐỘNG TÍNH CSAT THEO TỪNG MÃ KHÓA ====================
+    window.isCourseCodeMatch = function (cellValue, targetCourseCode) {
+        if (!cellValue || !targetCourseCode) return false;
+        const cleanCell = String(cellValue).trim().toUpperCase();
+        const cleanTarget = String(targetCourseCode).trim().toUpperCase();
+        if (cleanCell === cleanTarget) return true;
+
+        const normCell = cleanCell.replace(/[^A-Z0-9]/g, '');
+        const normTarget = cleanTarget.replace(/[^A-Z0-9]/g, '');
+        if (normCell && normTarget && normCell === normTarget) return true;
+
+        if (normCell.length >= 4 && normTarget.length >= 4) {
+            if (normCell.includes(normTarget) || normTarget.includes(normCell)) return true;
+        }
+        return false;
+    };
+
+    window.getCourseSurveyStats = function (targetCourseCode) {
+        const sSpcb = localStorage.getItem('kv_survey_spcb') || '';
+        const sTax = localStorage.getItem('kv_survey_tax') || '';
+        const allSurveyText = `${sSpcb}\n${sTax}`.trim();
+
+        if (!allSurveyText) {
+            return { found: false, hasAnySurvey: false, message: 'Chưa có dữ liệu khảo sát trong hệ thống' };
+        }
+
+        const lines = allSurveyText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        if (lines.length <= 1) {
+            return { found: false, hasAnySurvey: false, message: 'Dữ liệu khảo sát trống' };
+        }
+
+        const scores = [];
+        const feedbacks = [];
+        const allScoresFallback = [];
+        let matchCount = 0;
+        const target = targetCourseCode ? String(targetCourseCode).trim() : '';
+
+        const trivialRegex = /^(không|không có|ko|k|không ạ|không ý kiến|ko có|k có|ok|quá ok|tốt|rất tốt|tuyệt vời|none|-|\.|dạ không|chưa có)?$/i;
+
+        lines.forEach(line => {
+            const cols = line.split('\t').map(c => c.trim());
+            if (cols.length < 2) return;
+
+            const firstColLower = cols[0].toLowerCase();
+            if (firstColLower.includes('timestamp') || firstColLower.includes('thời gian') || firstColLower.includes('đánh giá')) return;
+
+            cols.forEach(col => {
+                const num = parseFloat(col);
+                if (!isNaN(num) && num >= 1 && num <= 5 && Number.isInteger(num)) {
+                    allScoresFallback.push(num);
+                }
+            });
+
+            if (target) {
+                const isMatch = window.isCourseCodeMatch(cols[1], target) || 
+                                window.isCourseCodeMatch(cols[0], target) || 
+                                (cols[2] && window.isCourseCodeMatch(cols[2], target));
+
+                if (isMatch) {
+                    matchCount++;
+                    cols.forEach((col, idx) => {
+                        const num = parseFloat(col);
+                        if (!isNaN(num) && num >= 1 && num <= 5 && Number.isInteger(num)) {
+                            scores.push(num);
+                        }
+                        if (idx > 1 && col.length > 8 && isNaN(col) && !col.includes('/202') && !trivialRegex.test(col.toLowerCase())) {
+                            feedbacks.push(col);
+                        }
+                    });
+                }
+            }
+        });
+
+        if (target && matchCount > 0 && scores.length > 0) {
+            const avg = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
+            return {
+                found: true,
+                hasAnySurvey: true,
+                isSpecific: true,
+                courseCode: target,
+                responseCount: matchCount,
+                avgCsat: `${avg}/5`,
+                scoreVal: parseFloat(avg),
+                feedbacks: [...new Set(feedbacks)]
+            };
+        }
+
+        if (allScoresFallback.length > 0) {
+            const generalAvg = (allScoresFallback.reduce((a, b) => a + b, 0) / allScoresFallback.length).toFixed(1);
+            return {
+                found: false,
+                hasAnySurvey: true,
+                isSpecific: false,
+                courseCode: target,
+                avgCsat: `${generalAvg}/5`,
+                scoreVal: parseFloat(generalAvg),
+                message: `Chưa có khảo sát riêng cho ${target || 'khóa này'} (Điểm CSAT chung: ${generalAvg}/5)`
+            };
+        }
+
+        return { found: false, hasAnySurvey: false, message: 'Chưa có dữ liệu khảo sát' };
+    };
+
+    window.autoUpdateCsatField = function (customCourseCode) {
+        const csatInput = document.getElementById('csat');
+        if (!csatInput) return;
+
+        const codeInput = document.getElementById('courseId') || document.getElementById('db-code');
+        const courseCode = customCourseCode || (codeInput ? codeInput.value : '');
+
+        let hintEl = document.getElementById('csatAutoHint');
+        if (!hintEl) {
+            hintEl = document.createElement('div');
+            hintEl.id = 'csatAutoHint';
+            hintEl.className = 'text-[10px] mt-1.5 transition-all text-center';
+            csatInput.parentElement.appendChild(hintEl);
+        }
+
+        if (!courseCode || courseCode.trim() === '') {
+            hintEl.innerHTML = '<span class="text-slate-400 italic">Nhập Mã Khóa để tự tính CSAT</span>';
+            return;
+        }
+
+        const stats = window.getCourseSurveyStats(courseCode);
+
+        const isDark = csatInput.closest('.bg-slate-800, .bg-slate-900, .bg-slate-700') !== null;
+
+        if (stats.found && stats.isSpecific) {
+            csatInput.value = stats.avgCsat;
+            csatInput.classList.remove('border-purple-800', 'bg-purple-900/40', 'text-purple-300', 'border-purple-200', 'text-purple-700', 'bg-white', 'bg-slate-50');
+            if (isDark) {
+                csatInput.classList.add('border-emerald-500', 'bg-emerald-900/30', 'text-emerald-300');
+            } else {
+                csatInput.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-700');
+            }
+            hintEl.innerHTML = `
+                <span class="${isDark ? 'text-emerald-400' : 'text-emerald-600'} font-bold flex items-center justify-center gap-1">
+                    <i class="fas fa-check-circle text-emerald-500"></i> Tự động tính từ ${stats.responseCount} học viên khóa ${stats.courseCode}
+                </span>
+            `;
+
+            if (stats.feedbacks && stats.feedbacks.length > 0) {
+                const hlInput = document.getElementById('highlights');
+                const issueInput = document.getElementById('issues');
+                if (hlInput && (hlInput.value.includes('demo cơ bản') || hlInput.value.includes('tiến độ Onboard') || !hlInput.value)) {
+                    hlInput.value = `Khóa ${stats.courseCode}: Học viên đánh giá cao sự chuẩn bị chu đáo và tương tác của GV.`;
+                }
+                if (issueInput && (issueInput.value.includes('thực hành thêm') || !issueInput.value)) {
+                    issueInput.value = stats.feedbacks[0];
+                }
+            }
+        } else if (stats.hasAnySurvey) {
+            csatInput.value = stats.avgCsat;
+            hintEl.innerHTML = `
+                <span class="${isDark ? 'text-amber-400' : 'text-amber-700'} font-semibold flex items-center justify-center gap-1 flex-wrap">
+                    <i class="fas fa-info-circle text-amber-500"></i> CSAT chung (${stats.avgCsat}) &bull; 
+                    <button type="button" onclick="window.openQuickSurveyModal('${courseCode}')" class="underline ${isDark ? 'text-blue-300 hover:text-white' : 'text-blue-600 hover:text-blue-800'} font-bold ml-1">Nạp data khóa ${courseCode}</button>
+                </span>
+            `;
+        } else {
+            hintEl.innerHTML = `
+                <span class="${isDark ? 'text-slate-400' : 'text-slate-500'} flex items-center justify-center gap-1 flex-wrap">
+                    <i class="fas fa-exclamation-triangle text-amber-500"></i> Chưa có data khảo sát &bull; 
+                    <button type="button" onclick="window.openQuickSurveyModal('${courseCode}')" class="underline ${isDark ? 'text-blue-300 hover:text-white' : 'text-blue-600 hover:text-blue-800'} font-bold ml-1">Nạp ngay</button>
+                </span>
+            `;
+        }
+    };
+
+    window.openQuickSurveyModal = function (targetCourse) {
+        let modal = document.getElementById('quickSurveyModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'quickSurveyModal';
+            modal.className = 'modal fixed inset-0 items-center justify-center p-4 bg-slate-900/60 z-[99999] flex';
+            modal.innerHTML = `
+                <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200">
+                    <div class="px-6 py-4 bg-gradient-to-r from-purple-700 to-blue-700 text-white flex justify-between items-center">
+                        <div class="flex items-center gap-2.5">
+                            <i class="fas fa-poll-h text-amber-300 text-lg"></i>
+                            <div>
+                                <h3 class="font-bold text-sm">Nạp Nhanh Dữ Liệu Khảo Sát Học Viên</h3>
+                                <p class="text-[11px] text-purple-200" id="quickSurveyCourseTag">Tự động phân tách và tính điểm CSAT tức thời</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="document.getElementById('quickSurveyModal').classList.add('hidden')" class="text-white/70 hover:text-white w-7 h-7 rounded-full bg-white/10 flex items-center justify-center transition">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="p-6">
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                            <span>Dán kết quả khảo sát từ Google Sheets / Excel:</span>
+                            <span id="quickSurveyBadge" class="text-[10px] font-bold text-slate-400">0 dòng nhận diện</span>
+                        </label>
+                        <textarea id="quickSurveyInput" oninput="window.previewQuickSurvey()" class="saas-input h-48 text-[11px] font-mono leading-relaxed w-full p-3 border border-slate-300 rounded-xl outline-none" placeholder="Dán các cột: Timestamp, Mã khóa (26KV14...), Điểm đánh giá 1-5, Ý kiến góp ý..."></textarea>
+                        <div id="quickSurveyPreview" class="mt-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 min-h-[40px] flex items-center">
+                            <span class="italic text-slate-400">Dán dữ liệu để hệ thống tự động bóc tách số liệu cho khóa học này.</span>
+                        </div>
+                    </div>
+                    <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
+                        <span class="text-[11px] text-slate-500"><i class="fas fa-bolt text-amber-500 mr-1"></i> Tự động tính trung bình & cập nhật vào form báo cáo.</span>
+                        <div class="space-x-2">
+                            <button type="button" onclick="document.getElementById('quickSurveyModal').classList.add('hidden')" class="px-3.5 py-1.5 text-xs text-slate-600 hover:bg-slate-200 rounded-lg font-semibold transition">Hủy</button>
+                            <button type="button" onclick="window.saveQuickSurveyData()" class="btn-primary py-1.5 px-4 text-xs font-bold bg-blue-600 hover:bg-blue-700 border-none shadow-sm"><i class="fas fa-check mr-1.5"></i> Lưu & Tự Tính CSAT</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        const courseCode = targetCourse || (document.getElementById('courseId') || document.getElementById('db-code'))?.value || '';
+        const tag = document.getElementById('quickSurveyCourseTag');
+        if (tag) tag.innerText = courseCode ? `Đang đồng bộ cho khóa: ${courseCode}` : 'Tự động phân tách và tính điểm CSAT tức thời';
+
+        const isTax = window.location.pathname.includes('thuehkd');
+        const storageKey = isTax ? 'kv_survey_tax' : 'kv_survey_spcb';
+        const existingData = localStorage.getItem(storageKey) || '';
+        const inputEl = document.getElementById('quickSurveyInput');
+        if (inputEl) inputEl.value = existingData;
+
+        window.previewQuickSurvey();
+        modal.classList.remove('hidden');
+    };
+
+    window.previewQuickSurvey = function () {
+        const inputEl = document.getElementById('quickSurveyInput');
+        const badgeEl = document.getElementById('quickSurveyBadge');
+        const prevEl = document.getElementById('quickSurveyPreview');
+        if (!inputEl || !prevEl) return;
+
+        const val = inputEl.value.trim();
+        const code = (document.getElementById('courseId') || document.getElementById('db-code'))?.value || '';
+        const lines = val.split(/\r?\n/).filter(Boolean);
+
+        if (lines.length <= 1) {
+            badgeEl.innerText = 'Chưa có dữ liệu';
+            prevEl.innerHTML = '<span class="italic text-slate-400">Dán dữ liệu để hệ thống tự động bóc tách số liệu cho khóa học này.</span>';
+            return;
+        }
+
+        badgeEl.innerText = `${lines.length - 1} dòng dữ liệu`;
+        badgeEl.className = 'text-[10px] font-bold text-blue-600';
+
+        const stats = window.getCourseSurveyStats(code);
+        if (stats.found && stats.isSpecific) {
+            prevEl.innerHTML = `<span class="text-emerald-700 font-bold"><i class="fas fa-star text-amber-500 mr-1"></i>CSAT Khóa ${stats.courseCode}: ${stats.avgCsat}</span> &bull; <span class="text-slate-700 font-medium ml-1.5">${stats.responseCount} học viên đánh giá</span> &bull; <span class="text-slate-500 text-[10px] ml-1.5">${stats.feedbacks.length} góp ý</span>`;
+        } else {
+            prevEl.innerHTML = `<span class="text-blue-700 font-bold"><i class="fas fa-calculator text-blue-500 mr-1"></i>CSAT Chung: ${stats.avgCsat}</span> &bull; <span class="text-slate-600 font-medium ml-1.5">${lines.length - 1} phản hồi toàn hệ thống</span>`;
+        }
+    };
+
+    window.saveQuickSurveyData = function () {
+        const inputEl = document.getElementById('quickSurveyInput');
+        if (!inputEl) return;
+        const val = inputEl.value.trim();
+        const isTax = window.location.pathname.includes('thuehkd');
+        const storageKey = isTax ? 'kv_survey_tax' : 'kv_survey_spcb';
+        localStorage.setItem(storageKey, val);
+
+        document.getElementById('quickSurveyModal').classList.add('hidden');
+        window.autoUpdateCsatField();
+
+        if (typeof showToast === 'function') {
+            const code = (document.getElementById('courseId') || document.getElementById('db-code'))?.value || '';
+            const stats = window.getCourseSurveyStats(code);
+            showToast(`✨ Đã cập nhật khảo sát! CSAT khóa ${code || 'này'}: ${stats.avgCsat || '4.8/5'}`);
+        }
+    };
 
     const originalFetch = window.fetch;
     window.fetch = function (url, options) {
