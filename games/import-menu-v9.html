@@ -43,6 +43,28 @@
   </div>
 </div>
 
+<!-- HƯỚNG DẪN TỪNG BƯỚC -->
+<div id="coachRing" class="hidden fixed z-[75] pointer-events-none rounded-xl" style="box-shadow:0 0 0 3px #7c3aed, 0 0 0 9999px rgba(15,23,42,.35); transition:all .2s"></div>
+<div id="coach" class="hidden fixed z-[80] w-80 bg-slate-900 text-white rounded-2xl p-4 shadow-2xl">
+  <div id="coachArrow" class="absolute w-3 h-3 bg-slate-900 rotate-45"></div>
+  <div class="text-[10px] text-violet-300 font-bold uppercase tracking-wider" id="coachStep"></div>
+  <div id="coachTitle" class="font-extrabold text-sm mt-1"></div>
+  <div id="coachBody" class="text-xs text-slate-300 mt-1.5 leading-relaxed"></div>
+  <div class="flex justify-between items-center mt-3">
+    <button id="coachSkip" class="text-[11px] text-slate-400 hover:text-white">Bỏ qua bước</button>
+    <button id="coachOk" class="bg-white text-slate-900 font-bold text-xs px-3 py-1.5 rounded-lg">OK</button>
+  </div>
+</div>
+<div id="tourPanel" class="hidden fixed bottom-4 right-4 z-[70] w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 text-xs">
+  <button id="tourHead" class="w-full flex items-center gap-2 px-4 py-3 border-b">
+    <span id="tourChevron">▾</span><b>Hướng dẫn</b>
+    <span class="ml-auto w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden"><span id="tourBar" class="block h-full bg-violet-600" style="width:0"></span></span>
+    <span id="tourCount" class="text-slate-500 font-bold">0/0</span>
+  </button>
+  <div id="tourBody" class="p-4 max-h-[55vh] overflow-auto"></div>
+  <div class="flex border-t text-[11px] font-bold text-slate-600"><button id="tourTopics" class="flex-1 py-2.5 hover:bg-slate-50">Chọn chủ đề</button><button id="tourOff" class="flex-1 py-2.5 border-l hover:bg-slate-50">Tắt hướng dẫn</button></div>
+</div>
+
 <aside class="hidden md:flex w-64 bg-white border-r border-slate-200/80 p-5 flex-col justify-between shrink-0">
   <div class="space-y-6">
     <div class="flex items-center gap-3">
@@ -76,7 +98,9 @@
     <div class="flex items-center gap-2 flex-wrap">
       <button id="btnUndo" disabled class="btn disabled:opacity-40" title="Ctrl+Z">↶ Hoàn tác</button>
       <button id="btnSaveLib" class="btn">💾 Lưu vào thư viện</button>
+      <button id="btnGuide" class="btn">❓ Hướng dẫn</button>
       <select id="exportMode" class="inp font-semibold"><option value="all">Xuất tất cả danh mục (mỗi danh mục 1 file)</option><option value="current">Chỉ xuất danh mục đang mở</option></select>
+      <label id="optSplitComboWrap" class="text-[11px] font-semibold text-slate-600 flex items-center gap-1" title="KiotViet cần các món thành phần có sẵn trước khi tạo combo"><input type="checkbox" id="optSplitCombo" checked> Tách combo ra file bước 2</label>
       <button id="btnExport" class="btn btn-p">📤 Xuất Excel import</button>
     </div>
   </header>
@@ -94,6 +118,7 @@
         <div id="sheetTabs" class="bg-slate-100 p-1 rounded-2xl flex items-center gap-1 border border-slate-200/60 flex-wrap"></div>
         <div class="flex items-center gap-2 flex-wrap">
           <input id="searchBox" type="search" placeholder="🔍 Tìm…" class="inp w-44">
+          <button id="btnCompBulk" class="btn hidden">🧩 Nhận diện thành phần combo</button>
           <button id="btnToggleCols" class="btn">↔ Mở đủ cột</button>
           <button id="btnAddRow" class="btn btn-p">+ Thêm dòng</button>
         </div>
@@ -170,7 +195,21 @@
           <div><div class="text-[11px] font-bold text-slate-500 mb-1">Mô hình</div><select id="tModel" class="inp"></select></div>
           <div><div class="text-[11px] font-bold text-slate-500 mb-1">Loại danh mục</div><select id="tKind" class="inp"></select></div>
           <div><div class="text-[11px] font-bold text-slate-500 mb-1">Tên hiển thị</div><input id="tName" class="inp w-56" placeholder="Tự đặt theo loại nếu bỏ trống"></div>
-          <label class="btn btn-p cursor-pointer">📥 Chọn file mẫu (.xlsx)<input type="file" id="tFile" accept=".xlsx,.xls,.csv" class="hidden"></label>
+          <label id="tFileLabel" class="btn btn-p cursor-pointer">📥 Chọn file mẫu (.xlsx)<input type="file" id="tFile" accept=".xlsx,.xls,.csv" class="hidden"></label>
+        </div>
+      </div>
+      <div id="compFormatCard" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+        <h3 class="font-bold text-sm">🧩 Định dạng cột “Món thành phần” khi xuất</h3>
+        <p class="text-[11px] text-slate-500">Nếu KiotViet không nhận thành phần combo: tạo tay 1 combo có thành phần trên KiotViet → bấm <b>Xuất file</b> ở màn hình Thực đơn → tải file đó lên đây. Hệ thống sẽ học đúng cách KiotViet ghi thành phần (ký tự ngăn cách, ghi mã hay tên).</p>
+        <div class="flex flex-wrap gap-2 items-center">
+          <select id="compFormatSel" class="inp">
+            <option value="|:code">MÃ:SL|MÃ:SL (mặc định)</option>
+            <option value=";:code">MÃ:SL;MÃ:SL</option>
+            <option value=",:code">MÃ:SL,MÃ:SL</option>
+            <option value="|:name">TÊN MÓN:SL|TÊN MÓN:SL</option>
+          </select>
+          <label class="btn cursor-pointer">🎓 Học định dạng từ file KiotViet xuất ra<input type="file" id="compLearnFile" accept=".xlsx,.xls,.csv" class="hidden"></label>
+          <span id="compFormatPreview" class="text-[11px] font-mono text-slate-600"></span>
         </div>
       </div>
       <div id="tplCoverage" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3"></div>
@@ -425,7 +464,7 @@ function handleTemplateFile(file) {
       $("tName").value = "";
       renderTemplates(); renderTemplateSelects();
       showToast("Đã thêm template", `${tpl.name}: ${tpl.columns.length} cột (${tpl.columns.filter(c => c.required).length} bắt buộc), sheet "${tpl.sheetName}", tiêu đề ở dòng ${tpl.headerRow + 1}.`);
-      openColumnEditor(tpl.id);
+      openColumnEditor(tpl.id); tourEmit("tplAdded");
     } catch (err) { showToast("Không đọc được file mẫu", String(err.message || err), "danger"); }
   };
   reader.readAsArrayBuffer(file);
@@ -606,6 +645,10 @@ function buildRowsFromParse(st, existingRows) {
     if (row._bad) rep.bad++;
     out.push(row);
   }
+  if (isMenu) { // thành phần ghi tự do trong dữ liệu thô ("5 bia tiger + 1 khô gà") → đổi sang mã
+    const all = [...(existingRows || []), ...out];
+    out.forEach(r => { if (!r[COMP_COL]) return; const res = resolveCompInput(r[COMP_COL], all, r["Mã món"]); r[COMP_COL] = res.value; if (res.value && !res.unresolved) { r["Loại món"] = "Combo cố định"; r["Loại thực đơn"] = "Khác"; } });
+  }
   return { rows: out, rep };
 }
 
@@ -664,8 +707,9 @@ function displayCols(tpl) {
 }
 const colDef = (tpl, name) => tpl.columns.find(c => c.name === name) || { name, type: "text" };
 const colWidth = (tpl, c) => c.name === tpl.nameCol ? 230 : c.name === tpl.keyCol ? 110 : c.type === "bool" ? 80 : c.type === "number" ? 105 : c.type === "select" ? 140 : Math.min(240, Math.max(110, c.name.length * 7));
-function cellHtml(c, val) {
+function cellHtml(c, val, tpl) {
   const k = esc(c.name);
+  if (tpl && tpl.profile === "fnb-menu" && c.name === COMP_COL) return `<div class="flex items-center gap-1"><input type="text" data-key="${k}" value="${esc(val)}" placeholder="vd: 10 tiger + 1 trái cây nhỏ" class="cell-in text-slate-700 font-mono"><button data-role="comp" class="shrink-0 px-1.5 py-0.5 rounded-lg border border-violet-200 bg-violet-50 hover:bg-violet-100" title="Chọn món thành phần">🧩</button></div>`;
   if (c.type === "select" && c.options) { const opts = c.options.includes(val) ? c.options : [val, ...c.options]; return `<select data-key="${k}" class="cell-in">${opts.map(o => `<option value="${esc(o)}" ${o === val ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>`; }
   if (c.type === "bool") return `<input type="checkbox" data-key="${k}" ${Number(val) === 1 ? "checked" : ""} class="rounded text-violet-600 cursor-pointer">`;
   if (c.type === "number") return `<input type="text" inputmode="decimal" data-key="${k}" value="${esc(val)}" class="cell-in text-right font-mono text-slate-700">`;
@@ -691,6 +735,7 @@ function renderDataTable() {
     $("validationPanel").innerHTML = ""; return;
   }
   $("btnToggleCols").classList.toggle("hidden", !tpl.compact);
+  $("btnCompBulk").classList.toggle("hidden", tpl.profile !== "fnb-menu");
   $("btnToggleCols").textContent = showAllCols ? "↔ Thu gọn cột" : `↔ Mở đủ ${tpl.columns.length} cột`;
   $("tplNote").innerHTML = tpl.fileB64
     ? `<span class="text-emerald-700 font-semibold">✓ Template từ file mẫu “${esc(tpl.fileName)}” — xuất file sẽ ghi vào đúng file mẫu này.</span>`
@@ -710,7 +755,7 @@ function renderDataTable() {
   $("tableBody").innerHTML = rows.length ? rows.map(r => {
     const sel = selected.has(r._id);
     return `<tr data-id="${esc(r._id)}" class="hover:bg-violet-50/40 ${sel ? "is-selected" : ""}"><td class="p-2 border-r text-center sticky-c" style="left:0"><input type="checkbox" data-role="select-row" ${sel ? "checked" : ""}></td>` +
-      cols.map((c, i) => `<td data-key="${esc(c.name)}" class="p-1 border-r ${c.type === "bool" ? "text-center" : ""} ${i < freeze ? "sticky-c" + (i === freeze - 1 ? " sticky-last" : "") : ""} ${c.name === tpl.nameCol ? "font-bold" : ""}"${i < freeze ? ` style="left:${off[i]}px"` : ""}>${cellHtml(c, r[c.name] ?? "")}</td>`).join("") +
+      cols.map((c, i) => `<td data-key="${esc(c.name)}" class="p-1 border-r ${c.type === "bool" ? "text-center" : ""} ${i < freeze ? "sticky-c" + (i === freeze - 1 ? " sticky-last" : "") : ""} ${c.name === tpl.nameCol ? "font-bold" : ""}"${i < freeze ? ` style="left:${off[i]}px"` : ""}>${cellHtml(c, r[c.name] ?? "", tpl)}</td>`).join("") +
       `<td class="p-1 text-center"><button data-role="del" class="text-slate-400 hover:text-red-600 font-bold px-2">✕</button></td></tr>`;
   }).join("") : `<tr><td colspan="${cols.length + 2}" class="p-8 text-center text-slate-400">${searchText ? "Không tìm thấy dòng phù hợp." : "Danh mục trống. Bấm “+ Thêm dòng” hoặc vào “Gom dữ liệu thô”."}</td></tr>`;
   renderValidation();
@@ -751,6 +796,7 @@ function loadPackage(pkg) {
   selected.clear(); searchText = ""; $("searchBox").value = "";
   navigateTo("workspace"); refreshWorkspace(); saveWs();
   showToast("Đã nạp bộ dữ liệu", `${pkg.title}: ${ws.sheets.map(s => `${getTpl(s.templateId).kind} ${s.rows.length}`).join(", ")}` + (missing ? ` · ${missing} danh mục thiếu template` : ""), missing ? "warn" : "success");
+  tourEmit("pkgLoaded");
 }
 function deleteRows(ids) {
   const sh = curSheet(); if (!sh || !ids.length) return;
@@ -788,8 +834,11 @@ function buildWorkbook(sheet) {
     startRow = 1;
   }
   let maxC = 0;
+  const allRows = sheet.allRows || sheet.rows;
   sheet.rows.forEach((row, ri) => tpl.columns.forEach(c => {
-    const cv = cellValue(c, row[c.name]); maxC = Math.max(maxC, c.ci);
+    let v = row[c.name];
+    if (tpl.profile === "fnb-menu" && c.name === COMP_COL && v) v = formatComp(v, allRows);
+    const cv = cellValue(c, v); maxC = Math.max(maxC, c.ci);
     if (cv) wsx[XLSX.utils.encode_cell({ r: startRow + ri, c: c.ci })] = cv;
   }));
   const old = XLSX.utils.decode_range(wsx["!ref"] || "A1");
@@ -810,8 +859,19 @@ function exportAll() {
   }
   if (warns.length && !confirm(`Có ${warns.length} cảnh báo (vd: ${warns[0].msg}).\nVẫn xuất file?`)) return;
   const date = new Date().toISOString().slice(0, 10);
-  const files = targets.map(s => { const t = getTpl(s.templateId); const fn = `KiotViet_${slug(t.kind)}_${slug(ws.title)}_${date}.xlsx`; XLSX.writeFile(buildWorkbook(s), fn); return fn; });
-  showToast("Xuất Excel thành công", files.join(", "));
+  const files = [];
+  targets.forEach(s => {
+    const t = getTpl(s.templateId); const base = `KiotViet_${slug(t.kind)}_${slug(ws.title)}_${date}`;
+    const combos = t.profile === "fnb-menu" ? s.rows.filter(isComboRow) : [];
+    if (combos.length && $("optSplitCombo").checked) {
+      // Bước 1: món đơn (để KiotViet có sẵn món thành phần) · Bước 2: combo
+      const singles = s.rows.filter(r => !isComboRow(r));
+      XLSX.writeFile(buildWorkbook({ ...s, rows: singles, allRows: s.rows }), base + "_B1_mon_le.xlsx"); files.push(base + "_B1_mon_le.xlsx");
+      XLSX.writeFile(buildWorkbook({ ...s, rows: combos, allRows: s.rows }), base + "_B2_combo.xlsx"); files.push(base + "_B2_combo.xlsx");
+    } else { XLSX.writeFile(buildWorkbook(s), base + ".xlsx"); files.push(base + ".xlsx"); }
+  });
+  showToast("Xuất Excel thành công", files.join(", ") + (files.some(f => f.includes("_B2_")) ? " — import file B1 trước, B2 sau." : ""));
+  tourEmit("exported");
   if (settings.autoSave) saveToLibrary("export", true);
 }
 
@@ -856,6 +916,7 @@ function exportLibraryJson() {
   const data = { version: 9, exportedAt: new Date().toISOString(), templates: [...sharedTemplates, ...userTemplates].filter((t, i, a) => a.findIndex(x => x.id === t.id) === i && (usedTpl.has(t.id) || userTemplates.includes(t))), library: [...sharedLibrary, ...userLibrary].filter((p, i, a) => a.findIndex(x => x.id === p.id) === i) };
   const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "library.json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  tourEmit("libExported");
   showToast("Đã xuất thư viện", `${data.library.length} bộ dữ liệu, ${data.templates.length} template. Đặt file library.json cạnh index.html để học viên cùng thấy.`);
 }
 function importLibraryData(data, asShared) {
@@ -918,6 +979,7 @@ function analyze() {
   let aoa = pFileAoa;
   if (!aoa) { const raw = $("rawTextarea").value; if (!raw.trim()) { showToast("Chưa có dữ liệu", "Dán bảng hoặc chọn file dữ liệu thô.", "warn"); return; } aoa = parseTSV(raw); }
   parseState = analyzeRaw(tplId, aoa);
+  tourEmit("analyzed");
   renderMapping();
 }
 function renderMapping() {
@@ -955,6 +1017,7 @@ function applyParse() {
   ws.active = idx; selected.clear();
   navigateTo("workspace"); refreshWorkspace(); saveWs();
   showToast(`Đã gom ${rows.length} dòng vào “${tpl.kind}”`, `${mode === "append" ? "Thêm vào cuối" : "Thay thế danh mục"}${rep.skipped ? ` · bỏ qua ${rep.skipped} dòng tiêu đề/nhóm` : ""}${rep.bad ? ` · ${rep.bad} dòng có số lỗi cần xem lại` : ""}`, rep.bad ? "warn" : "success");
+  tourEmit("applied");
   if (settings.autoSave) saveToLibrary("import", true);
 }
 function readDataFile(file) {
@@ -974,11 +1037,364 @@ function readDataFile(file) {
 }
 
 // =====================================================================
+// 14b. COMBO & MÓN THÀNH PHẦN
+//   Lưu nội bộ dạng chuẩn "MÃ:SL|MÃ:SL"; khi xuất đổi sang định dạng KiotViet (settings.compFormat)
+// =====================================================================
+const COMP_COL = "Món thành phần";
+const isComboRow = (r) => r["Loại món"] === "Combo cố định" || (String(r[COMP_COL] || "").trim() !== "");
+const tokn = (s) => norm(s).replace(/[^a-z0-9]+/g, " ").trim().split(" ").filter(Boolean);
+const STOP = new Set(["combo", "va", "cac", "loai", "phan", "suat", "mon", "cua", "cho", "set", "kem", "voi", "goi"]);
+const ALIAS = { ken: ["heineken"], heniken: ["heineken"], hnk: ["heineken"], bac: ["silver"], silver: ["bac"], sg: ["sai", "gon"], coke: ["coca"], coca: ["coca", "cola"], tc: ["trai", "cay"], tiger: ["tiger"], redbull: ["redbull", "bo", "huc"], bohuc: ["redbull"], nuocsuoi: ["nuoc", "suoi"], kt: ["khoai", "tay"] };
+function compCandidates(rows, selfCode) {
+  return rows.filter(r => String(r["Mã món"] || "").trim() && String(r["Mã món"]).toUpperCase() !== String(selfCode || "").toUpperCase() && r["Loại món"] !== "Combo cố định");
+}
+function scoreItem(q, r) {
+  const it = tokn(r["Tên món"] + " " + r["Mã món"]).filter(t => !STOP.has(t));
+  const set = new Set(it); if (!q.length || !it.length) return { score: 0, cover: 0, prec: 0 };
+  let hit = 0;
+  q.forEach(t => { const alts = [t, ...(ALIAS[t] || [])]; if (alts.some(a => set.has(a) || (a.length >= 4 && it.some(x => x.startsWith(a))))) hit++; });
+  const cover = hit / q.length, prec = hit / set.size;
+  return { score: cover * 0.85 + prec * 0.15, cover, prec };
+}
+// Tìm món theo chuỗi gõ: mã chính xác > tên gần đúng
+function findItems(text, rows, selfCode, limit = 6) {
+  const cands = compCandidates(rows, selfCode);
+  const exact = cands.find(r => String(r["Mã món"]).trim().toUpperCase() === String(text).trim().toUpperCase());
+  if (exact) return [{ item: exact, score: 1, cover: 1, prec: 1 }];
+  const q = tokn(text).filter(t => !STOP.has(t));
+  return cands.map(r => ({ item: r, ...scoreItem(q, r) })).filter(x => x.score >= 0.35).sort((a, b) => b.score - a.score).slice(0, limit);
+}
+function splitQty(p) {
+  let m = p.match(/^(\d+(?:[.,]\d+)?)\s*(?:x|\*|×)?\s+(.+)$/i); if (m) return { qty: parseFloat(m[1].replace(",", ".")), text: m[2] };
+  m = p.match(/^(.+?)\s*(?:x|\*|×|:)\s*(\d+(?:[.,]\d+)?)$/i); if (m) return { qty: parseFloat(m[2].replace(",", ".")), text: m[1] };
+  return { qty: 1, text: p };
+}
+// Đọc chuỗi tự do: "10 tiger + 1 trái cây nhỏ", "BIA001:10|ANV001:1", hoặc tên combo "Combo X (10 Bia Tiger + 1 Khô gà)"
+function parseComboText(text, rows, selfCode, fromName) {
+  let s = String(text || "").trim(); if (!s) return { parts: [], explained: false };
+  if (fromName) {
+    const m = s.match(/\(([^()]*(?:\+|,|&|;| và )[^()]*)\)/i);
+    if (m) s = m[1];
+    else { s = s.replace(/^combo\s*/i, ""); if (!/\+|,|&|;| và /i.test(s)) return { parts: [], explained: false }; }
+  }
+  const raw = s.split(/\s*(?:\+|\||;|,|&|\bvà\b)\s*/i).map(x => x.trim()).filter(Boolean);
+  const parts = raw.map(p => {
+    const { qty, text: t } = splitQty(p);
+    const found = findItems(t, rows, selfCode, 4);
+    const best = found[0];
+    const ambiguous = !!(best && found[1] && best.score < 1 && found[1].cover >= best.cover && Math.abs(best.prec - found[1].prec) < 0.15);
+    const status = !best || best.score < 0.6 ? "missing" : (ambiguous ? "ambiguous" : "ok");
+    return { text: p, qty, code: best && best.score >= 0.6 ? best.item["Mã món"] : "", alts: found.map(f => f.item["Mã món"]), status };
+  });
+  return { parts, explained: true };
+}
+const toCanon = (parts) => parts.filter(p => p.code && p.qty > 0).map(p => `${p.code}:${+p.qty}`).join("|");
+function canonToParts(v) {
+  return String(v || "").split("|").map(x => x.trim()).filter(Boolean).map(x => { const m = x.match(/^([^:]+):(\d+(?:\.\d+)?)$/); return m ? { code: m[1].trim(), qty: +m[2] } : { code: x, qty: 1, bad: true }; });
+}
+// Khi người dùng gõ vào ô: nếu đã đúng dạng chuẩn thì giữ, ngược lại tự hiểu thành mã
+function resolveCompInput(text, rows, selfCode) {
+  const s = String(text || "").trim(); if (!s) return { value: "", notes: [] };
+  const codes = new Set(rows.map(r => String(r["Mã món"]).toUpperCase()));
+  if (canonToParts(s).every(p => !p.bad && codes.has(p.code.toUpperCase()))) return { value: s, notes: [] };
+  const { parts } = parseComboText(s, rows, selfCode, false);
+  if (parts.some(p => p.status === "missing")) return { value: s, notes: parts.filter(p => p.status === "missing").map(p => `Không tìm thấy “${p.text}”`), unresolved: true };
+  return { value: toCanon(parts), notes: parts.filter(p => p.status === "ambiguous").map(p => `“${p.text}” có nhiều món giống nhau → chọn tạm ${p.code}`) };
+}
+function formatComp(v, rows) {
+  const f = settings.compFormat || { itemSep: "|", qtySep: ":", ref: "code" };
+  const byCode = {}; rows.forEach(r => { byCode[String(r["Mã món"]).toUpperCase()] = r; });
+  return canonToParts(v).map(p => { const ref = f.ref === "name" ? (byCode[p.code.toUpperCase()]?.["Tên món"] || p.code) : p.code; return f.qtyFirst ? `${p.qty}${f.qtySep}${ref}` : `${ref}${f.qtySep}${p.qty}`; }).join(f.itemSep);
+}
+function renderCompFormat() {
+  const f = settings.compFormat || { itemSep: "|", qtySep: ":", ref: "code" };
+  const key = `${f.itemSep}:${f.ref}`;
+  const sel = $("compFormatSel"); if ([...sel.options].some(o => o.value === key) && f.qtySep === ":" && !f.qtyFirst) sel.value = key;
+  $("compFormatPreview").textContent = "Ví dụ xuất: " + formatComp("BIA001:10|ANV001:1", [{ "Mã món": "BIA001", "Tên món": "Bia Tiger Bạc (Lon)" }, { "Mã món": "ANV001", "Tên món": "Trái cây thập cẩm (Dĩa nhỏ)" }]) + (f.learnedFrom ? `  · học từ ${f.learnedFrom}` : "");
+}
+function learnCompFormat(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+      let found = null;
+      wb.SheetNames.forEach(sn => {
+        if (found) return;
+        const aoa = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: false, defval: "" });
+        for (let h = 0; h < Math.min(aoa.length, 10) && !found; h++) {
+          const ci = aoa[h].findIndex(x => /thanh phan/.test(norm(x)));
+          if (ci < 0) continue;
+          const codeCi = aoa[h].findIndex(x => /^ma (mon|hang)/.test(canon(x)));
+          const nameCi = aoa[h].findIndex(x => /^ten (mon|hang)/.test(canon(x)));
+          const data = aoa.slice(h + 1);
+          const sample = data.map(r => String(r[ci] || "").trim()).find(Boolean);
+          if (sample) found = { sample, codes: new Set(data.map(r => norm(r[codeCi]))), names: new Set(data.map(r => norm(r[nameCi]))) };
+        }
+      });
+      if (!found) throw new Error("Không thấy cột “thành phần” có dữ liệu. Hãy tạo ít nhất 1 combo có thành phần trên KiotViet rồi xuất file.");
+      const s = found.sample;
+      const itemSep = ["|", ";", "\n", ","].map(c => [c, s.split(c).length - 1]).sort((a, b) => b[1] - a[1])[0];
+      const sep = itemSep[1] > 0 ? itemSep[0] : "|";
+      const first = s.split(sep)[0].trim();
+      let m = first.match(/^(.+?)\s*([:x*×\-])\s*(\d+(?:[.,]\d+)?)$/i), qtyFirst = false;
+      if (!m) { const m2 = first.match(/^(\d+(?:[.,]\d+)?)\s*([x*×:\-])\s*(.+)$/i); if (m2) { m = [first, m2[3], m2[2], m2[1]]; qtyFirst = true; } }
+      if (!m) throw new Error(`Không xác định được cách ghi số lượng trong “${first}”.`);
+      const ref = found.names.has(norm(m[1])) && !found.codes.has(norm(m[1])) ? "name" : "code";
+      settings.compFormat = { itemSep: sep, qtySep: m[2], ref, qtyFirst, learnedFrom: file.name, sample: s };
+      lsSet(K_SET, settings); renderCompFormat();
+      showToast("Đã học định dạng thành phần", `Mẫu “${s.slice(0, 60)}” → ${ref === "name" ? "ghi TÊN món" : "ghi MÃ món"}, ngăn cách “${sep === "\n" ? "xuống dòng" : sep}”, số lượng “${m[2]}”.`);
+      tourEmit("compLearned");
+    } catch (err) { showToast("Chưa học được định dạng", String(err.message || err), "danger"); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ---------- Bộ chọn thành phần cho 1 combo ----------
+let cb = null; // { rowId, parts:[{code,qty,status,text,alts}] }
+function menuSheet() { return ws.sheets.find(s => getTpl(s.templateId)?.profile === "fnb-menu"); }
+function openComboBuilder(rowId) {
+  const sh = menuSheet(); const row = sh.rows.find(r => r._id === rowId); if (!row) return;
+  const cur = canonToParts(row[COMP_COL]).filter(p => !p.bad).map(p => ({ ...p, status: "ok" }));
+  let parts = cur;
+  if (!parts.length) { const g = parseComboText(row[COMP_COL] || row["Tên món"], sh.rows, row["Mã món"], !row[COMP_COL]); parts = g.parts; }
+  cb = { rowId, parts, updateCost: false };
+  openModal(`🧩 Thành phần của “${row["Tên món"]}”`, `
+    <div class="space-y-3">
+      <div class="flex flex-wrap gap-2 items-center">
+        <div class="relative flex-1 min-w-[260px]">
+          <input id="cbSearch" class="inp w-full" placeholder="Gõ tên hoặc mã món, vd: “10 tiger”, “2 snack”… rồi Enter" autocomplete="off">
+          <div id="cbSugg" class="absolute left-0 right-0 top-full mt-1 bg-white border rounded-xl shadow-xl z-10 hidden"></div>
+        </div>
+        <button id="cbSuggest" class="btn">✨ Gợi ý từ tên combo</button>
+      </div>
+      <div class="text-[11px] text-slate-500">Mẹo: gõ nhiều món một lần, ngăn cách bằng “+”, vd: <code>10 tiger + 1 trái cây nhỏ + 1 khô gà</code>.</div>
+      <div id="cbList"></div>
+    </div>`, [{ label: "Lưu thành phần", primary: true, id: "cbSave", onClick: saveComboBuilder }]);
+  renderComboBuilder();
+  setTimeout(() => $("cbSearch") && $("cbSearch").focus(), 50);
+  tourEmit("compOpen");
+}
+function renderComboBuilder() {
+  const sh = menuSheet(); const row = sh.rows.find(r => r._id === cb.rowId);
+  const by = {}; sh.rows.forEach(r => { by[String(r["Mã món"]).toUpperCase()] = r; });
+  const cands = compCandidates(sh.rows, row["Mã món"]);
+  let sumCost = 0, sumPrice = 0;
+  const lines = cb.parts.map((p, i) => {
+    const it = by[String(p.code).toUpperCase()];
+    if (it) { sumCost += (+it["Giá vốn"] || 0) * p.qty; sumPrice += (+it["Giá bán"] || 0) * p.qty; }
+    const badge = p.status === "missing" ? `<span class="text-red-600 font-bold">✗ chưa tìm thấy “${esc(p.text)}”</span>` : p.status === "ambiguous" ? `<span class="text-amber-600 font-bold">? “${esc(p.text)}” – kiểm tra lại</span>` : p.text ? `<span class="text-emerald-600 font-bold">✓ “${esc(p.text)}”</span>` : "";
+    const opts = (p.alts && p.alts.length ? [...new Set([p.code, ...p.alts].filter(Boolean))] : [p.code].filter(Boolean));
+    const others = cands.filter(c => !opts.includes(c["Mã món"]));
+    return `<tr class="border-t ${p.status === "missing" ? "bg-red-50" : p.status === "ambiguous" ? "bg-amber-50" : ""}">
+      <td class="p-1.5"><select data-cb="code" data-i="${i}" class="inp w-full max-w-[320px]"><option value="">— chọn món —</option>${opts.map(c => `<option value="${esc(c)}" ${c === p.code ? "selected" : ""}>${esc(c)} · ${esc(by[String(c).toUpperCase()]?.["Tên món"] || "")}</option>`).join("")}<optgroup label="Món khác">${others.map(c => `<option value="${esc(c["Mã món"])}">${esc(c["Mã món"])} · ${esc(c["Tên món"])}</option>`).join("")}</optgroup></select><div class="text-[10px] mt-0.5">${badge}</div></td>
+      <td class="p-1.5 w-20"><input data-cb="qty" data-i="${i}" type="number" min="0" step="1" value="${p.qty}" class="inp w-16 text-right"></td>
+      <td class="p-1.5 text-right font-mono text-slate-500">${it ? ((+it["Giá vốn"] || 0) * p.qty).toLocaleString("vi-VN") : "—"}</td>
+      <td class="p-1.5 text-center"><button data-cb="del" data-i="${i}" class="text-slate-400 hover:text-red-600 font-bold">✕</button></td></tr>`;
+  }).join("");
+  const price = +row["Giá bán"] || 0;
+  $("cbList").innerHTML = cb.parts.length ? `<table class="w-full"><thead><tr class="text-left text-slate-500"><th class="p-1.5">Món thành phần</th><th class="p-1.5">SL</th><th class="p-1.5 text-right">Giá vốn</th><th></th></tr></thead><tbody>${lines}</tbody></table>
+    <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
+      <div class="bg-slate-50 rounded-xl p-2">Tổng giá vốn TP<br><b class="text-sm">${sumCost.toLocaleString("vi-VN")}</b></div>
+      <div class="bg-slate-50 rounded-xl p-2">Tổng giá bán lẻ TP<br><b class="text-sm">${sumPrice.toLocaleString("vi-VN")}</b></div>
+      <div class="bg-slate-50 rounded-xl p-2">Giá combo<br><b class="text-sm">${price.toLocaleString("vi-VN")}</b></div>
+      <div class="bg-slate-50 rounded-xl p-2">Khách tiết kiệm<br><b class="text-sm ${sumPrice - price >= 0 ? "text-emerald-600" : "text-red-600"}">${sumPrice ? Math.round((sumPrice - price) / sumPrice * 100) : 0}%</b></div>
+    </div>
+    <label class="mt-2 flex items-center gap-1.5 font-semibold"><input type="checkbox" id="cbUpdateCost" ${cb.updateCost ? "checked" : ""}> Cập nhật Giá vốn combo = ${sumCost.toLocaleString("vi-VN")} (hiện tại ${(+row["Giá vốn"] || 0).toLocaleString("vi-VN")})</label>`
+    : `<div class="border border-dashed rounded-xl p-6 text-center text-slate-500">Chưa có thành phần. Gõ tên món ở ô trên, hoặc bấm “✨ Gợi ý từ tên combo”.<br>${/\(|\+/.test(row["Tên món"]) ? "" : "Tên combo này không diễn giải món bên trong → cần chọn thủ công."}</div>`;
+  cb.sumCost = sumCost;
+}
+function cbAddFromText(text) {
+  const sh = menuSheet(); const row = sh.rows.find(r => r._id === cb.rowId);
+  const { parts } = parseComboText(text, sh.rows, row["Mã món"], false);
+  parts.forEach(p => {
+    const ex = p.code && cb.parts.find(x => x.code === p.code);
+    if (ex) ex.qty += p.qty; else cb.parts.push(p);
+  });
+  renderComboBuilder();
+  return parts;
+}
+function renderCbSuggest() {
+  const sh = menuSheet(); const row = sh.rows.find(r => r._id === cb.rowId);
+  const q = $("cbSearch").value.trim(); const box = $("cbSugg");
+  if (!q || /\+|\|/.test(q)) { box.classList.add("hidden"); return; }
+  const { qty, text } = splitQty(q);
+  const found = findItems(text, sh.rows, row["Mã món"], 6);
+  box.innerHTML = found.length ? found.map(f => `<button data-cbadd="${esc(f.item["Mã món"])}" data-qty="${qty}" class="w-full text-left px-3 py-1.5 hover:bg-violet-50 flex gap-2"><span class="font-mono text-violet-700 font-bold">${esc(f.item["Mã món"])}</span><span class="flex-1">${esc(f.item["Tên món"])}</span><span class="text-slate-400">×${qty}</span></button>`).join("") : `<div class="px-3 py-2 text-slate-400">Không tìm thấy món phù hợp</div>`;
+  box.classList.remove("hidden");
+}
+function saveComboBuilder() {
+  const sh = menuSheet(); const row = sh.rows.find(r => r._id === cb.rowId);
+  const missing = cb.parts.filter(p => !p.code);
+  if (missing.length && !confirm(`${missing.length} dòng chưa chọn món sẽ bị bỏ qua. Tiếp tục?`)) return;
+  pushUndo();
+  row[COMP_COL] = toCanon(cb.parts);
+  if (row[COMP_COL] && row["Loại món"] !== "Combo cố định") { row["Loại món"] = "Combo cố định"; row["Loại thực đơn"] = "Khác"; }
+  if (cb.updateCost) row["Giá vốn"] = cb.sumCost;
+  closeModal(); renderDataTable(); renderTabs(); saveWs();
+  showToast("Đã lưu thành phần", `${row["Tên món"]}: ${row[COMP_COL] || "(trống)"}`);
+  tourEmit("compSaved");
+}
+// ---------- Nhận diện hàng loạt từ tên combo ----------
+let bulkComp = [];
+function openCompBulk() {
+  const sh = menuSheet(); if (!sh) return;
+  const combos = sh.rows.filter(r => r["Loại món"] === "Combo cố định" || /^combo\b/i.test(norm(r["Tên món"])));
+  if (!combos.length) { showToast("Không có combo", "Chưa có món nào thuộc loại Combo cố định hoặc tên bắt đầu bằng “Combo”.", "info"); return; }
+  bulkComp = combos.map(r => {
+    const g = parseComboText(r["Tên món"], sh.rows, r["Mã món"], true);
+    const allOk = g.parts.length && g.parts.every(p => p.code);
+    return { id: r._id, name: r["Tên món"], current: r[COMP_COL] || "", parts: g.parts, explained: g.explained, apply: !r[COMP_COL] && allOk };
+  });
+  openModal("🧩 Nhận diện thành phần từ tên combo", `<p class="text-slate-500 mb-3">Hệ thống đọc phần mô tả trong tên combo (vd “(10 Bia Tiger + 1 Khô gà)”) và tìm món tương ứng. Tích chọn dòng muốn áp dụng; dòng vàng/đỏ nên mở 🧩 để chọn lại.</p>
+    <table class="w-full"><thead><tr class="text-left text-slate-500"><th class="p-1.5">Áp dụng</th><th class="p-1.5">Combo</th><th class="p-1.5">Nhận diện được</th><th class="p-1.5">Hiện tại</th></tr></thead><tbody>
+    ${bulkComp.map((b, i) => `<tr class="border-t align-top"><td class="p-1.5 text-center"><input type="checkbox" data-bulk="${i}" ${b.apply ? "checked" : ""} ${b.parts.some(p => p.code) ? "" : "disabled"}></td>
+      <td class="p-1.5 font-semibold max-w-[220px]">${esc(b.name)}</td>
+      <td class="p-1.5">${!b.explained ? `<span class="text-slate-400">Tên không diễn giải thành phần → mở 🧩 chọn thủ công</span>` : b.parts.map(p => `<div class="${p.status === "ok" ? "text-emerald-700" : p.status === "ambiguous" ? "text-amber-700" : "text-red-600"}">${p.status === "ok" ? "✓" : p.status === "ambiguous" ? "?" : "✗"} ${esc(p.text)} → <b class="font-mono">${esc(p.code || "không thấy")}</b> ×${p.qty}</div>`).join("")}</td>
+      <td class="p-1.5 font-mono text-slate-500">${esc(b.current || "—")}</td></tr>`).join("")}</tbody></table>`,
+    [{ label: "Áp dụng các dòng đã chọn", primary: true, id: "bulkApply", onClick: applyCompBulk }]);
+}
+function applyCompBulk() {
+  const sh = menuSheet(); pushUndo(); let n = 0;
+  document.querySelectorAll("[data-bulk]").forEach(cbx => { const b = bulkComp[+cbx.dataset.bulk]; if (!cbx.checked) return;
+    const row = sh.rows.find(r => r._id === b.id); const v = toCanon(b.parts); if (!row || !v) return;
+    row[COMP_COL] = v; row["Loại món"] = "Combo cố định"; row["Loại thực đơn"] = "Khác"; n++; });
+  closeModal(); renderDataTable(); saveWs();
+  showToast("Đã điền thành phần", `${n} combo được cập nhật. Có thể Hoàn tác.`);
+  tourEmit("compBulk");
+}
+
+// =====================================================================
+// 14c. HƯỚNG DẪN TỪNG BƯỚC (coach mark + bảng checklist)
+// =====================================================================
+const TOURS = [
+  { id: "quick", title: "Bắt đầu nhanh: dùng thư viện mẫu", steps: [
+    { sel: '[data-nav="library"]', title: "Mở Thư viện dữ liệu mẫu", body: "Ở menu bên trái, bấm <b>📚 Thư viện dữ liệu mẫu</b>.", wait: "nav:library" },
+    { view: "library", sel: "#libModelTabs", title: "Chọn mô hình kinh doanh", body: "Chọn 1 trong 4 mô hình: <b>Retail, FnB, Salon, Hotel</b>. Ví dụ bấm <b>🍹 FnB</b>.", wait: "libFiltered" },
+    { view: "library", sel: "#libIndustryChips", title: "Chọn ngành nghề", body: "Bấm ngành cần demo, ví dụ <b>Karaoke, Bida</b>. Số trong ngoặc là số bộ dữ liệu đang có.", wait: "libFiltered" },
+    { view: "library", sel: "[data-libload]", title: "Nạp bộ dữ liệu", body: "Bấm <b>Nạp vào bàn làm việc</b> trên thẻ bộ dữ liệu muốn dùng.", wait: "pkgLoaded" },
+    { view: "workspace", sel: "#sheetTabs", title: "Xem từng danh mục", body: "Mỗi tab là 1 file import: <b>Thực đơn, Phòng/Bàn, Nguyên vật liệu</b>… Bấm để chuyển." },
+    { view: "workspace", sel: "#validationPanel", title: "Kiểm tra lỗi trước khi xuất", body: "Dòng <b class='text-red-300'>đỏ</b> là lỗi chặn xuất, <b class='text-amber-300'>vàng</b> là cảnh báo. Bấm vào từng dòng để nhảy tới ô cần sửa." },
+    { view: "workspace", sel: "#btnExport", title: "Xuất file import", body: "Bấm <b>📤 Xuất Excel import</b>. Bộ dữ liệu cũng được tự lưu vào thư viện.", wait: "exported" } ] },
+  { id: "parse", title: "Gom dữ liệu thô thành file import", steps: [
+    { sel: '[data-nav="parser"]', title: "Mở Gom dữ liệu thô", body: "Ở menu bên trái, bấm <b>⚡ Gom dữ liệu thô</b>.", wait: "nav:parser" },
+    { view: "parser", sel: "#pTemplate", title: "1. Chọn template đích", body: "Chọn loại file muốn tạo, ví dụ <b>Thực đơn FnB</b> hoặc template bạn đã tải lên." },
+    { view: "parser", sel: "#rawTextarea", title: "2. Đưa dữ liệu thô vào", body: "Bôi đen bảng trong Excel/Google Sheets rồi <b>dán</b> vào đây, hoặc bấm <b>Chọn file dữ liệu thô</b>. Bảng có dòng tiêu đề nhóm, cột lệch… đều được." },
+    { view: "parser", sel: "#btnAnalyze", title: "3. Phân tích & ghép cột", body: "Bấm nút để hệ thống tự ghép cột dữ liệu thô vào đúng cột của template.", wait: "analyzed" },
+    { view: "parser", sel: "#mapBody", title: "Kiểm tra ghép cột", body: "Mỗi dòng là 1 cột của template. Dòng <b>nền đỏ</b> là cột bắt buộc chưa có dữ liệu → chọn cột nguồn hoặc nhập <b>giá trị mặc định</b>." },
+    { view: "parser", sel: "#btnApply", title: "4. Đưa vào bàn làm việc", body: "Chọn <b>Thay thế</b> hoặc <b>Thêm vào cuối</b> rồi bấm nút.", wait: "applied" },
+    { view: "workspace", sel: "#validationPanel", title: "Sửa lỗi còn lại", body: "Xem bảng lỗi, sửa trực tiếp trong bảng (ô đỏ)." },
+    { view: "workspace", sel: "#btnExport", title: "Xuất file", body: "Bấm <b>📤 Xuất Excel import</b> để lấy file import KiotViet.", wait: "exported" } ] },
+  { id: "combo", title: "Tạo combo & món thành phần", steps: [
+    { view: "workspace", sel: "#btnCompBulk", title: "Tự nhận diện từ tên combo", body: "Bấm <b>🧩 Nhận diện thành phần combo</b>. Hệ thống đọc tên kiểu “Combo X (10 Bia Tiger + 1 Khô gà)” và tìm đúng mã món.", wait: "compBulk", before: () => focusMenuSheet() },
+    { view: "workspace", sel: '#tableBody [data-role="comp"]', title: "Mở bộ chọn thành phần", body: "Ở cột <b>Món thành phần</b>, bấm nút <b>🧩</b> của 1 combo (dùng cho combo có tên không diễn giải món bên trong).", wait: "compOpen", before: () => focusMenuSheet(true) },
+    { sel: "#cbSearch", title: "Gõ để thêm món nhanh", body: "Gõ vài ký tự tên hoặc mã món, có thể kèm số lượng: <b>“10 tiger”</b>, <b>“2 snack”</b> → chọn gợi ý hoặc Enter. Gõ nhiều món: <b>“10 tiger + 1 khô gà”</b>." },
+    { sel: "#cbList", title: "Kiểm tra & chỉnh số lượng", body: "<b class='text-emerald-300'>✓</b> chắc chắn · <b class='text-amber-300'>?</b> có nhiều món giống → chọn lại trong danh sách · <b class='text-red-300'>✗</b> chưa tìm thấy. Có tổng giá vốn để đối chiếu giá combo." },
+    { sel: "#cbSave", title: "Lưu thành phần", body: "Bấm <b>Lưu thành phần</b>.", wait: "compSaved" },
+    { view: "workspace", sel: "#optSplitComboWrap", title: "Tách combo ra file bước 2", body: "KiotViet cần <b>các món thành phần có sẵn trước</b> khi tạo combo. Giữ tích ô này để xuất 2 file: <b>_B1_mon_le</b> và <b>_B2_combo</b>." },
+    { view: "workspace", sel: "#btnExport", title: "Xuất 2 file", body: "Bấm <b>📤 Xuất Excel import</b>. Import file B1 trước, B2 sau.", wait: "exported" } ] },
+  { id: "kv-import", title: "Import lên KiotViet (combo nhận đúng thành phần)", steps: [
+    { title: "Bước 1 – Import món lẻ", body: "Trên KiotViet: menu <b>Thực đơn</b> → nút <b>Import</b> (cạnh <b>+ Món mới</b>) → chọn file <b>…_B1_mon_le.xlsx</b> → Thực hiện." },
+    { title: "Bước 2 – Import combo", body: "Làm lại thao tác <b>Import</b> với file <b>…_B2_combo.xlsx</b>. Lúc này các món thành phần đã tồn tại nên combo liên kết được." },
+    { title: "Bước 3 – Kiểm tra 1 combo", body: "Mở 1 combo trên KiotViet, xem phần thành phần. Nếu đã đúng → xong." },
+    { sel: '[data-nav="templates"]', title: "Nếu vẫn chưa nhận thành phần", body: "Tạo tay 1 combo có thành phần trên KiotViet → <b>Xuất file</b> ở màn hình Thực đơn → vào <b>🧩 Quản lý template</b> trong tool này.", wait: "nav:templates" },
+    { view: "templates", sel: "#compFormatCard", title: "Học định dạng từ KiotViet", body: "Bấm <b>🎓 Học định dạng từ file KiotViet xuất ra</b> và chọn file vừa xuất. Từ đó tool xuất đúng cách KiotViet ghi thành phần.", wait: "compLearned" } ] },
+  { id: "template", title: "Dùng file mẫu chính thức của KiotViet", steps: [
+    { sel: '[data-nav="templates"]', title: "Mở Quản lý template", body: "Menu trái → <b>🧩 Quản lý template</b>.", wait: "nav:templates" },
+    { view: "templates", sel: "#tModel", title: "Chọn mô hình & loại danh mục", body: "Chọn mô hình (Retail/FnB/Salon/Hotel) và loại danh mục: Hàng hóa, Khách hàng, Voucher, Ca làm việc…" },
+    { view: "templates", sel: "#tFileLabel", title: "Tải file mẫu", body: "Bấm <b>📥 Chọn file mẫu</b> và chọn file tải từ màn hình <b>Import</b> của KiotViet.", wait: "tplAdded" },
+    { sel: "#modalBody", title: "Kiểm tra cột", body: "Xem kiểu dữ liệu, cột bắt buộc (*), cột mã chống trùng. Chỉnh nếu cần rồi bấm <b>Lưu</b>." },
+    { view: "templates", sel: "#tplCoverage", title: "Theo dõi độ phủ template", body: "Bảng này cho biết mỗi mô hình đã có file mẫu cho loại danh mục nào." } ] },
+  { id: "share", title: "Lưu & chia sẻ thư viện cho học viên", steps: [
+    { view: "workspace", sel: "#wsTitle", title: "Đặt tên & phân loại", body: "Nhập tên bộ dữ liệu, chọn <b>mô hình</b> và <b>ngành</b> để xếp đúng chỗ trong thư viện." },
+    { view: "workspace", sel: "#btnSaveLib", title: "Lưu vào thư viện", body: "Bấm <b>💾 Lưu vào thư viện</b> (việc gom dữ liệu và xuất file cũng tự lưu).", wait: "libSaved" },
+    { sel: '[data-nav="library"]', title: "Mở thư viện", body: "Menu trái → <b>📚 Thư viện dữ liệu mẫu</b>.", wait: "nav:library" },
+    { view: "library", sel: "#btnLibExport", title: "Xuất thư viện", body: "Bấm <b>⬇ Xuất thư viện (.json)</b> để lấy file <b>library.json</b>.", wait: "libExported" },
+    { title: "Đưa lên cho học viên", body: "Tải <b>library.json</b> lên GitHub, <b>cùng thư mục</b> với trang tool. Học viên mở trang là thấy toàn bộ thư viện + template." } ] }
+];
+let tour = null; // { id, idx, done:[] }
+function focusMenuSheet(needCombo) {
+  const i = ws.sheets.findIndex(s => getTpl(s.templateId)?.profile === "fnb-menu");
+  if (i >= 0 && ws.active !== i) { ws.active = i; refreshWorkspace(); }
+  if (needCombo) { const btn = [...document.querySelectorAll('#tableBody [data-role="comp"]')].find(b => /combo/i.test(b.closest("tr").textContent)); if (btn) { const tr = btn.closest("tr"); tr.parentNode.prepend(tr); } }
+}
+function startTour(id, idx = 0) {
+  const t = TOURS.find(x => x.id === id); if (!t) return;
+  const prev = settings.tours?.[id] || [];
+  tour = { id, idx, done: prev.slice() };
+  settings.tourOn = true; settings.tourId = id; lsSet(K_SET, settings);
+  $("tourPanel").classList.remove("hidden"); renderTourPanel(); showStep();
+}
+function currentStep() { const t = tour && TOURS.find(x => x.id === tour.id); return t ? t.steps[tour.idx] : null; }
+function showStep() {
+  const st = currentStep(); hideCoach();
+  if (!st) { renderTourPanel(); return; }
+  if (st.view && $("view-" + st.view).classList.contains("hidden")) navigateTo(st.view);
+  if (st.before) st.before();
+  setTimeout(() => placeCoach(st), 120);
+  renderTourPanel();
+}
+function placeCoach(st) {
+  const t = TOURS.find(x => x.id === tour.id);
+  $("coachStep").textContent = `${t.title} · Bước ${tour.idx + 1}/${t.steps.length}`;
+  $("coachTitle").textContent = st.title; $("coachBody").innerHTML = st.body;
+  $("coachOk").textContent = st.wait ? "Tôi làm ngay" : (tour.idx === t.steps.length - 1 ? "Hoàn tất" : "OK");
+  st._navFallback = false;
+  const el = st.sel ? [...document.querySelectorAll(st.sel)].find(e => e.offsetParent !== null) : null;
+  const coach = $("coach"), ring = $("coachRing"), arrow = $("coachArrow");
+  coach.classList.remove("hidden");
+  if (el) {
+    el.scrollIntoView({ block: "nearest", inline: "nearest" });
+    const r = el.getBoundingClientRect();
+    ring.classList.remove("hidden");
+    Object.assign(ring.style, { left: r.left - 4 + "px", top: r.top - 4 + "px", width: r.width + 8 + "px", height: r.height + 8 + "px" });
+    const cw = 320, ch = coach.offsetHeight, below = r.bottom + 14 + ch < innerHeight;
+    const left = Math.max(12, Math.min(innerWidth - cw - 12, r.left + r.width / 2 - cw / 2));
+    coach.style.left = left + "px"; coach.style.top = (below ? r.bottom + 14 : Math.max(12, r.top - ch - 14)) + "px";
+    arrow.classList.remove("hidden");
+    arrow.style.left = Math.max(12, Math.min(cw - 24, r.left + r.width / 2 - left - 6)) + "px";
+    arrow.style.top = below ? "-6px" : ""; arrow.style.bottom = below ? "" : "-6px";
+  } else {
+    ring.classList.add("hidden"); arrow.classList.add("hidden");
+    if (st.wait && st.wait.startsWith("nav:")) { st._navFallback = true; $("coachOk").textContent = "Mở giúp tôi"; }
+    coach.style.left = Math.max(12, innerWidth / 2 - 160) + "px"; coach.style.top = Math.max(12, innerHeight / 2 - coach.offsetHeight / 2) + "px";
+  }
+}
+function hideCoach() { $("coach").classList.add("hidden"); $("coachRing").classList.add("hidden"); }
+function completeStep(advance = true) {
+  if (!tour) return;
+  if (!tour.done.includes(tour.idx)) tour.done.push(tour.idx);
+  settings.tours = settings.tours || {}; settings.tours[tour.id] = tour.done; lsSet(K_SET, settings);
+  const t = TOURS.find(x => x.id === tour.id);
+  if (advance) {
+    const next = t.steps.findIndex((_, i) => i > tour.idx && !tour.done.includes(i));
+    if (next >= 0) { tour.idx = next; showStep(); }
+    else { tour.idx = t.steps.length; hideCoach(); renderTourPanel(); showToast("Hoàn thành hướng dẫn", t.title); }
+  } else renderTourPanel();
+}
+function tourEmit(ev) {
+  const st = currentStep();
+  if (st && st.wait === ev) setTimeout(() => completeStep(true), 250);
+}
+function renderTourPanel() {
+  if (!tour) { $("tourCount").textContent = ""; $("tourBar").style.width = "0"; $("tourBody").innerHTML = renderTopics(); return; }
+  const t = TOURS.find(x => x.id === tour.id);
+  const n = t.steps.filter((_, i) => tour.done.includes(i)).length;
+  $("tourCount").textContent = `${n}/${t.steps.length}`; $("tourBar").style.width = (n / t.steps.length * 100) + "%";
+  $("tourBody").innerHTML = `<div class="font-extrabold text-sm mb-2">${esc(t.title)}</div><ul class="space-y-1.5">${t.steps.map((s, i) => `<li><button data-tstep="${i}" class="w-full text-left flex items-start gap-2 ${i === tour.idx ? "text-violet-700 font-bold" : "text-slate-600"}"><span class="${tour.done.includes(i) ? "text-emerald-500" : "text-slate-300"}">${tour.done.includes(i) ? "●" : "○"}</span><span>${esc(s.title)}</span></button></li>`).join("")}</ul>`;
+}
+function renderTopics() {
+  return `<div class="font-extrabold text-sm mb-2">Chọn chủ đề hướng dẫn</div><div class="space-y-1.5">${TOURS.map(t => { const d = (settings.tours?.[t.id] || []).length; return `<button data-tour="${t.id}" class="w-full text-left border rounded-xl px-3 py-2 hover:bg-violet-50 flex justify-between gap-2"><span class="font-semibold">${esc(t.title)}</span><span class="text-slate-400">${d}/${t.steps.length}</span></button>`; }).join("")}</div>`;
+}
+function openTourPanel() { $("tourPanel").classList.remove("hidden"); $("tourBody").classList.remove("hidden"); renderTourPanel(); }
+window.addEventListener("resize", () => { const st = currentStep(); if (st && !$("coach").classList.contains("hidden")) placeCoach(st); });
+document.addEventListener("scroll", () => { const st = currentStep(); if (st && !$("coach").classList.contains("hidden")) placeCoach(st); }, true);
+
+// =====================================================================
 // 15. MODAL, ĐIỀU HƯỚNG, SỰ KIỆN
 // =====================================================================
 function openModal(title, html, buttons) {
   $("modalTitle").textContent = title; $("modalBody").innerHTML = html;
-  $("modalFoot").innerHTML = ""; [...buttons, { label: "Đóng" }].forEach(b => { const el = document.createElement("button"); el.className = "btn" + (b.primary ? " btn-p" : ""); el.textContent = b.label; el.onclick = b.onClick || closeModal; $("modalFoot").appendChild(el); });
+  $("modalFoot").innerHTML = ""; [...buttons, { label: "Đóng" }].forEach(b => { const el = document.createElement("button"); el.className = "btn" + (b.primary ? " btn-p" : ""); el.textContent = b.label; if (b.id) el.id = b.id; el.onclick = b.onClick || closeModal; $("modalFoot").appendChild(el); });
   $("modal").classList.remove("hidden");
 }
 function closeModal() { $("modal").classList.add("hidden"); }
@@ -988,6 +1404,7 @@ function navigateTo(v) {
   ["workspace", "library", "parser", "templates"].forEach(x => $("view-" + x).classList.toggle("hidden", x !== v));
   $("viewTitle").textContent = titles[v];
   if (v === "parser") renderTemplateSelects();
+  tourEmit("nav:" + v);
 }
 
 document.querySelectorAll(".nav-btn").forEach(b => b.addEventListener("click", () => navigateTo(b.dataset.nav)));
@@ -999,7 +1416,7 @@ $("modal").addEventListener("click", (e) => {
 });
 $("btnUndo").onclick = undo;
 $("btnExport").onclick = exportAll;
-$("btnSaveLib").onclick = () => saveToLibrary("manual", false);
+$("btnSaveLib").onclick = () => { saveToLibrary("manual", false); tourEmit("libSaved"); };
 $("wsTitle").addEventListener("change", (e) => { ws.title = e.target.value.trim(); renderWsMeta(); saveWs(); });
 $("wsModel").addEventListener("change", (e) => { ws.model = e.target.value; ws.industry = MODELS[ws.model].industries[0]; renderWsMeta(); saveWs(); });
 $("wsIndustry").addEventListener("change", (e) => { ws.industry = e.target.value; renderWsMeta(); saveWs(); });
@@ -1031,7 +1448,53 @@ $("tableHeader").addEventListener("change", (e) => {
   if (e.target.dataset.role !== "select-all") return;
   visibleRows().forEach(r => e.target.checked ? selected.add(r._id) : selected.delete(r._id)); renderDataTable(); updateBulk();
 });
-$("tableBody").addEventListener("click", (e) => { const b = e.target.closest('[data-role="del"]'); if (b) deleteRows([b.closest("tr").dataset.id]); });
+$("tableBody").addEventListener("click", (e) => {
+  const b = e.target.closest('[data-role="del"]'); if (b) { deleteRows([b.closest("tr").dataset.id]); return; }
+  const c = e.target.closest('[data-role="comp"]'); if (c) openComboBuilder(c.closest("tr").dataset.id);
+});
+$("btnCompBulk").onclick = openCompBulk;
+// Bộ chọn thành phần (nội dung nằm trong modal)
+$("modalBody").addEventListener("input", (e) => { if (e.target.id === "cbSearch") renderCbSuggest(); });
+$("modalBody").addEventListener("keydown", (e) => {
+  if (e.target.id !== "cbSearch" || e.key !== "Enter") return;
+  e.preventDefault(); const v = e.target.value.trim(); if (!v) return;
+  const first = $("cbSugg").querySelector("[data-cbadd]");
+  if (/\+|\|/.test(v) || !first) cbAddFromText(v); else first.click();
+  e.target.value = ""; $("cbSugg").classList.add("hidden");
+});
+$("modalBody").addEventListener("click", (e) => {
+  const add = e.target.closest("[data-cbadd]");
+  if (add) { const code = add.dataset.cbadd, qty = +add.dataset.qty || 1; const ex = cb.parts.find(p => p.code === code); if (ex) ex.qty += qty; else cb.parts.push({ code, qty, status: "ok", text: "" }); $("cbSearch").value = ""; $("cbSugg").classList.add("hidden"); renderComboBuilder(); $("cbSearch").focus(); return; }
+  if (e.target.id === "cbSuggest") {
+    const sh = menuSheet(); const row = sh.rows.find(r => r._id === cb.rowId);
+    const g = parseComboText(row["Tên món"], sh.rows, row["Mã món"], true);
+    if (!g.explained || !g.parts.length) { showToast("Tên combo không diễn giải thành phần", "Hãy gõ tên món vào ô tìm kiếm để thêm.", "info"); return; }
+    cb.parts = g.parts; renderComboBuilder(); return;
+  }
+  const del = e.target.closest('[data-cb="del"]'); if (del) { cb.parts.splice(+del.dataset.i, 1); renderComboBuilder(); }
+});
+$("modalBody").addEventListener("change", (e) => {
+  const el = e.target;
+  if (el.id === "cbUpdateCost") { cb.updateCost = el.checked; return; }
+  if (!el.dataset.cb) return; const p = cb.parts[+el.dataset.i];
+  if (el.dataset.cb === "code") { p.code = el.value; p.status = el.value ? "ok" : "missing"; }
+  if (el.dataset.cb === "qty") p.qty = Math.max(0, +el.value || 0);
+  renderComboBuilder();
+});
+// Định dạng thành phần
+$("compFormatSel").addEventListener("change", (e) => { const [itemSep, ref] = e.target.value.split(":"); settings.compFormat = { itemSep, qtySep: ":", ref }; lsSet(K_SET, settings); renderCompFormat(); });
+$("compLearnFile").addEventListener("change", (e) => { const f = e.target.files[0]; if (f) learnCompFormat(f); e.target.value = ""; });
+// Hướng dẫn
+$("btnGuide").onclick = () => { openTourPanel(); if (!tour) $("tourBody").innerHTML = renderTopics(); };
+$("tourHead").onclick = () => { const b = $("tourBody"); b.classList.toggle("hidden"); $("tourChevron").textContent = b.classList.contains("hidden") ? "▸" : "▾"; };
+$("tourTopics").onclick = () => { tour = null; hideCoach(); $("tourBody").classList.remove("hidden"); renderTourPanel(); };
+$("tourOff").onclick = () => { tour = null; hideCoach(); $("tourPanel").classList.add("hidden"); settings.tourOn = false; settings.tourSeen = true; lsSet(K_SET, settings); };
+$("tourBody").addEventListener("click", (e) => {
+  const t = e.target.closest("[data-tour]"); if (t) { startTour(t.dataset.tour); return; }
+  const s = e.target.closest("[data-tstep]"); if (s && tour) { tour.idx = +s.dataset.tstep; showStep(); }
+});
+$("coachOk").onclick = () => { const st = currentStep(); if (!st) return; if (st._navFallback) navigateTo(st.wait.slice(4)); else if (st.wait) hideCoach(); else completeStep(true); };
+$("coachSkip").onclick = () => completeStep(true);
 $("tableBody").addEventListener("change", (e) => {
   const t = e.target, tr = t.closest("tr[data-id]"); if (!tr) return;
   const id = tr.dataset.id, sh = curSheet();
@@ -1046,13 +1509,20 @@ $("tableBody").addEventListener("change", (e) => {
   pushUndo();
   if (c.type === "bool") row[key] = t.checked ? 1 : 0;
   else if (c.type === "number") { if (t.value.trim() === "") row[key] = c.required ? 0 : ""; else { const p = parseNumber(t.value); row[key] = p.bad ? t.value : p.value; t.value = row[key]; } delete row._bad; }
+  else if (tpl.profile === "fnb-menu" && key === COMP_COL) {
+    // Gõ tự do "10 tiger + 1 khô gà" → tự hiểu thành mã món
+    const res = resolveCompInput(t.value, sh.rows, row["Mã món"]);
+    row[key] = res.value; t.value = res.value;
+    if (res.value && !res.unresolved && row["Loại món"] !== "Combo cố định") { row["Loại món"] = "Combo cố định"; row["Loại thực đơn"] = "Khác"; const s = tr.querySelector('td[data-key="Loại món"] select'); if (s) s.value = "Combo cố định"; }
+    if (res.notes.length) showToast(res.unresolved ? "Chưa hiểu hết thành phần" : "Đã hiểu thành phần", res.notes.join(" · ") + " — bấm 🧩 để chọn lại.", res.unresolved ? "warn" : "info");
+  }
   else row[key] = t.value.trim();
   if (tpl.profile === "fnb-menu" && key === KEY_TIME && row[key] === 1) { row["Quản lý tồn kho"] = 0; const q = tr.querySelector('td[data-key="Quản lý tồn kho"] input'); if (q) q.checked = false; }
   renderValidation(); renderTabs(); renderWsMeta(); saveWs();
 });
 // Thư viện
-$("libModelTabs").addEventListener("click", (e) => { const b = e.target.closest("[data-libmodel]"); if (b) { libFilter = { model: b.dataset.libmodel, industry: "" }; renderLibrary(); } });
-$("libIndustryChips").addEventListener("click", (e) => { const b = e.target.closest("[data-libind]"); if (b) { libFilter.industry = b.dataset.libind; renderLibrary(); } });
+$("libModelTabs").addEventListener("click", (e) => { const b = e.target.closest("[data-libmodel]"); if (b) { libFilter = { model: b.dataset.libmodel, industry: "" }; renderLibrary(); tourEmit("libFiltered"); } });
+$("libIndustryChips").addEventListener("click", (e) => { const b = e.target.closest("[data-libind]"); if (b) { libFilter.industry = b.dataset.libind; renderLibrary(); tourEmit("libFiltered"); } });
 $("libGrid").addEventListener("click", (e) => {
   const l = e.target.closest("[data-libload]"); if (l) { loadPackage(allPackages().find(p => p.id === l.dataset.libload)); return; }
   const d = e.target.closest("[data-libdel]");
@@ -1113,7 +1583,10 @@ function boot() {
     ws = { packageId: null, basedOn: p.id, title: p.title, model: p.model, industry: p.industry, active: 0, sheets: p.sheets.map(s => ({ templateId: s.templateId, rows: withIds(s.rows) })) };
     navigateTo("workspace"); refreshWorkspace();
   }
-  renderLibrary();
+  renderLibrary(); renderCompFormat();
+  // Lần đầu mở: hiện bảng chọn chủ đề hướng dẫn
+  if (!settings.tourSeen) { settings.tourSeen = true; lsSet(K_SET, settings); openTourPanel(); }
+  else if (settings.tourOn && settings.tourId) { const t = TOURS.find(x => x.id === settings.tourId); const d = settings.tours?.[settings.tourId] || []; if (t && d.length < t.steps.length) { tour = { id: t.id, idx: t.steps.findIndex((_, i) => !d.includes(i)), done: d.slice() }; openTourPanel(); } }
 }
 boot();
 // Thư viện chung cho học viên: file library.json đặt cạnh index.html (bỏ qua nếu không có)
