@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KiotViet Import Studio V9</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .sticky-c { position: sticky; background: #ffffff; z-index: 20; }
+    thead th { background: #f8fafc; }
+    thead .sticky-c { background: #f8fafc; z-index: 31; }
+    .sticky-last { box-shadow: 4px 0 6px -2px rgba(0,0,0,0.06); }
+    tr.is-selected td, tr.is-selected td.sticky-c { background: #f5f3ff; }
+    td.cell-err { box-shadow: inset 0 0 0 2px #ef4444; background: #fef2f2 !important; }
+    td.cell-warn { box-shadow: inset 0 0 0 2px #f59e0b; background: #fffbeb !important; }
+    .cell-in { width: 100%; background: transparent; padding: 4px; font-size: 12px; border-radius: 6px; }
+    .cell-in:focus { outline: 2px solid #8b5cf6; }
+    .chip { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid #e2e8f0; background: #fff; color: #475569; }
+    .chip.on { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+    .btn { padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 700; border: 1px solid #e2e8f0; background: #fff; color: #334155; }
+    .btn:hover { background: #f8fafc; }
+    .btn-p { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+    .btn-p:hover { background: #6d28d9; }
+    .inp { border: 1px solid #cbd5e1; border-radius: 10px; padding: 6px 8px; font-size: 12px; background: #fff; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+  </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-800 antialiased h-screen flex overflow-hidden">
+
+<div id="toastContainer" class="fixed top-5 right-5 z-[60] flex flex-col gap-2 pointer-events-none"></div>
+
+<!-- MODAL -->
+<div id="modal" class="hidden fixed inset-0 z-50 bg-slate-900/40 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+    <div class="px-5 py-3 border-b flex items-center justify-between"><h3 id="modalTitle" class="font-extrabold text-sm"></h3><button id="modalClose" class="text-slate-400 hover:text-slate-700 text-lg">✕</button></div>
+    <div id="modalBody" class="p-5 overflow-auto text-xs"></div>
+    <div id="modalFoot" class="px-5 py-3 border-t flex justify-end gap-2"></div>
+  </div>
+</div>
+
+<aside class="hidden md:flex w-64 bg-white border-r border-slate-200/80 p-5 flex-col justify-between shrink-0">
+  <div class="space-y-6">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-pink-500 flex items-center justify-center text-white shadow-md">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+      <div>
+        <h1 class="text-sm font-extrabold text-slate-900">KIOTVIET <span class="text-violet-600 text-xs px-1.5 bg-violet-50 rounded-md">STUDIO V9</span></h1>
+        <p class="text-[10px] text-slate-400 font-medium">Template-driven Import Engine</p>
+      </div>
+    </div>
+    <nav class="space-y-1.5">
+      <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-3 mb-2">Không gian làm việc</div>
+      <button data-nav="workspace" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs"><span>📊</span> Bàn làm việc</button>
+      <button data-nav="library" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs"><span>📚</span> Thư viện dữ liệu mẫu <span id="libCount" class="ml-auto bg-violet-100 text-violet-700 text-[9px] font-black px-1.5 py-0.5 rounded-full">0</span></button>
+      <button data-nav="parser" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs"><span>⚡</span> Gom dữ liệu thô</button>
+      <button data-nav="templates" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs"><span>🧩</span> Quản lý template <span id="tplCount" class="ml-auto bg-slate-100 text-slate-600 text-[9px] font-black px-1.5 py-0.5 rounded-full">0</span></button>
+    </nav>
+  </div>
+  <div class="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-4 rounded-2xl shadow-lg">
+    <span class="text-[10px] text-indigo-300 font-bold uppercase tracking-wider">Đang làm</span>
+    <div id="sideTitle" class="font-extrabold text-xs mt-1">—</div>
+    <div id="sideMeta" class="text-[10px] text-slate-300 mt-0.5"></div>
+    <p id="sideSave" class="text-[10px] text-slate-400 mt-1">Tự động lưu trên trình duyệt này.</p>
+  </div>
+</aside>
+
+<div class="flex-1 flex flex-col overflow-hidden min-w-0">
+  <header class="bg-white border-b border-slate-200/80 px-4 md:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0">
+    <span id="viewTitle" class="font-extrabold text-slate-900 text-base">Bàn làm việc</span>
+    <div class="flex items-center gap-2 flex-wrap">
+      <button id="btnUndo" disabled class="btn disabled:opacity-40" title="Ctrl+Z">↶ Hoàn tác</button>
+      <button id="btnSaveLib" class="btn">💾 Lưu vào thư viện</button>
+      <select id="exportMode" class="inp font-semibold"><option value="all">Xuất tất cả danh mục (mỗi danh mục 1 file)</option><option value="current">Chỉ xuất danh mục đang mở</option></select>
+      <button id="btnExport" class="btn btn-p">📤 Xuất Excel import</button>
+    </div>
+  </header>
+
+  <div class="flex-1 overflow-y-auto p-4 md:p-6">
+    <!-- ========== BÀN LÀM VIỆC ========== -->
+    <section id="view-workspace" class="space-y-3">
+      <div class="bg-white rounded-2xl border border-slate-200/80 p-3 flex flex-wrap gap-2 items-center">
+        <input id="wsTitle" class="inp font-bold w-64" placeholder="Tên bộ dữ liệu (vd: Karaoke ABC)">
+        <select id="wsModel" class="inp"></select>
+        <select id="wsIndustry" class="inp"></select>
+        <span class="text-[11px] text-slate-400">Thông tin này dùng để xếp bộ dữ liệu vào thư viện.</span>
+      </div>
+      <div class="flex flex-wrap justify-between items-center gap-3">
+        <div id="sheetTabs" class="bg-slate-100 p-1 rounded-2xl flex items-center gap-1 border border-slate-200/60 flex-wrap"></div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <input id="searchBox" type="search" placeholder="🔍 Tìm…" class="inp w-44">
+          <button id="btnToggleCols" class="btn">↔ Mở đủ cột</button>
+          <button id="btnAddRow" class="btn btn-p">+ Thêm dòng</button>
+        </div>
+      </div>
+      <div id="tplNote" class="text-[11px]"></div>
+      <div id="validationPanel" class="text-xs"></div>
+      <div id="bulkBar" class="hidden bg-slate-900 text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center justify-between">
+        <span class="text-xs">Đã chọn <strong id="selCount" class="text-yellow-300">0</strong> dòng</span>
+        <div class="flex gap-2"><button id="btnBulkDelete" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-xl text-xs font-bold">🗑️ Xóa các dòng đã chọn</button><button id="btnDeselect" class="text-slate-300 hover:text-white px-2 py-1 text-xs">Hủy</button></div>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="overflow-auto max-h-[calc(100vh-340px)]">
+          <table class="w-full text-left text-xs border-collapse whitespace-nowrap">
+            <thead class="text-slate-700 sticky top-0 border-b border-slate-200 font-bold z-30" id="tableHeader"></thead>
+            <tbody id="tableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== THƯ VIỆN ========== -->
+    <section id="view-library" class="hidden space-y-4">
+      <div class="flex flex-wrap justify-between gap-3 items-start">
+        <div>
+          <h2 class="text-lg font-black text-slate-900">Thư viện dữ liệu mẫu theo mô hình & ngành nghề</h2>
+          <p class="text-xs text-slate-400 mt-1">Bộ dữ liệu được tự lưu mỗi khi gom dữ liệu thô hoặc xuất file Excel. Dùng để demo cho học viên.</p>
+        </div>
+        <div class="flex gap-2 flex-wrap items-center">
+          <label class="text-xs font-semibold text-slate-600 flex items-center gap-1.5"><input type="checkbox" id="optAutoSave" checked> Tự lưu khi gom / xuất</label>
+          <button id="btnLibExport" class="btn">⬇ Xuất thư viện (.json)</button>
+          <label class="btn cursor-pointer">⬆ Nhập thư viện (.json)<input type="file" id="libImportInput" accept=".json" class="hidden"></label>
+        </div>
+      </div>
+      <div id="libModelTabs" class="flex flex-wrap gap-2"></div>
+      <div id="libIndustryChips" class="flex flex-wrap gap-2"></div>
+      <div id="libGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+    </section>
+
+    <!-- ========== GOM DỮ LIỆU THÔ ========== -->
+    <section id="view-parser" class="hidden space-y-4">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+        <div class="flex flex-wrap gap-3 items-end">
+          <div><div class="text-[11px] font-bold text-slate-500 mb-1">1. Đổ dữ liệu vào template</div><select id="pTemplate" class="inp min-w-[280px]"></select></div>
+          <label class="btn cursor-pointer">📄 Chọn file dữ liệu thô (.xlsx/.csv)<input type="file" id="pFile" accept=".xlsx,.xls,.csv" class="hidden"></label>
+          <span id="pFileName" class="text-[11px] text-slate-500"></span>
+        </div>
+        <textarea id="rawTextarea" rows="8" class="w-full border border-slate-300 rounded-xl p-3 text-xs font-mono focus:ring-2 focus:ring-violet-500 focus:outline-none" placeholder="…hoặc bôi đen bảng trong Excel / Google Sheets rồi dán vào đây (nên có dòng tiêu đề). Bảng nhiều đoạn, có dòng tiêu đề nhóm hoặc lặp tiêu đề đều được."></textarea>
+        <button id="btnAnalyze" class="btn btn-p">2. Phân tích & ghép cột</button>
+      </div>
+      <div id="mappingBox" class="hidden bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+        <div class="flex flex-wrap justify-between gap-2 items-center">
+          <div><h3 class="font-bold text-sm">3. Kiểm tra ghép cột</h3><p id="mapInfo" class="text-[11px] text-slate-500"></p></div>
+          <label class="text-xs font-semibold flex items-center gap-1.5"><input type="checkbox" id="pHasHeader"> Dữ liệu có dòng tiêu đề (dòng <span id="pHeaderRowNo"></span>)</label>
+        </div>
+        <div class="overflow-auto max-h-[45vh] border rounded-xl">
+          <table class="w-full text-xs"><thead class="bg-slate-50 sticky top-0"><tr><th class="p-2 text-left">Cột trong template</th><th class="p-2 text-left">Lấy từ cột dữ liệu thô</th><th class="p-2 text-left">Giá trị mặc định nếu trống</th><th class="p-2 text-left">Ví dụ (dòng đầu)</th></tr></thead><tbody id="mapBody"></tbody></table>
+        </div>
+        <div class="flex flex-wrap justify-between items-center gap-3">
+          <div class="flex items-center gap-4 text-xs font-semibold text-slate-700">
+            <label class="flex items-center gap-1.5"><input type="radio" name="importMode" value="replace" checked> Thay thế danh mục này</label>
+            <label class="flex items-center gap-1.5"><input type="radio" name="importMode" value="append"> Thêm vào cuối</label>
+          </div>
+          <button id="btnApply" class="btn btn-p">4. Đưa vào bàn làm việc</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== QUẢN LÝ TEMPLATE ========== -->
+    <section id="view-templates" class="hidden space-y-4">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+        <h3 class="font-bold text-sm">Thêm template từ file mẫu chính thức của KiotViet</h3>
+        <p class="text-[11px] text-slate-500">Tải file mẫu import (tải từ màn hình Nhập file trên KiotViet). Hệ thống tự đọc dòng tiêu đề, nhận cột bắt buộc (có dấu *), và khi xuất sẽ ghi dữ liệu vào đúng file mẫu đó.</p>
+        <div class="flex flex-wrap gap-2 items-end">
+          <div><div class="text-[11px] font-bold text-slate-500 mb-1">Mô hình</div><select id="tModel" class="inp"></select></div>
+          <div><div class="text-[11px] font-bold text-slate-500 mb-1">Loại danh mục</div><select id="tKind" class="inp"></select></div>
+          <div><div class="text-[11px] font-bold text-slate-500 mb-1">Tên hiển thị</div><input id="tName" class="inp w-56" placeholder="Tự đặt theo loại nếu bỏ trống"></div>
+          <label class="btn btn-p cursor-pointer">📥 Chọn file mẫu (.xlsx)<input type="file" id="tFile" accept=".xlsx,.xls,.csv" class="hidden"></label>
+        </div>
+      </div>
+      <div id="tplCoverage" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3"></div>
+      <div id="tplGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+'use strict';
+// =====================================================================
+// 1. DANH MỤC MÔ HÌNH / NGÀNH NGHỀ / LOẠI TEMPLATE
+// =====================================================================
+const MODELS = {
+  retail: { name: "Retail", label: "Bán buôn, bán lẻ", icon: "🏪",
+    industries: ["Tạp hóa & Siêu thị", "Điện tử & Điện máy", "Nông sản & Thực phẩm", "Xe & Máy móc", "Nội thất & Gia dụng", "Sách & Văn phòng phẩm", "Thời trang", "Vật liệu xây dựng", "Nhà thuốc", "Mỹ phẩm", "Mẹ & Bé", "Hoa & Quà tặng", "Khác"],
+    kinds: ["Hàng hóa", "Bảng giá", "Khách hàng", "Nhà cung cấp", "Khuyến mãi", "Voucher", "Nhân viên", "Ca làm việc", "Lịch làm việc", "Kiểm kho"] },
+  fnb: { name: "FnB", label: "Ăn uống, giải trí", icon: "🍹",
+    industries: ["Quán ăn", "Cafe, Trà sữa", "Karaoke, Bida", "Bar, Pub & Club", "Căng tin & Trạm dừng nghỉ", "Nhà hàng"],
+    kinds: ["Thực đơn", "Phòng/Bàn", "Nguyên vật liệu", "Bảng giá", "Khách hàng", "Khuyến mãi", "Voucher", "Nhân viên", "Ca làm việc", "Lịch làm việc"] },
+  salon: { name: "Salon", label: "Sức khỏe, làm đẹp", icon: "💅",
+    industries: ["Thẩm mỹ viện", "Hair Salon", "Nail & Mi", "Phòng khám", "Spa & Massage", "Gym, Yoga & Pilates"],
+    kinds: ["Dịch vụ & Sản phẩm", "Gói dịch vụ / Liệu trình", "Bảng giá", "Khách hàng", "Nhân viên", "Ca làm việc", "Lịch làm việc", "Khuyến mãi", "Voucher"] },
+  hotel: { name: "Hotel", label: "Khách sạn, nhà nghỉ", icon: "🏨",
+    industries: ["Khách sạn", "Homestay", "Nhà nghỉ", "Nhà trọ", "Villa", "Resort", "Camping/Glamping"],
+    kinds: ["Hạng phòng", "Buồng phòng", "Bảng giá phòng", "Hàng hóa & Dịch vụ", "Khách hàng", "Nhân viên", "Ca làm việc", "Lịch làm việc", "Khuyến mãi", "Voucher"] }
+};
+
+// =====================================================================
+// 2. TEMPLATE CÓ SẴN (từ bản V7/V8 – chưa đối chiếu file mẫu chính thức)
+// =====================================================================
+const TYPE_OPTIONS = ["Món thường", "Dịch vụ", "Combo cố định", "Món chế biến", "Topping thường"];
+const CAT_OPTIONS = ["Đồ ăn", "Đồ uống", "Dịch vụ", "Khác"];
+const KEY_TIME = "Là món dịch vụ tính theo thời gian sử dụng";
+const MENU_28 = ["Loại món", "Loại thực đơn", "Nhóm món (3 Cấp)", "Quản lý tồn kho", "Món thêm", KEY_TIME, "Mã món", "Tên món", "Giá bán", "Giá vốn", "Tồn kho hiện tại", "Định mức tồn nhỏ nhất", "Định mức tồn lớn nhất", "ĐVT", "Mã ĐVT Cơ bản", "Quy đổi", "Thuộc tính", "Mã món Liên quan", "Hình ảnh (url1,url2...)", "Trọng lượng", "ĐVT trọng lượng", "Tích điểm", "Đang kinh doanh", "Cho phép bán", "Mô tả", "Mẫu ghi chú", "Món thành phần", "Vị trí"];
+const MENU_TYPES = { "Loại món": ["select", TYPE_OPTIONS], "Loại thực đơn": ["select", CAT_OPTIONS], "Quản lý tồn kho": ["bool"], [KEY_TIME]: ["bool"], "Giá bán": ["number"], "Giá vốn": ["number"], "Tồn kho hiện tại": ["number"], "Định mức tồn nhỏ nhất": ["number"], "Định mức tồn lớn nhất": ["number"], "Quy đổi": ["number"], "Trọng lượng": ["number"], "Tích điểm": ["bool"], "Đang kinh doanh": ["bool"], "Cho phép bán": ["bool"] };
+const colsFrom = (names, types = {}, required = []) => names.map((n, i) => ({ name: n, ci: i, type: (types[n] || ["text"])[0], options: (types[n] || [])[1] || null, required: required.includes(n) }));
+const BUILTIN_TEMPLATES = [
+  { id: "fnb-menu", builtin: true, model: "fnb", kind: "Thực đơn", name: "Thực đơn FnB (28 cột)", profile: "fnb-menu", sheetName: "Danh mục thực đơn", headerRow: 0,
+    columns: colsFrom(MENU_28, MENU_TYPES, ["Tên món"]), keyCol: "Mã món", nameCol: "Tên món",
+    compact: ["Mã món", "Tên món", "Nhóm món (3 Cấp)", "ĐVT", "Giá bán", "Giá vốn", KEY_TIME, "Quản lý tồn kho", "Tồn kho hiện tại", "Loại món", "Loại thực đơn", "Món thành phần"],
+    labels: { [KEY_TIME]: "Tính giờ?", "Quản lý tồn kho": "QL kho?" } },
+  { id: "fnb-rooms", builtin: true, model: "fnb", kind: "Phòng/Bàn", name: "Phòng/Bàn FnB", sheetName: "Phòng bàn", headerRow: 0,
+    columns: colsFrom(["Tên bàn", "Ghi chú", "Khu vực", "Số ghế", "Trạng thái", "Số thứ tự"], { "Số ghế": ["number"], "Trạng thái": ["bool"], "Số thứ tự": ["number"] }, ["Tên bàn"]), keyCol: "Tên bàn", nameCol: "Tên bàn" },
+  { id: "fnb-nvl", builtin: true, model: "fnb", kind: "Nguyên vật liệu", name: "Nguyên vật liệu FnB", sheetName: "Hàng hóa NVL", headerRow: 0,
+    columns: colsFrom(["Nhóm quản lý", "Nhóm hàng (3 Cấp)", "Mã hàng", "Tên hàng", "Giá vốn", "Tồn kho hiện tại", "ĐVT", "Quản lý tồn kho"], { "Giá vốn": ["number"], "Tồn kho hiện tại": ["number"], "Quản lý tồn kho": ["bool"] }, ["Tên hàng"]), keyCol: "Mã hàng", nameCol: "Tên hàng" }
+];
+
+// =====================================================================
+// 3. THƯ VIỆN CÓ SẴN (FnB)
+// =====================================================================
+const DV = "Dịch vụ", MT = "Món thường", CB = "Món chế biến", CO = "Combo cố định", TP = "Topping thường", DA = "Đồ ăn", DU = "Đồ uống", KH = "Khác";
+const room = (n, area, seats, note = "") => ({ "Tên bàn": n, "Ghi chú": note, "Khu vực": area, "Số ghế": seats, "Trạng thái": 1 });
+const nvl = (code, name, grp, unit, cost, stock) => ({ "Nhóm quản lý": "Nguyên vật liệu", "Nhóm hàng (3 Cấp)": grp, "Mã hàng": code, "Tên hàng": name, "Giá vốn": cost, "Tồn kho hiện tại": stock, "ĐVT": unit, "Quản lý tồn kho": 1 });
+const DEMO = [
+  { id: "demo-karaoke", title: "Karaoke Full", model: "fnb", industry: "Karaoke, Bida", items: [
+    ["DV001","Giờ hát Phòng Thường (Sáng/Chiều)","Dịch vụ giờ hát",DV,DV,"Giờ",150000,0,1,0],["DV002","Giờ hát Phòng Thường (Tối)","Dịch vụ giờ hát",DV,DV,"Giờ",250000,0,1,0],
+    ["DV003","Giờ hát Phòng VIP (Sáng/Chiều)","Dịch vụ giờ hát",DV,DV,"Giờ",250000,0,1,0],["DV004","Giờ hát Phòng VIP (Tối)","Dịch vụ giờ hát",DV,DV,"Giờ",380000,0,1,0],
+    ["DV005","Giờ hát Phòng Super VIP","Dịch vụ giờ hát",DV,DV,"Giờ",550000,0,1,0],["PT001","Phí phục vụ / Bấm bài","Khác & Phụ thu",DV,DV,"Lượt",100000,0],
+    ["PT002","Phụ thu mang đồ ăn / uống ngoài","Khác & Phụ thu",DV,DV,"Lần",200000,0],["PT003","Khăn lạnh","Khác & Phụ thu",MT,KH,"Cái",5000,1500,0,1],
+    ["PT004","Đá viên (Xô)","Khác & Phụ thu",DV,DV,"Xô",20000,5000],["PT005","Gói trang trí sinh nhật cơ bản","Khác & Phụ thu",DV,DV,"Gói",300000,100000],
+    ["BIA001","Bia Tiger Bạc (Lon)","Bia",MT,DU,"Lon",35000,16500,0,1],["BIA002","Bia Tiger Nâu (Lon)","Bia",MT,DU,"Lon",32000,15000,0,1],
+    ["BIA003","Bia Heineken Silver (Lon)","Bia",MT,DU,"Lon",42000,20000,0,1],["BIA004","Bia Heineken Xanh (Lon)","Bia",MT,DU,"Lon",40000,19000,0,1],
+    ["BIA005","Bia Sài Gòn Special (Lon)","Bia",MT,DU,"Lon",30000,14500,0,1],["BIA006","Bia Budweiser (Chai/Lon)","Bia",MT,DU,"Lon",45000,21000,0,1],
+    ["BIA007","Tháp bia tươi 3 Lít","Bia",CB,DU,"Tháp",350000,160000],["RUO001","Rượu Soju Hàn Quốc (Các vị)","Rượu",MT,DU,"Chai",120000,55000,0,1],
+    ["RUO002","Rượu Vang Đỏ Đà Lạt","Rượu",MT,DU,"Chai",350000,140000,0,1],["RUO003","Rượu Vang Chile (Nhập khẩu)","Rượu",MT,DU,"Chai",850000,380000,0,1],
+    ["RUO004","Rượu Chivas 12 (700ml)","Rượu",MT,DU,"Chai",1650000,750000,0,1],["RUO005","Rượu Chivas 18 (700ml)","Rượu",MT,DU,"Chai",2800000,1450000,0,1],
+    ["NGK001","Nước suối Aquafina / Lavie","Nước giải khát",MT,DU,"Chai",20000,4500,0,1],["NGK002","Nước ngọt Coca-Cola (Lon)","Nước giải khát",MT,DU,"Lon",25000,8500,0,1],
+    ["NGK003","Nước ngọt Pepsi (Lon)","Nước giải khát",MT,DU,"Lon",25000,8500,0,1],["NGK004","Nước ngọt 7Up / Sprite (Lon)","Nước giải khát",MT,DU,"Lon",25000,8500,0,1],
+    ["NGK005","Nước tăng lực Redbull (Lon)","Nước giải khát",MT,DU,"Lon",35000,11500,0,1],["NGK006","Trà xanh 0 Độ / Ô Long","Nước giải khát",MT,DU,"Chai",25000,8000,0,1],
+    ["NGK007","Nước ép Cam tươi","Nước giải khát",CB,DU,"Ly",55000,15000],["NGK008","Nước ép Dưa hấu","Nước giải khát",CB,DU,"Ly",50000,12000],
+    ["NGK009","Trà đào cam sả","Nước giải khát",CB,DU,"Ly",55000,14000],["ANV001","Trái cây thập cẩm (Dĩa nhỏ)","Trái cây & Ăn vặt",CB,DA,"Dĩa",150000,55000],
+    ["ANV002","Trái cây thập cẩm (Dĩa lớn)","Trái cây & Ăn vặt",CB,DA,"Dĩa",250000,95000],["ANV003","Khô bò xé cay","Trái cây & Ăn vặt",MT,DA,"Dĩa",110000,45000,0,1],
+    ["ANV004","Khô gà lá chanh","Trái cây & Ăn vặt",MT,DA,"Dĩa",95000,38000,0,1],["ANV005","Khoai tây chiên","Trái cây & Ăn vặt",CB,DA,"Dĩa",75000,20000],
+    ["ANV006","Đậu phộng rang tỏi ớt","Trái cây & Ăn vặt",MT,DA,"Dĩa",40000,12000,0,1],["ANV007","Snack / Bim bim các loại","Trái cây & Ăn vặt",MT,DA,"Gói",25000,8000,0,1],
+    ["ANV008","Xúc xích Đức nướng","Trái cây & Ăn vặt",CB,DA,"Dĩa",90000,35000],["MON001","Mực nướng sa tế","Món nóng",CB,DA,"Dĩa",180000,75000],
+    ["MON002","Gà nướng muối ớt (Nguyên con)","Món nóng",CB,DA,"Con",320000,140000],["MON003","Bò lúc lắc khoai tây","Món nóng",CB,DA,"Dĩa",190000,80000],
+    ["MON004","Mì xào bò","Món nóng",CB,DA,"Dĩa",110000,35000],["MON005","Cơm chiên Dương Châu","Món nóng",CB,DA,"Dĩa",120000,35000],
+    ["CMB001","Combo Nhẹ Nhàng (10 Bia Tiger + 1 Trái cây nhỏ + 1 Khô gà)","Combo",CO,KH,"Combo",499000,258000,0,0,"BIA001:10|ANV001:1|ANV004:1"],
+    ["CMB002","Combo Tiệc Vui (20 Bia Ken Bạc + 1 Trái cây lớn + 1 Khô bò + 1 Khoai tây)","Combo",CO,KH,"Combo",1190000,560000,0,0,"BIA003:20|ANV002:1|ANV003:1|ANV005:1"],
+    ["CMB003","Combo Sinh Viên (6 Nước ngọt + 1 Trái cây nhỏ + 2 Snack)","Combo",CO,KH,"Combo",299000,122000,0,0,"NGK002:6|ANV001:1|ANV007:2"]
+  ], rooms: [room("Phòng 101","Khu Thường",8,"Phòng thường lầu 1"), room("Phòng VIP 201","Khu VIP",15,"Dàn âm thanh JBL"), room("Super VIP 301","Super VIP",30,"Sân khấu mini")],
+     inventory: [nvl("NVL001","Dưa hấu Long An","Trái cây","kg",15000,30)] },
+  { id: "demo-cafe", title: "Quán Cà phê / Trà sữa", model: "fnb", industry: "Cafe, Trà sữa", items: [
+    ["CF001","Cà phê đen đá","Cà phê",CB,DU,"Ly",25000,7000],["CF002","Cà phê sữa đá","Cà phê",CB,DU,"Ly",29000,9000],["CF003","Bạc xỉu","Cà phê",CB,DU,"Ly",32000,10000],
+    ["CF004","Cappuccino","Cà phê",CB,DU,"Ly",45000,14000],["CF005","Latte","Cà phê",CB,DU,"Ly",45000,14000],["TR001","Trà đào cam sả","Trà",CB,DU,"Ly",45000,12000],
+    ["TR002","Trà vải","Trà",CB,DU,"Ly",42000,11000],["TR003","Trà sữa trân châu","Trà",CB,DU,"Ly",39000,11000],["ST001","Sinh tố bơ","Sinh tố & Nước ép",CB,DU,"Ly",49000,16000],
+    ["ST002","Nước ép cam","Sinh tố & Nước ép",CB,DU,"Ly",45000,15000],["TP001","Trân châu đen","Topping",TP,DU,"Phần",8000,2000],["TP002","Thạch phô mai","Topping",TP,DU,"Phần",10000,3000],
+    ["BN001","Bánh croissant","Bánh ngọt",MT,DA,"Cái",35000,15000,0,1],["BN002","Bánh tiramisu","Bánh ngọt",MT,DA,"Cái",45000,20000,0,1],["NGK001","Nước suối","Nước đóng chai",MT,DU,"Chai",15000,4000,0,1]
+  ], rooms: [1,2,3,4,5,6].map(i => room("Bàn " + i, "Tầng 1", 4)),
+     inventory: [nvl("NVL001","Cà phê hạt Robusta","Cà phê","kg",180000,10), nvl("NVL002","Sữa đặc","Sữa","Lon",25000,48), nvl("NVL003","Trà đen","Trà","kg",150000,5)] },
+  { id: "demo-restaurant", title: "Nhà hàng / Quán nhậu", model: "fnb", industry: "Nhà hàng", items: [
+    ["KV001","Gỏi ngó sen tôm thịt","Khai vị",CB,DA,"Dĩa",120000,45000],["KV002","Đậu hũ chiên giòn","Khai vị",CB,DA,"Dĩa",60000,18000],["LAU001","Lẩu thái hải sản","Lẩu",CB,DA,"Nồi",350000,150000],
+    ["LAU002","Lẩu bò nhúng giấm","Lẩu",CB,DA,"Nồi",320000,140000],["NUONG001","Ba chỉ bò nướng","Món nướng",CB,DA,"Dĩa",150000,70000],["NUONG002","Sườn heo nướng mật ong","Món nướng",CB,DA,"Dĩa",140000,60000],
+    ["COM001","Cơm chiên hải sản","Cơm & Mì",CB,DA,"Dĩa",90000,30000],["COM002","Mì xào hải sản","Cơm & Mì",CB,DA,"Dĩa",95000,32000],["BIA001","Bia Tiger Bạc (Lon)","Bia",MT,DU,"Lon",25000,16500,0,1],
+    ["BIA002","Bia Sài Gòn Special (Lon)","Bia",MT,DU,"Lon",22000,14500,0,1],["NGK001","Nước suối","Nước giải khát",MT,DU,"Chai",15000,4500,0,1],["NGK002","Coca-Cola (Lon)","Nước giải khát",MT,DU,"Lon",20000,8500,0,1],
+    ["PT001","Khăn lạnh","Khác & Phụ thu",MT,KH,"Cái",3000,1000,0,1],["CMB001","Combo nhậu 4 người (Lẩu thái + 2 món nướng + 12 Bia Tiger)","Combo",CO,KH,"Combo",899000,478000,0,0,"LAU001:1|NUONG001:1|NUONG002:1|BIA001:12"]
+  ], rooms: [...[1,2,3,4,5,6].map(i => room("Bàn A" + i, "Khu A", 4)), room("VIP 1","Phòng VIP",12), room("VIP 2","Phòng VIP",12)],
+     inventory: [nvl("NVL001","Thịt bò ba chỉ","Thịt","kg",280000,10), nvl("NVL002","Tôm sú","Hải sản","kg",320000,5), nvl("NVL003","Rau các loại","Rau củ","kg",30000,20)] },
+  { id: "demo-billiards", title: "Bida", model: "fnb", industry: "Karaoke, Bida", items: [
+    ["BD001","Giờ chơi Bàn Lỗ thường","Dịch vụ giờ chơi",DV,DV,"Giờ",60000,0,1,0],["BD002","Giờ chơi Bàn Lỗ VIP","Dịch vụ giờ chơi",DV,DV,"Giờ",90000,0,1,0],["BD003","Giờ chơi Bàn Phăng (Carom)","Dịch vụ giờ chơi",DV,DV,"Giờ",70000,0,1,0],
+    ["PT001","Thuê cơ cá nhân","Khác & Phụ thu",DV,DV,"Lượt",20000,0],["NGK001","Nước suối","Nước giải khát",MT,DU,"Chai",15000,4500,0,1],["NGK002","Sting dâu","Nước giải khát",MT,DU,"Chai",20000,7500,0,1],
+    ["NGK003","Bò húc","Nước giải khát",MT,DU,"Lon",25000,11000,0,1],["BIA001","Bia Tiger Bạc (Lon)","Bia",MT,DU,"Lon",30000,16500,0,1],["ANV001","Mì tôm trứng","Ăn vặt",CB,DA,"Tô",35000,12000],
+    ["ANV002","Đậu phộng rang","Ăn vặt",MT,DA,"Dĩa",25000,9000,0,1]
+  ], rooms: [...[1,2,3,4,5,6].map(i => room("Bàn Lỗ " + i, "Khu Lỗ", 4)), room("Bàn Phăng 1","Khu Phăng",4), room("Bàn VIP 1","Khu VIP",6)],
+     inventory: [nvl("NVL001","Phấn cơ","Phụ kiện","Hộp",50000,10), nvl("NVL002","Đầu cơ","Phụ kiện","Cái",30000,20)] }
+];
+
+// =====================================================================
+// 4. TIỆN ÍCH
+// =====================================================================
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const norm = (s) => String(s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/\s+/g, " ").trim();
+const canon = (s) => norm(s).replace(/\(.*?\)|\*/g, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+let _uid = 0;
+const uid = () => "r" + (++_uid).toString(36) + Math.random().toString(36).slice(2, 7);
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } };
+const b64FromBytes = (u8) => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+const bytesFromB64 = (b) => Uint8Array.from(atob(b), c => c.charCodeAt(0));
+
+function showToast(title, message, type = "success") {
+  const toast = document.createElement("div");
+  const border = { danger: "border-red-500", info: "border-blue-500", warn: "border-amber-500" }[type] || "border-emerald-500";
+  const icon = { danger: "⛔", info: "ℹ️", warn: "⚠️" }[type] || "✅";
+  toast.className = `p-3.5 rounded-2xl border-l-4 ${border} bg-white shadow-xl flex items-start gap-3 w-80 pointer-events-auto transition-all duration-300`;
+  const ic = document.createElement("span"); ic.textContent = icon;
+  const box = document.createElement("div");
+  const t = document.createElement("div"); t.className = "font-bold text-xs text-slate-900"; t.textContent = title;
+  const m = document.createElement("div"); m.className = "text-[11px] text-slate-500 mt-0.5"; m.textContent = message;
+  box.append(t, m); toast.append(ic, box); $("toastContainer").appendChild(toast);
+  setTimeout(() => { toast.classList.add("opacity-0"); setTimeout(() => toast.remove(), 300); }, 3800);
+}
+function parseNumber(v) {
+  if (v === null || v === undefined || v === "") return { value: 0, bad: false, empty: true };
+  if (typeof v === "number") return { value: v, bad: false };
+  let s = String(v).trim().toLowerCase();
+  if (!s) return { value: 0, bad: false, empty: true };
+  if (/^#+$/.test(s)) return { value: 0, bad: true };
+  let mult = 1;
+  s = s.replace(/vnđ|vnd|đồng|đ|₫|%/g, "").replace(/\s/g, "");
+  if (/(tr|triệu|trieu)$/.test(s)) { mult = 1e6; s = s.replace(/(tr|triệu|trieu)$/, ""); }
+  else if (/k$/.test(s)) { mult = 1000; s = s.slice(0, -1); }
+  const hasDot = s.includes("."), hasComma = s.includes(",");
+  if (hasDot && hasComma) { const dec = s.lastIndexOf(".") > s.lastIndexOf(",") ? "." : ","; s = s.split(dec === "." ? "," : ".").join("").replace(dec, "."); }
+  else if (hasDot || hasComma) { const parts = s.split(hasDot ? "." : ","); s = (parts.length > 2 || (parts.length === 2 && parts[1].length === 3 && mult === 1)) ? parts.join("") : parts.join("."); }
+  if (!/^-?\d+(\.\d+)?$/.test(s)) return { value: 0, bad: true };
+  return { value: Math.round(parseFloat(s) * mult * 100) / 100, bad: false };
+}
+const parseBool = (v) => ["1", "co", "x", "yes", "true", "y", "v", "✓", "dang kinh doanh", "hoat dong"].includes(norm(v)) ? 1 : 0;
+function parseTSV(text) {
+  const rows = []; let row = [], cell = "", inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQ) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else inQ = false; } else cell += ch; }
+    else if (ch === '"' && cell === "") inQ = true;
+    else if (ch === "\t") { row.push(cell); cell = ""; }
+    else if (ch === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; }
+    else if (ch !== "\r") cell += ch;
+  }
+  row.push(cell); rows.push(row);
+  return rows.map(r => r.map(c => String(c).replace(/\s+/g, " ").trim())).filter(r => r.some(c => c !== ""));
+}
+function trimAoa(aoa) { // bỏ cột trống ở đầu (bảng dán lệch)
+  let lead = Infinity;
+  aoa.forEach(r => { const i = r.findIndex(c => c !== ""); if (i >= 0) lead = Math.min(lead, i); });
+  return lead > 0 && lead !== Infinity ? aoa.map(r => r.slice(lead)) : aoa;
+}
+
+// =====================================================================
+// 5. TRẠNG THÁI & LƯU TRỮ
+// =====================================================================
+const K_TPL = "kv-studio-v9-templates", K_LIB = "kv-studio-v9-library", K_WS = "kv-studio-v9-workspace", K_SET = "kv-studio-v9-settings";
+let userTemplates = lsGet(K_TPL, []);
+let sharedTemplates = [];   // nạp từ library.json đi kèm trang
+let userLibrary = lsGet(K_LIB, []);
+let sharedLibrary = [];
+let settings = Object.assign({ autoSave: true }, lsGet(K_SET, {}));
+let ws = null;              // { packageId, title, model, industry, sheets:[{templateId, rows}], active }
+let showAllCols = false, searchText = "";
+const selected = new Set();
+const undoStack = [];
+let parseState = null;
+let libFilter = { model: "all", industry: "" };
+
+const allTemplates = () => [...BUILTIN_TEMPLATES, ...sharedTemplates.filter(t => !userTemplates.some(u => u.id === t.id)), ...userTemplates];
+const getTpl = (id) => allTemplates().find(t => t.id === id);
+const demoPackages = () => DEMO.map(d => ({ id: d.id, title: d.title, model: d.model, industry: d.industry, source: "builtin", builtin: true,
+  sheets: [{ templateId: "fnb-menu", rows: d.items.map(a => menuRowFromArr(a)) }, { templateId: "fnb-rooms", rows: d.rooms.map((r, i) => ({ ...r, "Số thứ tự": i + 1 })) }, { templateId: "fnb-nvl", rows: d.inventory }] }));
+const allPackages = () => [...demoPackages(), ...sharedLibrary.filter(p => !userLibrary.some(u => u.id === p.id)), ...userLibrary];
+
+function saveWs() {
+  const ok = lsSet(K_WS, ws);
+  $("sideSave").textContent = ok ? "Đã lưu lúc " + new Date().toLocaleTimeString("vi-VN") : "Không lưu được trên trình duyệt này.";
+}
+function pushUndo() { undoStack.push(JSON.stringify(ws)); if (undoStack.length > 40) undoStack.shift(); $("btnUndo").disabled = false; }
+function undo() {
+  if (!undoStack.length) return;
+  ws = JSON.parse(undoStack.pop()); selected.clear();
+  $("btnUndo").disabled = !undoStack.length;
+  refreshWorkspace(); saveWs(); showToast("Đã hoàn tác", "Khôi phục trạng thái trước thao tác gần nhất.", "info");
+}
+
+// =====================================================================
+// 6. TEMPLATE: ĐỌC FILE MẪU CHÍNH THỨC
+// =====================================================================
+function inferType(name) {
+  const n = canon(name);
+  if (/^(gia|so luong|ton kho|dinh muc|so ghe|quy doi|trong luong|diem|chiet khau|giam gia|so tien|tien|phan tram|so lan|so dem|so gio|suc chua|so nguoi|gia tri|han muc|cong no|no can|so thu tu|tong)\b/.test(n) || /\b(gia ban|gia von|gia phong|don gia)\b/.test(n)) return "number";
+  return "text";
+}
+function detectTemplateSheet(wb) {
+  let best = null;
+  wb.SheetNames.forEach(sn => {
+    const aoa = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: false, defval: "" });
+    let max = 0, rowIdx = -1;
+    aoa.slice(0, 15).forEach((r, i) => { const c = r.filter(x => String(x).trim() !== "").length; if (c > max) { max = c; rowIdx = i; } });
+    if (rowIdx < 0) return;
+    // chọn dòng đầu tiên đạt >= 70% số cột lớn nhất (bỏ qua dòng tiêu đề lớn)
+    const first = aoa.slice(0, 15).findIndex(r => r.filter(x => String(x).trim() !== "").length >= Math.max(2, Math.ceil(max * 0.7)));
+    if (!best || max > best.max) best = { sheetName: sn, headerRow: first, max, aoa };
+  });
+  return best;
+}
+function templateFromWorkbook(wb, meta) {
+  const d = detectTemplateSheet(wb);
+  if (!d || d.max < 2) throw new Error("Không tìm thấy dòng tiêu đề (cần ít nhất 2 cột).");
+  const header = d.aoa[d.headerRow];
+  const columns = [];
+  header.forEach((h, ci) => {
+    const raw = String(h).trim(); if (!raw) return;
+    const required = /\*/.test(raw) || /bat buoc/.test(norm(raw));
+    columns.push({ name: raw, ci, type: inferType(raw), options: null, required });
+  });
+  const key = columns.find(c => /^ma\b/.test(canon(c.name)) && !/vach|dvt|lien quan|nhom|giam gia|voucher cha/.test(canon(c.name)));
+  const nm = columns.find(c => /^ten\b/.test(canon(c.name)));
+  return { id: "tpl-" + uid(), builtin: false, model: meta.model, kind: meta.kind, name: meta.name || meta.kind, sheetName: d.sheetName, headerRow: d.headerRow,
+    columns, keyCol: key ? key.name : null, nameCol: nm ? nm.name : (key ? key.name : columns[0].name), fileName: meta.fileName, fileB64: meta.fileB64, createdAt: Date.now() };
+}
+function handleTemplateFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const u8 = new Uint8Array(e.target.result);
+      const wb = XLSX.read(u8, { type: "array" });
+      const model = $("tModel").value, kind = $("tKind").value;
+      const tpl = templateFromWorkbook(wb, { model, kind, name: $("tName").value.trim() || `${kind} ${MODELS[model].name}`, fileName: file.name, fileB64: b64FromBytes(u8) });
+      userTemplates.push(tpl);
+      if (!lsSet(K_TPL, userTemplates)) showToast("Bộ nhớ trình duyệt đầy", "Template vẫn dùng được trong phiên này nhưng chưa lưu lâu dài.", "warn");
+      $("tName").value = "";
+      renderTemplates(); renderTemplateSelects();
+      showToast("Đã thêm template", `${tpl.name}: ${tpl.columns.length} cột (${tpl.columns.filter(c => c.required).length} bắt buộc), sheet "${tpl.sheetName}", tiêu đề ở dòng ${tpl.headerRow + 1}.`);
+      openColumnEditor(tpl.id);
+    } catch (err) { showToast("Không đọc được file mẫu", String(err.message || err), "danger"); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// =====================================================================
+// 7. HÀNG DỮ LIỆU & CHUẨN HÓA
+// =====================================================================
+function menuRowFromArr(a) {
+  return makeMenuRow({ code: a[0], name: a[1], group: a[2], type: a[3], cat: a[4], unit: a[5], price: a[6], cost: a[7], isTime: a[8] || 0, track: a[9] || 0, comp: a[10] || "" });
+}
+function makeMenuRow(it) {
+  return { "Loại món": it.type || "Món thường", "Loại thực đơn": it.cat || "Đồ ăn", "Nhóm món (3 Cấp)": it.group || "Chung", "Quản lý tồn kho": it.track ? 1 : 0, "Món thêm": "",
+    [KEY_TIME]: it.isTime ? 1 : 0, "Mã món": it.code || "", "Tên món": it.name || "", "Giá bán": Number(it.price) || 0, "Giá vốn": Number(it.cost) || 0,
+    "Tồn kho hiện tại": Number(it.stock) || 0, "Định mức tồn nhỏ nhất": 0, "Định mức tồn lớn nhất": 999999999, "ĐVT": it.unit || "Cái", "Mã ĐVT Cơ bản": "", "Quy đổi": 1,
+    "Thuộc tính": "", "Mã món Liên quan": "", "Hình ảnh (url1,url2...)": "", "Trọng lượng": "", "ĐVT trọng lượng": "", "Tích điểm": 1, "Đang kinh doanh": 1, "Cho phép bán": 1,
+    "Mô tả": "", "Mẫu ghi chú": "", "Món thành phần": it.comp || "", "Vị trí": "" };
+}
+function blankRow(tpl) {
+  if (tpl.profile === "fnb-menu") return makeMenuRow({});
+  const r = {}; tpl.columns.forEach(c => { r[c.name] = c.type === "number" ? (c.required ? 0 : "") : c.type === "bool" ? 0 : ""; }); return r;
+}
+function normalizeType(v, isTime) {
+  const s = norm(v); const exact = TYPE_OPTIONS.find(o => norm(o) === s); if (exact) return exact;
+  if (isTime || s.includes("dich vu")) return "Dịch vụ";
+  if (s.includes("combo")) return "Combo cố định";
+  if (s.includes("che bien")) return "Món chế biến";
+  if (s.includes("topping")) return "Topping thường";
+  return "Món thường";
+}
+const DRINK_WORDS = ["bia", "ruou", "nuoc", "tra", "ca phe", "cafe", "coffee", "sinh to", "sua", "soda", "cocktail", "vang", "soju", "latte", "cappuccino", "bac xiu", "redbull", "pepsi", "coca", "sting"];
+function normalizeCat(v, { group, name, type, isTime }) {
+  const s = norm(v); const exact = CAT_OPTIONS.find(o => norm(o) === s); if (exact) return exact;
+  if (isTime || type === "Dịch vụ") return "Dịch vụ";
+  if (type === "Combo cố định") return "Khác";
+  const hay = " " + norm(group) + " " + norm(name) + " ";
+  return DRINK_WORDS.some(w => hay.includes(" " + w)) ? "Đồ uống" : "Đồ ăn";
+}
+function nextCode(rows, key, prefix, extra) {
+  const used = new Set([...rows.map(r => String(r[key] ?? "").toUpperCase()), ...extra]);
+  let n = 1, c; do { c = prefix + String(n++).padStart(4, "0"); } while (used.has(c.toUpperCase())); return c;
+}
+function finalizeMenu(o, used, existing) {
+  const name = String(o["Tên món"] ?? "").trim();
+  let code = String(o["Mã món"] ?? "").trim();
+  if (!code) code = nextCode(existing, "Mã món", "SP", used);
+  used.add(code.toUpperCase());
+  const pr = parseNumber(o["Giá bán"]), co = parseNumber(o["Giá vốn"]), st = parseNumber(o["Tồn kho hiện tại"]);
+  const unit = String(o["ĐVT"] ?? "").trim() || "Cái";
+  const group = String(o["Nhóm món (3 Cấp)"] ?? "").trim() || "Chung";
+  const nl = norm(name);
+  const isTime = (KEY_TIME in o) ? parseBool(o[KEY_TIME]) : ((norm(unit) === "gio" || nl.includes("gio hat") || nl.includes("gio choi") || nl.includes("bida")) ? 1 : 0);
+  const type = normalizeType(o["Loại món"], isTime);
+  const cat = normalizeCat(o["Loại thực đơn"], { group, name, type, isTime });
+  const track = isTime ? 0 : (("Quản lý tồn kho" in o) ? parseBool(o["Quản lý tồn kho"]) : 0);
+  const row = makeMenuRow({ code, name: name || code, group, type, cat, unit, price: pr.value, cost: co.value, stock: st.value, isTime, track, comp: String(o["Món thành phần"] ?? "").trim() });
+  const handled = ["Mã món", "Tên món", "Giá bán", "Giá vốn", "Tồn kho hiện tại", "ĐVT", "Nhóm món (3 Cấp)", "Loại món", "Loại thực đơn", KEY_TIME, "Quản lý tồn kho", "Món thành phần"];
+  getTpl("fnb-menu").columns.forEach(c => {
+    if (!(c.name in o) || handled.includes(c.name)) return;
+    row[c.name] = c.type === "bool" ? parseBool(o[c.name]) : c.type === "number" ? (o[c.name] === "" ? row[c.name] : parseNumber(o[c.name]).value) : String(o[c.name] ?? "");
+  });
+  if (pr.bad || co.bad) row._bad = 1;
+  return row;
+}
+function finalizeGeneric(tpl, o) {
+  const row = blankRow(tpl); let bad = false;
+  tpl.columns.forEach(c => {
+    if (!(c.name in o)) return;
+    const v = o[c.name];
+    if (c.type === "number") { const p = parseNumber(v); if (p.bad) { bad = true; row[c.name] = String(v); } else row[c.name] = p.empty ? row[c.name] : p.value; }
+    else if (c.type === "bool") row[c.name] = parseBool(v);
+    else if (c.type === "select" && c.options) { const m = c.options.find(op => canon(op) === canon(v)); row[c.name] = m || String(v ?? ""); }
+    else row[c.name] = String(v ?? "").trim();
+  });
+  if (bad) row._bad = 1;
+  return row;
+}
+
+// =====================================================================
+// 8. GHÉP CỘT DỮ LIỆU THÔ ↔ TEMPLATE
+// =====================================================================
+const SYN = [
+  ["ma", "sku", "code", "ma hang", "ma sp", "ma san pham", "ma mon", "ma hang hoa", "ma dich vu"],
+  ["ten", "ten hang", "ten san pham", "ten mon", "san pham", "mat hang", "hang hoa", "ten hang hoa", "ten dich vu", "dich vu"],
+  ["gia ban", "don gia", "gia", "gia niem yet", "gia le"], ["gia von", "von", "gia nhap"],
+  ["dien thoai", "sdt", "so dien thoai", "phone", "mobile", "di dong"], ["email", "mail"], ["dia chi", "address"],
+  ["ngay sinh", "sinh nhat", "dob"], ["gioi tinh", "gender"], ["ten khach hang", "khach hang", "ho ten", "ho va ten", "ten khach"], ["ma khach hang", "ma kh"],
+  ["nhom", "nhom hang", "nhom mon", "danh muc", "category", "nhom hang 3 cap", "nhom mon 3 cap"],
+  ["loai mon", "loai mat hang", "loai hang", "loai", "loai san pham"], ["loai thuc don", "thuc don"],
+  ["dvt", "don vi", "don vi tinh", "unit"], ["ton kho", "so luong", "sl", "ton", "ton kho hien tai"],
+  ["ghi chu", "note"], ["mo ta", "description"], ["khu vuc", "khu", "tang"], ["so ghe", "suc chua", "so cho"],
+  ["ten ban", "ban", "phong", "ten phong", "ten ban phong"], ["hang phong", "loai phong"], ["ma nhan vien", "ma nv"], ["ten nhan vien", "nhan vien", "ho ten nhan vien"],
+  ["quan ly ton kho", "theo doi ton kho", "ql kho"], ["mon thanh phan", "thanh phan", "hang thanh phan"]
+];
+function matchScore(t, s) {
+  const a = canon(t), b = canon(s);
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  const ga = SYN.findIndex(g => g.includes(a)), gb = SYN.findIndex(g => g.includes(b));
+  if (ga >= 0 && ga === gb) return 0.9;
+  const A = new Set(a.split(" ")), B = new Set(b.split(" "));
+  const inter = [...A].filter(x => B.has(x)).length;
+  return (inter / new Set([...A, ...B]).size) * 0.8;
+}
+function autoMap(tpl, srcHeaders) {
+  const pairs = [];
+  tpl.columns.forEach(c => srcHeaders.forEach((h, i) => { const s = matchScore(c.name, h); if (s >= 0.5) pairs.push({ c: c.name, i, s }); }));
+  pairs.sort((x, y) => y.s - x.s);
+  const map = {}, usedSrc = new Set();
+  pairs.forEach(p => { if (!(p.c in map) && !usedSrc.has(p.i)) { map[p.c] = p.i; usedSrc.add(p.i); } });
+  return map;
+}
+function detectSourceHeader(tpl, aoa) {
+  let best = { idx: -1, score: 0 };
+  aoa.slice(0, 10).forEach((r, idx) => {
+    const sc = r.reduce((sum, cell) => sum + Math.max(0, ...tpl.columns.map(c => matchScore(c.name, cell) >= 0.5 ? matchScore(c.name, cell) : 0)), 0);
+    if (sc > best.score) best = { idx, score: sc };
+  });
+  return best.score >= 1.4 ? best.idx : -1;
+}
+const UNIT_WORDS = ["giờ", "lon", "chai", "dĩa", "đĩa", "cái", "gói", "xô", "lượt", "lần", "suất", "ly", "cốc", "phần", "tô", "bát", "nồi", "con", "kg", "hộp", "combo", "tháp", "ấm", "bình", "set", "vé"];
+function guessMenuRow(cols) {
+  const o = {}; const nums = [];
+  cols.forEach(raw => {
+    const s = raw.trim(); if (!s) return;
+    if (UNIT_WORDS.includes(s.toLowerCase()) && !o["ĐVT"]) { o["ĐVT"] = s; return; }
+    if (!o["Mã món"] && /^[A-Za-z0-9_.-]{2,20}$/.test(s) && /[A-Za-z]/.test(s) && /\d/.test(s)) { o["Mã món"] = s; return; }
+    const p = parseNumber(s);
+    if (/^[\d.,\s]+(k|đ|vnđ|vnd|tr)?$/i.test(s) && !p.bad) { nums.push(p.value); return; }
+    if (/^#+$/.test(s)) { nums.push(s); return; }
+    if (!o["Tên món"] && s.length >= 2) { o["Tên món"] = s; return; }
+    if (!o["Nhóm món (3 Cấp)"]) o["Nhóm món (3 Cấp)"] = s;
+  });
+  if (nums.length) o["Giá bán"] = nums[0];
+  if (nums.length > 1) o["Giá vốn"] = nums[1];
+  return o;
+}
+function analyzeRaw(tplId, aoa) {
+  const tpl = getTpl(tplId);
+  aoa = trimAoa(aoa);
+  const headerIdx = detectSourceHeader(tpl, aoa);
+  const width = Math.max(...aoa.map(r => r.length));
+  const srcHeaders = headerIdx >= 0 ? aoa[headerIdx].map((h, i) => h || `Cột ${i + 1}`) : Array.from({ length: width }, (_, i) => `Cột ${i + 1}`);
+  while (srcHeaders.length < width) srcHeaders.push(`Cột ${srcHeaders.length + 1}`);
+  const mapping = headerIdx >= 0 ? autoMap(tpl, srcHeaders) : {};
+  return { tplId, aoa, headerIdx, srcHeaders, mapping, defaults: {} };
+}
+function buildRowsFromParse(st, existingRows) {
+  const tpl = getTpl(st.tplId);
+  const isMenu = tpl.profile === "fnb-menu";
+  const useGuess = st.headerIdx < 0 && isMenu && Object.keys(st.mapping).length === 0;
+  const hdr = st.headerIdx >= 0 ? st.aoa[st.headerIdx].map(canon) : null;
+  const rep = { skipped: 0, bad: 0 };
+  const used = new Set((existingRows || []).map(r => String(r[tpl.keyCol] ?? "").toUpperCase()));
+  const out = [];
+  const width = st.srcHeaders.length;
+  for (let i = st.headerIdx + 1; i < st.aoa.length; i++) {
+    const cols = st.aoa[i];
+    const nonEmpty = cols.filter(c => c !== "").length;
+    if (!nonEmpty) continue;
+    if (hdr && cols.filter((c, j) => c && canon(c) === hdr[j]).length >= 2) { rep.skipped++; continue; }   // tiêu đề lặp
+    if (nonEmpty <= 1 && width >= 3) { rep.skipped++; continue; }                                         // dòng tiêu đề nhóm
+    let o;
+    if (useGuess) o = guessMenuRow(cols);
+    else {
+      o = {};
+      tpl.columns.forEach(c => {
+        const idx = st.mapping[c.name];
+        const v = idx !== undefined && idx >= 0 ? (cols[idx] ?? "") : "";
+        if (v !== "") o[c.name] = v;
+        else if (st.defaults[c.name]) o[c.name] = st.defaults[c.name];
+      });
+    }
+    const keyV = tpl.keyCol ? String(o[tpl.keyCol] ?? "").trim() : "";
+    const nameV = tpl.nameCol ? String(o[tpl.nameCol] ?? "").trim() : "";
+    if (!keyV && !nameV && Object.keys(o).length === 0) { rep.skipped++; continue; }
+    const row = isMenu ? finalizeMenu(o, used, existingRows || []) : finalizeGeneric(tpl, o);
+    if (row._bad) rep.bad++;
+    out.push(row);
+  }
+  return { rows: out, rep };
+}
+
+// =====================================================================
+// 9. KIỂM TRA DỮ LIỆU
+// =====================================================================
+function validateSheet(sheet) {
+  const tpl = getTpl(sheet.templateId); const issues = [];
+  if (!tpl) return issues;
+  const rows = sheet.rows;
+  const add = (r, i, key, level, msg) => issues.push({ id: r._id, key, level, msg, rowNo: i + 1, templateId: sheet.templateId });
+  const keyCount = {};
+  if (tpl.keyCol) rows.forEach(r => { const k = String(r[tpl.keyCol] ?? "").trim().toUpperCase(); if (k) keyCount[k] = (keyCount[k] || 0) + 1; });
+  rows.forEach((r, i) => {
+    tpl.columns.forEach(c => {
+      const v = r[c.name];
+      const empty = v === undefined || v === null || String(v).trim() === "";
+      if (c.required && empty) add(r, i, c.name, "error", `Thiếu "${c.name}" (bắt buộc)`);
+      if (!empty && c.type === "number") { const n = Number(v); if (!isFinite(n)) add(r, i, c.name, "error", `"${c.name}" phải là số`); else if (n < 0) add(r, i, c.name, "error", `"${c.name}" âm`); }
+      if (!empty && c.type === "select" && c.options && !c.options.includes(v)) add(r, i, c.name, "error", `"${v}" không hợp lệ cho "${c.name}"`);
+    });
+    if (tpl.keyCol) { const k = String(r[tpl.keyCol] ?? "").trim(); if (k && keyCount[k.toUpperCase()] > 1) add(r, i, tpl.keyCol, "error", `Trùng "${k}"`); }
+    if (r._bad) add(r, i, tpl.nameCol || tpl.columns[0].name, "warn", 'Có ô số bị "#####" hoặc sai định dạng khi copy — kiểm tra lại');
+  });
+  if (tpl.profile === "fnb-menu") {
+    const codes = new Set(Object.keys(keyCount));
+    rows.forEach((r, i) => {
+      const code = String(r["Mã món"] ?? "").trim();
+      if (!code) add(r, i, "Mã món", "warn", "Mã món trống (KiotViet có thể tự sinh)");
+      else if (/\s/.test(code) || /[^\x00-\x7F]/.test(code)) add(r, i, "Mã món", "warn", "Mã có dấu hoặc khoảng trắng");
+      const price = Number(r["Giá bán"]), cost = Number(r["Giá vốn"]);
+      if (price === 0) add(r, i, "Giá bán", "warn", "Giá bán = 0");
+      if (price > 0 && cost > price) add(r, i, "Giá vốn", "warn", "Giá vốn lớn hơn giá bán");
+      const comp = String(r["Món thành phần"] ?? "").trim();
+      if (r["Loại món"] === "Combo cố định" && !comp) add(r, i, "Món thành phần", "warn", "Combo chưa khai báo món thành phần");
+      if (comp) comp.split("|").map(p => p.trim()).filter(Boolean).forEach(p => {
+        const m = p.match(/^([^:]+):(\d+(?:\.\d+)?)$/);
+        if (!m) add(r, i, "Món thành phần", "error", `Sai định dạng "${p}" (đúng: MÃ:SỐ_LƯỢNG|...)`);
+        else if (!codes.has(m[1].trim().toUpperCase())) add(r, i, "Món thành phần", "error", `Thành phần "${m[1]}" không có trong thực đơn`);
+        else if (m[1].trim().toUpperCase() === code.toUpperCase()) add(r, i, "Món thành phần", "error", "Combo tự chứa chính nó");
+      });
+      if (Number(r[KEY_TIME]) === 1 && Number(r["Quản lý tồn kho"]) === 1) add(r, i, "Quản lý tồn kho", "warn", "Món tính giờ không nên quản lý tồn kho");
+    });
+  }
+  return issues;
+}
+
+// =====================================================================
+// 10. BÀN LÀM VIỆC
+// =====================================================================
+const curSheet = () => (ws && ws.sheets[ws.active]) || null;
+function displayCols(tpl) {
+  let names = (tpl.compact && !showAllCols) ? tpl.compact.slice() : tpl.columns.map(c => c.name);
+  const front = [tpl.keyCol, tpl.nameCol].filter((v, i, a) => v && a.indexOf(v) === i && names.includes(v));
+  return [...front, ...names.filter(n => !front.includes(n))];
+}
+const colDef = (tpl, name) => tpl.columns.find(c => c.name === name) || { name, type: "text" };
+const colWidth = (tpl, c) => c.name === tpl.nameCol ? 230 : c.name === tpl.keyCol ? 110 : c.type === "bool" ? 80 : c.type === "number" ? 105 : c.type === "select" ? 140 : Math.min(240, Math.max(110, c.name.length * 7));
+function cellHtml(c, val) {
+  const k = esc(c.name);
+  if (c.type === "select" && c.options) { const opts = c.options.includes(val) ? c.options : [val, ...c.options]; return `<select data-key="${k}" class="cell-in">${opts.map(o => `<option value="${esc(o)}" ${o === val ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>`; }
+  if (c.type === "bool") return `<input type="checkbox" data-key="${k}" ${Number(val) === 1 ? "checked" : ""} class="rounded text-violet-600 cursor-pointer">`;
+  if (c.type === "number") return `<input type="text" inputmode="decimal" data-key="${k}" value="${esc(val)}" class="cell-in text-right font-mono text-slate-700">`;
+  return `<input type="text" data-key="${k}" value="${esc(val)}" class="cell-in text-slate-700">`;
+}
+function visibleRows() {
+  const sh = curSheet(); if (!sh) return [];
+  const q = norm(searchText); if (!q) return sh.rows;
+  return sh.rows.filter(r => Object.entries(r).some(([k, v]) => k !== "_id" && norm(v).includes(q)));
+}
+function renderTabs() {
+  $("sheetTabs").innerHTML = ws.sheets.map((s, i) => {
+    const t = getTpl(s.templateId);
+    return `<button data-tab="${i}" class="px-3 py-1.5 rounded-xl text-xs font-bold ${i === ws.active ? "bg-white shadow-sm text-violet-700" : "text-slate-600 hover:text-slate-900"}">${esc(t ? t.kind : "Template đã xóa")} (${s.rows.length})</button>`;
+  }).join("") + `<button id="btnAddSheet" class="px-3 py-1.5 rounded-xl text-xs font-bold text-violet-700 hover:bg-white">+ Danh mục</button>`;
+}
+function renderDataTable() {
+  const sh = curSheet();
+  const tpl = sh && getTpl(sh.templateId);
+  if (!sh || !tpl) {
+    $("tableHeader").innerHTML = ""; $("tplNote").innerHTML = "";
+    $("tableBody").innerHTML = `<tr><td class="p-8 text-center text-slate-400">Chưa có danh mục. Bấm “+ Danh mục”, nạp từ Thư viện hoặc vào “Gom dữ liệu thô”.</td></tr>`;
+    $("validationPanel").innerHTML = ""; return;
+  }
+  $("btnToggleCols").classList.toggle("hidden", !tpl.compact);
+  $("btnToggleCols").textContent = showAllCols ? "↔ Thu gọn cột" : `↔ Mở đủ ${tpl.columns.length} cột`;
+  $("tplNote").innerHTML = tpl.fileB64
+    ? `<span class="text-emerald-700 font-semibold">✓ Template từ file mẫu “${esc(tpl.fileName)}” — xuất file sẽ ghi vào đúng file mẫu này.</span>`
+    : `<span class="text-amber-700 font-semibold">⚠ Template có sẵn (chưa đối chiếu file mẫu chính thức). Nên tải file mẫu của KiotViet ở mục Quản lý template.</span>`;
+  const cols = displayCols(tpl).map(n => colDef(tpl, n));
+  const freeze = Math.min(2, [tpl.keyCol, tpl.nameCol].filter((v, i, a) => v && a.indexOf(v) === i).length);
+  const off = []; let left = 44; cols.forEach((c, i) => { if (i < freeze) { off[i] = left; left += colWidth(tpl, c); } });
+  const rows = visibleRows();
+  const allSel = rows.length > 0 && rows.every(r => selected.has(r._id));
+  const lbl = (c) => (tpl.labels && tpl.labels[c.name]) || c.name;
+  let h = `<tr><th class="p-2.5 border-r text-center sticky-c" style="left:0;min-width:44px"><input type="checkbox" data-role="select-all" ${allSel ? "checked" : ""}></th>`;
+  cols.forEach((c, i) => {
+    const w = colWidth(tpl, c);
+    h += `<th class="p-2.5 border-r ${c.type === "number" ? "text-right" : c.type === "bool" ? "text-center" : ""} ${i < freeze ? "sticky-c" + (i === freeze - 1 ? " sticky-last" : "") : ""}" style="${i < freeze ? `left:${off[i]}px;` : ""}min-width:${w}px" title="${esc(c.name)}">${esc(lbl(c))}${c.required ? ' <span class="text-red-500">*</span>' : ""}</th>`;
+  });
+  $("tableHeader").innerHTML = h + `<th class="p-2.5 text-center w-12">Xóa</th></tr>`;
+  $("tableBody").innerHTML = rows.length ? rows.map(r => {
+    const sel = selected.has(r._id);
+    return `<tr data-id="${esc(r._id)}" class="hover:bg-violet-50/40 ${sel ? "is-selected" : ""}"><td class="p-2 border-r text-center sticky-c" style="left:0"><input type="checkbox" data-role="select-row" ${sel ? "checked" : ""}></td>` +
+      cols.map((c, i) => `<td data-key="${esc(c.name)}" class="p-1 border-r ${c.type === "bool" ? "text-center" : ""} ${i < freeze ? "sticky-c" + (i === freeze - 1 ? " sticky-last" : "") : ""} ${c.name === tpl.nameCol ? "font-bold" : ""}"${i < freeze ? ` style="left:${off[i]}px"` : ""}>${cellHtml(c, r[c.name] ?? "")}</td>`).join("") +
+      `<td class="p-1 text-center"><button data-role="del" class="text-slate-400 hover:text-red-600 font-bold px-2">✕</button></td></tr>`;
+  }).join("") : `<tr><td colspan="${cols.length + 2}" class="p-8 text-center text-slate-400">${searchText ? "Không tìm thấy dòng phù hợp." : "Danh mục trống. Bấm “+ Thêm dòng” hoặc vào “Gom dữ liệu thô”."}</td></tr>`;
+  renderValidation();
+}
+function renderValidation() {
+  const sh = curSheet(); if (!sh) return [];
+  const issues = validateSheet(sh);
+  const errs = issues.filter(x => x.level === "error"), warns = issues.filter(x => x.level === "warn");
+  $("validationPanel").innerHTML = !issues.length
+    ? `<div class="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-3 py-2 font-semibold">✓ Dữ liệu hợp lệ, sẵn sàng xuất.</div>`
+    : `<details class="${errs.length ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"} border rounded-xl px-3 py-2" ${errs.length ? "open" : ""}><summary class="cursor-pointer font-bold ${errs.length ? "text-red-700" : "text-amber-700"}">${errs.length} lỗi (chặn xuất) · ${warns.length} cảnh báo</summary><ul class="mt-2 space-y-0.5">${issues.slice(0, 12).map(x => `<li><button class="hover:underline text-left" data-goto="${esc(x.id)}">${x.level === "error" ? "⛔" : "⚠️"} Dòng ${x.rowNo} · <b>${esc(x.key)}</b>: ${esc(x.msg)}</button></li>`).join("")}${issues.length > 12 ? `<li class="text-slate-400">… và ${issues.length - 12} vấn đề khác</li>` : ""}</ul></details>`;
+  document.querySelectorAll("#tableBody td.cell-err, #tableBody td.cell-warn").forEach(td => td.classList.remove("cell-err", "cell-warn"));
+  issues.forEach(x => {
+    const td = document.querySelector(`#tableBody tr[data-id="${x.id}"] td[data-key="${CSS.escape(x.key)}"]`);
+    if (td && !td.classList.contains("cell-err")) { td.classList.remove("cell-warn"); td.classList.add(x.level === "error" ? "cell-err" : "cell-warn"); td.title = x.msg; }
+  });
+  return issues;
+}
+function renderWsMeta() {
+  $("wsTitle").value = ws.title || "";
+  $("wsModel").innerHTML = Object.entries(MODELS).map(([k, m]) => `<option value="${k}" ${k === ws.model ? "selected" : ""}>${m.icon} ${m.name} – ${m.label}</option>`).join("");
+  $("wsIndustry").innerHTML = (MODELS[ws.model]?.industries || []).map(i => `<option ${i === ws.industry ? "selected" : ""}>${esc(i)}</option>`).join("");
+  $("sideTitle").textContent = ws.title || "Bộ dữ liệu chưa đặt tên";
+  $("sideMeta").textContent = `${MODELS[ws.model]?.name || ""} · ${ws.industry || ""} · ${ws.sheets.map(s => `${getTpl(s.templateId)?.kind || "?"} ${s.rows.length}`).join(", ")}`;
+}
+function updateBulk() {
+  const sh = curSheet(); const ids = new Set(sh ? sh.rows.map(r => r._id) : []);
+  [...selected].forEach(id => { if (!ids.has(id)) selected.delete(id); });
+  $("bulkBar").classList.toggle("hidden", selected.size === 0); $("selCount").textContent = selected.size;
+}
+function refreshWorkspace() { if (ws.active >= ws.sheets.length) ws.active = Math.max(0, ws.sheets.length - 1); renderWsMeta(); renderTabs(); renderDataTable(); updateBulk(); }
+function withIds(rows) { return rows.map(r => ({ ...clone(r), _id: uid() })); }
+function loadPackage(pkg) {
+  if (ws && ws.sheets.some(s => s.rows.length)) pushUndo();
+  ws = { packageId: pkg.builtin ? null : pkg.id, basedOn: pkg.id, title: pkg.title, model: pkg.model, industry: pkg.industry, active: 0,
+    sheets: pkg.sheets.filter(s => getTpl(s.templateId)).map(s => ({ templateId: s.templateId, rows: withIds(s.rows) })) };
+  const missing = pkg.sheets.filter(s => !getTpl(s.templateId)).length;
+  selected.clear(); searchText = ""; $("searchBox").value = "";
+  navigateTo("workspace"); refreshWorkspace(); saveWs();
+  showToast("Đã nạp bộ dữ liệu", `${pkg.title}: ${ws.sheets.map(s => `${getTpl(s.templateId).kind} ${s.rows.length}`).join(", ")}` + (missing ? ` · ${missing} danh mục thiếu template` : ""), missing ? "warn" : "success");
+}
+function deleteRows(ids) {
+  const sh = curSheet(); if (!sh || !ids.length) return;
+  pushUndo(); sh.rows = sh.rows.filter(r => !ids.includes(r._id)); ids.forEach(id => selected.delete(id));
+  refreshWorkspace(); saveWs(); showToast("Đã xóa", `${ids.length} dòng — bấm Hoàn tác nếu nhầm.`, "danger");
+}
+function addSheetDialog() {
+  const tpls = allTemplates().filter(t => !ws.sheets.some(s => s.templateId === t.id));
+  openModal("Thêm danh mục vào bộ dữ liệu", tpls.length ? `<div class="space-y-2">${tpls.map(t => `<button data-addtpl="${esc(t.id)}" class="w-full text-left border rounded-xl px-3 py-2 hover:bg-violet-50"><b>${MODELS[t.model]?.icon || ""} ${esc(t.name)}</b> <span class="text-slate-400">· ${esc(t.kind)} · ${t.columns.length} cột${t.fileB64 ? " · từ file mẫu" : ""}</span></button>`).join("")}</div>` : "Đã thêm đủ mọi template. Tải thêm template ở mục Quản lý template.", []);
+}
+
+// =====================================================================
+// 11. XUẤT EXCEL (ghi vào đúng file mẫu nếu có)
+// =====================================================================
+function cellValue(c, v) {
+  if (v === undefined || v === null || v === "") return null;
+  if (c.type === "number" || c.type === "bool") { const n = Number(v); return isFinite(n) ? { t: "n", v: n } : { t: "s", v: String(v) }; }
+  return { t: "s", v: String(v) };
+}
+function buildWorkbook(sheet) {
+  const tpl = getTpl(sheet.templateId);
+  let wb, wsx, startRow;
+  if (tpl.fileB64) {
+    wb = XLSX.read(bytesFromB64(tpl.fileB64), { type: "array", cellStyles: true });
+    wsx = wb.Sheets[tpl.sheetName] || wb.Sheets[wb.SheetNames[0]];
+    startRow = tpl.headerRow + 1;
+    const rng = XLSX.utils.decode_range(wsx["!ref"] || "A1");
+    for (let r = startRow; r <= rng.e.r; r++) for (let c = rng.s.c; c <= rng.e.c; c++) delete wsx[XLSX.utils.encode_cell({ r, c })];
+    if (wsx["!merges"]) wsx["!merges"] = wsx["!merges"].filter(m => m.e.r < startRow);
+  } else {
+    wb = XLSX.utils.book_new();
+    wsx = XLSX.utils.aoa_to_sheet([tpl.columns.map(c => c.name)]);
+    wsx["!cols"] = tpl.columns.map(c => ({ wch: Math.max(10, Math.min(45, c.name.length + 4)) }));
+    XLSX.utils.book_append_sheet(wb, wsx, tpl.sheetName || tpl.kind);
+    startRow = 1;
+  }
+  let maxC = 0;
+  sheet.rows.forEach((row, ri) => tpl.columns.forEach(c => {
+    const cv = cellValue(c, row[c.name]); maxC = Math.max(maxC, c.ci);
+    if (cv) wsx[XLSX.utils.encode_cell({ r: startRow + ri, c: c.ci })] = cv;
+  }));
+  const old = XLSX.utils.decode_range(wsx["!ref"] || "A1");
+  wsx["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(startRow + sheet.rows.length - 1, tpl.headerRow), c: Math.max(old.e.c, maxC) } });
+  return wb;
+}
+const slug = (s) => norm(s).replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || "du_lieu";
+function exportAll() {
+  const targets = $("exportMode").value === "current" ? [curSheet()].filter(Boolean) : ws.sheets.filter(s => s.rows.length);
+  if (!targets.length) { showToast("Không có dữ liệu để xuất", "Các danh mục đang trống.", "danger"); return; }
+  const issues = targets.flatMap(validateSheet);
+  const errs = issues.filter(x => x.level === "error"), warns = issues.filter(x => x.level === "warn");
+  if (errs.length) {
+    navigateTo("workspace");
+    ws.active = ws.sheets.findIndex(s => s.templateId === errs[0].templateId); refreshWorkspace();
+    showToast(`Chưa thể xuất: ${errs.length} lỗi`, `${getTpl(errs[0].templateId).kind} dòng ${errs[0].rowNo} – ${errs[0].msg}`, "danger");
+    return;
+  }
+  if (warns.length && !confirm(`Có ${warns.length} cảnh báo (vd: ${warns[0].msg}).\nVẫn xuất file?`)) return;
+  const date = new Date().toISOString().slice(0, 10);
+  const files = targets.map(s => { const t = getTpl(s.templateId); const fn = `KiotViet_${slug(t.kind)}_${slug(ws.title)}_${date}.xlsx`; XLSX.writeFile(buildWorkbook(s), fn); return fn; });
+  showToast("Xuất Excel thành công", files.join(", "));
+  if (settings.autoSave) saveToLibrary("export", true);
+}
+
+// =====================================================================
+// 12. THƯ VIỆN
+// =====================================================================
+function saveToLibrary(source, silent) {
+  if (!ws.sheets.some(s => s.rows.length)) { if (!silent) showToast("Chưa có dữ liệu", "Bộ dữ liệu đang trống.", "warn"); return; }
+  ws.title = ws.title || `${MODELS[ws.model].name} – ${ws.industry}`;
+  const pkg = { id: ws.packageId || "pkg-" + uid(), title: ws.title, model: ws.model, industry: ws.industry, source, updatedAt: Date.now(),
+    sheets: ws.sheets.map(s => ({ templateId: s.templateId, rows: s.rows.map(r => { const { _id, _bad, ...rest } = r; return rest; }) })) };
+  ws.packageId = pkg.id;
+  const i = userLibrary.findIndex(p => p.id === pkg.id);
+  if (i >= 0) userLibrary[i] = pkg; else userLibrary.push(pkg);
+  const ok = lsSet(K_LIB, userLibrary);
+  saveWs(); renderLibrary(); renderWsMeta();
+  if (!ok) showToast("Bộ nhớ trình duyệt đầy", "Hãy Xuất thư viện (.json) để giữ lại.", "warn");
+  else showToast(silent ? "Đã tự lưu vào thư viện" : "Đã lưu vào thư viện", `${pkg.title} · ${MODELS[pkg.model].name} › ${pkg.industry}`, "info");
+}
+function renderLibrary() {
+  const pk = allPackages();
+  $("libCount").textContent = pk.length;
+  $("libModelTabs").innerHTML = [["all", "Tất cả", "📚"], ...Object.entries(MODELS).map(([k, m]) => [k, `${m.name} · ${m.label}`, m.icon])]
+    .map(([k, l, ic]) => `<button data-libmodel="${k}" class="chip ${libFilter.model === k ? "on" : ""}">${ic} ${esc(l)} (${k === "all" ? pk.length : pk.filter(p => p.model === k).length})</button>`).join("");
+  const inds = libFilter.model === "all" ? [] : MODELS[libFilter.model].industries;
+  $("libIndustryChips").innerHTML = inds.length ? [`<button data-libind="" class="chip ${!libFilter.industry ? "on" : ""}">Mọi ngành</button>`, ...inds.map(i => `<button data-libind="${esc(i)}" class="chip ${libFilter.industry === i ? "on" : ""}">${esc(i)} (${pk.filter(p => p.model === libFilter.model && p.industry === i).length})</button>`)].join("") : "";
+  const list = pk.filter(p => (libFilter.model === "all" || p.model === libFilter.model) && (!libFilter.industry || p.industry === libFilter.industry));
+  const srcLabel = { builtin: "Mẫu có sẵn", export: "Tự lưu khi xuất file", import: "Tự lưu khi gom dữ liệu", manual: "Lưu thủ công", shared: "Thư viện chung" };
+  $("libGrid").innerHTML = list.length ? list.map(p => {
+    const isUser = userLibrary.some(u => u.id === p.id);
+    return `<div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm flex flex-col gap-3">
+      <div class="flex items-start gap-3"><span class="text-3xl">${MODELS[p.model]?.icon || "📄"}</span>
+        <div class="min-w-0"><div class="font-extrabold text-sm text-slate-900">${esc(p.title)}</div><div class="text-[11px] text-slate-400">${esc(MODELS[p.model]?.name || "")} › ${esc(p.industry)}</div></div>
+        <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full ${p.builtin ? "bg-slate-100 text-slate-600" : "bg-violet-50 text-violet-700"} whitespace-nowrap">${esc(srcLabel[p.source] || p.source || "")}</span></div>
+      <div class="flex gap-1.5 flex-wrap text-[11px] font-semibold text-slate-600">${p.sheets.map(s => `<span class="bg-slate-100 px-2 py-0.5 rounded-full ${getTpl(s.templateId) ? "" : "line-through text-red-500"}">${esc(getTpl(s.templateId)?.kind || "Thiếu template")} ${s.rows.length}</span>`).join("")}</div>
+      ${p.updatedAt ? `<div class="text-[10px] text-slate-400">Cập nhật ${new Date(p.updatedAt).toLocaleString("vi-VN")}</div>` : ""}
+      <div class="mt-auto flex gap-2"><button data-libload="${esc(p.id)}" class="btn btn-p flex-1">Nạp vào bàn làm việc</button>${isUser ? `<button data-libdel="${esc(p.id)}" class="btn text-red-600" title="Xóa khỏi thư viện">🗑</button>` : ""}</div></div>`;
+  }).join("") : `<div class="col-span-full bg-white border border-dashed rounded-2xl p-8 text-center text-xs text-slate-500">Chưa có bộ dữ liệu cho ${libFilter.industry ? `ngành “${esc(libFilter.industry)}”` : "mô hình này"}.<br>Cách tạo: tải file mẫu ở <b>Quản lý template</b> → <b>Gom dữ liệu thô</b> → xuất Excel. Bộ dữ liệu sẽ tự lưu vào đây.</div>`;
+}
+function exportLibraryJson() {
+  const usedTpl = new Set(userLibrary.flatMap(p => p.sheets.map(s => s.templateId)));
+  const data = { version: 9, exportedAt: new Date().toISOString(), templates: [...sharedTemplates, ...userTemplates].filter((t, i, a) => a.findIndex(x => x.id === t.id) === i && (usedTpl.has(t.id) || userTemplates.includes(t))), library: [...sharedLibrary, ...userLibrary].filter((p, i, a) => a.findIndex(x => x.id === p.id) === i) };
+  const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "library.json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  showToast("Đã xuất thư viện", `${data.library.length} bộ dữ liệu, ${data.templates.length} template. Đặt file library.json cạnh index.html để học viên cùng thấy.`);
+}
+function importLibraryData(data, asShared) {
+  if (!data || !Array.isArray(data.library)) throw new Error("File không đúng định dạng thư viện.");
+  const tpls = Array.isArray(data.templates) ? data.templates : [];
+  if (asShared) { sharedTemplates = tpls; sharedLibrary = data.library.map(p => ({ ...p, source: p.source || "shared" })); return; }
+  tpls.forEach(t => { if (!getTpl(t.id)) userTemplates.push(t); });
+  data.library.forEach(p => { const i = userLibrary.findIndex(u => u.id === p.id); if (i >= 0) userLibrary[i] = p; else userLibrary.push(p); });
+  lsSet(K_TPL, userTemplates); lsSet(K_LIB, userLibrary);
+}
+
+// =====================================================================
+// 13. QUẢN LÝ TEMPLATE
+// =====================================================================
+function renderTemplateSelects() {
+  const groups = Object.entries(MODELS).map(([k, m]) => { const ts = allTemplates().filter(t => t.model === k); return ts.length ? `<optgroup label="${m.icon} ${m.name}">${ts.map(t => `<option value="${esc(t.id)}">${esc(t.name)} (${t.columns.length} cột)</option>`).join("")}</optgroup>` : ""; }).join("");
+  const cur = $("pTemplate").value || (curSheet() && curSheet().templateId);
+  $("pTemplate").innerHTML = groups; if (cur && getTpl(cur)) $("pTemplate").value = cur;
+  $("tplCount").textContent = allTemplates().length;
+}
+function renderTemplates() {
+  $("tModel").innerHTML = Object.entries(MODELS).map(([k, m]) => `<option value="${k}">${m.icon} ${m.name} – ${m.label}</option>`).join("");
+  if (renderTemplates._model) $("tModel").value = renderTemplates._model;
+  const fillKinds = () => { $("tKind").innerHTML = MODELS[$("tModel").value].kinds.map(k => `<option>${esc(k)}</option>`).join(""); };
+  fillKinds(); $("tModel").onchange = () => { renderTemplates._model = $("tModel").value; fillKinds(); };
+  $("tplCoverage").innerHTML = Object.entries(MODELS).map(([k, m]) => `<div class="bg-white border rounded-2xl p-4"><div class="font-extrabold text-xs mb-2">${m.icon} ${m.name} – ${m.label}</div><ul class="space-y-1 text-[11px]">${m.kinds.map(kind => { const ts = allTemplates().filter(t => t.model === k && t.kind === kind); const official = ts.some(t => t.fileB64); return `<li class="flex justify-between gap-2"><span>${esc(kind)}</span><span class="${official ? "text-emerald-600" : ts.length ? "text-amber-600" : "text-slate-400"} font-bold">${official ? "✓ có file mẫu" : ts.length ? "⚠ có sẵn, chưa xác minh" : "chưa có"}</span></li>`; }).join("")}</ul></div>`).join("");
+  $("tplGrid").innerHTML = allTemplates().map(t => `<div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm space-y-2">
+    <div class="flex items-start gap-2"><span class="text-2xl">${MODELS[t.model]?.icon || "📄"}</span><div><div class="font-extrabold text-sm">${esc(t.name)}</div><div class="text-[11px] text-slate-400">${esc(MODELS[t.model]?.name || "")} · ${esc(t.kind)}</div></div>
+      <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full ${t.fileB64 ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}">${t.fileB64 ? "File mẫu" : "Có sẵn"}</span></div>
+    <div class="text-[11px] text-slate-600">${t.columns.length} cột · ${t.columns.filter(c => c.required).length} bắt buộc · sheet “${esc(t.sheetName)}” · tiêu đề dòng ${t.headerRow + 1}${t.fileName ? ` · ${esc(t.fileName)}` : ""}</div>
+    <div class="text-[10px] text-slate-400 line-clamp-2">${t.columns.slice(0, 10).map(c => esc(c.name)).join(" · ")}${t.columns.length > 10 ? " …" : ""}</div>
+    <div class="flex gap-2 flex-wrap"><button data-tpledit="${esc(t.id)}" class="btn">Xem / sửa cột</button><button data-tpluse="${esc(t.id)}" class="btn">Gom dữ liệu vào template này</button>${t.fileB64 ? `<button data-tpldl="${esc(t.id)}" class="btn">⬇ File gốc</button>` : ""}${userTemplates.some(u => u.id === t.id) ? `<button data-tpldel="${esc(t.id)}" class="btn text-red-600">🗑</button>` : ""}</div></div>`).join("");
+}
+function openColumnEditor(id) {
+  const t = getTpl(id); const editable = userTemplates.some(u => u.id === id);
+  openModal(`Cột của template: ${t.name}`, `<p class="mb-2 text-slate-500">${editable ? "Chỉnh kiểu dữ liệu và cột bắt buộc để hệ thống kiểm tra trước khi xuất. Cột chính (mã) dùng để phát hiện trùng." : "Template có sẵn — chỉ xem."}</p>
+    <div class="flex gap-3 mb-3 flex-wrap"><label>Cột mã (chống trùng): <select id="edKey" class="inp" ${editable ? "" : "disabled"}><option value="">— không —</option>${t.columns.map(c => `<option ${c.name === t.keyCol ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>
+    <label>Cột tên: <select id="edName" class="inp" ${editable ? "" : "disabled"}>${t.columns.map(c => `<option ${c.name === t.nameCol ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label></div>
+    <table class="w-full"><thead><tr class="text-left text-slate-500"><th class="p-1">#</th><th class="p-1">Tên cột</th><th class="p-1">Kiểu</th><th class="p-1">Bắt buộc</th><th class="p-1">Danh sách giá trị (cách nhau dấu ;)</th></tr></thead><tbody>
+    ${t.columns.map((c, i) => `<tr class="border-t"><td class="p-1 text-slate-400">${XLSX.utils.encode_col(c.ci)}</td><td class="p-1 font-semibold">${esc(c.name)}</td>
+      <td class="p-1"><select data-ed="type" data-i="${i}" class="inp" ${editable ? "" : "disabled"}>${[["text", "Chữ"], ["number", "Số"], ["bool", "Có/Không (1/0)"], ["select", "Danh sách"]].map(([v, l]) => `<option value="${v}" ${c.type === v ? "selected" : ""}>${l}</option>`).join("")}</select></td>
+      <td class="p-1 text-center"><input type="checkbox" data-ed="req" data-i="${i}" ${c.required ? "checked" : ""} ${editable ? "" : "disabled"}></td>
+      <td class="p-1"><input data-ed="opts" data-i="${i}" class="inp w-full" value="${esc((c.options || []).join("; "))}" ${editable ? "" : "disabled"}></td></tr>`).join("")}</tbody></table>`,
+    editable ? [{ label: "Lưu", primary: true, onClick: () => {
+      document.querySelectorAll("[data-ed]").forEach(el => { const c = t.columns[+el.dataset.i];
+        if (el.dataset.ed === "type") c.type = el.value; else if (el.dataset.ed === "req") c.required = el.checked; else c.options = el.value.split(";").map(s => s.trim()).filter(Boolean); });
+      t.columns.forEach(c => { if (c.type !== "select" || !(c.options && c.options.length)) { if (c.type === "select") c.type = "text"; c.options = null; } });
+      t.keyCol = $("edKey").value || null; t.nameCol = $("edName").value;
+      lsSet(K_TPL, userTemplates); closeModal(); renderTemplates(); refreshWorkspace(); showToast("Đã lưu template", t.name);
+    } }] : []);
+}
+
+// =====================================================================
+// 14. GOM DỮ LIỆU THÔ – GIAO DIỆN
+// =====================================================================
+let pFileAoa = null;
+function analyze() {
+  const tplId = $("pTemplate").value;
+  if (!tplId) { showToast("Chưa chọn template", "Chọn template đích trước.", "warn"); return; }
+  let aoa = pFileAoa;
+  if (!aoa) { const raw = $("rawTextarea").value; if (!raw.trim()) { showToast("Chưa có dữ liệu", "Dán bảng hoặc chọn file dữ liệu thô.", "warn"); return; } aoa = parseTSV(raw); }
+  parseState = analyzeRaw(tplId, aoa);
+  renderMapping();
+}
+function renderMapping() {
+  const st = parseState, tpl = getTpl(st.tplId);
+  $("mappingBox").classList.remove("hidden");
+  $("pHasHeader").checked = st.headerIdx >= 0; $("pHeaderRowNo").textContent = st.headerIdx >= 0 ? st.headerIdx + 1 : "–";
+  const firstData = st.aoa.slice(st.headerIdx + 1).find(r => r.filter(c => c).length > 1) || [];
+  const mapped = Object.keys(st.mapping).length;
+  const guess = st.headerIdx < 0 && tpl.profile === "fnb-menu" && !mapped;
+  $("mapInfo").textContent = `${st.aoa.length - st.headerIdx - 1} dòng dữ liệu · ghép tự động ${mapped}/${tpl.columns.length} cột` + (guess ? " · không có tiêu đề: thực đơn sẽ được đoán cột theo nội dung (có thể chọn cột thủ công bên dưới)" : "");
+  const opts = (sel) => `<option value="-1">— bỏ trống —</option>` + st.srcHeaders.map((h, i) => `<option value="${i}" ${sel === i ? "selected" : ""}>${esc(h)}</option>`).join("");
+  $("mapBody").innerHTML = tpl.columns.map(c => {
+    const idx = st.mapping[c.name];
+    const sample = idx !== undefined && idx >= 0 ? (firstData[idx] ?? "") : (st.defaults[c.name] || "");
+    return `<tr class="border-t ${idx !== undefined ? "" : c.required ? "bg-red-50/60" : ""}"><td class="p-2 font-semibold">${esc(c.name)}${c.required ? ' <span class="text-red-500">*</span>' : ""}</td>
+      <td class="p-2"><select data-map="${esc(c.name)}" class="inp w-full">${opts(idx !== undefined ? idx : -1)}</select></td>
+      <td class="p-2"><input data-def="${esc(c.name)}" class="inp w-full" value="${esc(st.defaults[c.name] || "")}" placeholder="${c.type === "bool" ? "1 hoặc 0" : ""}"></td>
+      <td class="p-2 text-slate-500 max-w-[220px] truncate">${esc(sample)}</td></tr>`;
+  }).join("");
+}
+function applyParse() {
+  if (!parseState) return;
+  const mode = document.querySelector('input[name="importMode"]:checked').value;
+  const tplId = parseState.tplId;
+  let idx = ws.sheets.findIndex(s => s.templateId === tplId);
+  const existing = idx >= 0 && mode === "append" ? ws.sheets[idx].rows : [];
+  const { rows, rep } = buildRowsFromParse(parseState, existing);
+  if (!rows.length) { showToast("Không có dòng nào được gom", "Kiểm tra lại ghép cột (cần ít nhất cột tên hoặc mã).", "danger"); return; }
+  pushUndo();
+  const withId = rows.map(r => ({ ...r, _id: uid() }));
+  if (idx < 0) { ws.sheets.push({ templateId: tplId, rows: withId }); idx = ws.sheets.length - 1; }
+  else ws.sheets[idx].rows = mode === "append" ? [...ws.sheets[idx].rows, ...withId] : withId;
+  const tpl = getTpl(tplId);
+  if (tpl.model && ws.model !== tpl.model && !ws.sheets.some((s, i) => i !== idx && s.rows.length)) { ws.model = tpl.model; ws.industry = MODELS[tpl.model].industries[0]; }
+  ws.active = idx; selected.clear();
+  navigateTo("workspace"); refreshWorkspace(); saveWs();
+  showToast(`Đã gom ${rows.length} dòng vào “${tpl.kind}”`, `${mode === "append" ? "Thêm vào cuối" : "Thay thế danh mục"}${rep.skipped ? ` · bỏ qua ${rep.skipped} dòng tiêu đề/nhóm` : ""}${rep.bad ? ` · ${rep.bad} dòng có số lỗi cần xem lại` : ""}`, rep.bad ? "warn" : "success");
+  if (settings.autoSave) saveToLibrary("import", true);
+}
+function readDataFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+      const tpl = getTpl($("pTemplate").value);
+      let best = null;
+      wb.SheetNames.forEach(sn => { const aoa = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: false, defval: "" }).map(r => r.map(c => String(c).trim())).filter(r => r.some(c => c));
+        const sc = tpl ? (detectSourceHeader(tpl, trimAoa(aoa)) >= 0 ? 1 : 0) * 1000 + aoa.length : aoa.length; if (!best || sc > best.sc) best = { aoa, sc, sn }; });
+      pFileAoa = best.aoa; $("pFileName").textContent = `${file.name} › sheet “${best.sn}” (${best.aoa.length} dòng)`;
+      analyze();
+    } catch (err) { showToast("Không đọc được file", String(err.message || err), "danger"); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// =====================================================================
+// 15. MODAL, ĐIỀU HƯỚNG, SỰ KIỆN
+// =====================================================================
+function openModal(title, html, buttons) {
+  $("modalTitle").textContent = title; $("modalBody").innerHTML = html;
+  $("modalFoot").innerHTML = ""; [...buttons, { label: "Đóng" }].forEach(b => { const el = document.createElement("button"); el.className = "btn" + (b.primary ? " btn-p" : ""); el.textContent = b.label; el.onclick = b.onClick || closeModal; $("modalFoot").appendChild(el); });
+  $("modal").classList.remove("hidden");
+}
+function closeModal() { $("modal").classList.add("hidden"); }
+function navigateTo(v) {
+  const titles = { workspace: "Bàn làm việc", library: "Thư viện dữ liệu mẫu", parser: "Gom dữ liệu thô vào template", templates: "Quản lý template" };
+  document.querySelectorAll(".nav-btn").forEach(b => { b.className = "nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs transition " + (b.dataset.nav === v ? "bg-violet-50 text-violet-700 shadow-sm" : "text-slate-600 hover:bg-slate-50"); });
+  ["workspace", "library", "parser", "templates"].forEach(x => $("view-" + x).classList.toggle("hidden", x !== v));
+  $("viewTitle").textContent = titles[v];
+  if (v === "parser") renderTemplateSelects();
+}
+
+document.querySelectorAll(".nav-btn").forEach(b => b.addEventListener("click", () => navigateTo(b.dataset.nav)));
+$("modalClose").onclick = closeModal;
+$("modal").addEventListener("click", (e) => {
+  if (e.target === $("modal")) closeModal();
+  const b = e.target.closest("[data-addtpl]");
+  if (b) { pushUndo(); ws.sheets.push({ templateId: b.dataset.addtpl, rows: [] }); ws.active = ws.sheets.length - 1; closeModal(); refreshWorkspace(); saveWs(); }
+});
+$("btnUndo").onclick = undo;
+$("btnExport").onclick = exportAll;
+$("btnSaveLib").onclick = () => saveToLibrary("manual", false);
+$("wsTitle").addEventListener("change", (e) => { ws.title = e.target.value.trim(); renderWsMeta(); saveWs(); });
+$("wsModel").addEventListener("change", (e) => { ws.model = e.target.value; ws.industry = MODELS[ws.model].industries[0]; renderWsMeta(); saveWs(); });
+$("wsIndustry").addEventListener("change", (e) => { ws.industry = e.target.value; renderWsMeta(); saveWs(); });
+$("sheetTabs").addEventListener("click", (e) => {
+  if (e.target.closest("#btnAddSheet")) { addSheetDialog(); return; }
+  const b = e.target.closest("[data-tab]"); if (!b) return;
+  ws.active = +b.dataset.tab; selected.clear(); searchText = ""; $("searchBox").value = ""; refreshWorkspace();
+});
+$("btnToggleCols").onclick = () => { showAllCols = !showAllCols; renderDataTable(); };
+$("btnAddRow").onclick = () => {
+  const sh = curSheet(); if (!sh) { addSheetDialog(); return; }
+  const tpl = getTpl(sh.templateId); pushUndo();
+  const row = { ...blankRow(tpl), _id: uid() };
+  if (tpl.profile === "fnb-menu") row["Mã món"] = nextCode(sh.rows, "Mã món", "SP", new Set());
+  sh.rows.push(row); searchText = ""; $("searchBox").value = ""; refreshWorkspace(); saveWs();
+  const tr = document.querySelector(`#tableBody tr[data-id="${row._id}"]`);
+  if (tr) { tr.scrollIntoView({ block: "center" }); const inp = tr.querySelector(`td[data-key="${CSS.escape(tpl.nameCol || "")}"] input`); if (inp) inp.focus(); }
+};
+$("btnBulkDelete").onclick = () => { if (selected.size && confirm(`Xóa ${selected.size} dòng đã chọn?`)) deleteRows([...selected]); };
+$("btnDeselect").onclick = () => { selected.clear(); renderDataTable(); updateBulk(); };
+$("searchBox").addEventListener("input", (e) => { searchText = e.target.value; renderDataTable(); });
+$("validationPanel").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-goto]"); if (!b) return;
+  if (searchText) { searchText = ""; $("searchBox").value = ""; renderDataTable(); }
+  const tr = document.querySelector(`#tableBody tr[data-id="${b.dataset.goto}"]`);
+  if (tr) { tr.scrollIntoView({ block: "center" }); const el = tr.querySelector(".cell-err input, .cell-err select, .cell-warn input, .cell-warn select"); if (el) el.focus(); }
+});
+$("tableHeader").addEventListener("change", (e) => {
+  if (e.target.dataset.role !== "select-all") return;
+  visibleRows().forEach(r => e.target.checked ? selected.add(r._id) : selected.delete(r._id)); renderDataTable(); updateBulk();
+});
+$("tableBody").addEventListener("click", (e) => { const b = e.target.closest('[data-role="del"]'); if (b) deleteRows([b.closest("tr").dataset.id]); });
+$("tableBody").addEventListener("change", (e) => {
+  const t = e.target, tr = t.closest("tr[data-id]"); if (!tr) return;
+  const id = tr.dataset.id, sh = curSheet();
+  if (t.dataset.role === "select-row") {
+    t.checked ? selected.add(id) : selected.delete(id); tr.classList.toggle("is-selected", t.checked);
+    const all = $("tableHeader").querySelector('[data-role="select-all"]'); const vis = visibleRows(); if (all) all.checked = vis.length > 0 && vis.every(r => selected.has(r._id));
+    updateBulk(); return;
+  }
+  const key = t.dataset.key; if (!key) return;
+  const row = sh.rows.find(r => r._id === id); if (!row) return;
+  const tpl = getTpl(sh.templateId); const c = colDef(tpl, key);
+  pushUndo();
+  if (c.type === "bool") row[key] = t.checked ? 1 : 0;
+  else if (c.type === "number") { if (t.value.trim() === "") row[key] = c.required ? 0 : ""; else { const p = parseNumber(t.value); row[key] = p.bad ? t.value : p.value; t.value = row[key]; } delete row._bad; }
+  else row[key] = t.value.trim();
+  if (tpl.profile === "fnb-menu" && key === KEY_TIME && row[key] === 1) { row["Quản lý tồn kho"] = 0; const q = tr.querySelector('td[data-key="Quản lý tồn kho"] input'); if (q) q.checked = false; }
+  renderValidation(); renderTabs(); renderWsMeta(); saveWs();
+});
+// Thư viện
+$("libModelTabs").addEventListener("click", (e) => { const b = e.target.closest("[data-libmodel]"); if (b) { libFilter = { model: b.dataset.libmodel, industry: "" }; renderLibrary(); } });
+$("libIndustryChips").addEventListener("click", (e) => { const b = e.target.closest("[data-libind]"); if (b) { libFilter.industry = b.dataset.libind; renderLibrary(); } });
+$("libGrid").addEventListener("click", (e) => {
+  const l = e.target.closest("[data-libload]"); if (l) { loadPackage(allPackages().find(p => p.id === l.dataset.libload)); return; }
+  const d = e.target.closest("[data-libdel]");
+  if (d && confirm("Xóa bộ dữ liệu này khỏi thư viện trên trình duyệt này?")) { userLibrary = userLibrary.filter(p => p.id !== d.dataset.libdel); lsSet(K_LIB, userLibrary); if (ws.packageId === d.dataset.libdel) ws.packageId = null; renderLibrary(); }
+});
+$("optAutoSave").addEventListener("change", (e) => { settings.autoSave = e.target.checked; lsSet(K_SET, settings); });
+$("btnLibExport").onclick = exportLibraryJson;
+$("libImportInput").addEventListener("change", (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  f.text().then(txt => { importLibraryData(JSON.parse(txt), false); renderLibrary(); renderTemplates(); renderTemplateSelects(); showToast("Đã nhập thư viện", f.name); })
+    .catch(err => showToast("Không nhập được thư viện", String(err.message || err), "danger"));
+  e.target.value = "";
+});
+// Gom dữ liệu thô
+$("btnAnalyze").onclick = () => { if ($("rawTextarea").value.trim()) { pFileAoa = null; $("pFileName").textContent = ""; } analyze(); };
+$("pFile").addEventListener("change", (e) => { const f = e.target.files[0]; if (f) { $("rawTextarea").value = ""; readDataFile(f); } e.target.value = ""; });
+$("pTemplate").addEventListener("change", () => { if (parseState) analyze(); });
+$("pHasHeader").addEventListener("change", (e) => {
+  if (!parseState) return;
+  if (!e.target.checked) { parseState.headerIdx = -1; parseState.srcHeaders = parseState.srcHeaders.map((_, i) => `Cột ${i + 1}`); parseState.mapping = {}; }
+  else { const st = analyzeRaw(parseState.tplId, parseState.aoa); if (st.headerIdx < 0) { st.headerIdx = 0; st.srcHeaders = st.aoa[0].map((h, i) => h || `Cột ${i + 1}`); st.mapping = autoMap(getTpl(st.tplId), st.srcHeaders); } st.defaults = parseState.defaults; parseState = st; }
+  renderMapping();
+});
+$("mapBody").addEventListener("change", (e) => {
+  const m = e.target.dataset.map, d = e.target.dataset.def;
+  if (m !== undefined) { const v = +e.target.value; if (v < 0) delete parseState.mapping[m]; else { Object.keys(parseState.mapping).forEach(k => { if (parseState.mapping[k] === v) delete parseState.mapping[k]; }); parseState.mapping[m] = v; } renderMapping(); }
+  if (d !== undefined) { parseState.defaults[d] = e.target.value; }
+});
+$("btnApply").onclick = applyParse;
+// Template
+$("tFile").addEventListener("change", (e) => { const f = e.target.files[0]; if (f) handleTemplateFile(f); e.target.value = ""; });
+$("tplGrid").addEventListener("click", (e) => {
+  const ed = e.target.closest("[data-tpledit]"); if (ed) return openColumnEditor(ed.dataset.tpledit);
+  const use = e.target.closest("[data-tpluse]"); if (use) { navigateTo("parser"); $("pTemplate").value = use.dataset.tpluse; return; }
+  const dl = e.target.closest("[data-tpldl]");
+  if (dl) { const t = getTpl(dl.dataset.tpldl); const blob = new Blob([bytesFromB64(t.fileB64)]); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = t.fileName || "template.xlsx"; a.click(); return; }
+  const del = e.target.closest("[data-tpldel]");
+  if (del && confirm("Xóa template này? Các bộ dữ liệu dùng template này sẽ không xuất được.")) { userTemplates = userTemplates.filter(t => t.id !== del.dataset.tpldel); lsSet(K_TPL, userTemplates); renderTemplates(); renderTemplateSelects(); refreshWorkspace(); }
+});
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); undo(); }
+  if (e.key === "Escape") closeModal();
+});
+
+// =====================================================================
+// 16. KHỞI TẠO
+// =====================================================================
+function boot() {
+  $("optAutoSave").checked = settings.autoSave;
+  renderTemplates(); renderTemplateSelects();
+  const saved = lsGet(K_WS, null);
+  if (saved && Array.isArray(saved.sheets)) {
+    ws = saved; ws.sheets.forEach(s => s.rows.forEach(r => { if (!r._id) r._id = uid(); }));
+    navigateTo("workspace"); refreshWorkspace();
+  } else {
+    ws = { packageId: null, title: "", model: "fnb", industry: "Karaoke, Bida", active: 0, sheets: [] };
+    const p = demoPackages()[0];
+    ws = { packageId: null, basedOn: p.id, title: p.title, model: p.model, industry: p.industry, active: 0, sheets: p.sheets.map(s => ({ templateId: s.templateId, rows: withIds(s.rows) })) };
+    navigateTo("workspace"); refreshWorkspace();
+  }
+  renderLibrary();
+}
+boot();
+// Thư viện chung cho học viên: file library.json đặt cạnh index.html (bỏ qua nếu không có)
+fetch("library.json", { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(data => {
+  if (!data) return;
+  importLibraryData(data, true); renderLibrary(); renderTemplates(); renderTemplateSelects(); refreshWorkspace();
+}).catch(() => {});
+</script>
+</body>
+</html>
