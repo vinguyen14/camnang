@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>KiotViet Studio Pro V6 - Trendy Multi-Industry Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    
+    /* Sticky Freeze Columns */
+    .sticky-checkbox { position: sticky; left: 0; background-color: #ffffff; z-index: 25; }
+    .sticky-code { position: sticky; left: 40px; background-color: #ffffff; z-index: 25; }
+    .sticky-name { position: sticky; left: 160px; background-color: #ffffff; z-index: 25; box-shadow: 4px 0 6px -2px rgba(0,0,0,0.06); }
+    thead .sticky-checkbox, thead .sticky-code, thead .sticky-name { background-color: #f8fafc; z-index: 35; }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-800 antialiased h-screen flex overflow-hidden">
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- SIDEBAR BÊN TRÁI (TRENDY STYLE GIỐNG ẢNH 2) -->
+  <aside class="w-64 bg-white border-r border-slate-200/80 p-5 flex flex-col justify-between shrink-0 shadow-xs">
+    <div class="space-y-6">
+      <!-- Logo Branding -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-pink-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div>
+          <h1 class="text-sm font-extrabold tracking-tight text-slate-900 flex items-center gap-1">
+            KIOTVIET <span class="text-violet-600 text-xs px-1.5 py-0.2 bg-violet-50 rounded-md">STUDIO</span>
+          </h1>
+          <p class="text-[10px] text-slate-400 font-medium">Smart Data Transformer</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="space-y-1.5">
+        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-3 mb-2">Không gian chính</div>
+        <button onclick="navigateTo('workspace')" id="nav-workspace" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs transition bg-violet-50 text-violet-700 shadow-xs">
+          <span class="text-base">📊</span> Bàn làm việc dữ liệu
+        </button>
+        <button onclick="navigateTo('library')" id="nav-library" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs transition text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+          <span class="text-base">📚</span> Thư viện mẫu đa ngành
+          <span class="ml-auto bg-violet-100 text-violet-700 text-[9px] font-black px-1.5 py-0.5 rounded-full">9</span>
+        </button>
+        <button onclick="navigateTo('parser')" id="nav-parser" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs transition text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+          <span class="text-base">⚡</span> Bóc tách văn bản thô
+        </button>
+      </nav>
+    </div>
+
+    <!-- Active Model Card ở góc dưới Sidebar -->
+    <div class="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-4 rounded-2xl shadow-lg shadow-indigo-950/20 relative overflow-hidden">
+      <div class="relative z-10 space-y-1">
+        <span class="text-[10px] text-indigo-300 font-bold uppercase tracking-wider">Mô hình hiện tại</span>
+        <div id="sidebarActiveModel" class="font-extrabold text-xs text-white">🎤 Karaoke Full (44 Món)</div>
+        <p class="text-[10px] text-slate-400">Đã tự động nạp Thực đơn, Phòng bàn & Kho hàng.</p>
+      </div>
+      <div class="absolute -right-4 -bottom-4 w-16 h-16 bg-violet-500/20 rounded-full blur-xl"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT AREA -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+
+    <!-- TOP HEADER BAR -->
+    <header class="h-16 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-3">
+        <span id="currentViewTitle" class="font-extrabold text-slate-900 text-base">Bàn làm việc dữ liệu chuẩn</span>
+        <span id="activeSheetBadge" class="bg-violet-50 text-violet-700 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-violet-100">🍽️ Đang xem: Thực đơn (28 cột)</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-200">
+          <span>📥</span> Nạp file template mẫu
+          <input type="file" id="templateInput" accept=".xlsx, .csv" class="hidden">
+        </label>
+        <button id="btnExportAll" class="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md shadow-indigo-500/20 transition flex items-center gap-1.5">
+          <span>📤</span> Xuất File Excel Đa Sheet (.xlsx)
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENT VIEWS -->
+    <div class="flex-1 overflow-y-auto p-6">
+
+      <!-- VIEW 1: BÀN LÀM VIỆC (WORKSPACE) -->
+      <section id="view-workspace" class="space-y-4">
+        <!-- Sub-tabs chuyển nhanh giữa các bộ dữ liệu của ngành -->
+        <div class="flex flex-wrap justify-between items-center gap-3">
+          <div class="bg-slate-100 p-1 rounded-2xl flex items-center gap-1 border border-slate-200/60">
+            <button onclick="switchSubSheet('menu')" id="sheet-menu" class="sheet-tab px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-white shadow-xs text-violet-700">
+              🍽️ Thực đơn / Món (<span id="menuCountBadge">44</span>)
+            </button>
+            <button onclick="switchSubSheet('rooms')" id="sheet-rooms" class="sheet-tab px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 hover:text-slate-900">
+              🛋️ Phòng / Bàn / Buồng (<span id="roomsCountBadge">8</span>)
+            </button>
+            <button onclick="switchSubSheet('inventory')" id="sheet-inventory" class="sheet-tab px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 hover:text-slate-900">
+              📦 Kho hàng / NVL (<span id="invCountBadge">10</span>)
+            </button>
+            <button onclick="switchSubSheet('customers')" id="sheet-customers" class="sheet-tab px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 hover:text-slate-900">
+              👥 Khách hàng thân thiết (<span id="custCountBadge">5</span>)
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="btnToggleColumns" class="text-xs px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-50 transition">
+              ↔ Thu gọn / Đầy đủ 28 cột
+            </button>
+            <button id="btnAddNewRow" class="text-xs px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold transition shadow-xs">
+              + Thêm dòng mới
+            </button>
+          </div>
+        </div>
+
+        <!-- Floating Multi-select Action Bar (Hiện khi tích chọn >= 1 món) -->
+        <div id="bulkActionBar" class="hidden bg-slate-900 text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center justify-between transition-all duration-200">
+          <div class="flex items-center gap-3 text-xs">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Đã chọn <strong id="selectedRowsCount" class="text-yellow-300 font-bold">0</strong> dòng</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btnBulkDelete" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-xl text-xs font-bold transition">
+              🗑️ Xóa các dòng đã chọn
+            </button>
+            <button onclick="deselectAllRows()" class="text-slate-300 hover:text-white px-2 py-1 text-xs">Hủy</button>
+          </div>
+        </div>
+
+        <!-- Bảng hiển thị 28 cột chuẩn KiotViet -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+          <div class="overflow-x-auto max-h-[calc(100vh-280px)]">
+            <table class="w-full text-left text-xs border-collapse whitespace-nowrap" id="mainDataTable">
+              <thead class="bg-slate-50 text-slate-700 sticky top-0 border-b border-slate-200 font-bold z-30" id="tableHeader"></thead>
+              <tbody id="tableBody" class="divide-y divide-slate-100 font-normal"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: THƯ VIỆN TEMPLATE ĐA NGÀNH (TÁCH RIÊNG KHÔNG BỊ RỐI) -->
+      <section id="view-library" class="hidden space-y-6">
+        <div>
+          <h2 class="text-lg font-black text-slate-900">Kho tàng Menu & Dữ liệu mẫu KiotViet</h2>
+          <p class="text-xs text-slate-400 mt-1">Chọn mô hình kinh doanh để nạp trọn gói Thực đơn, Phòng bàn, Kho NVL và Khách hàng.</p>
+        </div>
+
+        <!-- Category Pills -->
+        <div class="flex gap-2 border-b border-slate-200 pb-3">
+          <button onclick="filterLibCategory('all')" class="lib-pill active px-4 py-1.5 rounded-full text-xs font-bold bg-slate-900 text-white">Tất cả (9 mô hình)</button>
+          <button onclick="filterLibCategory('fnb')" class="lib-pill px-4 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">🍹 FnB & Giải trí</button>
+          <button onclick="filterLibCategory('retail')" class="lib-pill px-4 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">🛒 Bán lẻ & Siêu thị</button>
+          <button onclick="filterLibCategory('salon')" class="lib-pill px-4 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">💅 Salon & Spa</button>
+          <button onclick="filterLibCategory('hotel')" class="lib-pill px-4 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">🏨 Khách sạn & Homestay</button>
+        </div>
+
+        <!-- Template Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="libraryCardsGrid"></div>
+      </section>
+
+      <!-- VIEW 3: BỘ BÓC TÁCH DỮ LIỆU THÔ -->
+      <section id="view-parser" class="hidden space-y-5">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Dán dữ liệu thô từ Excel, Word hoặc Tin nhắn Zalo</h3>
+            <p class="text-xs text-slate-400 mt-1">Hệ thống tự động phát hiện cột Mã, Tên, Giá bán, Giá vốn và Tồn kho.</p>
+          </div>
+
+          <textarea id="rawTextarea" rows="8" class="w-full border border-slate-300 rounded-xl p-4 text-xs font-mono focus:ring-2 focus:ring-violet-500 focus:outline-none" 
+placeholder="Bia Heineken Bạc | Lon | 42000 | 20000 | Tồn 240
+Giờ hát VIP đêm | Giờ | 380000 | 0 | Giờ
+Đĩa trái cây lớn | Dĩa | 250000 | 95000
+Khô mực nướng | Dĩa | 180000 | 75000"></textarea>
+
+          <div class="flex justify-between items-center pt-2">
+            <span class="text-xs text-slate-500">Dữ liệu sau khi bóc tách sẽ được gộp vào Sheet hiện tại.</span>
+            <button onclick="parseRawInput()" class="bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition shadow-xs">
+              ⚡ Bóc tách & Chuyển sang Bàn làm việc
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- SIMULATION ONBOARDING WIDGET (MÔ PHỎNG KIOTVIET Y NHƯ HÌNH 1) -->
+  <aside id="guideWidget" class="fixed bottom-6 right-6 z-40 w-80 bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden transition-all duration-300">
+    <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center cursor-pointer select-none" onclick="toggleGuideWidget()">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <span class="font-bold text-xs">Hướng dẫn từng bước (Step-by-step)</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="guideStepBadge" class="bg-white/20 text-[10px] font-mono px-2 py-0.5 rounded-full font-bold">1/5</span>
+        <button id="btnMinimizeGuide" class="text-slate-300 hover:text-white text-xs font-bold px-1.5 py-0.5 rounded">_</button>
+      </div>
+    </div>
+
+    <div id="guideContent" class="p-4 space-y-3 text-xs">
+      <div>
+        <h4 class="font-bold text-slate-900 text-xs">Quy trình nạp menu & Import chuẩn:</h4>
+        <p class="text-[11px] text-slate-400 mt-0.5">Mô phỏng hành động chính xác trên KiotViet</p>
+      </div>
+
+      <div class="space-y-2">
+        <div onclick="simulateStep(1)" class="guide-item flex items-start gap-2.5 p-2 rounded-xl border border-slate-100 bg-slate-50 hover:bg-violet-50/60 cursor-pointer transition">
+          <input type="checkbox" id="chkStep1" checked class="mt-0.5 rounded text-violet-600 pointer-events-none">
+          <div>
+            <div class="font-bold text-slate-800 text-[11px]">1. Chọn mô hình từ Thư viện</div>
+            <div class="text-[10px] text-slate-400">Tự động nạp Thực đơn, Phòng bàn, Kho NVL.</div>
+          </div>
+        </div>
+
+        <div onclick="simulateStep(2)" class="guide-item flex items-start gap-2.5 p-2 rounded-xl border border-slate-100 bg-slate-50 hover:bg-violet-50/60 cursor-pointer transition">
+          <input type="checkbox" id="chkStep2" class="mt-0.5 rounded text-violet-600 pointer-events-none">
+          <div>
+            <div class="font-bold text-slate-800 text-[11px]">2. Kiểm tra cờ "Dịch vụ tính giờ"</div>
+            <div class="text-[10px] text-slate-400">Giờ hát/Bida/Phòng khách sạn phải bật cờ này.</div>
+          </div>
+        </div>
+
+        <div onclick="simulateStep(3)" class="guide-item flex items-start gap-2.5 p-2 rounded-xl border border-slate-100 bg-slate-50 hover:bg-violet-50/60 cursor-pointer transition">
+          <input type="checkbox" id="chkStep3" class="mt-0.5 rounded text-violet-600 pointer-events-none">
+          <div>
+            <div class="font-bold text-slate-800 text-[11px]">3. Tích chọn để sửa hoặc xóa món</div>
+            <div class="text-[10px] text-slate-400">Chọn 1 hoặc nhiều dòng để xóa nhanh.</div>
+          </div>
+        </div>
+
+        <div onclick="simulateStep(4)" class="guide-item flex items-start gap-2.5 p-2 rounded-xl border border-slate-100 bg-slate-50 hover:bg-violet-50/60 cursor-pointer transition">
+          <input type="checkbox" id="chkStep4" class="mt-0.5 rounded text-violet-600 pointer-events-none">
+          <div>
+            <div class="font-bold text-slate-800 text-[11px]">4. Bấm "Xuất File Excel Đa Sheet"</div>
+            <div class="text-[10px] text-slate-400">Tải file .xlsx có đủ các Sheet chuẩn KiotViet.</div>
+          </div>
+        </div>
+
+        <div onclick="simulateStep(5)" class="guide-item flex items-start gap-2.5 p-2 rounded-xl border border-slate-100 bg-slate-50 hover:bg-violet-50/60 cursor-pointer transition">
+          <input type="checkbox" id="chkStep5" class="mt-0.5 rounded text-violet-600 pointer-events-none">
+          <div>
+            <div class="font-bold text-slate-800 text-[11px]">5. Import lên KiotViet</div>
+            <div class="text-[10px] text-slate-400">Vào Thực đơn $\rightarrow$ Import $\rightarrow$ Chọn file!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <script>
+    // --- 28 CỘT CHUẨN KIOTVIET FNB ---
+    const KIOTVIET_COLUMNS = [
+      { key: "Loại món", width: "120px", type: "select", options: ["Món thường", "Dịch vụ", "Combo cố định", "Món chế biến", "Món sản xuất", "Topping thường"] },
+      { key: "Loại thực đơn", width: "110px", type: "select", options: ["Đồ ăn", "Đồ uống", "Dịch vụ", "Khác"] },
+      { key: "Nhóm món (3 Cấp)", width: "160px", type: "text" },
+      { key: "Quản lý tồn kho", width: "100px", type: "checkbox", align: "center" },
+      { key: "Món thêm", width: "100px", type: "text" },
+      { key: "Là món dịch vụ tính theo thời gian sử dụng", width: "120px", type: "checkbox", align: "center" },
+      { key: "Mã món", width: "120px", type: "text", isStickyCode: true },
+      { key: "Tên món", width: "230px", type: "text", isStickyName: true },
+      { key: "Giá bán", width: "110px", type: "number", align: "right" },
+      { key: "Giá vốn", width: "100px", type: "number", align: "right" },
+      { key: "Tồn kho hiện tại", width: "100px", type: "number", align: "right" },
+      { key: "Định mức tồn nhỏ nhất", width: "100px", type: "number", align: "right" },
+      { key: "Định mức tồn lớn nhất", width: "110px", type: "number", align: "right" },
+      { key: "ĐVT", width: "80px", type: "text", align: "center" },
+      { key: "Mã ĐVT Cơ bản", width: "100px", type: "text" },
+      { key: "Quy đổi", width: "80px", type: "number", align: "center" },
+      { key: "Thuộc tính", width: "110px", type: "text" },
+      { key: "Mã món Liên quan", width: "110px", type: "text" },
+      { key: "Hình ảnh (url1,url2...)", width: "130px", type: "text" },
+      { key: "Trọng lượng", width: "90px", type: "text", align: "right" },
+      { key: "ĐVT trọng lượng", width: "90px", type: "text", align: "center" },
+      { key: "Tích điểm", width: "80px", type: "checkbox", align: "center" },
+      { key: "Đang kinh doanh", width: "100px", type: "checkbox", align: "center" },
+      { key: "Cho phép bán", width: "100px", type: "checkbox", align: "center" },
+      { key: "Mô tả", width: "150px", type: "text" },
+      { key: "Mẫu ghi chú", width: "120px", type: "text" },
+      { key: "Món thành phần", width: "220px", type: "text" },
+      { key: "Vị trí", width: "100px", type: "text" }
+    ];
+
+    const COMPACT_KEYS = [
+      "Mã món", "Tên món", "Nhóm món (3 Cấp)", "Loại món", "Loại thực đơn", 
+      "ĐVT", "Giá bán", "Giá vốn", "Quản lý tồn kho", "Là món dịch vụ tính theo thời gian sử dụng"
+    ];
+
+    // --- KHO TÀNG DỮ LIỆU ĐA CHIỀU (THỰC ĐƠN + PHÒNG BÀN + KHO NVL + KHÁCH HÀNG) ---
+    const TEMPLATE_MODELS = [
+      {
+        id: "karaoke",
+        category: "fnb",
+        title: "🎤 Karaoke Trọn Gói",
+        badge: "Khuyên dùng",
+        desc: "Đầy đủ 44 món (giờ hát, bia tiger, chivas, hoa quả, combo) + 8 Phòng VIP + Kho nguyên liệu pha chế.",
+        menuCount: 44,
+        roomsCount: 8,
+        invCount: 10,
+        custCount: 5,
+        prefix: "KAR",
+        data: {
+          menu: [
+            { "Loại món": "Dịch vụ", "Loại thực đơn": "Dịch vụ", "Nhóm món (3 Cấp)": "Dịch vụ giờ hát", "Quản lý tồn kho": 0, "Là món dịch vụ tính theo thời gian sử dụng": 1, "Mã món": "DV001", "Tên món": "Giờ hát Phòng Thường (Sáng/Chiều)", "Giá bán": 150000, "Giá vốn": 0, "Tồn kho hiện tại": 0, "ĐVT": "Giờ", "Đang kinh doanh": 1, "Cho phép bán": 1 },
+            { "Loại món": "Dịch vụ", "Loại thực đơn": "Dịch vụ", "Nhóm món (3 Cấp)": "Dịch vụ giờ hát", "Quản lý tồn kho": 0, "Là món dịch vụ tính theo thời gian sử dụng": 1, "Mã món": "DV002", "Tên món": "Giờ hát Phòng Thường (Tối)", "Giá bán": 250000, "Giá vốn": 0, "Tồn kho hiện tại": 0, "ĐVT": "Giờ", "Đang kinh doanh": 1, "Cho phép bán": 1 },
+            { "Loại món": "Dịch vụ", "Loại thực đơn": "Dịch vụ", "Nhóm món (3 Cấp)": "Dịch vụ giờ hát", "Quản lý tồn kho": 0, "Là món dịch vụ tính theo thời gian sử dụng": 1, "Mã món": "DV003", "Tên món": "Giờ hát Phòng VIP (Sáng/Chiều)", "Giá bán": 250000, "Giá vốn": 0, "Tồn kho hiện tại": 0, "ĐVT": "Giờ", "Đang kinh doanh": 1, "Cho phép bán": 1 },
+            { "Loại món": "Dịch vụ", "Loại thực đơn": "Dịch vụ", "Nhóm món (3 Cấp)": "Dịch vụ giờ hát", "Quản lý tồn kho": 0, "Là món dịch vụ tính theo thời gian sử dụng": 1, "Mã món": "DV004", "Tên món": "Giờ hát Phòng VIP (Tối)", "Giá bán": 380000, "Giá vốn": 0, "Tồn kho hiện tại": 0, "ĐVT": "Giờ", "Đang kinh doanh": 1, "Cho phép bán": 1 },
+            { "Loại món": "Dịch vụ", "Loại thực đơn": "Dịch vụ", "Nhóm món (3 Cấp)": "Dịch vụ giờ hát", "Quản lý tồn kho": 0, "Là món dịch vụ tính theo thời gian sử dụng": 1, "Mã món": "DV005", "Tên món": "Giờ hát Phòng Super VIP", "Giá bán": 550000, "Giá vốn": 0, "Tồn kho hiện tại": 0, "ĐVT": "Giờ", "Đang kinh doanh": 1, "Cho phép bán": 1 },
+            { "Loại món": "Món thường", "Loại thực đơn": "Đồ uống", "Nhóm món (3 Cấp)": "Đồ uống>>Bia", "Quản lý tồn kho": 1, "Là món dịch vụ tính theo thời gian sử dụng": 0, "Mã món": "BIA001", "Tên món": "Bia Tiger Bạc (Lon)", "Giá bán": 35000, "Giá vốn": 16500, "Tồn kho hiện tại": 240, "ĐVT": "Lon", "Đang kinh doanh": 1, "Cho phép bán": 1 },
+            { "Loại món": "Món thường", "Loại thực đơn": "Đồ uống", "Nhóm món (3 Cấp)": "Đồ uống>>Bia", "Quản lý tồn kho": 1, "Là món dịch vụ tính theo thời gian sử dụng": 0, "Mã món": "BIA003", "Tên món": "Bia Heineken Silver (Lon)", "Giá bán": 42000, "Giá vốn": 20000, "Tồn kho hiện tại": 240, "ĐVT": "Lon", "Đang kinh doanh": 1, "Cho phép bán": 1 },
+            { "Loại món": "Món thường", "Loại thực đơn": "Đồ uống", "Nhóm món (3 Cấp)": "Đồ uống>>Rượu", "Quản lý tồn kho": 1, "Là món dịch vụ tính theo thời gian sử dụng": 0, "Mã món": "RUO004", "Tên món": "Rượu Chivas 12 (700ml)", "Giá bán": 1650000, "Giá vốn": 750000, "Tồn kho hiện tại": 12, "ĐVT": "Chai", "Đang kinh doanh": 1, "Cho phép bán": 1 },
+            { "Loại món": "Món thường", "Loại thực đơn": "Đồ uống", "Nhóm món (3 Cấp)": "Đồ uống>>Rượu", "Quản lý tồn kho": 1, "Là món dịch vụ tính theo thời gian sử dụng": 0, "Mã món": "RUO005", "Tên món": "Rượu Chivas 18 (700ml)", "Giá bán": 2800000, "Giá vốn": 1450000, "Tồn kho hiện tại": 8, "ĐVT": "Chai", "Đang kinh doanh": 1, "Cho phép bán": 1 },
+            { "Loại món": "Món chế biến", "Loại thực đơn": "Đồ ăn", "Nhóm món (3 Cấp)": "Đồ ăn>>Trái cây", "Quản lý tồn kho": 0, "Là món dịch vụ tính theo thời gian sử dụng": 0, "Mã món": "ANV002", "Tên món": "Trái cây thập cẩm (Dĩa lớn)", "Giá bán": 250000, "Giá vốn": 95000, "Tồn kho hiện tại": 0, "ĐVT": "Dĩa", "Đang kinh doanh": 1, "Cho phép bán": 1 },
+            { "Loại món": "Combo cố định", "Loại thực đơn": "Khác", "Nhóm món (3 Cấp)": "Combo", "Quản lý tồn kho": 0, "Là món dịch vụ tính theo thời gian sử dụng": 0, "Mã món": "CMB002", "Tên món": "Combo Tiệc Vui (20 Bia Ken + 1 Trái cây + 1 Bò khô)", "Giá bán": 1190000, "Giá vốn": 560000, "Tồn kho hiện tại": 0, "ĐVT": "Combo", "Món thành phần": "BIA003:20|ANV002:1|ANV003:1", "Đang kinh doanh": 1, "Cho phép bán": 1 }
+          ],
+          rooms: [
+            { "Tên bàn": "Phòng 101", "Ghi chú": "Phòng thường lầu 1", "Khu vực": "Khu Thường", "Số ghế": 8, "Trạng thái": 1, "Số thứ tự": 1 },
+            { "Tên bàn": "Phòng 102", "Ghi chú": "Phòng thường lầu 1", "Khu vực": "Khu Thường", "Số ghế": 10, "Trạng thái": 1, "Số thứ tự": 2 },
+            { "Tên bàn": "Phòng VIP 201", "Ghi chú": "Dàn âm thanh JBL", "Khu vực": "Khu VIP", "Số ghế": 15, "Trạng thái": 1, "Số thứ tự": 3 },
+            { "Tên bàn": "Phòng VIP 202", "Ghi chú": "Dàn âm thanh BMB", "Khu vực": "Khu VIP", "Số ghế": 18, "Trạng thái": 1, "Số thứ tự": 4 },
+            { "Tên bàn": "Super VIP 301", "Ghi chú": "Sân khấu mini", "Khu vực": "Super VIP", "Số ghế": 30, "Trạng thái": 1, "Số thứ tự": 5 }
+          ],
+          inventory: [
+            { "Nhóm quản lý": "Nguyên vật liệu", "Nhóm hàng (3 Cấp)": "Trái cây tươi", "Mã hàng": "NVL001", "Tên hàng": "Dưa hấu Long An", "Giá vốn": 15000, "Tồn kho hiện tại": 30, "ĐVT": "kg", "Quản lý tồn kho": 1 },
+            { "Nhóm quản lý": "Nguyên vật liệu", "Nhóm hàng (3 Cấp)": "Trái cây tươi", "Mã hàng": "NVL002", "Tên hàng": "Thơm (Dứa)", "Giá vốn": 12000, "Tồn kho hiện tại": 20, "ĐVT": "Trái", "Quản lý tồn kho": 1 },
+            { "Nhóm quản lý": "Công cụ dụng cụ", "Nhóm hàng (3 Cấp)": "Dụng cụ phòng", "Mã hàng": "CC001", "Tên hàng": "Đầu bọc micro dùng 1 lần", "Giá vốn": 500, "Tồn kho hiện tại": 500, "ĐVT": "Cái", "Quản lý tồn kho": 1 }
+          ],
+          customers: [
+            { "Mã khách hàng": "KH001", "Tên khách hàng": "Anh Tuấn (VIP)", "Điện thoại": "0908123456", "Nhóm khách": "Khách VIP", "Giảm giá (%)": 10 },
+            { "Mã khách hàng": "KH002", "Tên khách hàng": "Chị Lan (Công ty FPT)", "Điện thoại": "0912987654", "Nhóm khách": "Doanh nghiệp", "Giảm giá (%)": 5 }
+          ]
+        }
+      },
+      {
+        id: "bida",
+        category: "fnb",
+        title: "🎱 Bida Club (Pool & Carom)",
+        badge: "Đầy đủ",
+        desc: "Tiền bàn bida theo giờ, Nước tăng lực, Thuốc lá, Mì tôm trứng, Bàn Pool/Carom.",
+        menuCount: 15,
+        roomsCount: 12,
+        invCount: 6,
+        custCount: 4,
+        prefix: "BID",
+        data: {
+          menu: [
+            { "Loại món": "Dịch vụ", "Loại thực đơn": "Dịch vụ", "Nhóm món (3 Cấp)": "Giờ chơi bida", "Quản lý tồn kho": 0, "Là món dịch vụ tính theo thời gian sử dụng": 1, "Mã món": "BID001", "Tên món": "Tiền bàn Bida Lỗ (Pool) Ngày", "Giá bán": 70000, "Giá vốn": 0, "ĐVT": "Giờ", "Đang kinh doanh": 1, "Cho phép bán": 1 },
+            { "Loại món": "Dịch vụ", "Loại thực đơn": "Dịch vụ", "Nhóm món (3 Cấp)": "Giờ chơi bida", "Quản lý tồn kho": 0, "Là món dịch vụ tính theo thời gian sử dụng": 1, "Mã món": "BID002", "Tên món": "Tiền bàn Bida Carom 3 Băng", "Giá bán": 110000, "Giá vốn": 0, "ĐVT": "Giờ", "Đang kinh doanh": 1, "Cho phép bán": 1 },
+            { "Loại món": "Món thường", "Loại thực đơn": "Đồ uống", "Nhóm món (3 Cấp)": "Nước tăng lực", "Quản lý tồn kho": 1, "Là món dịch vụ tính theo thời gian sử dụng": 0, "Mã món": "BID003", "Tên món": "Nước tăng lực Redbull Thái", "Giá bán": 25000, "Giá vốn": 11000, "Tồn kho hiện tại": 96, "ĐVT": "Lon", "Đang kinh doanh": 1, "Cho phép bán": 1 }
+          ],
+          rooms: [
+            { "Tên bàn": "Bàn Pool 01 (Aplus)", "Ghi chú": "Bàn thi đấu", "Khu vực": "Khu Pool", "Số ghế": 4, "Trạng thái": 1, "Số thứ tự": 1 },
+            { "Tên bàn": "Bàn Carom 01 (Gabriels)", "Ghi chú": "Sưởi nhiệt", "Khu vực": "Khu Carom", "Số ghế": 4, "Trạng thái": 1, "Số thứ tự": 2 }
+          ],
+          inventory: [],
+          customers: []
+        }
+      },
+      {
+        id: "cafe",
+        category: "fnb",
+        title: "☕ Cafe & Trà Sữa Takeaway",
+        badge: "Phổ biến",
+        desc: "Cà phê pha phin, Trà đào cam sả, Trà sữa trân châu đường đen, Topping trân châu, Bánh ngọt.",
+        menuCount: 20,
+        roomsCount: 15,
+        invCount: 12,
+        custCount: 6,
+        prefix: "CF",
+        data: {
+          menu: [
+            { "Loại món": "Món thường", "Loại thực đơn": "Đồ uống", "Nhóm món (3 Cấp)": "Cà phê", "Quản lý tồn kho": 0, "Là món dịch vụ tính theo thời gian sử dụng": 0, "Mã món": "CF001", "Tên món": "Cà phê đen đá truyền thống", "Giá bán": 25000, "Giá vốn": 6500, "ĐVT": "Ly", "Đang kinh doanh": 1, "Cho phép bán": 1 },
+            { "Loại món": "Món thường", "Loại thực đơn": "Đồ uống", "Nhóm món (3 Cấp)": "Trà sữa", "Quản lý tồn kho": 0, "Là món dịch vụ tính theo thời gian sử dụng": 0, "Mã món": "CF005", "Tên món": "Trà sữa trân châu đường đen", "Giá bán": 42000, "Giá vốn": 12000, "ĐVT": "Ly", "Đang kinh doanh": 1, "Cho phép bán": 1 }
+          ],
+          rooms: [],
+          inventory: [],
+          customers: []
+        }
+      },
+      {
+        id: "hotel",
+        category: "hotel",
+        title: "🏨 Khách Sạn & Homestay",
+        badge: "Nhiều tiện ích",
+        desc: "Phòng nghỉ theo giờ, qua đêm, theo ngày, Nước minibar, Mì ly, Giặt ủi, Thuê xe máy.",
+        menuCount: 14,
+        roomsCount: 20,
+        invCount: 15,
+        custCount: 8,
+        prefix: "HTL",
+        data: {
+          menu: [
+            { "Loại món": "Dịch vụ", "Loại thực đơn": "Dịch vụ", "Nhóm món (3 Cấp)": "Tiền phòng theo giờ", "Quản lý tồn kho": 0, "Là món dịch vụ tính theo thời gian sử dụng": 1, "Mã món": "RM001", "Tên món": "Tiền phòng Standard (2 Giờ đầu)", "Giá bán": 160000, "Giá vốn": 0, "ĐVT": "Giờ", "Đang kinh doanh": 1, "Cho phép bán": 1 },
+            { "Loại món": "Dịch vụ", "Loại thực đơn": "Dịch vụ", "Nhóm món (3 Cấp)": "Tiền phòng qua đêm", "Quản lý tồn kho": 0, "Là món dịch vụ tính theo thời gian sử dụng": 0, "Mã món": "RM002", "Tên món": "Tiền phòng Standard (Qua đêm)", "Giá bán": 350000, "Giá vốn": 0, "ĐVT": "Đêm", "Đang kinh doanh": 1, "Cho phép bán": 1 }
+          ],
+          rooms: [
+            { "Tên bàn": "Phòng 201 (Standard)", "Ghi chú": "Giường đơn 1m6", "Khu vực": "Tầng 2", "Số ghế": 2, "Trạng thái": 1, "Số thứ tự": 1 },
+            { "Tên bàn": "Phòng 301 (Deluxe)", "Ghi chú": "Giường đôi ban công", "Khu vực": "Tầng 3", "Số ghế": 4, "Trạng thái": 1, "Số thứ tự": 2 }
+          ],
+          inventory: [],
+          customers: []
+        }
+      },
+      {
+        id: "salon",
+        category: "salon",
+        title: "💅 Hair Salon & Spa Làm Đẹp",
+        badge: "Hot",
+        desc: "Combo Cắt gội tạo kiểu, Uốn phục hồi collagen, Nhuộm nano, Massage body 75p, Mỹ phẩm tóc.",
+        menuCount: 16,
+        roomsCount: 10,
+        invCount: 8,
+        custCount: 10,
+        prefix: "SAL",
+        data: {
+          menu: [
+            { "Loại món": "Dịch vụ", "Loại thực đơn": "Dịch vụ", "Nhóm món (3 Cấp)": "Dịch vụ nam", "Quản lý tồn kho": 0, "Là món dịch vụ tính theo thời gian sử dụng": 0, "Mã món": "SAL001", "Tên món": "Combo Cắt gội massage bấm huyệt", "Giá bán": 120000, "Giá vốn": 15000, "ĐVT": "Lượt", "Đang kinh doanh": 1, "Cho phép bán": 1 }
+          ],
+          rooms: [],
+          inventory: [],
+          customers: []
+        }
+      },
+      {
+        id: "taphoa",
+        category: "retail",
+        title: "🛒 Siêu Thị Mini & Tạp Hóa",
+        badge: "Bán chạy",
+        desc: "Mì ăn liền, Dầu ăn, Nước mắm, Bột giặt, Sữa tươi tiệt trùng, Đồ gia dụng nhanh.",
+        menuCount: 25,
+        roomsCount: 0,
+        invCount: 25,
+        custCount: 12,
+        prefix: "TH",
+        data: {
+          menu: [
+            { "Loại món": "Món thường", "Loại thực đơn": "Đồ ăn", "Nhóm món (3 Cấp)": "Mì ăn liền", "Quản lý tồn kho": 1, "Là món dịch vụ tính theo thời gian sử dụng": 0, "Mã món": "TH001", "Tên món": "Mì Hảo Hảo tôm chua cay 75g", "Giá bán": 4500, "Giá vốn": 3800, "Tồn kho hiện tại": 300, "ĐVT": "Gói", "Đang kinh doanh": 1, "Cho phép bán": 1 }
+          ],
+          rooms: [],
+          inventory: [],
+          customers: []
+        }
+      }
+    ];
+
+    // Trạng thái dữ liệu hiện tại
+    let currentStore = {
+      menu: [],
+      rooms: [],
+      inventory: [],
+      customers: []
+    };
+    let activeSheetKey = "menu";
+    let isCompact = false;
+    let selectedIndices = new Set();
+
+    // TOAST NOTIFICATION SYSTEM
+    function showToast(title, message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      let borderCol = "border-emerald-500 bg-white";
+      let icon = "✅";
+      if (type === 'danger') { borderCol = "border-red-500 bg-white"; icon = "🗑️"; }
+      if (type === 'info') { borderCol = "border-blue-500 bg-white"; icon = "ℹ️"; }
+
+      toast.className = `p-3.5 rounded-2xl border-l-4 ${borderCol} shadow-xl flex items-start gap-3 w-80 pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0`;
+      toast.innerHTML = `
+        <span class="text-base">${icon}</span>
+        <div class="flex-1">
+          <div class="font-bold text-xs text-slate-900">${title}</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">${message}</div>
+        </div>
+      `;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ĐIỀU HƯỚNG VIEW (TABS BÊN TRÁI)
+    function navigateTo(viewId) {
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.className = "nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs transition text-slate-600 hover:bg-slate-50 hover:text-slate-900";
+      });
+      document.getElementById(`nav-${viewId}`).className = "nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs transition bg-violet-50 text-violet-700 shadow-xs";
+
+      document.getElementById('view-workspace').classList.add('hidden');
+      document.getElementById('view-library').classList.add('hidden');
+      document.getElementById('view-parser').classList.add('hidden');
+
+      document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+      if (viewId === 'workspace') document.getElementById('currentViewTitle').innerText = "Bàn làm việc dữ liệu chuẩn";
+      if (viewId === 'library') document.getElementById('currentViewTitle').innerText = "Thư viện mẫu đa ngành (9 Mô hình)";
+      if (viewId === 'parser') document.getElementById('currentViewTitle').innerText = "Bóc tách văn bản thô";
+    }
+
+    // CHUYỂN SUB-SHEET TRONG BÀN LÀM VIỆC
+    function switchSubSheet(sheetKey) {
+      activeSheetKey = sheetKey;
+      selectedIndices.clear();
+      updateBulkActionBar();
+
+      document.querySelectorAll('.sheet-tab').forEach(t => {
+        t.className = "sheet-tab px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 hover:text-slate-900";
+      });
+      document.getElementById(`sheet-${sheetKey}`).className = "sheet-tab px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-white shadow-xs text-violet-700";
+
+      const badges = {
+        menu: "🍽️ Đang xem: Thực đơn & Món",
+        rooms: "🛋️ Đang xem: Phòng / Bàn / Buồng phòng",
+        inventory: "📦 Đang xem: Kho hàng & Nguyên vật liệu",
+        customers: "👥 Đang xem: Khách hàng thân thiết"
+      };
+      document.getElementById('activeSheetBadge').innerText = badges[sheetKey];
+
+      renderDataTable();
+    }
+
+    // THƯ VIỆN: RENDER THẺ TEMPLATE
+    function renderLibraryCards(filterCat = 'all') {
+      const grid = document.getElementById('libraryCardsGrid');
+      grid.innerHTML = '';
+
+      let list = TEMPLATE_MODELS;
+      if (filterCat !== 'all') {
+        list = list.filter(m => m.category === filterCat);
+      }
+
+      list.forEach(model => {
+        const card = document.createElement('div');
+        card.className = "bg-white p-5 rounded-2xl border border-slate-200/80 hover:border-violet-500 hover:shadow-xl hover:shadow-violet-500/5 transition cursor-pointer flex flex-col justify-between group";
+        card.innerHTML = `
+          <div class="space-y-3">
+            <div class="flex justify-between items-start">
+              <h3 class="font-extrabold text-sm text-slate-900 group-hover:text-violet-600 transition">${model.title}</h3>
+              <span class="bg-violet-50 text-violet-700 text-[10px] font-black px-2 py-0.5 rounded-full border border-violet-100">${model.badge}</span>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed">${model.desc}</p>
+            <div class="flex flex-wrap gap-1.5 text-[10px] font-bold text-slate-500 pt-1">
+              <span class="bg-slate-100 px-2 py-0.5 rounded-md">🍽️ ${model.menuCount} Món</span>
+              <span class="bg-slate-100 px-2 py-0.5 rounded-md">🛋️ ${model.roomsCount} Phòng</span>
+              <span class="bg-slate-100 px-2 py-0.5 rounded-md">📦 ${model.invCount} NVL</span>
+            </div>
+          </div>
+          <button onclick="applyModelTemplate('${model.id}')" class="mt-4 w-full bg-slate-900 group-hover:bg-violet-600 text-white font-bold py-2 rounded-xl text-xs transition shadow-xs">
+            Áp dụng trọn bộ mẫu này →
+          </button>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterLibCategory(cat) {
+      document.querySelectorAll('.lib-pill').forEach(p => {
+        p.className = "lib-pill px-4 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200";
+      });
+      event.target.className = "lib-pill active px-4 py-1.5 rounded-full text-xs font-bold bg-slate-900 text-white";
+      renderLibraryCards(cat);
+    }
+
+    // ÁP DỤNG TEMPLATE MẪU
+    function applyModelTemplate(modelId) {
+      const model = TEMPLATE_MODELS.find(m => m.id === modelId);
+      if (!model) return;
+
+      currentStore = JSON.parse(JSON.stringify(model.data));
+      document.getElementById('sidebarActiveModel').innerText = model.title;
+      updateBadges();
+
+      showToast("Đã nạp Template thành công!", `Đã áp dụng mẫu ${model.title} gồm đủ Thực đơn, Phòng bàn và Kho.`);
+      navigateTo('workspace');
+      switchSubSheet('menu');
+
+      document.getElementById('chkStep1').checked = true;
+      document.getElementById('chkStep2').checked = true;
+      document.getElementById('guideStepBadge').innerText = "2/5";
+    }
+
+    function updateBadges() {
+      document.getElementById('menuCountBadge').innerText = currentStore.menu.length;
+      document.getElementById('roomsCountBadge').innerText = currentStore.rooms.length;
+      document.getElementById('invCountBadge').innerText = currentStore.inventory.length;
+      document.getElementById('custCountBadge').innerText = currentStore.customers.length;
+    }
+
+    // RENDER DATA TABLE (28 CỘT VỚI STICKY & CHECKBOX)
+    function renderDataTable() {
+      const thead = document.getElementById('tableHeader');
+      const tbody = document.getElementById('tableBody');
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+
+      let dataList = currentStore[activeSheetKey] || [];
+
+      // THỰC ĐƠN: 28 CỘT CHUẨN
+      if (activeSheetKey === 'menu') {
+        let trHead = document.createElement('tr');
+
+        // Checkbox Chọn tất cả
+        let thSelectAll = document.createElement('th');
+        thSelectAll.className = "p-2.5 border-r text-center w-10 sticky-checkbox";
+        thSelectAll.innerHTML = `<input type="checkbox" onchange="toggleSelectAll(this.checked)" class="rounded text-violet-600 cursor-pointer">`;
+        trHead.appendChild(thSelectAll);
+
+        KIOTVIET_COLUMNS.forEach(col => {
+          if (isCompact && !COMPACT_KEYS.includes(col.key)) return;
+
+          let th = document.createElement('th');
+          let classes = "p-2.5 border-r " + (col.align === "right" ? "text-right " : (col.align === "center" ? "text-center " : "text-left "));
+          if (col.isStickyCode) classes += "sticky-code ";
+          if (col.isStickyName) classes += "sticky-name ";
+          th.className = classes;
+          th.style.minWidth = col.width;
+          th.innerText = col.key;
+          trHead.appendChild(th);
+        });
+
+        let thDel = document.createElement('th');
+        thDel.className = "p-2.5 text-center w-12";
+        thDel.innerText = "Xóa";
+        trHead.appendChild(thDel);
+        thead.appendChild(trHead);
+
+        // Body rows
+        dataList.forEach((row, rowIdx) => {
+          const tr = document.createElement('tr');
+          tr.className = `hover:bg-violet-50/40 transition ${selectedIndices.has(rowIdx) ? 'bg-violet-50/70' : ''}`;
+
+          // Checkbox row
+          let tdCb = document.createElement('td');
+          tdCb.className = "p-2 border-r text-center sticky-checkbox";
+          tdCb.innerHTML = `<input type="checkbox" ${selectedIndices.has(rowIdx) ? 'checked' : ''} onchange="toggleSelectRow(${rowIdx}, this.checked)" class="rounded text-violet-600 cursor-pointer">`;
+          tr.appendChild(tdCb);
+
+          KIOTVIET_COLUMNS.forEach(col => {
+            if (isCompact && !COMPACT_KEYS.includes(col.key)) return;
+
+            let td = document.createElement('td');
+            let classes = "p-1 border-r ";
+            if (col.isStickyCode) classes += "sticky-code ";
+            if (col.isStickyName) classes += "sticky-name ";
+            td.className = classes;
+
+            let val = row[col.key] !== undefined ? row[col.key] : "";
+
+            if (col.type === "select") {
+              let select = document.createElement('select');
+              select.className = "w-full bg-transparent p-1 text-xs focus:outline-violet-500 rounded font-medium " + (val === "Dịch vụ" ? "text-purple-600 font-bold" : (val === "Combo cố định" ? "text-amber-600 font-bold" : "text-slate-700"));
+              col.options.forEach(opt => {
+                let o = document.createElement('option');
+                o.value = opt;
+                o.innerText = opt;
+                if (val === opt) o.selected = true;
+                select.appendChild(o);
+              });
+              select.onchange = (e) => { 
+                currentStore.menu[rowIdx][col.key] = e.target.value;
+                showToast("Cập nhật món", `Đã đổi ${col.key} thành "${e.target.value}"`, 'info');
+              };
+              td.appendChild(select);
+            }
+            else if (col.type === "checkbox") {
+              td.className += "text-center";
+              let cb = document.createElement('input');
+              cb.type = "checkbox";
+              cb.checked = (val === 1 || val === "1" || val === true);
+              cb.className = "rounded text-violet-600 focus:ring-0 cursor-pointer";
+              cb.onchange = (e) => { 
+                currentStore.menu[rowIdx][col.key] = e.target.checked ? 1 : 0;
+                showToast("Cập nhật thuộc tính", `Đã ${e.target.checked ? 'Bật' : 'Tắt'} ${col.key}`, 'info');
+              };
+              td.appendChild(cb);
+            }
+            else if (col.type === "number") {
+              let inp = document.createElement('input');
+              inp.type = "number";
+              inp.value = val;
+              inp.className = "w-full bg-transparent p-1 text-xs text-right focus:outline-violet-500 rounded font-mono " + (col.key === "Giá bán" ? "font-bold text-violet-700" : "text-slate-600");
+              inp.onchange = (e) => { currentStore.menu[rowIdx][col.key] = Number(e.target.value) || 0; };
+              td.appendChild(inp);
+            }
+            else {
+              let inp = document.createElement('input');
+              inp.type = "text";
+              inp.value = val;
+              inp.className = "w-full bg-transparent p-1 text-xs focus:outline-violet-500 rounded " + (col.key === "Tên món" ? "font-bold text-slate-800" : (col.key === "Mã món" ? "font-mono font-bold text-violet-700" : "text-slate-600"));
+              inp.onchange = (e) => { currentStore.menu[rowIdx][col.key] = e.target.value; };
+              td.appendChild(inp);
+            }
+
+            tr.appendChild(td);
+          });
+
+          // Single Delete
+          let tdDel = document.createElement('td');
+          tdDel.className = "p-1 text-center";
+          tdDel.innerHTML = `<button onclick="deleteSingleRow(${rowIdx})" class="text-slate-400 hover:text-red-600 font-bold px-2 py-0.5">✕</button>`;
+          tr.appendChild(tdDel);
+
+          tbody.appendChild(tr);
+        });
+      } 
+      // CÁC SHEET KHÁC (PHÒNG BÀN, KHO NVL, KHÁCH HÀNG)
+      else {
+        let headers = Object.keys(dataList[0] || { "Thông báo": "Chưa có dữ liệu" });
+        let trHead = document.createElement('tr');
+        headers.forEach(h => {
+          let th = document.createElement('th');
+          th.className = "p-2.5 border-r text-left bg-slate-50 font-bold";
+          th.innerText = h;
+          trHead.appendChild(th);
+        });
+        thead.appendChild(trHead);
+
+        dataList.forEach(row => {
+          let tr = document.createElement('tr');
+          headers.forEach(h => {
+            let td = document.createElement('td');
+            td.className = "p-2 border-r text-xs";
+            td.innerText = row[h] !== undefined ? row[h] : "";
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    // MULTI-SELECT CHECKBOX & BULK ACTIONS
+    function toggleSelectRow(idx, isChecked) {
+      if (isChecked) selectedIndices.add(idx);
+      else selectedIndices.delete(idx);
+      updateBulkActionBar();
+    }
+
+    function toggleSelectAll(isChecked) {
+      let list = currentStore[activeSheetKey] || [];
+      if (isChecked) {
+        list.forEach((_, idx) => selectedIndices.add(idx));
+      } else {
+        selectedIndices.clear();
+      }
+      renderDataTable();
+      updateBulkActionBar();
+    }
+
+    function deselectAllRows() {
+      selectedIndices.clear();
+      renderDataTable();
+      updateBulkActionBar();
+    }
+
+    function updateBulkActionBar() {
+      const bar = document.getElementById('bulkActionBar');
+      const countLabel = document.getElementById('selectedRowsCount');
+      if (selectedIndices.size > 0) {
+        bar.classList.remove('hidden');
+        countLabel.innerText = selectedIndices.size;
+      } else {
+        bar.classList.add('hidden');
+      }
+    }
+
+    // XÓA 1 MÓN
+    function deleteSingleRow(idx) {
+      let item = currentStore[activeSheetKey][idx];
+      let name = item["Tên món"] || item["Tên bàn"] || "Dòng đã chọn";
+      currentStore[activeSheetKey].splice(idx, 1);
+      selectedIndices.delete(idx);
+      updateBadges();
+      renderDataTable();
+      updateBulkActionBar();
+      showToast("Đã xóa món", `Đã xóa "${name}" khỏi danh mục.`, 'danger');
+    }
+
+    // XÓA HÀNG LOẠT (BULK DELETE)
+    document.getElementById('btnBulkDelete').onclick = () => {
+      let count = selectedIndices.size;
+      if (confirm(`Bạn có chắc chắn muốn xóa ${count} dòng đã chọn?`)) {
+        currentStore[activeSheetKey] = currentStore[activeSheetKey].filter((_, idx) => !selectedIndices.has(idx));
+        selectedIndices.clear();
+        updateBadges();
+        renderDataTable();
+        updateBulkActionBar();
+        showToast("Đã xóa nhiều dòng", `Đã xóa thành công ${count} mục khỏi hệ thống!`, 'danger');
+      }
+    };
+
+    // THU GỌN / MỞ RỘNG 28 CỘT
+    document.getElementById('btnToggleColumns').onclick = () => {
+      isCompact = !isCompact;
+      document.getElementById('btnToggleColumns').innerText = isCompact ? "↔ Mở đủ 28 cột chuẩn" : "↔ Thu gọn 10 cột chính";
+      renderDataTable();
+    };
+
+    // THÊM MÓN MỚI
+    document.getElementById('btnAddNewRow').onclick = () => {
+      if (activeSheetKey === 'menu') {
+        let newCode = "MN" + String(currentStore.menu.length + 1).padStart(4, '0');
+        let newRow = {
+          "Loại món": "Món thường",
+          "Loại thực đơn": "Đồ ăn",
+          "Nhóm món (3 Cấp)": "Chung",
+          "Quản lý tồn kho": 0,
+          "Là món dịch vụ tính theo thời gian sử dụng": 0,
+          "Mã món": newCode,
+          "Tên món": "Món mới thêm",
+          "Giá bán": 50000,
+          "Giá vốn": 20000,
+          "Tồn kho hiện tại": 0,
+          "ĐVT": "Dĩa",
+          "Đang kinh doanh": 1,
+          "Cho phép bán": 1
+        };
+        currentStore.menu.unshift(newRow); // đưa lên đầu
+        updateBadges();
+        renderDataTable();
+        showToast("Đã thêm món mới", `Đã tạo món ${newCode} thành công.`, 'success');
+      }
+    };
+
+    // XUẤT FILE EXCEL ĐA SHEET CHUẨN 100% KIOTVIET
+    document.getElementById('btnExportAll').onclick = () => {
+      if (currentStore.menu.length === 0) return alert("Không có dữ liệu thực đơn để xuất!");
+
+      const wb = XLSX.utils.book_new();
+
+      // Sheet 1: Thực đơn (28 Cột sắp xếp đúng thứ tự)
+      let exportMenu = currentStore.menu.map(row => {
+        let sorted = {};
+        KIOTVIET_COLUMNS.forEach(col => {
+          sorted[col.key] = row[col.key] !== undefined ? row[col.key] : "";
+        });
+        return sorted;
+      });
+      const wsMenu = XLSX.utils.json_to_sheet(exportMenu);
+      XLSX.utils.book_append_sheet(wb, wsMenu, "Danh mục thực đơn");
+
+      // Sheet 2: Phòng bàn (nếu có)
+      if (currentStore.rooms.length > 0) {
+        const wsRooms = XLSX.utils.json_to_sheet(currentStore.rooms);
+        XLSX.utils.book_append_sheet(wb, wsRooms, "Phòng bàn");
+      }
+
+      // Sheet 3: Kho hàng (nếu có)
+      if (currentStore.inventory.length > 0) {
+        const wsInv = XLSX.utils.json_to_sheet(currentStore.inventory);
+        XLSX.utils.book_append_sheet(wb, wsInv, "Kho hàng");
+      }
+
+      const fileName = `KiotViet_MultiSheet_Export_${new Date().toISOString().slice(0,10)}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+
+      showToast("Xuất Excel thành công!", `Đã tải về file "${fileName}" chứa đầy đủ các Sheet.`, 'success');
+      document.getElementById('chkStep4').checked = true;
+      document.getElementById('guideStepBadge').innerText = "4/5";
+    };
+
+    // BÓC TÁCH TEXT THÔ
+    function parseRawInput() {
+      const text = document.getElementById('rawTextarea').value.trim();
+      if (!text) return alert("Vui lòng dán dữ liệu vào ô!");
+
+      const lines = text.split('\n');
+      let count = 0;
+
+      lines.forEach((line, idx) => {
+        let clean = line.trim();
+        if (!clean) return;
+        let parts = clean.split(/[|\t,]/).map(p => p.trim());
+        let name = parts[0] || `Món mới ${idx+1}`;
+        let price = parts[2] ? parseFloat(parts[2].replace(/[^0-9]/g, '')) : 50000;
+        let cost = parts[3] ? parseFloat(parts[3].replace(/[^0-9]/g, '')) : 20000;
+        let unit = parts[1] || "Dĩa";
+
+        let isTime = (unit.toLowerCase() === 'giờ' || name.toLowerCase().includes('giờ')) ? 1 : 0;
+
+        currentStore.menu.push({
+          "Loại món": isTime ? "Dịch vụ" : "Món thường",
+          "Loại thực đơn": isTime ? "Dịch vụ" : "Đồ ăn",
+          "Nhóm món (3 Cấp)": isTime ? "Dịch vụ tính giờ" : "Món ăn",
+          "Quản lý tồn kho": isTime ? 0 : 1,
+          "Là món dịch vụ tính theo thời gian sử dụng": isTime,
+          "Mã món": "SP" + String(currentStore.menu.length + 1).padStart(4, '0'),
+          "Tên món": name,
+          "Giá bán": price,
+          "Giá vốn": cost,
+          "Tồn kho hiện tại": 50,
+          "ĐVT": unit,
+          "Đang kinh doanh": 1,
+          "Cho phép bán": 1
+        });
+        count++;
+      });
+
+      updateBadges();
+      navigateTo('workspace');
+      switchSubSheet('menu');
+      showToast("Bóc tách thành công!", `Đã thêm ${count} món mới vào Thực đơn.`);
+    }
+
+    // ONBOARDING GUIDANCE SIMULATION
+    let guideOpen = true;
+    function toggleGuideWidget() {
+      guideOpen = !guideOpen;
+      document.getElementById('guideContent').style.display = guideOpen ? 'block' : 'none';
+      document.getElementById('btnMinimizeGuide').innerText = guideOpen ? '_' : '+';
+    }
+
+    function simulateStep(step) {
+      if (step === 1) {
+        navigateTo('library');
+        showToast("Bước 1: Chọn mô hình", "Hãy chọn 1 trong 9 mô hình mẫu bên dưới.", "info");
+      } else if (step === 2) {
+        navigateTo('workspace');
+        switchSubSheet('menu');
+        showToast("Bước 2: Rà soát cờ tính giờ", "Cột 'Là món dịch vụ tính giờ' cần tích bật cho giờ hát/phòng.", "info");
+      } else if (step === 3) {
+        navigateTo('workspace');
+        showToast("Bước 3: Tích chọn xóa", "Hãy tích checkbox ở đầu dòng để chọn và xóa nhiều món cùng lúc.", "info");
+      } else if (step === 4) {
+        document.getElementById('btnExportAll').click();
+      } else if (step === 5) {
+        alert("Sau khi tải file Excel về:\n1. Mở phần mềm KiotViet của bạn\n2. Vào mục Thực đơn -> Món\n3. Nhấn nút 'Import' ở góc trên\n4. Chọn file Excel vừa tải về là hoàn tất!");
+      }
+    }
+
+    // Khởi tạo mặc định
+    renderLibraryCards();
+    applyModelTemplate('karaoke');
+  </script>
+</body>
+</html>
