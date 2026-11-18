@@ -2455,18 +2455,38 @@ class StudioAudioEngine {
       this.micStream.getTracks().forEach((t) => t.stop());
     }
 
-    const constraints = {
-      audio: {
-        deviceId: deviceId ? { exact: deviceId } : undefined,
-        echoCancellation: !rawStudioMode,
-        noiseSuppression: !rawStudioMode,
-        autoGainControl: false,
-        channelCount: 1,
-        sampleRate: 48000
-      }
+    const baseAudio = {
+      echoCancellation: !rawStudioMode,
+      noiseSuppression: !rawStudioMode,
+      autoGainControl: false
     };
 
-    this.micStream = await navigator.mediaDevices.getUserMedia(constraints);
+    const attempts = [];
+    if (deviceId) {
+      attempts.push({ audio: { ...baseAudio, deviceId: { exact: deviceId } } });
+    }
+    attempts.push({ audio: baseAudio });
+    attempts.push({ audio: true });
+
+    let lastErr = null;
+    for (const constraints of attempts) {
+      try {
+        this.micStream = await navigator.mediaDevices.getUserMedia(constraints);
+        lastErr = null;
+        break;
+      } catch (err) {
+        lastErr = err;
+        // Stop retrying if user explicitly denied permission
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          throw err;
+        }
+      }
+    }
+
+    if (lastErr || !this.micStream) {
+      throw lastErr || new Error('Không tìm thấy thiết bị Micro nào trên máy.');
+    }
+
     if (this.micSource) {
       try { this.micSource.disconnect(); } catch (_) {}
     }
@@ -2838,6 +2858,9 @@ class KaraokeStudioApp {
     this._initAudioTelemetry();
     this._startRenderLoop();
     this._populateMicDevices();
+    if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+      navigator.mediaDevices.addEventListener('devicechange', () => this._populateMicDevices());
+    }
   }
 
   _bindDOM() {
@@ -3152,15 +3175,26 @@ class KaraokeStudioApp {
 
   async _populateMicDevices() {
     try {
+      const prevVal = this.dom.micSelect.value;
       const devices = await navigator.mediaDevices.enumerateDevices();
-      const mics = devices.filter((d) => d.kind === 'audioinput');
+      const mics = devices.filter((d) => d.kind === 'audioinput' && d.deviceId);
       this.dom.micSelect.innerHTML = '';
+      if (mics.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'Mặc định (Default)';
+        this.dom.micSelect.appendChild(opt);
+        return;
+      }
       mics.forEach((m, i) => {
         const opt = document.createElement('option');
         opt.value = m.deviceId;
         opt.textContent = m.label || `Micro ${i + 1}`;
         this.dom.micSelect.appendChild(opt);
       });
+      if (prevVal && mics.some((m) => m.deviceId === prevVal)) {
+        this.dom.micSelect.value = prevVal;
+      }
     } catch (_) {}
   }
 
@@ -3174,7 +3208,7 @@ class KaraokeStudioApp {
       this.dom.btnEnableMic.classList.add('active-green');
       await this._populateMicDevices();
     } catch (err) {
-      alert('Không thể truy cập Micro: ' + err.message);
+      alert('Không thể truy cập Micro (' + err.name + '): ' + err.message + '\nHãy kiểm tra xem Micro đã cắm/kết nối và được cấp quyền trên trình duyệt chưa.');
     }
   }
 
