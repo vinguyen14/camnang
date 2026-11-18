@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Karaoke Studio Pro - Thu Âm Phòng Thu & Auto-Tune</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- LameJS for client-side MP3 encoding -->
+  <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js" defer></script>
+  <!-- YouTube IFrame API for embedded karaoke links -->
+  <script src="https://www.youtube.com/iframe_api" defer></script>
+</head>
+<body>
+  <!-- TOP TRANSPORT & HARDWARE BAR -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-led"></div>
+      <div>
+        <h1>KARAOKE STUDIO <span>PRO</span></h1>
+        <p class="subtitle">Phòng Thu Âm • Auto-Tune • Ghép Đoạn • Quay Hình</p>
+      </div>
+    </div>
+
+    <div class="transport-center">
+      <button id="btnPlay" class="btn-transport" title="Phát / Tạm dừng (Space)">
+        <span class="icon">▶</span> Phát
+      </button>
+      <button id="btnStop" class="btn-transport" title="Dừng & Về đầu">
+        <span class="icon">■</span> Dừng
+      </button>
+      <button id="btnRecord" class="btn-record" title="Bắt đầu thu âm đoạn mới từ vị trí hiện tại">
+        <span class="rec-dot"></span> THU ÂM
+      </button>
+      <div class="timecode-box">
+        <span id="timeCurrent">00:00.0</span>
+        <span class="sep">/</span>
+        <span id="timeTotal">00:00.0</span>
+      </div>
+    </div>
+
+    <div class="hardware-controls">
+      <button id="btnEnableMic" class="btn-pill active-warn" title="Kích hoạt Micro phòng thu">
+        🎙️ Bật Micro
+      </button>
+      <select id="micSelect" class="compact-select" title="Chọn thiết bị Micro"></select>
+      <button id="btnMonitor" class="btn-pill" title="Nghe lại giọng trực tiếp qua tai nghe (Monitor)">
+        🎧 Monitor: TẮT
+      </button>
+      <button id="btnCamera" class="btn-pill" title="Bật/Tắt Camera quay hình">
+        📹 Camera: TẮT
+      </button>
+      <div class="vu-mini" title="Mức âm lượng đầu ra Master">
+        <div class="vu-bar"><div id="vuMasterFill" class="vu-fill"></div></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN 3-COLUMN STUDIO WORKSPACE -->
+  <main class="studio-grid">
+    <!-- LEFT PANEL: BEAT / EMBED & CUSTOM LYRICS -->
+    <section class="panel left-panel">
+      <div class="panel-header">
+        <h2>🎵 Nhạc Nền (Beat) & Embed</h2>
+        <div class="tab-group" id="beatTabs">
+          <button class="tab-btn active" data-tab="file">File Beat</button>
+          <button class="tab-btn" data-tab="embed">Embed Link</button>
+        </div>
+      </div>
+
+      <div id="tabFile" class="tab-content active">
+        <label class="upload-dropzone" for="beatFileInput">
+          <input type="file" id="beatFileInput" accept="audio/*,video/*" hidden />
+          <span class="upload-icon">📂</span>
+          <span id="beatFileName">Chọn file nhạc không lời (MP3, WAV, M4A, MP4...)</span>
+        </label>
+      </div>
+
+      <div id="tabEmbed" class="tab-content">
+        <div class="embed-input-row">
+          <input type="text" id="embedUrlInput" placeholder="Dán link YouTube hoặc link MP3/MP4 trực tiếp..." />
+          <button id="btnLoadEmbed" class="btn-accent">Nhúng</button>
+        </div>
+        <div id="embedContainer" class="embed-box hidden">
+          <div id="ytPlayerContainer"></div>
+          <audio id="urlAudioPlayer" controls class="hidden" style="width:100%"></audio>
+        </div>
+        <div class="embed-actions">
+          <button id="btnCaptureTabAudio" class="btn-small" title="Thu âm thanh từ tab trình duyệt (dùng để mix nhạc YouTube vào bản xuất)">
+            🔊 Thu âm thanh Tab YouTube
+          </button>
+          <span id="tabCaptureStatus" class="hint-text">Chưa kết nối âm thanh Tab</span>
+        </div>
+      </div>
+
+      <!-- LYRICS & TELEPROMPTER -->
+      <div class="panel-header lyrics-header">
+        <h2>📝 Lời Bài Hát / Tự Chế</h2>
+        <div class="tab-group" id="lyricsTabs">
+          <button class="tab-btn active" data-tab="prompter">Chạy Chữ</button>
+          <button class="tab-btn" data-tab="editor">Soạn & Sync</button>
+        </div>
+      </div>
+
+      <div id="tabPrompter" class="tab-content active prompter-wrap">
+        <div id="teleprompter" class="teleprompter">
+          <p class="empty-hint">Chưa có lời bài hát. Chuyển sang tab <b>Soạn & Sync</b> để dán hoặc tự chế lời!</p>
+        </div>
+      </div>
+
+      <div id="tabEditor" class="tab-content lyrics-editor-wrap">
+        <textarea id="lyricsTextarea" placeholder="Dán lời bài hát hoặc viết lời tự chế của bạn tại đây...&#10;(Hỗ trợ định dạng [mm:ss.xx] LRC hoặc văn bản thường)"></textarea>
+        <div class="lyrics-tools">
+          <button id="btnApplyLyrics" class="btn-small btn-accent">Lưu Lời</button>
+          <button id="btnTapSync" class="btn-small" title="Phát nhạc và bấm nút này (hoặc phím S) theo từng câu để gắn nhịp">⏱️ Gắn Nhịp (S)</button>
+          <button id="btnResetSync" class="btn-small">Xóa Nhịp</button>
+          <div class="offset-ctrl">
+            <span>Lệch:</span>
+            <input type="number" id="lyricsOffsetMs" value="0" step="100" style="width:62px" />
+            <span>ms</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CENTER PANEL: STAGE, AUTO-TUNE TUNER, MULTI-SEGMENT TIMELINE & EXPORT -->
+    <section class="panel center-panel">
+      <!-- STAGE VIEW (CAMERA OR SPECTRUM) -->
+      <div class="stage-box">
+        <video id="cameraPreview" autoplay muted playsinline class="hidden mirror"></video>
+        <canvas id="spectrumCanvas" width="720" height="240"></canvas>
+
+        <!-- Live Lyrics Overlay on Stage -->
+        <div id="stageLyricsOverlay" class="stage-lyrics-overlay">
+          <div id="stageLineCurrent" class="stage-line-current">Sẵn sàng thu âm phòng thu...</div>
+          <div id="stageLineNext" class="stage-line-next"></div>
+        </div>
+
+        <div class="stage-badges">
+          <span id="recIndicator" class="badge-rec hidden">● ĐANG THU</span>
+          <button id="btnMirrorCam" class="btn-mini hidden">🪞 Lật gương</button>
+        </div>
+      </div>
+
+      <!-- LIVE AUTO-TUNE PITCH TUNER -->
+      <div class="tuner-bar">
+        <div class="tuner-note-box">
+          <span class="tuner-label">CAO ĐỘ</span>
+          <span id="tunerNote" class="tuner-note">--</span>
+          <span id="tunerFreq" class="tuner-freq">0 Hz</span>
+        </div>
+        <div class="tuner-meter">
+          <div class="tuner-scale">
+            <span>-50¢</span><span>-25¢</span><span class="center-mark">0</span><span>+25¢</span><span>+50¢</span>
+          </div>
+          <div class="tuner-track">
+            <div id="tunerNeedle" class="tuner-needle"></div>
+          </div>
+        </div>
+        <div class="tuner-target-box">
+          <span class="tuner-label">AUTO-TUNE</span>
+          <span id="tunerTargetNote" class="tuner-target">--</span>
+        </div>
+      </div>
+
+      <!-- MULTI-SEGMENT TIMELINE (GHI ÂM TỪNG ĐOẠN & GHÉP BÀI) -->
+      <div class="timeline-section">
+        <div class="timeline-header">
+          <div>
+            <h3>🎛️ Timeline Ghép Đoạn (<span id="segmentCount">0</span> đoạn)</h3>
+            <span class="hint-text">Click lên thanh thời gian để chọn vị trí thu đoạn mới hoặc thu lại đoạn bị sai</span>
+          </div>
+          <div class="timeline-actions">
+            <button id="btnPunchIn" class="btn-small btn-warn" disabled title="Ghi âm đè lại đúng đoạn đang chọn">🔄 Thu lại đoạn này</button>
+            <button id="btnDeleteSeg" class="btn-small btn-danger" disabled>🗑️ Xóa đoạn</button>
+            <button id="btnClearAllSegs" class="btn-small" title="Xóa toàn bộ các đoạn đã thu">🧹 Xóa hết</button>
+          </div>
+        </div>
+
+        <!-- Playhead / Beat Scrubber -->
+        <div id="timelineContainer" class="timeline-container">
+          <div id="beatTrackBar" class="beat-track-bar">
+            <div id="beatTrackLabel">Beat: Chưa tải nhạc nền</div>
+          </div>
+          <div id="segmentsTrack" class="segments-track"></div>
+          <div id="playheadLine" class="playhead-line" style="left:0%"></div>
+        </div>
+
+        <!-- Selected Segment Fine Controls -->
+        <div id="segmentInspector" class="segment-inspector hidden">
+          <span id="segInspName" class="seg-name">Đoạn #1</span>
+          <label>Âm lượng: <input type="range" id="segVol" min="0" max="2" step="0.05" value="1" /></label>
+          <label>Lệch nhịp (ms): <input type="number" id="segOffset" min="-500" max="500" step="10" value="0" style="width:68px" /></label>
+          <button id="btnSegMute" class="btn-small">🔇 Tắt tiếng</button>
+        </div>
+      </div>
+
+      <!-- EXPORT MULTI-FORMAT BAR -->
+      <div class="export-bar">
+        <div class="export-options">
+          <span class="export-title">💾 Xuất & Tải File:</span>
+          <label class="radio-pill">
+            <input type="radio" name="exportMixType" value="full" checked /> Full Mix (Beat + Giọng)
+          </label>
+          <label class="radio-pill">
+            <input type="radio" name="exportMixType" value="vocal" /> Chỉ Giọng (Acapella)
+          </label>
+        </div>
+        <div class="export-buttons">
+          <button class="btn-export" data-format="wav16">WAV 16-bit</button>
+          <button class="btn-export" data-format="wav24">WAV 24-bit</button>
+          <button class="btn-export" data-format="mp3">MP3 320k</button>
+          <button class="btn-export" data-format="webm_audio">WebM / OGG</button>
+          <button class="btn-export btn-export-video" data-format="video">🎬 Video Karaoke</button>
+          <button class="btn-export" data-format="lrc">Lời .LRC</button>
+        </div>
+        <div id="exportProgressWrap" class="export-progress hidden">
+          <span id="exportStatusText">Đang xử lý master...</span>
+          <div class="progress-bar"><div id="exportProgressFill" class="progress-fill"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: STUDIO VOCAL RACK, MODES & AUTO-TUNE -->
+    <section class="panel right-panel">
+      <div class="panel-header">
+        <h2>🎚️ Bàn Mixer Phòng Thu</h2>
+        <button id="btnResetFX" class="btn-mini">Reset FX</button>
+      </div>
+
+      <!-- PRESET MODES -->
+      <div class="rack-module">
+        <div class="module-title">CHẾ ĐỘ GIỌNG HÁT (MODES)</div>
+        <div id="presetGrid" class="preset-grid"></div>
+      </div>
+
+      <!-- AUTO-TUNE MODULE -->
+      <div class="rack-module autotune-module">
+        <div class="module-header-row">
+          <div class="module-title">✨ AUTO-TUNE PRO</div>
+          <label class="switch">
+            <input type="checkbox" id="chkAutoTune" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="autotune-selectors">
+          <select id="autoTuneRoot" title="Tone chủ (Root Note)">
+            <option value="0">Tone C (Đô)</option>
+            <option value="1">Tone C# / Db</option>
+            <option value="2">Tone D (Rê)</option>
+            <option value="3">Tone D# / Eb</option>
+            <option value="4">Tone E (Mi)</option>
+            <option value="5">Tone F (Fa)</option>
+            <option value="6">Tone F# / Gb</option>
+            <option value="7">Tone G (Sol)</option>
+            <option value="8">Tone G# / Ab</option>
+            <option value="9">Tone A (La)</option>
+            <option value="10">Tone A# / Bb</option>
+            <option value="11">Tone B (Si)</option>
+          </select>
+          <select id="autoTuneScale" title="Âm giai (Scale)">
+            <option value="1">Trưởng (Major)</option>
+            <option value="2">Thứ (Minor)</option>
+            <option value="0">Chromatic (Tất cả)</option>
+            <option value="3">Ngũ cung Trưởng</option>
+            <option value="4">Ngũ cung Thứ</option>
+          </select>
+        </div>
+        <div id="knobsAutoTune" class="knobs-row"></div>
+      </div>
+
+      <!-- PREAMP & 4-BAND EQ -->
+      <div class="rack-module">
+        <div class="module-title">PREAMP & 4-BAND EQ</div>
+        <div id="knobsEQ" class="knobs-grid-3"></div>
+      </div>
+
+      <!-- COMPRESSOR & WARMTH -->
+      <div class="rack-module">
+        <div class="module-title">COMPRESSOR & TUBE WARMTH</div>
+        <div id="knobsComp" class="knobs-grid-3"></div>
+      </div>
+
+      <!-- REVERB & DELAY -->
+      <div class="rack-module">
+        <div class="module-title">REVERB & ECHO / DELAY</div>
+        <div id="knobsSpace" class="knobs-grid-3"></div>
+      </div>
+
+      <!-- MASTER MIXER -->
+      <div class="rack-module">
+        <div class="module-title">MIXER TỔNG (VOLUMES)</div>
+        <div class="faders-row">
+          <div class="fader-item">
+            <label>Beat</label>
+            <input type="range" id="faderBeat" min="0" max="1.5" step="0.01" value="0.85" />
+            <span id="valBeat">85%</span>
+          </div>
+          <div class="fader-item">
+            <label>Vocal</label>
+            <input type="range" id="faderVocal" min="0" max="2" step="0.01" value="1.0" />
+            <span id="valVocal">100%</span>
+          </div>
+          <div class="fader-item">
+            <label>Master</label>
+            <input type="range" id="faderMaster" min="0" max="1.5" step="0.01" value="1.0" />
+            <span id="valMaster">100%</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
