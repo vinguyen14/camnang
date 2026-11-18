@@ -7,7 +7,1080 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+  <style>
+:root {
+  --bg-dark: #070b14;
+  --bg-panel: #0f1624;
+  --bg-card: #161f33;
+  --bg-input: #0a101d;
+  --border: #23304c;
+  --text-main: #e2e8f0;
+  --text-muted: #8b9bb4;
+  --accent: #38bdf8;
+  --accent-glow: rgba(56, 189, 248, 0.35);
+  --purple: #a855f7;
+  --green: #22c55e;
+  --red: #ef4444;
+  --amber: #f59e0b;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-main);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: #2b3a5a; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* TOP BAR */
+.topbar {
+  height: 62px;
+  background: linear-gradient(180deg, #131b2e 0%, #0d1321 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-led {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+}
+
+.brand h1 {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+
+.brand h1 span {
+  color: var(--accent);
+}
+
+.brand .subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* TRANSPORT */
+.transport-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-input);
+  padding: 5px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.btn-transport, .btn-record {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-main);
+  padding: 6px 13px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+
+.btn-transport:hover {
+  border-color: var(--accent);
+  background: #1d2942;
+}
+
+.btn-transport.playing {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: var(--green);
+  color: #4ade80;
+}
+
+.btn-record {
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+}
+
+.btn-record:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.btn-record.recording {
+  background: var(--red);
+  color: #fff;
+  border-color: #f87171;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.65);
+  animation: pulseRec 1.2s infinite;
+}
+
+.rec-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+@keyframes pulseRec {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+.timecode-box {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  padding: 4px 10px;
+  background: #05080f;
+  border-radius: 6px;
+  border: 1px solid #1c273e;
+  color: var(--accent);
+}
+
+.timecode-box .sep {
+  color: var(--text-muted);
+  margin: 0 3px;
+}
+
+/* HARDWARE CONTROLS */
+.hardware-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-pill {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 6px 11px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.btn-pill:hover { border-color: var(--accent); }
+.btn-pill.active {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.btn-pill.active-warn {
+  background: rgba(245, 158, 11, 0.16);
+  border-color: var(--amber);
+  color: #fbbf24;
+}
+.btn-pill.active-green {
+  background: rgba(34, 197, 94, 0.16);
+  border-color: var(--green);
+  color: #4ade80;
+}
+
+.compact-select {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 5px 8px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  max-width: 155px;
+}
+
+.vu-mini {
+  width: 64px;
+  height: 10px;
+  background: #05080f;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.vu-bar { width: 100%; height: 100%; }
+.vu-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #22c55e 0%, #eab308 75%, #ef4444 100%);
+  transition: width 0.05s linear;
+}
+
+/* MAIN GRID */
+.studio-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 330px 1fr 370px;
+  gap: 10px;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.02);
+  flex-shrink: 0;
+}
+
+.panel-header h2 {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* TABS */
+.tab-group {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-input);
+  padding: 3px;
+  border-radius: 7px;
+}
+
+.tab-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background: var(--bg-card);
+  color: var(--accent);
+}
+
+.tab-content { display: none; padding: 12px; }
+.tab-content.active { display: block; }
+
+/* LEFT PANEL: BEAT & LYRICS */
+.upload-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1.5px dashed #33456b;
+  border-radius: 10px;
+  padding: 16px 12px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--bg-input);
+  font-size: 12px;
+  color: var(--text-muted);
+  transition: 0.15s;
+}
+
+.upload-dropzone:hover {
+  border-color: var(--accent);
+  color: var(--text-main);
+}
+
+.upload-icon { font-size: 22px; }
+
+.embed-input-row {
+  display: flex;
+  gap: 6px;
+}
+
+.embed-input-row input {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 12px;
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: #050a14;
+  border: none;
+  padding: 7px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.embed-box {
+  margin-top: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--border);
+}
+
+#ytPlayerContainer,
+iframe#ytPlayerContainer,
+#ytPlayerContainer iframe {
+  width: 100%;
+  max-width: 100%;
+  height: 165px;
+  display: block;
+  border: none;
+}
+
+.embed-actions {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hint-text {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.lyrics-header {
+  border-top: 1px solid var(--border);
+}
+
+.prompter-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+.prompter-wrap.active {
+  display: flex;
+  flex-direction: column;
+}
+
+.teleprompter {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: center;
+  padding: 20px 6px;
+}
+
+.lyric-line {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  transition: all 0.2s;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.lyric-line:hover { background: rgba(255,255,255,0.04); }
+
+.lyric-line.active {
+  color: var(--accent);
+  font-size: 17px;
+  font-weight: 700;
+  background: rgba(56, 189, 248, 0.1);
+  transform: scale(1.02);
+}
+
+.lyric-line .ts-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #64748b;
+  margin-right: 6px;
+}
+
+.lyrics-editor-wrap {
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lyrics-editor-wrap.active {
+  display: flex;
+}
+
+#lyricsTextarea {
+  flex: 1;
+  width: 100%;
+  min-height: 180px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  border-radius: 8px;
+  padding: 10px;
+  font-family: inherit;
+  font-size: 12.5px;
+  line-height: 1.5;
+  resize: none;
+}
+
+.lyrics-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.offset-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.offset-ctrl input {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 3px 5px;
+  border-radius: 5px;
+  font-size: 11px;
+}
+
+/* BUTTONS SMALL */
+.btn-small {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-small:hover:not(:disabled) { border-color: var(--accent); }
+.btn-small:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-small.btn-accent { background: var(--accent); color: #050a14; border: none; }
+.btn-small.btn-warn { border-color: rgba(245, 158, 11, 0.5); color: #fbbf24; }
+.btn-small.btn-danger { border-color: rgba(239, 68, 68, 0.5); color: #f87171; }
+.btn-mini {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  cursor: pointer;
+}
+
+/* CENTER PANEL */
+.center-panel {
+  padding: 10px;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.stage-box {
+  position: relative;
+  height: 230px;
+  background: radial-gradient(circle at center, #111b33 0%, #060911 100%);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+#spectrumCanvas, #cameraPreview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+#cameraPreview.mirror {
+  transform: scaleX(-1);
+}
+
+.hidden { display: none !important; }
+
+.stage-lyrics-overlay {
+  position: absolute;
+  bottom: 12px;
+  left: 16px;
+  right: 16px;
+  text-align: center;
+  pointer-events: none;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
+}
+
+.stage-line-current {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.stage-line-next {
+  font-size: 13px;
+  color: rgba(226, 232, 240, 0.72);
+  margin-top: 3px;
+}
+
+.stage-badges {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.badge-rec {
+  background: rgba(239, 68, 68, 0.9);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  animation: pulseRec 1s infinite;
+}
+
+/* TUNER BAR */
+.tuner-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 7px 14px;
+  flex-shrink: 0;
+}
+
+.tuner-note-box, .tuner-target-box {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 130px;
+}
+
+.tuner-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.tuner-note {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.tuner-target {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--purple);
+}
+
+.tuner-freq {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.tuner-meter { flex: 1; }
+
+.tuner-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9.5px;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+
+.tuner-scale .center-mark { color: var(--green); font-weight: 700; }
+
+.tuner-track {
+  position: relative;
+  height: 7px;
+  background: var(--bg-input);
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.tuner-needle {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 4px;
+  height: 11px;
+  background: var(--accent);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  transition: left 0.06s linear;
+}
+
+/* TIMELINE */
+.timeline-section {
+  flex: 1;
+  min-height: 155px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.timeline-header h3 { font-size: 12.5px; }
+.timeline-actions { display: flex; gap: 6px; }
+
+.timeline-container {
+  position: relative;
+  flex: 1;
+  min-height: 86px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  cursor: pointer;
+}
+
+.beat-track-bar {
+  height: 24px;
+  background: rgba(56, 189, 248, 0.08);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 11px;
+  color: var(--accent);
+}
+
+.segments-track {
+  position: relative;
+  height: calc(100% - 24px);
+  min-height: 60px;
+}
+
+.segment-block {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  background: rgba(168, 85, 247, 0.22);
+  border: 1.5px solid var(--purple);
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.segment-block.selected {
+  border-color: var(--accent);
+  background: rgba(56, 189, 248, 0.22);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.segment-block.muted {
+  opacity: 0.4;
+  border-style: dashed;
+}
+
+.segment-title {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  background: rgba(0,0,0,0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.segment-wave {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.playhead-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #f43f5e;
+  box-shadow: 0 0 8px #f43f5e;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.segment-inspector {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11.5px;
+  background: var(--bg-input);
+  padding: 6px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+}
+
+.segment-inspector .seg-name {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.segment-inspector label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.segment-inspector input[type="number"] {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* EXPORT BAR */
+.export-bar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.export-options {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.export-title {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.radio-pill {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-export {
+  background: #1b2740;
+  border: 1px solid #30446e;
+  color: var(--text-main);
+  padding: 6px 11px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.btn-export:hover {
+  border-color: var(--accent);
+  background: #233354;
+}
+
+.btn-export-video {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  border: none;
+  color: #fff;
+}
+
+.export-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--accent);
+}
+
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-input);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.1s;
+}
+
+/* RIGHT PANEL: RACK & KNOBS */
+.right-panel {
+  overflow-y: auto;
+}
+
+.rack-module {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.module-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.module-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.module-header-row .module-title { margin-bottom: 0; }
+
+/* PRESET GRID */
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.preset-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 6px 8px;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.preset-btn:hover { border-color: var(--accent); }
+.preset-btn.active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: var(--accent);
+}
+
+.preset-btn .p-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-main);
+  display: block;
+}
+
+.preset-btn .p-badge {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* AUTO-TUNE */
+.autotune-module {
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.08) 0%, transparent 100%);
+}
+
+.autotune-selectors {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.autotune-selectors select {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 5px 7px;
+  border-radius: 6px;
+  font-size: 11.5px;
+}
+
+/* SWITCH */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 20px;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #23304c;
+  border-radius: 20px;
+  transition: 0.2s;
+}
+.slider:before {
+  content: "";
+  position: absolute;
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+input:checked + .slider { background: var(--purple); }
+input:checked + .slider:before { transform: translateX(18px); }
+
+/* KNOBS */
+.knobs-row {
+  display: flex;
+  justify-content: space-around;
+  gap: 6px;
+}
+
+.knobs-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px 4px;
+}
+
+.knob-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+}
+
+.knob-dial {
+  width: 48px;
+  height: 48px;
+  cursor: ns-resize;
+}
+
+.knob-svg { width: 100%; height: 100%; }
+.knob-track {
+  fill: none;
+  stroke: #1e293b;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+}
+.knob-fill {
+  fill: none;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+}
+.knob-cap {
+  fill: #151e30;
+  stroke: #2c3c5c;
+  stroke-width: 1.5;
+}
+.knob-pointer {
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.knob-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  margin-top: 1px;
+}
+
+.knob-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* FADERS */
+.faders-row {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.fader-item {
+  display: grid;
+  grid-template-columns: 52px 1fr 42px;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+}
+
+.fader-item input[type="range"] {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.fader-item span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-align: right;
+  color: var(--text-muted);
+}
+
+@media (max-width: 1150px) {
+  body { overflow-y: auto; height: auto; }
+  .studio-grid { grid-template-columns: 1fr; overflow: visible; }
+}
+
+</style>
   <!-- LameJS for client-side MP3 encoding -->
   <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js" defer></script>
   <!-- YouTube IFrame API for embedded karaoke links -->
@@ -313,6 +1386,2344 @@
     </section>
   </main>
 
-  <script type="module" src="js/app.js"></script>
+  <script>
+// Bundled Karaoke Studio Pro
+const AUTOTUNE_WORKLET_SRC = "// Real-time Auto-Tune AudioWorkletProcessor\n// Implements YIN pitch detection + Musical Scale Quantization + Dual-Head Windowed Pitch Shifter\n\nconst SCALES = {\n  chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],\n  major: [0, 2, 4, 5, 7, 9, 11],\n  minor: [0, 2, 3, 5, 7, 8, 10],\n  pentatonic_major: [0, 2, 4, 7, 9],\n  pentatonic_minor: [0, 3, 5, 7, 10]\n};\n\nclass AutoTuneProcessor extends AudioWorkletProcessor {\n  static get parameterDescriptors() {\n    return [\n      { name: \u0027enabled\u0027, defaultValue: 0, minValue: 0, maxValue: 1 },\n      { name: \u0027retuneSpeed\u0027, defaultValue: 0.25, minValue: 0.0, maxValue: 1.0 },\n      { name: \u0027mix\u0027, defaultValue: 1.0, minValue: 0.0, maxValue: 1.0 },\n      { name: \u0027rootNote\u0027, defaultValue: 0, minValue: 0, maxValue: 11 },\n      { name: \u0027scaleIndex\u0027, defaultValue: 1, minValue: 0, maxValue: 4 }\n    ];\n  }\n\n  constructor() {\n    super();\n    this.scaleNames = [\u0027chromatic\u0027, \u0027major\u0027, \u0027minor\u0027, \u0027pentatonic_major\u0027, \u0027pentatonic_minor\u0027];\n\n    // Pitch detection buffers\n    this.analyzeSize = 1024;\n    this.hopSize = 256;\n    this.analyzeBuf = new Float32Array(this.analyzeSize);\n    this.analyzePos = 0;\n    this.yinBuf = new Float32Array(this.analyzeSize / 2);\n\n    // Pitch shifting circular buffer\n    this.ringSize = 4096;\n    this.ringBuf = new Float32Array(this.ringSize);\n    this.writePtr = 0;\n\n    // Dual-head delay line state\n    this.windowSize = 1024;\n    this.phase = 0;\n\n    // Pitch tracking state\n    this.detectedFreq = 0;\n    this.targetFreq = 0;\n    this.currentRatio = 1.0;\n    this.targetRatio = 1.0;\n    this.voiced = false;\n    this.reportCounter = 0;\n  }\n\n  detectPitchYIN(buffer, sr) {\n    const half = buffer.length \u003e\u003e 1;\n    const minLag = Math.floor(sr / 900); // ~900 Hz max\n    const maxLag = Math.min(half - 1, Math.floor(sr / 75)); // ~75 Hz min\n\n    // Check RMS energy first\n    let energy = 0;\n    for (let i = 0; i \u003c buffer.length; i++) {\n      energy += buffer[i] * buffer[i];\n    }\n    const rms = Math.sqrt(energy / buffer.length);\n    if (rms \u003c 0.008) {\n      return { freq: 0, confidence: 0 };\n    }\n\n    // Difference function\n    this.yinBuf[0] = 1;\n    let runningSum = 0;\n    for (let tau = 1; tau \u003c= maxLag; tau++) {\n      let diff = 0;\n      for (let i = 0; i \u003c half; i++) {\n        const d = buffer[i] - buffer[i + tau];\n        diff += d * d;\n      }\n      runningSum += diff;\n      this.yinBuf[tau] = runningSum \u003e 0 ? (diff * tau) / runningSum : 1;\n    }\n\n    // Find first dip below threshold\n    const threshold = 0.22;\n    let bestTau = -1;\n    for (let tau = minLag; tau \u003c maxLag; tau++) {\n      if (this.yinBuf[tau] \u003c threshold) {\n        while (tau + 1 \u003c maxLag \u0026\u0026 this.yinBuf[tau + 1] \u003c this.yinBuf[tau]) {\n          tau++;\n        }\n        bestTau = tau;\n        break;\n      }\n    }\n\n    // Fallback: global minimum if no dip below threshold\n    if (bestTau === -1) {\n      let minVal = 1;\n      for (let tau = minLag; tau \u003c maxLag; tau++) {\n        if (this.yinBuf[tau] \u003c minVal) {\n          minVal = this.yinBuf[tau];\n          bestTau = tau;\n        }\n      }\n      if (minVal \u003e 0.35 || bestTau === -1) {\n        return { freq: 0, confidence: 0 };\n      }\n    }\n\n    // Parabolic interpolation\n    let betterTau = bestTau;\n    if (bestTau \u003e 0 \u0026\u0026 bestTau \u003c maxLag - 1) {\n      const s0 = this.yinBuf[bestTau - 1];\n      const s1 = this.yinBuf[bestTau];\n      const s2 = this.yinBuf[bestTau + 1];\n      const denom = 2 * (2 * s1 - s2 - s0);\n      if (Math.abs(denom) \u003e 1e-6) {\n        betterTau += (s2 - s0) / denom;\n      }\n    }\n\n    const freq = sr / betterTau;\n    const confidence = 1 - Math.min(1, this.yinBuf[bestTau]);\n    return { freq, confidence };\n  }\n\n  quantizeToScale(freq, rootNote, scaleIdx) {\n    if (freq \u003c= 0) return { targetFreq: 0, midi: 0, targetMidi: 0, cents: 0 };\n    const midiFloat = 69 + 12 * Math.log2(freq / 440);\n    const scaleKey = this.scaleNames[Math.round(scaleIdx)] || \u0027major\u0027;\n    const intervals = SCALES[scaleKey] || SCALES.major;\n\n    let bestMidi = Math.round(midiFloat);\n    let minDist = Infinity;\n\n    const baseNote = Math.floor(midiFloat) - 12;\n    for (let m = baseNote; m \u003c= baseNote + 24; m++) {\n      const pc = ((m - rootNote) % 12 + 12) % 12;\n      if (intervals.includes(pc)) {\n        const dist = Math.abs(midiFloat - m);\n        if (dist \u003c minDist) {\n          minDist = dist;\n          bestMidi = m;\n        }\n      }\n    }\n\n    const targetFreq = 440 * Math.pow(2, (bestMidi - 69) / 12);\n    const cents = Math.round((midiFloat - bestMidi) * 100);\n    return { targetFreq, midi: midiFloat, targetMidi: bestMidi, cents };\n  }\n\n  readRingLinear(pos) {\n    const mask = this.ringSize - 1;\n    const p = ((pos % this.ringSize) + this.ringSize) % this.ringSize;\n    const i0 = Math.floor(p);\n    const i1 = (i0 + 1) \u0026 mask;\n    const frac = p - i0;\n    return this.ringBuf[i0] * (1 - frac) + this.ringBuf[i1] * frac;\n  }\n\n  process(inputs, outputs, parameters) {\n    const input = inputs[0];\n    const output = outputs[0];\n    if (!input || input.length === 0 || !output || output.length === 0) {\n      return true;\n    }\n\n    const inCh = input[0];\n    const outCh0 = output[0];\n    const outCh1 = output.length \u003e 1 ? output[1] : null;\n\n    const enabled = parameters.enabled[0] \u003e= 0.5;\n    const retuneSpeed = parameters.retuneSpeed[0]; // 0 = fast/hard, 1 = slow/natural\n    const mix = parameters.mix[0];\n    const rootNote = Math.round(parameters.rootNote[0]);\n    const scaleIdx = Math.round(parameters.scaleIndex[0]);\n\n    const mask = this.ringSize - 1;\n    // Smooth coefficient based on retuneSpeed (0 -\u003e 0.35, 1 -\u003e 0.005)\n    const smoothCoeff = 0.005 + (1 - retuneSpeed) * (1 - retuneSpeed) * 0.35;\n\n    for (let i = 0; i \u003c inCh.length; i++) {\n      const sample = inCh[i];\n\n      // Write to circular buffer\n      this.ringBuf[this.writePtr] = sample;\n      this.writePtr = (this.writePtr + 1) \u0026 mask;\n\n      // Fill analysis buffer\n      this.analyzeBuf[this.analyzePos] = sample;\n      this.analyzePos++;\n\n      if (this.analyzePos \u003e= this.analyzeSize) {\n        // Shift analysis buffer left by hopSize\n        const { freq, confidence } = this.detectPitchYIN(this.analyzeBuf, sampleRate);\n        if (freq \u003e 65 \u0026\u0026 freq \u003c 950 \u0026\u0026 confidence \u003e 0.55) {\n          const q = this.quantizeToScale(freq, rootNote, scaleIdx);\n          this.detectedFreq = freq;\n          this.targetFreq = q.targetFreq;\n          this.voiced = true;\n          const rawRatio = q.targetFreq / freq;\n          this.targetRatio = Math.max(0.5, Math.min(2.0, rawRatio));\n\n          this.reportCounter++;\n          if (this.reportCounter \u003e= 6) {\n            this.reportCounter = 0;\n            this.port.postMessage({\n              type: \u0027pitch\u0027,\n              voiced: true,\n              detectedFreq: freq,\n              targetFreq: q.targetFreq,\n              targetMidi: q.targetMidi,\n              cents: q.cents\n            });\n          }\n        } else {\n          this.voiced = false;\n          this.targetRatio = 1.0;\n          this.reportCounter++;\n          if (this.reportCounter \u003e= 12) {\n            this.reportCounter = 0;\n            this.port.postMessage({ type: \u0027pitch\u0027, voiced: false });\n          }\n        }\n\n        // Slide window\n        this.analyzeBuf.copyWithin(0, this.hopSize);\n        this.analyzePos = this.analyzeSize - this.hopSize;\n      }\n\n      if (!enabled || mix \u003c= 0.001) {\n        outCh0[i] = sample;\n        if (outCh1) outCh1[i] = sample;\n        continue;\n      }\n\n      // Smoothly approach target ratio\n      this.currentRatio += (this.targetRatio - this.currentRatio) * smoothCoeff;\n      const shiftRate = 1.0 - this.currentRatio;\n\n      // Dual-tap granular delay line\n      this.phase = (this.phase + shiftRate / this.windowSize) % 1.0;\n      if (this.phase \u003c 0) this.phase += 1.0;\n\n      const phaseA = this.phase;\n      const phaseB = (this.phase + 0.5) % 1.0;\n\n      const delayA = phaseA * this.windowSize + 64;\n      const delayB = phaseB * this.windowSize + 64;\n\n      const sampleA = this.readRingLinear(this.writePtr - delayA);\n      const sampleB = this.readRingLinear(this.writePtr - delayB);\n\n      // Triangle / raised window crossfade\n      const gainA = 1.0 - Math.abs(2.0 * phaseA - 1.0);\n      const gainB = 1.0 - Math.abs(2.0 * phaseB - 1.0);\n\n      const wet = sampleA * gainA + sampleB * gainB;\n      const effectiveMix = this.voiced ? mix : 0.0;\n      const outSample = sample * (1.0 - effectiveMix) + wet * effectiveMix;\n\n      outCh0[i] = outSample;\n      if (outCh1) outCh1[i] = outSample;\n    }\n\n    return true;\n  }\n}\n\nregisterProcessor(\u0027autotune-processor\u0027, AutoTuneProcessor);\n";
+const PCM_WORKLET_SRC = "// Sample-accurate PCM Recorder AudioWorkletProcessor\nclass PCMRecorderProcessor extends AudioWorkletProcessor {\n  constructor() {\n    super();\n    this.recording = false;\n    this.port.onmessage = (e) =\u003e {\n      if (e.data.command === \u0027start\u0027) {\n        this.recording = true;\n      } else if (e.data.command === \u0027stop\u0027) {\n        this.recording = false;\n      }\n    };\n  }\n\n  process(inputs) {\n    if (!this.recording) return true;\n    const input = inputs[0];\n    if (input \u0026\u0026 input.length \u003e 0 \u0026\u0026 input[0].length \u003e 0) {\n      // Copy mono channel (or mixdown) and send to main thread\n      const ch0 = input[0];\n      const copy = new Float32Array(ch0.length);\n      copy.set(ch0);\n      this.port.postMessage({ type: \u0027pcm\u0027, samples: copy }, [copy.buffer]);\n    }\n    return true;\n  }\n}\n\nregisterProcessor(\u0027pcm-recorder-processor\u0027, PCMRecorderProcessor);\n";
+// Studio Vocal Modes & Presets
+const VOCAL_PRESETS = {
+  studio: {
+    name: 'Phòng Thu Chuẩn',
+    badge: 'STUDIO',
+    desc: 'Cân bằng, sáng giọng, nén chuẩn phòng thu chuyên nghiệp',
+    params: {
+      inputGain: 1.2,
+      hpfFreq: 85,
+      eqLow: 1.5,
+      eqLowMid: -1.5,
+      eqHighMid: 2.5,
+      eqHigh: 3.0,
+      compThreshold: -18,
+      compRatio: 4,
+      compAttack: 0.008,
+      compRelease: 0.15,
+      warmth: 0.18,
+      reverbMix: 0.22,
+      reverbDecay: 1.4,
+      delayMix: 0.08,
+      delayTime: 0.22,
+      delayFeedback: 0.2,
+      autotuneEnabled: false,
+      autotuneSpeed: 0.35,
+      autotuneMix: 0.75
+    }
+  },
+  concert: {
+    name: 'Sân Khấu Live',
+    badge: 'CONCERT',
+    desc: 'Không gian rộng lớn, vang sâu và dày dặn như sân khấu',
+    params: {
+      inputGain: 1.25,
+      hpfFreq: 95,
+      eqLow: 2.0,
+      eqLowMid: -2.0,
+      eqHighMid: 3.5,
+      eqHigh: 4.0,
+      compThreshold: -20,
+      compRatio: 5,
+      compAttack: 0.005,
+      compRelease: 0.18,
+      warmth: 0.22,
+      reverbMix: 0.45,
+      reverbDecay: 2.8,
+      delayMix: 0.22,
+      delayTime: 0.34,
+      delayFeedback: 0.32,
+      autotuneEnabled: false,
+      autotuneSpeed: 0.35,
+      autotuneMix: 0.75
+    }
+  },
+  ballad: {
+    name: 'Ballad / Bolero',
+    badge: 'BALLAD',
+    desc: 'Giọng ấm áp, mượt mà, echo dịu nhẹ cho nhạc trữ tình',
+    params: {
+      inputGain: 1.15,
+      hpfFreq: 80,
+      eqLow: 3.0,
+      eqLowMid: 0.5,
+      eqHighMid: 1.5,
+      eqHigh: 2.5,
+      compThreshold: -16,
+      compRatio: 3.2,
+      compAttack: 0.015,
+      compRelease: 0.22,
+      warmth: 0.3,
+      reverbMix: 0.38,
+      reverbDecay: 2.4,
+      delayMix: 0.26,
+      delayTime: 0.38,
+      delayFeedback: 0.35,
+      autotuneEnabled: false,
+      autotuneSpeed: 0.45,
+      autotuneMix: 0.65
+    }
+  },
+  autotune_pop: {
+    name: 'Auto-Tune Pop / R&B',
+    badge: 'TUNE',
+    desc: 'Bắt cao độ sắc nét, hiện đại theo tone nhạc đã chọn',
+    params: {
+      inputGain: 1.25,
+      hpfFreq: 100,
+      eqLow: 0.5,
+      eqLowMid: -2.5,
+      eqHighMid: 3.5,
+      eqHigh: 4.5,
+      compThreshold: -22,
+      compRatio: 6,
+      compAttack: 0.004,
+      compRelease: 0.12,
+      warmth: 0.15,
+      reverbMix: 0.28,
+      reverbDecay: 1.8,
+      delayMix: 0.18,
+      delayTime: 0.26,
+      delayFeedback: 0.28,
+      autotuneEnabled: true,
+      autotuneSpeed: 0.08,
+      autotuneMix: 0.95
+    }
+  },
+  rap: {
+    name: 'Rap / Hip-Hop',
+    badge: 'RAP',
+    desc: 'Chắc nhịp, rõ chữ, nén mạnh và slapback delay gọn gàng',
+    params: {
+      inputGain: 1.3,
+      hpfFreq: 110,
+      eqLow: 2.5,
+      eqLowMid: -3.0,
+      eqHighMid: 4.0,
+      eqHigh: 3.0,
+      compThreshold: -24,
+      compRatio: 7,
+      compAttack: 0.003,
+      compRelease: 0.09,
+      warmth: 0.25,
+      reverbMix: 0.12,
+      reverbDecay: 0.8,
+      delayMix: 0.12,
+      delayTime: 0.11,
+      delayFeedback: 0.15,
+      autotuneEnabled: false,
+      autotuneSpeed: 0.15,
+      autotuneMix: 0.8
+    }
+  },
+  radio: {
+    name: 'Podcast / Radio',
+    badge: 'RADIO',
+    desc: 'Giọng gần, ấm, dày tiếng, không vang để thu thoại & dẫn',
+    params: {
+      inputGain: 1.3,
+      hpfFreq: 75,
+      eqLow: 4.0,
+      eqLowMid: -1.5,
+      eqHighMid: 2.0,
+      eqHigh: 2.0,
+      compThreshold: -22,
+      compRatio: 5.5,
+      compAttack: 0.005,
+      compRelease: 0.14,
+      warmth: 0.35,
+      reverbMix: 0.04,
+      reverbDecay: 0.5,
+      delayMix: 0.0,
+      delayTime: 0.2,
+      delayFeedback: 0.1,
+      autotuneEnabled: false,
+      autotuneSpeed: 0.5,
+      autotuneMix: 0.0
+    }
+  },
+  lofi: {
+    name: 'Lo-Fi / Vintage',
+    badge: 'LO-FI',
+    desc: 'Màu âm hoài niệm, ấm đục nhẹ kiểu băng cassette',
+    params: {
+      inputGain: 1.1,
+      hpfFreq: 180,
+      eqLow: 1.0,
+      eqLowMid: 2.5,
+      eqHighMid: -2.0,
+      eqHigh: -5.0,
+      compThreshold: -18,
+      compRatio: 4,
+      compAttack: 0.01,
+      compRelease: 0.15,
+      warmth: 0.65,
+      reverbMix: 0.32,
+      reverbDecay: 1.6,
+      delayMix: 0.18,
+      delayTime: 0.28,
+      delayFeedback: 0.3,
+      autotuneEnabled: false,
+      autotuneSpeed: 0.4,
+      autotuneMix: 0.6
+    }
+  },
+  raw: {
+    name: 'Mộc (Raw Vocal)',
+    badge: 'RAW',
+    desc: 'Âm thanh gốc từ micro, không hiệu ứng',
+    params: {
+      inputGain: 1.0,
+      hpfFreq: 20,
+      eqLow: 0,
+      eqLowMid: 0,
+      eqHighMid: 0,
+      eqHigh: 0,
+      compThreshold: 0,
+      compRatio: 1,
+      compAttack: 0.01,
+      compRelease: 0.15,
+      warmth: 0,
+      reverbMix: 0,
+      reverbDecay: 1.0,
+      delayMix: 0,
+      delayTime: 0.25,
+      delayFeedback: 0.2,
+      autotuneEnabled: false,
+      autotuneSpeed: 0.35,
+      autotuneMix: 0.75
+    }
+  }
+};
+
+// Hardware-style Interactive SVG Rotary Knobs
+function createKnobElement({ id, label, min, max, step = 0.01, value, unit = '', color = '#38bdf8', onChange }) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'knob-control';
+  wrapper.dataset.param = id;
+
+  const defaultValue = value;
+  let currentValue = value;
+
+  const formatVal = (v) => {
+    if (Math.abs(step) >= 1) return `${Math.round(v)}${unit}`;
+    if (Math.abs(max - min) <= 2) return `${v.toFixed(2)}${unit}`;
+    return `${v.toFixed(1)}${unit}`;
+  };
+
+  wrapper.innerHTML = `
+    <div class="knob-dial" tabindex="0" title="Kéo lên/xuống hoặc cuộn chuột để chỉnh. Double-click để reset.">
+      <svg viewBox="0 0 64 64" class="knob-svg">
+        <circle cx="32" cy="32" r="24" class="knob-track" stroke-dasharray="113.1 150.8" stroke-dashoffset="-18.85" transform="rotate(135 32 32)"/>
+        <circle cx="32" cy="32" r="24" class="knob-fill" stroke="${color}" stroke-dasharray="0 150.8" stroke-dashoffset="-18.85" transform="rotate(135 32 32)"/>
+        <circle cx="32" cy="32" r="18" class="knob-cap"/>
+        <line x1="32" y1="32" x2="32" y2="16" class="knob-pointer" stroke="${color}"/>
+      </svg>
+    </div>
+    <div class="knob-value">${formatVal(currentValue)}</div>
+    <div class="knob-label">${label}</div>
+  `;
+
+  const dial = wrapper.querySelector('.knob-dial');
+  const fillCircle = wrapper.querySelector('.knob-fill');
+  const pointer = wrapper.querySelector('.knob-pointer');
+  const valueEl = wrapper.querySelector('.knob-value');
+
+  const updateVisual = (v) => {
+    const norm = Math.max(0, Math.min(1, (v - min) / (max - min)));
+    const arcLen = norm * 113.1; // 270 deg of r=24 circumference (150.8)
+    fillCircle.setAttribute('stroke-dasharray', `${arcLen} 150.8`);
+    const angle = -135 + norm * 270;
+    pointer.setAttribute('transform', `rotate(${angle} 32 32)`);
+    valueEl.textContent = formatVal(v);
+  };
+
+  const setValue = (v, emit = true) => {
+    const snapped = Math.round(v / step) * step;
+    currentValue = Math.max(min, Math.min(max, Number(snapped.toFixed(4))));
+    updateVisual(currentValue);
+    if (emit && onChange) onChange(currentValue);
+  };
+
+  updateVisual(currentValue);
+
+  let startY = 0;
+  let startVal = currentValue;
+  let dragging = false;
+
+  const onMove = (clientY) => {
+    if (!dragging) return;
+    const deltaY = startY - clientY;
+    const range = max - min;
+    const sensitivity = 140; // px for full sweep
+    setValue(startVal + (deltaY / sensitivity) * range);
+  };
+
+  dial.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    dragging = true;
+    startY = e.clientY;
+    startVal = currentValue;
+    dial.classList.add('active');
+    const moveHandler = (ev) => onMove(ev.clientY);
+    const upHandler = () => {
+      dragging = false;
+      dial.classList.remove('active');
+      window.removeEventListener('mousemove', moveHandler);
+      window.removeEventListener('mouseup', upHandler);
+    };
+    window.addEventListener('mousemove', moveHandler);
+    window.addEventListener('mouseup', upHandler);
+  });
+
+  dial.addEventListener('touchstart', (e) => {
+    dragging = true;
+    startY = e.touches[0].clientY;
+    startVal = currentValue;
+    const moveHandler = (ev) => onMove(ev.touches[0].clientY);
+    const endHandler = () => {
+      dragging = false;
+      window.removeEventListener('touchmove', moveHandler);
+      window.removeEventListener('touchend', endHandler);
+    };
+    window.addEventListener('touchmove', moveHandler, { passive: true });
+    window.addEventListener('touchend', endHandler);
+  }, { passive: true });
+
+  dial.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const dir = e.deltaY < 0 ? 1 : -1;
+    const delta = dir * (max - min) * 0.03;
+    setValue(currentValue + delta);
+  }, { passive: false });
+
+  dial.addEventListener('dblclick', () => {
+    setValue(defaultValue);
+  });
+
+  return {
+    el: wrapper,
+    setValue: (v) => setValue(v, false),
+    getValue: () => currentValue
+  };
+}
+
+// Custom Lyrics Editor, LRC Parser/Exporter & Tap-to-Sync Teleprompter
+class LyricsManager {
+  constructor() {
+    this.lines = []; // { time: number | null, text: string }
+    this.syncIndex = 0;
+    this.offsetMs = 0;
+    this.activeIndex = -1;
+  }
+
+  parseText(rawText) {
+    const rawLines = rawText.split(/\r?\n/);
+    const lrcRegex = /^\[(\d{1,2}):(\d{2}(?:\.\d{1,3})?)\](.*)$/;
+
+    this.lines = rawLines
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .map((line) => {
+        const match = line.match(lrcRegex);
+        if (match) {
+          const mins = parseInt(match[1], 10);
+          const secs = parseFloat(match[2]);
+          return {
+            time: mins * 60 + secs,
+            text: match[3].trim()
+          };
+        }
+        return { time: null, text: line };
+      });
+
+    this.syncIndex = 0;
+    this.activeIndex = -1;
+    return this.lines;
+  }
+
+  stampNextLine(currentTimeSec) {
+    if (this.syncIndex >= this.lines.length) return false;
+    this.lines[this.syncIndex].time = Math.max(0, currentTimeSec);
+    this.syncIndex++;
+    return true;
+  }
+
+  resetSync() {
+    this.lines.forEach((l) => (l.time = null));
+    this.syncIndex = 0;
+    this.activeIndex = -1;
+  }
+
+  getActiveLineIndex(currentTimeSec) {
+    const t = currentTimeSec + this.offsetMs / 1000;
+    let idx = -1;
+    for (let i = 0; i < this.lines.length; i++) {
+      if (this.lines[i].time !== null && this.lines[i].time <= t) {
+        idx = i;
+      }
+    }
+    this.activeIndex = idx;
+    return idx;
+  }
+
+  toLRCString() {
+    return this.lines
+      .map((l) => {
+        if (l.time === null) return l.text;
+        const mins = Math.floor(l.time / 60);
+        const secs = (l.time % 60).toFixed(2).padStart(5, '0');
+        return `[${String(mins).padStart(2, '0')}:${secs}] ${l.text}`;
+      })
+      .join('\n');
+  }
+}
+
+// Multi-Segment Vocal Timeline & Stitching Manager
+class TimelineManager {
+  constructor() {
+    this.segments = [];
+    this.nextId = 1;
+    this.selectedId = null;
+    this.activeSources = [];
+  }
+
+  static computePeaks(audioBuffer, numPeaks = 140) {
+    const ch = audioBuffer.getChannelData(0);
+    const step = Math.max(1, Math.floor(ch.length / numPeaks));
+    const peaks = new Float32Array(numPeaks);
+    for (let i = 0; i < numPeaks; i++) {
+      let max = 0;
+      const start = i * step;
+      const end = Math.min(ch.length, start + step);
+      for (let j = start; j < end; j++) {
+        const abs = Math.abs(ch[j]);
+        if (abs > max) max = abs;
+      }
+      peaks[i] = max;
+    }
+    return peaks;
+  }
+
+  addSegment({ startTime, buffer, videoBlob = null, name = null }) {
+    const id = this.nextId++;
+    const seg = {
+      id,
+      name: name || `Đoạn #${id}`,
+      startTime: Math.max(0, startTime),
+      buffer,
+      videoBlob,
+      volume: 1.0,
+      offsetMs: 0,
+      trimStart: 0,
+      trimEnd: buffer.duration,
+      muted: false,
+      peaks: TimelineManager.computePeaks(buffer)
+    };
+    this.segments.push(seg);
+    this.segments.sort((a, b) => a.startTime - b.startTime);
+    this.selectedId = id;
+    return seg;
+  }
+
+  replaceSegment(id, { buffer, videoBlob = null }) {
+    const seg = this.getSegment(id);
+    if (!seg) return null;
+    seg.buffer = buffer;
+    seg.videoBlob = videoBlob;
+    seg.trimStart = 0;
+    seg.trimEnd = buffer.duration;
+    seg.peaks = TimelineManager.computePeaks(buffer);
+    return seg;
+  }
+
+  getSegment(id) {
+    return this.segments.find((s) => s.id === id) || null;
+  }
+
+  removeSegment(id) {
+    this.segments = this.segments.filter((s) => s.id !== id);
+    if (this.selectedId === id) {
+      this.selectedId = this.segments.length ? this.segments[0].id : null;
+    }
+  }
+
+  clearAll() {
+    this.stopAllPlayback();
+    this.segments = [];
+    this.selectedId = null;
+  }
+
+  getTotalDuration() {
+    return this.segments.reduce((max, s) => {
+      const dur = (s.trimEnd ?? s.buffer.duration) - (s.trimStart ?? 0);
+      return Math.max(max, s.startTime + dur);
+    }, 0);
+  }
+
+  stopAllPlayback() {
+    for (const src of this.activeSources) {
+      try {
+        src.stop();
+        src.disconnect();
+      } catch (_) {}
+    }
+    this.activeSources = [];
+  }
+
+  schedulePlayback(audioEngine, playheadSec = 0) {
+    this.stopAllPlayback();
+    if (!audioEngine.ctx || !audioEngine.fxInput) return;
+
+    const ctx = audioEngine.ctx;
+    const now = ctx.currentTime;
+
+    for (const seg of this.segments) {
+      if (seg.muted || !seg.buffer) continue;
+
+      const trimStart = seg.trimStart ?? 0;
+      const trimEnd = seg.trimEnd ?? seg.buffer.duration;
+      const segDur = Math.max(0.01, trimEnd - trimStart);
+      const segStart = Math.max(0, seg.startTime + (seg.offsetMs || 0) / 1000);
+      const segEnd = segStart + segDur;
+
+      if (segEnd <= playheadSec) continue; // Already passed
+
+      const src = ctx.createBufferSource();
+      src.buffer = seg.buffer;
+
+      const segGain = ctx.createGain();
+      segGain.gain.value = seg.volume ?? 1.0;
+
+      src.connect(segGain);
+      segGain.connect(audioEngine.fxInput);
+
+      if (playheadSec <= segStart) {
+        const delay = segStart - playheadSec;
+        src.start(now + delay, trimStart, segDur);
+      } else {
+        const alreadyPlayed = playheadSec - segStart;
+        const remaining = segDur - alreadyPlayed;
+        src.start(now, trimStart + alreadyPlayed, remaining);
+      }
+
+      this.activeSources.push(src);
+    }
+  }
+}
+
+// Multi-format Studio Exporter: WAV (16/24-bit), MP3, WebM/OGG Audio, Video (WebM/MP4), LRC
+class StudioExporter {
+  static downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 1000);
+  }
+
+  // Encode AudioBuffer -> WAV (16-bit or 24-bit)
+  static encodeWAV(audioBuffer, bitDepth = 16) {
+    const numChannels = audioBuffer.numberOfChannels;
+    const sampleRate = audioBuffer.sampleRate;
+    const numFrames = audioBuffer.length;
+    const bytesPerSample = bitDepth === 24 ? 3 : 2;
+    const blockAlign = numChannels * bytesPerSample;
+    const dataSize = numFrames * blockAlign;
+    const buffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(buffer);
+
+    const writeStr = (offset, str) => {
+      for (let i = 0; i < str.length; i++) {
+        view.setUint8(offset + i, str.charCodeAt(i));
+      }
+    };
+
+    writeStr(0, 'RIFF');
+    view.setUint32(4, 36 + dataSize, true);
+    writeStr(8, 'WAVE');
+    writeStr(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true); // PCM
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * blockAlign, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bitDepth, true);
+    writeStr(36, 'data');
+    view.setUint32(40, dataSize, true);
+
+    const channels = [];
+    for (let c = 0; c < numChannels; c++) {
+      channels.push(audioBuffer.getChannelData(c));
+    }
+
+    let offset = 44;
+    for (let i = 0; i < numFrames; i++) {
+      for (let c = 0; c < numChannels; c++) {
+        const s = Math.max(-1, Math.min(1, channels[c][i]));
+        if (bitDepth === 24) {
+          const val = s < 0 ? Math.round(s * 8388608) : Math.round(s * 8388607);
+          view.setUint8(offset, val & 0xff);
+          view.setUint8(offset + 1, (val >> 8) & 0xff);
+          view.setUint8(offset + 2, (val >> 16) & 0xff);
+          offset += 3;
+        } else {
+          const val = s < 0 ? Math.round(s * 32768) : Math.round(s * 32767);
+          view.setInt16(offset, val, true);
+          offset += 2;
+        }
+      }
+    }
+
+    return new Blob([buffer], { type: 'audio/wav' });
+  }
+
+  // Encode AudioBuffer -> MP3 using lamejs (if loaded)
+  static encodeMP3(audioBuffer, kbps = 320, onProgress = null) {
+    if (typeof window.lamejs === 'undefined') {
+      throw new Error('Thư viện nén MP3 (lamejs) chưa sẵn sàng (có thể do mất mạng). Vui lòng xuất định dạng WAV hoặc WebM.');
+    }
+
+    const numChannels = Math.min(2, audioBuffer.numberOfChannels);
+    const sampleRate = audioBuffer.sampleRate;
+    const mp3encoder = new window.lamejs.Mp3Encoder(numChannels, sampleRate, kbps);
+
+    const left = audioBuffer.getChannelData(0);
+    const right = numChannels > 1 ? audioBuffer.getChannelData(1) : left;
+
+    const floatToInt16 = (arr) => {
+      const out = new Int16Array(arr.length);
+      for (let i = 0; i < arr.length; i++) {
+        const s = Math.max(-1, Math.min(1, arr[i]));
+        out[i] = s < 0 ? s * 32768 : s * 32767;
+      }
+      return out;
+    };
+
+    const left16 = floatToInt16(left);
+    const right16 = numChannels > 1 ? floatToInt16(right) : left16;
+
+    const mp3Data = [];
+    const blockSize = 1152;
+    const total = left16.length;
+
+    for (let i = 0; i < total; i += blockSize) {
+      const lChunk = left16.subarray(i, i + blockSize);
+      const rChunk = right16.subarray(i, i + blockSize);
+      const mp3buf = numChannels === 2
+        ? mp3encoder.encodeBuffer(lChunk, rChunk)
+        : mp3encoder.encodeBuffer(lChunk);
+      if (mp3buf.length > 0) mp3Data.push(mp3buf);
+      if (onProgress && i % (blockSize * 40) === 0) {
+        onProgress(Math.min(0.98, i / total));
+      }
+    }
+
+    const endBuf = mp3encoder.flush();
+    if (endBuf.length > 0) mp3Data.push(endBuf);
+    if (onProgress) onProgress(1);
+
+    return new Blob(mp3Data, { type: 'audio/mp3' });
+  }
+
+  // Encode AudioBuffer -> WebM/OGG Audio via MediaRecorder
+  static async encodeWebMAudio(audioBuffer) {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: audioBuffer.sampleRate });
+    const src = ctx.createBufferSource();
+    src.buffer = audioBuffer;
+    const dest = ctx.createMediaStreamDestination();
+    src.connect(dest);
+
+    const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus'
+      : 'audio/webm';
+
+    const recorder = new MediaRecorder(dest.stream, { mimeType: mime, audioBitsPerSecond: 192000 });
+    const chunks = [];
+
+    return new Promise((resolve) => {
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+      recorder.onstop = () => {
+        ctx.close();
+        resolve(new Blob(chunks, { type: mime }));
+      };
+      recorder.start();
+      src.start(0);
+      src.onended = () => {
+        setTimeout(() => recorder.stop(), 120);
+      };
+    });
+  }
+
+  // Render Video (Camera segments stitched OR Karaoke Lyric Visualizer + Mastered Audio)
+  static async renderKaraokeVideo({ audioBuffer, segments, lyricsManager, songTitle = 'Karaoke Studio Pro', preferMp4 = false, onProgress = null }) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1280;
+    canvas.height = 720;
+    const ctx2d = canvas.getContext('2d');
+
+    // Prepare video elements for segments that have videoBlob
+    const videoClips = [];
+    for (const seg of segments) {
+      if (seg.muted || !seg.videoBlob) continue;
+      const vid = document.createElement('video');
+      vid.src = URL.createObjectURL(seg.videoBlob);
+      vid.muted = true;
+      vid.playsInline = true;
+      await new Promise((res) => {
+        vid.onloadedmetadata = res;
+        vid.onerror = res;
+      });
+      videoClips.push({
+        startTime: seg.startTime,
+        endTime: seg.startTime + ((seg.trimEnd ?? seg.buffer.duration) - (seg.trimStart ?? 0)),
+        videoEl: vid,
+        started: false
+      });
+    }
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: audioBuffer.sampleRate });
+    const src = audioCtx.createBufferSource();
+    src.buffer = audioBuffer;
+    const dest = audioCtx.createMediaStreamDestination();
+    src.connect(dest);
+
+    const canvasStream = canvas.captureStream(30);
+    const combinedStream = new MediaStream([
+      ...canvasStream.getVideoTracks(),
+      ...dest.stream.getAudioTracks()
+    ]);
+
+    let mime = 'video/webm;codecs=vp9,opus';
+    if (preferMp4 && MediaRecorder.isTypeSupported('video/mp4')) {
+      mime = 'video/mp4';
+    } else if (!MediaRecorder.isTypeSupported(mime)) {
+      mime = 'video/webm';
+    }
+
+    const recorder = new MediaRecorder(combinedStream, {
+      mimeType: mime,
+      videoBitsPerSecond: 3500000,
+      audioBitsPerSecond: 192000
+    });
+
+    const chunks = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data);
+    };
+
+    const totalDuration = audioBuffer.duration;
+    let rafId = null;
+    const startPerf = performance.now();
+
+    const drawFrame = () => {
+      const elapsed = (performance.now() - startPerf) / 1000;
+      if (onProgress) onProgress(Math.min(0.98, elapsed / totalDuration));
+
+      // Background
+      const grad = ctx2d.createLinearGradient(0, 0, 1280, 720);
+      grad.addColorStop(0, '#090d16');
+      grad.addColorStop(1, '#161b2e');
+      ctx2d.fillStyle = grad;
+      ctx2d.fillRect(0, 0, 1280, 720);
+
+      // Draw active camera clip if available
+      const activeClip = videoClips.find((c) => elapsed >= c.startTime && elapsed <= c.endTime);
+      if (activeClip) {
+        if (!activeClip.started) {
+          activeClip.started = true;
+          activeClip.videoEl.currentTime = Math.max(0, elapsed - activeClip.startTime);
+          activeClip.videoEl.play().catch(() => {});
+        }
+        ctx2d.save();
+        ctx2d.drawImage(activeClip.videoEl, 0, 0, 1280, 720);
+        // Subtle dark gradient overlay at bottom for lyrics readability
+        const ov = ctx2d.createLinearGradient(0, 440, 0, 720);
+        ov.addColorStop(0, 'rgba(0,0,0,0)');
+        ov.addColorStop(1, 'rgba(0,0,0,0.82)');
+        ctx2d.fillStyle = ov;
+        ctx2d.fillRect(0, 440, 1280, 280);
+        ctx2d.restore();
+      }
+
+      // Header badge
+      ctx2d.fillStyle = 'rgba(255,255,255,0.75)';
+      ctx2d.font = 'bold 22px Inter, sans-serif';
+      ctx2d.textAlign = 'left';
+      ctx2d.fillText(`🎙️ ${songTitle}`, 42, 48);
+
+      // Lyrics overlay
+      if (lyricsManager && lyricsManager.lines.length > 0) {
+        const idx = lyricsManager.getActiveLineIndex(elapsed);
+        const current = idx >= 0 ? lyricsManager.lines[idx]?.text : '';
+        const next = idx + 1 < lyricsManager.lines.length ? lyricsManager.lines[idx + 1]?.text : '';
+
+        ctx2d.textAlign = 'center';
+        if (current) {
+          ctx2d.font = 'bold 42px Inter, sans-serif';
+          ctx2d.fillStyle = '#38bdf8';
+          ctx2d.fillText(current, 640, 615, 1180);
+        }
+        if (next) {
+          ctx2d.font = '500 26px Inter, sans-serif';
+          ctx2d.fillStyle = 'rgba(255,255,255,0.65)';
+          ctx2d.fillText(next, 640, 668, 1180);
+        }
+      }
+
+      // Progress bar
+      ctx2d.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx2d.fillRect(0, 714, 1280, 6);
+      ctx2d.fillStyle = '#38bdf8';
+      ctx2d.fillRect(0, 714, 1280 * Math.min(1, elapsed / totalDuration), 6);
+
+      if (elapsed < totalDuration) {
+        rafId = requestAnimationFrame(drawFrame);
+      }
+    };
+
+    return new Promise((resolve) => {
+      recorder.onstop = () => {
+        cancelAnimationFrame(rafId);
+        videoClips.forEach((c) => {
+          c.videoEl.pause();
+          URL.revokeObjectURL(c.videoEl.src);
+        });
+        audioCtx.close();
+        if (onProgress) onProgress(1);
+        const ext = mime.includes('mp4') ? 'mp4' : 'webm';
+        resolve({ blob: new Blob(chunks, { type: mime }), ext });
+      };
+
+      recorder.start(200);
+      src.start(0);
+      drawFrame();
+      src.onended = () => {
+        setTimeout(() => recorder.stop(), 150);
+      };
+    });
+  }
+}
+
+// Studio Audio Engine - Web Audio API + AudioWorklet DSP + Offline Mixdown
+
+class StudioAudioEngine {
+  constructor() {
+    this.ctx = null;
+    this.micStream = null;
+    this.micSource = null;
+
+    // Live & Playback shared FX bus
+    this.fxInput = null;
+    this.inputGain = null;
+    this.hpf = null;
+    this.autoTuneNode = null;
+    this.pcmRecorderNode = null;
+
+    // EQ
+    this.eqLow = null;
+    this.eqLowMid = null;
+    this.eqHighMid = null;
+    this.eqHigh = null;
+
+    // Saturation & Dynamics
+    this.warmthShaper = null;
+    this.compressor = null;
+
+    // Reverb & Delay
+    this.dryGain = null;
+    this.reverbSend = null;
+    this.convolver = null;
+    this.reverbReturn = null;
+    this.delaySend = null;
+    this.delayNode = null;
+    this.delayFeedback = null;
+    this.delayReturn = null;
+
+    // Output Buses
+    this.vocalMasterGain = null;
+    this.monitorGain = null;
+    this.beatGain = null;
+    this.masterGain = null;
+
+    // Analysers
+    this.vocalAnalyser = null;
+    this.beatAnalyser = null;
+    this.masterAnalyser = null;
+
+    // Beat Sources
+    this.beatBuffer = null;
+    this.beatSourceNode = null;
+    this.tabAudioSource = null;
+
+    // Recording state
+    this.recordedChunks = [];
+    this.isRecording = false;
+    this.monitorEnabled = false;
+
+    // Current parameters
+    this.params = {
+      ...VOCAL_PRESETS.studio.params,
+      autotuneRoot: 0, // C
+      autotuneScale: 1, // Major
+      vocalVolume: 1.0,
+      beatVolume: 0.85,
+      masterVolume: 1.0,
+      latencyOffsetMs: 40
+    };
+
+    this.onPitchUpdate = null;
+    this.initialized = false;
+  }
+
+  async init() {
+    if (this.initialized) {
+      if (this.ctx.state === 'suspended') await this.ctx.resume();
+      return;
+    }
+
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    this.ctx = new AudioCtx({ sampleRate: 48000, latencyHint: 'interactive' });
+
+    // Load AudioWorklets
+    const atUrl = URL.createObjectURL(new Blob([AUTOTUNE_WORKLET_SRC], { type: 'application/javascript' }));
+    await this.ctx.audioWorklet.addModule(atUrl);
+    const pcmUrl = URL.createObjectURL(new Blob([PCM_WORKLET_SRC], { type: 'application/javascript' }));
+    await this.ctx.audioWorklet.addModule(pcmUrl);
+
+    this._buildGraph();
+    this.applyAllParams();
+    this.initialized = true;
+  }
+
+  _buildGraph() {
+    const ctx = this.ctx;
+
+    // Input stage (Live Mic -> inputGain -> hpf -> autoTune -> pcmRecorder)
+    this.inputGain = ctx.createGain();
+    this.hpf = ctx.createBiquadFilter();
+    this.hpf.type = 'highpass';
+
+    this.autoTuneNode = new AudioWorkletNode(ctx, 'autotune-processor', {
+      numberOfInputs: 1,
+      numberOfOutputs: 1,
+      outputChannelCount: [1]
+    });
+    this.autoTuneNode.port.onmessage = (e) => {
+      if (e.data.type === 'pitch' && this.onPitchUpdate) {
+        this.onPitchUpdate(e.data);
+      }
+    };
+
+    this.pcmRecorderNode = new AudioWorkletNode(ctx, 'pcm-recorder-processor');
+    this.pcmRecorderNode.port.onmessage = (e) => {
+      if (e.data.type === 'pcm' && this.isRecording) {
+        this.recordedChunks.push(e.data.samples);
+      }
+    };
+
+    // Shared FX Input (both live mic post-autotune AND timeline playback segments connect here)
+    this.fxInput = ctx.createGain();
+
+    // 4-Band Studio EQ
+    this.eqLow = ctx.createBiquadFilter();
+    this.eqLow.type = 'lowshelf';
+    this.eqLow.frequency.value = 100;
+
+    this.eqLowMid = ctx.createBiquadFilter();
+    this.eqLowMid.type = 'peaking';
+    this.eqLowMid.frequency.value = 400;
+    this.eqLowMid.Q.value = 1.2;
+
+    this.eqHighMid = ctx.createBiquadFilter();
+    this.eqHighMid.type = 'peaking';
+    this.eqHighMid.frequency.value = 2800;
+    this.eqHighMid.Q.value = 1.2;
+
+    this.eqHigh = ctx.createBiquadFilter();
+    this.eqHigh.type = 'highshelf';
+    this.eqHigh.frequency.value = 8500;
+
+    // Tube Warmth WaveShaper
+    this.warmthShaper = ctx.createWaveShaper();
+    this.warmthShaper.oversample = '2x';
+    this._updateWarmthCurve(this.params.warmth);
+
+    // Studio Compressor
+    this.compressor = ctx.createDynamicsCompressor();
+
+    // Parallel Dry / Reverb / Delay
+    this.dryGain = ctx.createGain();
+    this.dryGain.gain.value = 1.0;
+
+    this.reverbSend = ctx.createGain();
+    this.convolver = ctx.createConvolver();
+    this.reverbReturn = ctx.createGain();
+    this.reverbReturn.gain.value = 1.0;
+    this._generateReverbIR(this.params.reverbDecay);
+
+    this.delaySend = ctx.createGain();
+    this.delayNode = ctx.createDelay(2.0);
+    this.delayFeedback = ctx.createGain();
+    this.delayReturn = ctx.createGain();
+    this.delayReturn.gain.value = 1.0;
+
+    // Vocal Master & Analysers
+    this.vocalMasterGain = ctx.createGain();
+    this.vocalAnalyser = ctx.createAnalyser();
+    this.vocalAnalyser.fftSize = 1024;
+    this.vocalAnalyser.smoothingTimeConstant = 0.8;
+
+    this.monitorGain = ctx.createGain();
+    this.monitorGain.gain.value = 0; // Off by default unless user enables headphones monitor
+
+    this.beatGain = ctx.createGain();
+    this.beatAnalyser = ctx.createAnalyser();
+    this.beatAnalyser.fftSize = 1024;
+    this.beatAnalyser.smoothingTimeConstant = 0.8;
+
+    this.masterGain = ctx.createGain();
+    this.masterAnalyser = ctx.createAnalyser();
+    this.masterAnalyser.fftSize = 2048;
+    this.masterAnalyser.smoothingTimeConstant = 0.82;
+
+    // Connect Live Mic Chain -> pcmRecorder & monitorGate -> fxInput
+    this.liveMonitorGate = ctx.createGain();
+    this.liveMonitorGate.gain.value = 0; // Muted to speakers unless Monitor is ON
+
+    this.inputGain.connect(this.hpf);
+    this.hpf.connect(this.autoTuneNode);
+    this.autoTuneNode.connect(this.pcmRecorderNode);
+    this.autoTuneNode.connect(this.liveMonitorGate);
+    this.liveMonitorGate.connect(this.fxInput);
+
+    // Connect Shared FX Chain
+    this.fxInput.connect(this.eqLow);
+    this.eqLow.connect(this.eqLowMid);
+    this.eqLowMid.connect(this.eqHighMid);
+    this.eqHighMid.connect(this.eqHigh);
+    this.eqHigh.connect(this.warmthShaper);
+    this.warmthShaper.connect(this.compressor);
+
+    // Dry + Reverb + Delay
+    this.compressor.connect(this.dryGain);
+    this.dryGain.connect(this.vocalMasterGain);
+
+    this.compressor.connect(this.reverbSend);
+    this.reverbSend.connect(this.convolver);
+    this.convolver.connect(this.reverbReturn);
+    this.reverbReturn.connect(this.vocalMasterGain);
+
+    this.compressor.connect(this.delaySend);
+    this.delaySend.connect(this.delayNode);
+    this.delayNode.connect(this.delayFeedback);
+    this.delayFeedback.connect(this.delayNode);
+    this.delayNode.connect(this.delayReturn);
+    this.delayReturn.connect(this.vocalMasterGain);
+
+    // Vocal Master -> Vocal Analyser -> Master Gain
+    this.vocalMasterGain.connect(this.vocalAnalyser);
+    this.vocalAnalyser.connect(this.masterGain);
+
+    // Beat -> Beat Analyser -> Master Gain
+    this.beatGain.connect(this.beatAnalyser);
+    this.beatAnalyser.connect(this.masterGain);
+
+    // Master -> Master Analyser -> Destination
+    this.masterGain.connect(this.masterAnalyser);
+    this.masterAnalyser.connect(ctx.destination);
+  }
+
+  async enableMicrophone(deviceId = null, rawStudioMode = true) {
+    await this.init();
+    if (this.micStream) {
+      this.micStream.getTracks().forEach((t) => t.stop());
+    }
+
+    const constraints = {
+      audio: {
+        deviceId: deviceId ? { exact: deviceId } : undefined,
+        echoCancellation: !rawStudioMode,
+        noiseSuppression: !rawStudioMode,
+        autoGainControl: false,
+        channelCount: 1,
+        sampleRate: 48000
+      }
+    };
+
+    this.micStream = await navigator.mediaDevices.getUserMedia(constraints);
+    if (this.micSource) {
+      try { this.micSource.disconnect(); } catch (_) {}
+    }
+    this.micSource = this.ctx.createMediaStreamSource(this.micStream);
+    this.micSource.connect(this.inputGain);
+    return this.micStream;
+  }
+
+  setMonitor(enabled) {
+    this.monitorEnabled = enabled;
+    if (this.liveMonitorGate && this.ctx) {
+      this.liveMonitorGate.gain.setTargetAtTime(enabled ? 1.0 : 0.0, this.ctx.currentTime, 0.015);
+    }
+  }
+
+  setParam(key, value) {
+    this.params[key] = value;
+    if (!this.initialized) return;
+
+    const t = this.ctx.currentTime;
+    switch (key) {
+      case 'inputGain':
+        this.inputGain.gain.setTargetAtTime(value, t, 0.02);
+        break;
+      case 'hpfFreq':
+        this.hpf.frequency.setTargetAtTime(value, t, 0.02);
+        break;
+      case 'eqLow':
+        this.eqLow.gain.setTargetAtTime(value, t, 0.02);
+        break;
+      case 'eqLowMid':
+        this.eqLowMid.gain.setTargetAtTime(value, t, 0.02);
+        break;
+      case 'eqHighMid':
+        this.eqHighMid.gain.setTargetAtTime(value, t, 0.02);
+        break;
+      case 'eqHigh':
+        this.eqHigh.gain.setTargetAtTime(value, t, 0.02);
+        break;
+      case 'warmth':
+        this._updateWarmthCurve(value);
+        break;
+      case 'compThreshold':
+        this.compressor.threshold.setTargetAtTime(value, t, 0.02);
+        break;
+      case 'compRatio':
+        this.compressor.ratio.setTargetAtTime(Math.max(1, value), t, 0.02);
+        break;
+      case 'compAttack':
+        this.compressor.attack.setTargetAtTime(value, t, 0.02);
+        break;
+      case 'compRelease':
+        this.compressor.release.setTargetAtTime(value, t, 0.02);
+        break;
+      case 'reverbMix':
+        this.reverbSend.gain.setTargetAtTime(value, t, 0.02);
+        break;
+      case 'reverbDecay':
+        this._generateReverbIR(value);
+        break;
+      case 'delayMix':
+        this.delaySend.gain.setTargetAtTime(value, t, 0.02);
+        break;
+      case 'delayTime':
+        this.delayNode.delayTime.setTargetAtTime(value, t, 0.03);
+        break;
+      case 'delayFeedback':
+        this.delayFeedback.gain.setTargetAtTime(Math.min(0.82, value), t, 0.02);
+        break;
+      case 'autotuneEnabled':
+        this.autoTuneNode.parameters.get('enabled').setValueAtTime(value ? 1 : 0, t);
+        break;
+      case 'autotuneSpeed':
+        this.autoTuneNode.parameters.get('retuneSpeed').setValueAtTime(value, t);
+        break;
+      case 'autotuneMix':
+        this.autoTuneNode.parameters.get('mix').setValueAtTime(value, t);
+        break;
+      case 'autotuneRoot':
+        this.autoTuneNode.parameters.get('rootNote').setValueAtTime(value, t);
+        break;
+      case 'autotuneScale':
+        this.autoTuneNode.parameters.get('scaleIndex').setValueAtTime(value, t);
+        break;
+      case 'vocalVolume':
+        this.vocalMasterGain.gain.setTargetAtTime(value, t, 0.02);
+        break;
+      case 'beatVolume':
+        this.beatGain.gain.setTargetAtTime(value, t, 0.02);
+        break;
+      case 'masterVolume':
+        this.masterGain.gain.setTargetAtTime(value, t, 0.02);
+        break;
+    }
+  }
+
+  applyPreset(presetKey) {
+    const preset = VOCAL_PRESETS[presetKey];
+    if (!preset) return;
+    Object.entries(preset.params).forEach(([k, v]) => {
+      this.setParam(k, v);
+    });
+  }
+
+  applyAllParams() {
+    Object.entries(this.params).forEach(([k, v]) => {
+      this.setParam(k, v);
+    });
+  }
+
+  _updateWarmthCurve(amount) {
+    if (!this.warmthShaper) return;
+    this.warmthShaper.curve = StudioAudioEngine.createSaturationCurve(amount);
+  }
+
+  static createSaturationCurve(amount) {
+    const samples = 1024;
+    const curve = new Float32Array(samples);
+    const k = amount * 12;
+    for (let i = 0; i < samples; i++) {
+      const x = (i * 2) / samples - 1;
+      if (k <= 0.01) {
+        curve[i] = x;
+      } else {
+        curve[i] = ((1 + k) * x) / (1 + k * Math.abs(x));
+      }
+    }
+    return curve;
+  }
+
+  _generateReverbIR(decaySeconds = 1.6) {
+    if (!this.ctx || !this.convolver) return;
+    this.convolver.buffer = StudioAudioEngine.createImpulseResponse(this.ctx, decaySeconds);
+  }
+
+  static createImpulseResponse(audioCtx, decaySeconds = 1.6) {
+    const rate = audioCtx.sampleRate;
+    const length = Math.max(rate * 0.2, Math.floor(rate * decaySeconds));
+    const impulse = audioCtx.createBuffer(2, length, rate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = impulse.getChannelData(ch);
+      for (let i = 0; i < length; i++) {
+        const env = Math.pow(1 - i / length, 2.6);
+        data[i] = (Math.random() * 2 - 1) * env * 0.55;
+      }
+    }
+    return impulse;
+  }
+
+  // Recording control (PCM sample-accurate)
+  startPCMRecording() {
+    this.recordedChunks = [];
+    this.isRecording = true;
+    this.pcmRecorderNode.port.postMessage({ command: 'start' });
+  }
+
+  stopPCMRecording() {
+    this.isRecording = false;
+    this.pcmRecorderNode.port.postMessage({ command: 'stop' });
+
+    const totalLen = this.recordedChunks.reduce((acc, c) => acc + c.length, 0);
+    if (totalLen === 0) return null;
+
+    const buffer = this.ctx.createBuffer(1, totalLen, this.ctx.sampleRate);
+    const channel = buffer.getChannelData(0);
+    let offset = 0;
+    for (const chunk of this.recordedChunks) {
+      channel.set(chunk, offset);
+      offset += chunk.length;
+    }
+    this.recordedChunks = [];
+    return buffer;
+  }
+
+  // Beat Loading & Playback
+  async loadBeatFromArrayBuffer(arrayBuffer) {
+    await this.init();
+    this.beatBuffer = await this.ctx.decodeAudioData(arrayBuffer);
+    return this.beatBuffer;
+  }
+
+  async connectTabAudioStream(stream) {
+    await this.init();
+    if (this.tabAudioSource) {
+      try { this.tabAudioSource.disconnect(); } catch (_) {}
+    }
+    this.tabAudioSource = this.ctx.createMediaStreamSource(stream);
+    this.tabAudioSource.connect(this.beatGain);
+  }
+
+  // Offline Studio Mixdown (Beat + Stitched Vocal Segments + Full Studio FX)
+  async renderOfflineMix({ beatBuffer, segments, includeBeat = true, duration = null }) {
+    const sr = 48000;
+    const maxSegEnd = segments.reduce((max, s) => {
+      if (s.muted) return max;
+      const dur = (s.trimEnd ?? s.buffer.duration) - (s.trimStart ?? 0);
+      return Math.max(max, s.startTime + dur);
+    }, 0);
+
+    const beatDur = includeBeat && beatBuffer ? beatBuffer.duration : 0;
+    const totalDuration = duration || Math.max(beatDur, maxSegEnd + (this.params.reverbDecay || 1.5));
+    if (totalDuration <= 0.1) throw new Error('Không có âm thanh nào để xuất file.');
+
+    const offline = new OfflineAudioContext(2, Math.ceil(totalDuration * sr), sr);
+
+    // Master Gain
+    const masterGain = offline.createGain();
+    masterGain.gain.value = this.params.masterVolume;
+    masterGain.connect(offline.destination);
+
+    // Beat Track
+    if (includeBeat && beatBuffer) {
+      const beatSrc = offline.createBufferSource();
+      beatSrc.buffer = beatBuffer;
+      const bGain = offline.createGain();
+      bGain.gain.value = this.params.beatVolume;
+      beatSrc.connect(bGain);
+      bGain.connect(masterGain);
+      beatSrc.start(0);
+    }
+
+    // Vocal FX Bus (mirrors live FX chain)
+    const fxIn = offline.createGain();
+    const eqLow = offline.createBiquadFilter();
+    eqLow.type = 'lowshelf';
+    eqLow.frequency.value = 100;
+    eqLow.gain.value = this.params.eqLow;
+
+    const eqLowMid = offline.createBiquadFilter();
+    eqLowMid.type = 'peaking';
+    eqLowMid.frequency.value = 400;
+    eqLowMid.Q.value = 1.2;
+    eqLowMid.gain.value = this.params.eqLowMid;
+
+    const eqHighMid = offline.createBiquadFilter();
+    eqHighMid.type = 'peaking';
+    eqHighMid.frequency.value = 2800;
+    eqHighMid.Q.value = 1.2;
+    eqHighMid.gain.value = this.params.eqHighMid;
+
+    const eqHigh = offline.createBiquadFilter();
+    eqHigh.type = 'highshelf';
+    eqHigh.frequency.value = 8500;
+    eqHigh.gain.value = this.params.eqHigh;
+
+    const shaper = offline.createWaveShaper();
+    shaper.oversample = '2x';
+    shaper.curve = StudioAudioEngine.createSaturationCurve(this.params.warmth);
+
+    const comp = offline.createDynamicsCompressor();
+    comp.threshold.value = this.params.compThreshold;
+    comp.ratio.value = Math.max(1, this.params.compRatio);
+    comp.attack.value = this.params.compAttack;
+    comp.release.value = this.params.compRelease;
+
+    const dry = offline.createGain();
+    const revSend = offline.createGain();
+    revSend.gain.value = this.params.reverbMix;
+    const conv = offline.createConvolver();
+    conv.buffer = StudioAudioEngine.createImpulseResponse(offline, this.params.reverbDecay);
+
+    const delSend = offline.createGain();
+    delSend.gain.value = this.params.delayMix;
+    const del = offline.createDelay(2.0);
+    del.delayTime.value = this.params.delayTime;
+    const delFb = offline.createGain();
+    delFb.gain.value = Math.min(0.82, this.params.delayFeedback);
+
+    const vMaster = offline.createGain();
+    vMaster.gain.value = this.params.vocalVolume;
+
+    fxIn.connect(eqLow);
+    eqLow.connect(eqLowMid);
+    eqLowMid.connect(eqHighMid);
+    eqHighMid.connect(eqHigh);
+    eqHigh.connect(shaper);
+    shaper.connect(comp);
+
+    comp.connect(dry);
+    dry.connect(vMaster);
+
+    comp.connect(revSend);
+    revSend.connect(conv);
+    conv.connect(vMaster);
+
+    comp.connect(delSend);
+    delSend.connect(del);
+    del.connect(delFb);
+    delFb.connect(del);
+    del.connect(vMaster);
+
+    vMaster.connect(masterGain);
+
+    // Schedule all active vocal segments with micro-fade to avoid clicks
+    for (const seg of segments) {
+      if (seg.muted || !seg.buffer) continue;
+      const trimStart = seg.trimStart ?? 0;
+      const trimEnd = seg.trimEnd ?? seg.buffer.duration;
+      const dur = Math.max(0.01, trimEnd - trimStart);
+      const when = Math.max(0, seg.startTime + (seg.offsetMs || 0) / 1000);
+
+      const src = offline.createBufferSource();
+      src.buffer = seg.buffer;
+
+      const segGain = offline.createGain();
+      const vol = seg.volume ?? 1.0;
+      const fade = Math.min(0.015, dur / 4);
+      segGain.gain.setValueAtTime(0, when);
+      segGain.gain.linearRampToValueAtTime(vol, when + fade);
+      segGain.gain.setValueAtTime(vol, when + dur - fade);
+      segGain.gain.linearRampToValueAtTime(0, when + dur);
+
+      src.connect(segGain);
+      segGain.connect(fxIn);
+      src.start(when, trimStart, dur);
+    }
+
+    return await offline.startRendering();
+  }
+}
+
+
+const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+function midiToNoteName(midi) {
+  const note = NOTE_NAMES[((Math.round(midi) % 12) + 12) % 12];
+  const octave = Math.floor(Math.round(midi) / 12) - 1;
+  return `${note}${octave}`;
+}
+
+function formatTime(sec) {
+  if (!isFinite(sec) || sec < 0) sec = 0;
+  const m = Math.floor(sec / 60);
+  const s = (sec % 60).toFixed(1).padStart(4, '0');
+  return `${String(m).padStart(2, '0')}:${s}`;
+}
+
+class KaraokeStudioApp {
+  constructor() {
+    this.audio = new StudioAudioEngine();
+    this.lyrics = new LyricsManager();
+    this.timeline = new TimelineManager();
+
+    this.knobs = {};
+    this.currentPreset = 'studio';
+
+    // Transport state
+    this.isPlaying = false;
+    this.isRecording = false;
+    this.punchInTargetId = null;
+    this.playheadSec = 0;
+    this.playStartCtxTime = 0;
+    this.playStartOffsetSec = 0;
+    this.recStartSec = 0;
+    this.beatPlaySource = null;
+
+    // Media / Camera / Embed state
+    this.micEnabled = false;
+    this.cameraStream = null;
+    this.cameraEnabled = false;
+    this.videoRecorder = null;
+    this.videoChunks = [];
+    this.ytPlayer = null;
+    this.embedType = null; // 'youtube' | 'url' | null
+
+    this._bindDOM();
+    this._initPresetsUI();
+    this._initKnobsUI();
+    this._initTabs();
+    this._initAudioTelemetry();
+    this._startRenderLoop();
+    this._populateMicDevices();
+  }
+
+  _bindDOM() {
+    this.dom = {
+      btnPlay: document.getElementById('btnPlay'),
+      btnStop: document.getElementById('btnStop'),
+      btnRecord: document.getElementById('btnRecord'),
+      timeCurrent: document.getElementById('timeCurrent'),
+      timeTotal: document.getElementById('timeTotal'),
+
+      btnEnableMic: document.getElementById('btnEnableMic'),
+      micSelect: document.getElementById('micSelect'),
+      btnMonitor: document.getElementById('btnMonitor'),
+      btnCamera: document.getElementById('btnCamera'),
+      btnMirrorCam: document.getElementById('btnMirrorCam'),
+      vuMasterFill: document.getElementById('vuMasterFill'),
+
+      beatFileInput: document.getElementById('beatFileInput'),
+      beatFileName: document.getElementById('beatFileName'),
+      embedUrlInput: document.getElementById('embedUrlInput'),
+      btnLoadEmbed: document.getElementById('btnLoadEmbed'),
+      embedContainer: document.getElementById('embedContainer'),
+      ytPlayerContainer: document.getElementById('ytPlayerContainer'),
+      urlAudioPlayer: document.getElementById('urlAudioPlayer'),
+      btnCaptureTabAudio: document.getElementById('btnCaptureTabAudio'),
+      tabCaptureStatus: document.getElementById('tabCaptureStatus'),
+
+      teleprompter: document.getElementById('teleprompter'),
+      lyricsTextarea: document.getElementById('lyricsTextarea'),
+      btnApplyLyrics: document.getElementById('btnApplyLyrics'),
+      btnTapSync: document.getElementById('btnTapSync'),
+      btnResetSync: document.getElementById('btnResetSync'),
+      lyricsOffsetMs: document.getElementById('lyricsOffsetMs'),
+
+      cameraPreview: document.getElementById('cameraPreview'),
+      spectrumCanvas: document.getElementById('spectrumCanvas'),
+      stageLineCurrent: document.getElementById('stageLineCurrent'),
+      stageLineNext: document.getElementById('stageLineNext'),
+      recIndicator: document.getElementById('recIndicator'),
+
+      tunerNote: document.getElementById('tunerNote'),
+      tunerFreq: document.getElementById('tunerFreq'),
+      tunerNeedle: document.getElementById('tunerNeedle'),
+      tunerTargetNote: document.getElementById('tunerTargetNote'),
+
+      timelineContainer: document.getElementById('timelineContainer'),
+      beatTrackLabel: document.getElementById('beatTrackLabel'),
+      segmentsTrack: document.getElementById('segmentsTrack'),
+      playheadLine: document.getElementById('playheadLine'),
+      segmentCount: document.getElementById('segmentCount'),
+      btnPunchIn: document.getElementById('btnPunchIn'),
+      btnDeleteSeg: document.getElementById('btnDeleteSeg'),
+      btnClearAllSegs: document.getElementById('btnClearAllSegs'),
+
+      segmentInspector: document.getElementById('segmentInspector'),
+      segInspName: document.getElementById('segInspName'),
+      segVol: document.getElementById('segVol'),
+      segOffset: document.getElementById('segOffset'),
+      btnSegMute: document.getElementById('btnSegMute'),
+
+      chkAutoTune: document.getElementById('chkAutoTune'),
+      autoTuneRoot: document.getElementById('autoTuneRoot'),
+      autoTuneScale: document.getElementById('autoTuneScale'),
+      btnResetFX: document.getElementById('btnResetFX'),
+
+      faderBeat: document.getElementById('faderBeat'),
+      valBeat: document.getElementById('valBeat'),
+      faderVocal: document.getElementById('faderVocal'),
+      valVocal: document.getElementById('valVocal'),
+      faderMaster: document.getElementById('faderMaster'),
+      valMaster: document.getElementById('valMaster'),
+
+      exportProgressWrap: document.getElementById('exportProgressWrap'),
+      exportStatusText: document.getElementById('exportStatusText'),
+      exportProgressFill: document.getElementById('exportProgressFill')
+    };
+
+    // Transport Events
+    this.dom.btnPlay.addEventListener('click', () => this.togglePlay());
+    this.dom.btnStop.addEventListener('click', () => this.stop());
+    this.dom.btnRecord.addEventListener('click', () => this.toggleRecord(null));
+
+    // Hardware Events
+    this.dom.btnEnableMic.addEventListener('click', () => this.activateMic());
+    this.dom.micSelect.addEventListener('change', () => {
+      if (this.micEnabled) this.activateMic();
+    });
+    this.dom.btnMonitor.addEventListener('click', () => this.toggleMonitor());
+    this.dom.btnCamera.addEventListener('click', () => this.toggleCamera());
+    this.dom.btnMirrorCam.addEventListener('click', () => {
+      this.dom.cameraPreview.classList.toggle('mirror');
+    });
+
+    // Beat File & Embed Events
+    this.dom.beatFileInput.addEventListener('change', (e) => this.handleBeatFile(e.target.files[0]));
+    this.dom.btnLoadEmbed.addEventListener('click', () => this.handleLoadEmbed());
+    this.dom.btnCaptureTabAudio.addEventListener('click', () => this.captureTabAudio());
+
+    // Lyrics Events
+    this.dom.btnApplyLyrics.addEventListener('click', () => this.applyLyricsFromEditor());
+    this.dom.btnTapSync.addEventListener('click', () => this.tapSyncLine());
+    this.dom.btnResetSync.addEventListener('click', () => {
+      this.lyrics.resetSync();
+      this.renderTeleprompter();
+    });
+    this.dom.lyricsOffsetMs.addEventListener('change', (e) => {
+      this.lyrics.offsetMs = parseInt(e.target.value, 10) || 0;
+    });
+
+    // Timeline Events
+    this.dom.timelineContainer.addEventListener('click', (e) => {
+      if (e.target.closest('.segment-block')) return;
+      const rect = this.dom.timelineContainer.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const totalDur = this.getProjectDuration();
+      this.seekTo(ratio * totalDur);
+    });
+
+    this.dom.btnPunchIn.addEventListener('click', () => {
+      if (!this.timeline.selectedId) return;
+      const seg = this.timeline.getSegment(this.timeline.selectedId);
+      if (!seg) return;
+      this.seekTo(seg.startTime);
+      this.toggleRecord(seg.id);
+    });
+
+    this.dom.btnDeleteSeg.addEventListener('click', () => {
+      if (!this.timeline.selectedId) return;
+      this.timeline.removeSegment(this.timeline.selectedId);
+      this.renderTimeline();
+    });
+
+    this.dom.btnClearAllSegs.addEventListener('click', () => {
+      if (this.timeline.segments.length && confirm('Bạn có chắc muốn xóa toàn bộ các đoạn đã thu?')) {
+        this.timeline.clearAll();
+        this.renderTimeline();
+      }
+    });
+
+    // Segment Inspector
+    this.dom.segVol.addEventListener('input', (e) => {
+      const seg = this.timeline.getSegment(this.timeline.selectedId);
+      if (seg) seg.volume = parseFloat(e.target.value);
+    });
+    this.dom.segOffset.addEventListener('change', (e) => {
+      const seg = this.timeline.getSegment(this.timeline.selectedId);
+      if (seg) seg.offsetMs = parseInt(e.target.value, 10) || 0;
+    });
+    this.dom.btnSegMute.addEventListener('click', () => {
+      const seg = this.timeline.getSegment(this.timeline.selectedId);
+      if (seg) {
+        seg.muted = !seg.muted;
+        this.renderTimeline();
+      }
+    });
+
+    // Auto-Tune Controls
+    this.dom.chkAutoTune.addEventListener('change', (e) => {
+      this.audio.setParam('autotuneEnabled', e.target.checked);
+    });
+    this.dom.autoTuneRoot.addEventListener('change', (e) => {
+      this.audio.setParam('autotuneRoot', parseInt(e.target.value, 10));
+    });
+    this.dom.autoTuneScale.addEventListener('change', (e) => {
+      this.audio.setParam('autotuneScale', parseInt(e.target.value, 10));
+    });
+    this.dom.btnResetFX.addEventListener('click', () => this.selectPreset('studio'));
+
+    // Master Faders
+    this.dom.faderBeat.addEventListener('input', (e) => {
+      const v = parseFloat(e.target.value);
+      this.audio.setParam('beatVolume', v);
+      this.dom.valBeat.textContent = `${Math.round(v * 100)}%`;
+    });
+    this.dom.faderVocal.addEventListener('input', (e) => {
+      const v = parseFloat(e.target.value);
+      this.audio.setParam('vocalVolume', v);
+      this.dom.valVocal.textContent = `${Math.round(v * 100)}%`;
+    });
+    this.dom.faderMaster.addEventListener('input', (e) => {
+      const v = parseFloat(e.target.value);
+      this.audio.setParam('masterVolume', v);
+      this.dom.valMaster.textContent = `${Math.round(v * 100)}%`;
+    });
+
+    // Export Buttons
+    document.querySelectorAll('.btn-export').forEach((btn) => {
+      btn.addEventListener('click', () => this.handleExport(btn.dataset.format));
+    });
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        this.togglePlay();
+      } else if (e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        this.tapSyncLine();
+      } else if (e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        this.toggleRecord(null);
+      }
+    });
+  }
+
+  _initTabs() {
+    const setupTabGroup = (groupId, mapping) => {
+      const group = document.getElementById(groupId);
+      group.querySelectorAll('.tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          group.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          Object.values(mapping).forEach((elId) => document.getElementById(elId).classList.remove('active'));
+          document.getElementById(mapping[btn.dataset.tab]).classList.add('active');
+        });
+      });
+    };
+
+    setupTabGroup('beatTabs', { file: 'tabFile', embed: 'tabEmbed' });
+    setupTabGroup('lyricsTabs', { prompter: 'tabPrompter', editor: 'tabEditor' });
+  }
+
+  _initPresetsUI() {
+    const grid = document.getElementById('presetGrid');
+    Object.entries(VOCAL_PRESETS).forEach(([key, preset]) => {
+      const btn = document.createElement('button');
+      btn.className = `preset-btn ${key === this.currentPreset ? 'active' : ''}`;
+      btn.dataset.preset = key;
+      btn.title = preset.desc;
+      btn.innerHTML = `<span class="p-badge">${preset.badge}</span><span class="p-name">${preset.name}</span>`;
+      btn.addEventListener('click', () => this.selectPreset(key));
+      grid.appendChild(btn);
+    });
+  }
+
+  selectPreset(key) {
+    this.currentPreset = key;
+    document.querySelectorAll('.preset-btn').forEach((b) => {
+      b.classList.toggle('active', b.dataset.preset === key);
+    });
+    this.audio.applyPreset(key);
+    const p = VOCAL_PRESETS[key].params;
+    this.dom.chkAutoTune.checked = !!p.autotuneEnabled;
+    Object.entries(this.knobs).forEach(([paramKey, knob]) => {
+      if (p[paramKey] !== undefined) knob.setValue(p[paramKey]);
+    });
+  }
+
+  _initKnobsUI() {
+    const addKnobs = (containerId, specs) => {
+      const container = document.getElementById(containerId);
+      specs.forEach((spec) => {
+        const knob = createKnobElement({
+          ...spec,
+          value: this.audio.params[spec.id],
+          onChange: (val) => this.audio.setParam(spec.id, val)
+        });
+        this.knobs[spec.id] = knob;
+        container.appendChild(knob.el);
+      });
+    };
+
+    addKnobs('knobsAutoTune', [
+      { id: 'autotuneSpeed', label: 'Tốc Độ Tune', min: 0, max: 1, step: 0.01, color: '#a855f7' },
+      { id: 'autotuneMix', label: 'Độ Mạnh Mix', min: 0, max: 1, step: 0.01, color: '#a855f7' }
+    ]);
+
+    addKnobs('knobsEQ', [
+      { id: 'inputGain', label: 'Mic Gain', min: 0.2, max: 3.0, step: 0.05, unit: 'x' },
+      { id: 'hpfFreq', label: 'Cắt Ù (HPF)', min: 20, max: 250, step: 5, unit: 'Hz' },
+      { id: 'eqLow', label: 'Bass (100Hz)', min: -12, max: 12, step: 0.5, unit: 'dB' },
+      { id: 'eqLowMid', label: 'Low-Mid', min: -12, max: 12, step: 0.5, unit: 'dB' },
+      { id: 'eqHighMid', label: 'Presence', min: -12, max: 12, step: 0.5, unit: 'dB' },
+      { id: 'eqHigh', label: 'Treble (8.5k)', min: -12, max: 12, step: 0.5, unit: 'dB' }
+    ]);
+
+    addKnobs('knobsComp', [
+      { id: 'warmth', label: 'Độ Ấm Tube', min: 0, max: 1, step: 0.02, color: '#f59e0b' },
+      { id: 'compThreshold', label: 'Ngưỡng Nén', min: -40, max: 0, step: 1, unit: 'dB', color: '#22c55e' },
+      { id: 'compRatio', label: 'Tỉ Lệ Nén', min: 1, max: 12, step: 0.5, unit: ':1', color: '#22c55e' },
+      { id: 'compAttack', label: 'Attack', min: 0.001, max: 0.08, step: 0.001, unit: 's', color: '#22c55e' },
+      { id: 'compRelease', label: 'Release', min: 0.03, max: 0.5, step: 0.01, unit: 's', color: '#22c55e' }
+    ]);
+
+    addKnobs('knobsSpace', [
+      { id: 'reverbMix', label: 'Reverb Mix', min: 0, max: 1, step: 0.02, color: '#38bdf8' },
+      { id: 'reverbDecay', label: 'Độ Vang', min: 0.3, max: 4.5, step: 0.1, unit: 's', color: '#38bdf8' },
+      { id: 'delayMix', label: 'Echo Mix', min: 0, max: 0.8, step: 0.02, color: '#38bdf8' },
+      { id: 'delayTime', label: 'Nhịp Echo', min: 0.05, max: 0.8, step: 0.01, unit: 's', color: '#38bdf8' },
+      { id: 'delayFeedback', label: 'Lặp Echo', min: 0, max: 0.75, step: 0.02, color: '#38bdf8' }
+    ]);
+  }
+
+  _initAudioTelemetry() {
+    this.audio.onPitchUpdate = (data) => {
+      if (!data.voiced) {
+        this.dom.tunerNote.textContent = '--';
+        this.dom.tunerFreq.textContent = '0 Hz';
+        this.dom.tunerTargetNote.textContent = '--';
+        this.dom.tunerNeedle.style.left = '50%';
+        return;
+      }
+      const detectedMidi = 69 + 12 * Math.log2(data.detectedFreq / 440);
+      this.dom.tunerNote.textContent = midiToNoteName(detectedMidi);
+      this.dom.tunerFreq.textContent = `${Math.round(data.detectedFreq)} Hz`;
+      this.dom.tunerTargetNote.textContent = midiToNoteName(data.targetMidi);
+      const clampedCents = Math.max(-50, Math.min(50, data.cents));
+      this.dom.tunerNeedle.style.left = `${50 + clampedCents}%`;
+    };
+  }
+
+  async _populateMicDevices() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const mics = devices.filter((d) => d.kind === 'audioinput');
+      this.dom.micSelect.innerHTML = '';
+      mics.forEach((m, i) => {
+        const opt = document.createElement('option');
+        opt.value = m.deviceId;
+        opt.textContent = m.label || `Micro ${i + 1}`;
+        this.dom.micSelect.appendChild(opt);
+      });
+    } catch (_) {}
+  }
+
+  async activateMic() {
+    try {
+      const deviceId = this.dom.micSelect.value || null;
+      await this.audio.enableMicrophone(deviceId, true);
+      this.micEnabled = true;
+      this.dom.btnEnableMic.textContent = '🎙️ Mic: SẴN SÀNG';
+      this.dom.btnEnableMic.classList.remove('active-warn');
+      this.dom.btnEnableMic.classList.add('active-green');
+      await this._populateMicDevices();
+    } catch (err) {
+      alert('Không thể truy cập Micro: ' + err.message);
+    }
+  }
+
+  toggleMonitor() {
+    const next = !this.audio.monitorEnabled;
+    this.audio.setMonitor(next);
+    this.dom.btnMonitor.textContent = next ? '🎧 Monitor: BẬT' : '🎧 Monitor: TẮT';
+    this.dom.btnMonitor.classList.toggle('active', next);
+  }
+
+  async toggleCamera() {
+    if (this.cameraEnabled) {
+      if (this.cameraStream) {
+        this.cameraStream.getTracks().forEach((t) => t.stop());
+        this.cameraStream = null;
+      }
+      this.cameraEnabled = false;
+      this.dom.cameraPreview.classList.add('hidden');
+      this.dom.spectrumCanvas.classList.remove('hidden');
+      this.dom.btnMirrorCam.classList.add('hidden');
+      this.dom.btnCamera.textContent = '📹 Camera: TẮT';
+      this.dom.btnCamera.classList.remove('active');
+    } else {
+      try {
+        this.cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+          audio: false
+        });
+        this.dom.cameraPreview.srcObject = this.cameraStream;
+        this.cameraEnabled = true;
+        this.dom.cameraPreview.classList.remove('hidden');
+        this.dom.spectrumCanvas.classList.add('hidden');
+        this.dom.btnMirrorCam.classList.remove('hidden');
+        this.dom.btnCamera.textContent = '📹 Camera: BẬT';
+        this.dom.btnCamera.classList.add('active');
+      } catch (err) {
+        alert('Không thể mở Camera: ' + err.message);
+      }
+    }
+  }
+
+  // BEAT LOADING
+  async handleBeatFile(file) {
+    if (!file) return;
+    this.dom.beatFileName.textContent = `⏳ Đang giải mã: ${file.name}...`;
+    try {
+      const buf = await file.arrayBuffer();
+      const decoded = await this.audio.loadBeatFromArrayBuffer(buf);
+      this.dom.beatFileName.textContent = `✅ ${file.name} (${formatTime(decoded.duration)})`;
+      this.dom.beatTrackLabel.textContent = `Beat: ${file.name}`;
+      this.embedType = null;
+      this.stop();
+    } catch (err) {
+      this.dom.beatFileName.textContent = `❌ Lỗi đọc file: ${err.message}`;
+    }
+  }
+
+  handleLoadEmbed() {
+    const url = this.dom.embedUrlInput.value.trim();
+    if (!url) return;
+    this.dom.embedContainer.classList.remove('hidden');
+
+    // Check YouTube
+    const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+    if (ytMatch) {
+      const videoId = ytMatch[1];
+      this.embedType = 'youtube';
+      this.dom.urlAudioPlayer.classList.add('hidden');
+      this.dom.ytPlayerContainer.classList.remove('hidden');
+      this.dom.beatTrackLabel.textContent = `YouTube Beat: ${videoId}`;
+
+      if (window.YT && window.YT.Player) {
+        if (this.ytPlayer) {
+          this.ytPlayer.loadVideoById(videoId);
+        } else {
+          this.ytPlayer = new window.YT.Player('ytPlayerContainer', {
+            videoId,
+            playerVars: { rel: 0, modestbranding: 1 }
+          });
+        }
+      } else {
+        this.dom.ytPlayerContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?enablejsapi=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      }
+      return;
+    }
+
+    // Direct audio/video URL
+    this.embedType = 'url';
+    this.dom.ytPlayerContainer.classList.add('hidden');
+    this.dom.urlAudioPlayer.classList.remove('hidden');
+    this.dom.urlAudioPlayer.crossOrigin = 'anonymous';
+    this.dom.urlAudioPlayer.src = url;
+    this.dom.beatTrackLabel.textContent = `Embed Link: ${url.slice(0, 40)}...`;
+  }
+
+  async captureTabAudio() {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+      });
+      const audioTracks = stream.getAudioTracks();
+      if (audioTracks.length === 0) {
+        stream.getTracks().forEach((t) => t.stop());
+        alert('Bạn chưa tick chọn "Share tab audio / Chia sẻ âm thanh tab"!');
+        return;
+      }
+      // Stop video track to save resources, keep audio
+      stream.getVideoTracks().forEach((t) => t.stop());
+      await this.audio.connectTabAudioStream(new MediaStream(audioTracks));
+      this.dom.tabCaptureStatus.textContent = '✅ Đã kết nối âm thanh Tab!';
+      this.dom.tabCaptureStatus.style.color = '#4ade80';
+    } catch (err) {
+      alert('Không thể thu âm thanh Tab: ' + err.message);
+    }
+  }
+
+  // LYRICS
+  applyLyricsFromEditor() {
+    this.lyrics.parseText(this.dom.lyricsTextarea.value);
+    this.renderTeleprompter();
+    // Switch to prompter tab
+    document.querySelector('#lyricsTabs [data-tab="prompter"]').click();
+  }
+
+  tapSyncLine() {
+    const t = this.getCurrentPlayhead();
+    if (this.lyrics.stampNextLine(t)) {
+      this.dom.lyricsTextarea.value = this.lyrics.toLRCString();
+      this.renderTeleprompter();
+    }
+  }
+
+  renderTeleprompter() {
+    const container = this.dom.teleprompter;
+    if (this.lyrics.lines.length === 0) {
+      container.innerHTML = `<p class="empty-hint">Chưa có lời bài hát. Chuyển sang tab <b>Soạn & Sync</b> để dán hoặc tự chế lời!</p>`;
+      return;
+    }
+    container.innerHTML = '';
+    this.lyrics.lines.forEach((line, i) => {
+      const div = document.createElement('div');
+      div.className = `lyric-line ${i === this.lyrics.activeIndex ? 'active' : ''}`;
+      const ts = line.time !== null ? `<span class="ts-badge">[${formatTime(line.time)}]</span>` : '';
+      div.innerHTML = `${ts}${line.text}`;
+      div.addEventListener('click', () => {
+        if (line.time !== null) this.seekTo(line.time);
+      });
+      container.appendChild(div);
+    });
+  }
+
+  // TRANSPORT & RECORDING
+  getProjectDuration() {
+    const beatDur = this.audio.beatBuffer ? this.audio.beatBuffer.duration : 0;
+    const tlDur = this.timeline.getTotalDuration();
+    return Math.max(beatDur, tlDur, 60);
+  }
+
+  getCurrentPlayhead() {
+    if (!this.isPlaying || !this.audio.ctx) return this.playheadSec;
+    return this.playStartOffsetSec + (this.audio.ctx.currentTime - this.playStartCtxTime);
+  }
+
+  async togglePlay() {
+    await this.audio.init();
+    if (this.isPlaying) {
+      this.pause();
+    } else {
+      this.play();
+    }
+  }
+
+  play() {
+    const ctx = this.audio.ctx;
+    this.stopAudioSources();
+
+    this.playStartOffsetSec = this.playheadSec;
+    this.playStartCtxTime = ctx.currentTime;
+    this.isPlaying = true;
+
+    // Play Beat Buffer if loaded
+    if (this.audio.beatBuffer && this.playheadSec < this.audio.beatBuffer.duration) {
+      this.beatPlaySource = ctx.createBufferSource();
+      this.beatPlaySource.buffer = this.audio.beatBuffer;
+      this.beatPlaySource.connect(this.audio.beatGain);
+      this.beatPlaySource.start(ctx.currentTime, this.playheadSec);
+    } else if (this.embedType === 'youtube' && this.ytPlayer && this.ytPlayer.playVideo) {
+      this.ytPlayer.seekTo(this.playheadSec, true);
+      this.ytPlayer.playVideo();
+    } else if (this.embedType === 'url' && this.dom.urlAudioPlayer.src) {
+      this.dom.urlAudioPlayer.currentTime = this.playheadSec;
+      this.dom.urlAudioPlayer.play().catch(() => {});
+    }
+
+    // Play Stitched Vocal Segments
+    this.timeline.schedulePlayback(this.audio, this.playheadSec);
+
+    this.dom.btnPlay.innerHTML = '<span class="icon">⏸</span> Tạm dừng';
+    this.dom.btnPlay.classList.add('playing');
+  }
+
+  pause() {
+    this.playheadSec = this.getCurrentPlayhead();
+    this.isPlaying = false;
+    this.stopAudioSources();
+    this.dom.btnPlay.innerHTML = '<span class="icon">▶</span> Phát';
+    this.dom.btnPlay.classList.remove('playing');
+  }
+
+  stop() {
+    if (this.isRecording) this.stopRecording();
+    this.isPlaying = false;
+    this.playheadSec = 0;
+    this.stopAudioSources();
+    this.dom.btnPlay.innerHTML = '<span class="icon">▶</span> Phát';
+    this.dom.btnPlay.classList.remove('playing');
+    this.updatePlayheadUI(0);
+  }
+
+  seekTo(sec) {
+    const wasPlaying = this.isPlaying;
+    if (wasPlaying) this.pause();
+    this.playheadSec = Math.max(0, sec);
+    this.updatePlayheadUI(this.playheadSec);
+    if (wasPlaying) this.play();
+  }
+
+  stopAudioSources() {
+    if (this.beatPlaySource) {
+      try {
+        this.beatPlaySource.stop();
+        this.beatPlaySource.disconnect();
+      } catch (_) {}
+      this.beatPlaySource = null;
+    }
+    if (this.embedType === 'youtube' && this.ytPlayer && this.ytPlayer.pauseVideo) {
+      try { this.ytPlayer.pauseVideo(); } catch (_) {}
+    }
+    if (this.embedType === 'url' && !this.dom.urlAudioPlayer.paused) {
+      this.dom.urlAudioPlayer.pause();
+    }
+    this.timeline.stopAllPlayback();
+  }
+
+  async toggleRecord(punchInId = null) {
+    if (this.isRecording) {
+      await this.stopRecording();
+      return;
+    }
+
+    if (!this.micEnabled) {
+      await this.activateMic();
+      if (!this.micEnabled) return;
+    }
+
+    await this.audio.init();
+    this.punchInTargetId = punchInId;
+    this.recStartSec = this.playheadSec;
+    this.isRecording = true;
+
+    // Start PCM Recorder
+    this.audio.startPCMRecording();
+
+    // Start Camera Video Recorder if enabled
+    if (this.cameraEnabled && this.cameraStream) {
+      this.videoChunks = [];
+      const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+      this.videoRecorder = new MediaRecorder(this.cameraStream, { mimeType: mime, videoBitsPerSecond: 2500000 });
+      this.videoRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) this.videoChunks.push(e.data);
+      };
+      this.videoRecorder.start(200);
+    }
+
+    // Start beat playback
+    if (!this.isPlaying) this.play();
+
+    this.dom.btnRecord.classList.add('recording');
+    this.dom.btnRecord.innerHTML = '<span class="rec-dot"></span> DỪNG THU';
+    this.dom.recIndicator.classList.remove('hidden');
+  }
+
+  async stopRecording() {
+    if (!this.isRecording) return;
+    this.isRecording = false;
+    this.pause();
+
+    const pcmBuffer = this.audio.stopPCMRecording();
+    let videoBlob = null;
+
+    if (this.videoRecorder && this.videoRecorder.state !== 'inactive') {
+      videoBlob = await new Promise((resolve) => {
+        this.videoRecorder.onstop = () => {
+          resolve(new Blob(this.videoChunks, { type: this.videoRecorder.mimeType }));
+        };
+        this.videoRecorder.stop();
+      });
+      this.videoRecorder = null;
+    }
+
+    this.dom.btnRecord.classList.remove('recording');
+    this.dom.btnRecord.innerHTML = '<span class="rec-dot"></span> THU ÂM';
+    this.dom.recIndicator.classList.add('hidden');
+
+    if (pcmBuffer && pcmBuffer.duration > 0.15) {
+      // Compensate browser audio input latency
+      const compensatedStart = Math.max(0, this.recStartSec - (this.audio.params.latencyOffsetMs || 40) / 1000);
+      if (this.punchInTargetId) {
+        this.timeline.replaceSegment(this.punchInTargetId, { buffer: pcmBuffer, videoBlob });
+      } else {
+        this.timeline.addSegment({
+          startTime: compensatedStart,
+          buffer: pcmBuffer,
+          videoBlob
+        });
+      }
+      this.punchInTargetId = null;
+      this.renderTimeline();
+    }
+  }
+
+  // TIMELINE RENDERING
+  renderTimeline() {
+    const track = this.dom.segmentsTrack;
+    track.innerHTML = '';
+    const totalDur = this.getProjectDuration();
+    this.dom.segmentCount.textContent = this.timeline.segments.length;
+
+    for (const seg of this.timeline.segments) {
+      const dur = (seg.trimEnd ?? seg.buffer.duration) - (seg.trimStart ?? 0);
+      const leftPct = (seg.startTime / totalDur) * 100;
+      const widthPct = Math.max(1.5, (dur / totalDur) * 100);
+
+      const block = document.createElement('div');
+      block.className = `segment-block ${seg.id === this.timeline.selectedId ? 'selected' : ''} ${seg.muted ? 'muted' : ''}`;
+      block.style.left = `${leftPct}%`;
+      block.style.width = `${widthPct}%`;
+
+      const title = document.createElement('div');
+      title.className = 'segment-title';
+      title.textContent = `${seg.videoBlob ? '📹 ' : '🎙️ '}${seg.name} (${dur.toFixed(1)}s)`;
+
+      const waveCanvas = document.createElement('canvas');
+      waveCanvas.className = 'segment-wave';
+      waveCanvas.width = 220;
+      waveCanvas.height = 48;
+
+      block.appendChild(title);
+      block.appendChild(waveCanvas);
+
+      block.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.timeline.selectedId = seg.id;
+        this.renderTimeline();
+      });
+
+      track.appendChild(block);
+      this._drawSegmentWaveform(waveCanvas, seg.peaks);
+    }
+
+    this._updateSegmentInspector();
+  }
+
+  _drawSegmentWaveform(canvas, peaks) {
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#38bdf8';
+    const barW = w / peaks.length;
+    for (let i = 0; i < peaks.length; i++) {
+      const amp = Math.max(2, peaks[i] * h * 0.9);
+      ctx.fillRect(i * barW, (h - amp) / 2, Math.max(1, barW - 0.5), amp);
+    }
+  }
+
+  _updateSegmentInspector() {
+    const seg = this.timeline.getSegment(this.timeline.selectedId);
+    const hasSel = !!seg;
+    this.dom.btnPunchIn.disabled = !hasSel;
+    this.dom.btnDeleteSeg.disabled = !hasSel;
+
+    if (!seg) {
+      this.dom.segmentInspector.classList.add('hidden');
+      return;
+    }
+
+    this.dom.segmentInspector.classList.remove('hidden');
+    this.dom.segInspName.textContent = seg.name;
+    this.dom.segVol.value = seg.volume;
+    this.dom.segOffset.value = seg.offsetMs;
+    this.dom.btnSegMute.textContent = seg.muted ? '🔊 Bật tiếng' : '🔇 Tắt tiếng';
+  }
+
+  updatePlayheadUI(sec) {
+    const totalDur = this.getProjectDuration();
+    this.dom.timeCurrent.textContent = formatTime(sec);
+    this.dom.timeTotal.textContent = formatTime(totalDur);
+    const pct = Math.max(0, Math.min(100, (sec / totalDur) * 100));
+    this.dom.playheadLine.style.left = `${pct}%`;
+
+    // Update lyrics sync
+    if (this.lyrics.lines.length > 0) {
+      const prevIdx = this.lyrics.activeIndex;
+      const idx = this.lyrics.getActiveLineIndex(sec);
+      if (idx !== prevIdx) {
+        const lineEls = this.dom.teleprompter.querySelectorAll('.lyric-line');
+        lineEls.forEach((el, i) => el.classList.toggle('active', i === idx));
+        if (idx >= 0 && lineEls[idx]) {
+          lineEls[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        this.dom.stageLineCurrent.textContent = idx >= 0 ? this.lyrics.lines[idx].text : '♪ ♪ ♪';
+        this.dom.stageLineNext.textContent = idx + 1 < this.lyrics.lines.length ? this.lyrics.lines[idx + 1].text : '';
+      }
+    }
+  }
+
+  // RENDER LOOP (SPECTRUM, VU METER, PLAYHEAD)
+  _startRenderLoop() {
+    const canvas = this.dom.spectrumCanvas;
+    const ctx2d = canvas.getContext('2d');
+    const freqData = new Uint8Array(1024);
+    const timeData = new Uint8Array(1024);
+
+    const tick = () => {
+      if (this.isPlaying) {
+        const t = this.getCurrentPlayhead();
+        this.updatePlayheadUI(t);
+        if (this.audio.beatBuffer && t >= this.audio.beatBuffer.duration && !this.isRecording) {
+          this.stop();
+        }
+      }
+
+      // Draw Master Spectrum & Vocal Level
+      if (this.audio.initialized && this.audio.masterAnalyser) {
+        this.audio.masterAnalyser.getByteFrequencyData(freqData);
+        this.audio.vocalAnalyser.getByteTimeDomainData(timeData);
+
+        // VU Meter
+        let peak = 0;
+        for (let i = 0; i < timeData.length; i++) {
+          const v = Math.abs(timeData[i] - 128) / 128;
+          if (v > peak) peak = v;
+        }
+        this.dom.vuMasterFill.style.width = `${Math.min(100, peak * 140)}%`;
+
+        // Spectrum Canvas
+        if (!this.cameraEnabled) {
+          const w = canvas.width;
+          const h = canvas.height;
+          ctx2d.clearRect(0, 0, w, h);
+
+          const bars = 64;
+          const barW = w / bars;
+          for (let i = 0; i < bars; i++) {
+            const val = freqData[i * 2] / 255;
+            const barH = val * (h * 0.75);
+            const grad = ctx2d.createLinearGradient(0, h, 0, h - barH);
+            grad.addColorStop(0, '#2563eb');
+            grad.addColorStop(0.6, '#38bdf8');
+            grad.addColorStop(1, '#a855f7');
+            ctx2d.fillStyle = grad;
+            ctx2d.fillRect(i * barW + 2, h - barH, barW - 4, barH);
+          }
+        }
+      }
+
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  // MULTI-FORMAT EXPORT
+  async handleExport(format) {
+    if (format === 'lrc') {
+      const lrc = this.lyrics.toLRCString();
+      if (!lrc) return alert('Chưa có lời bài hát để xuất!');
+      StudioExporter.downloadBlob(new Blob([lrc], { type: 'text/plain;charset=utf-8' }), 'karaoke-lyrics.lrc');
+      return;
+    }
+
+    const mixType = document.querySelector('input[name="exportMixType"]:checked').value;
+    const includeBeat = mixType === 'full';
+
+    if (this.timeline.segments.length === 0 && (!includeBeat || !this.audio.beatBuffer)) {
+      alert('Chưa có giọng thu hoặc nhạc nền để xuất file!');
+      return;
+    }
+
+    this.dom.exportProgressWrap.classList.remove('hidden');
+    this.dom.exportStatusText.textContent = 'Đang mixdown chuẩn phòng thu...';
+    this.dom.exportProgressFill.style.width = '20%';
+
+    try {
+      const rendered = await this.audio.renderOfflineMix({
+        beatBuffer: this.audio.beatBuffer,
+        segments: this.timeline.segments,
+        includeBeat
+      });
+
+      this.dom.exportProgressFill.style.width = '60%';
+      const baseName = `karaoke-studio-${mixType}`;
+
+      if (format === 'wav16') {
+        const blob = StudioExporter.encodeWAV(rendered, 16);
+        StudioExporter.downloadBlob(blob, `${baseName}-16bit.wav`);
+      } else if (format === 'wav24') {
+        const blob = StudioExporter.encodeWAV(rendered, 24);
+        StudioExporter.downloadBlob(blob, `${baseName}-24bit.wav`);
+      } else if (format === 'mp3') {
+        this.dom.exportStatusText.textContent = 'Đang nén MP3 320kbps...';
+        const blob = StudioExporter.encodeMP3(rendered, 320, (p) => {
+          this.dom.exportProgressFill.style.width = `${60 + p * 38}%`;
+        });
+        StudioExporter.downloadBlob(blob, `${baseName}.mp3`);
+      } else if (format === 'webm_audio') {
+        this.dom.exportStatusText.textContent = 'Đang xuất WebM/OGG Audio...';
+        const blob = await StudioExporter.encodeWebMAudio(rendered);
+        StudioExporter.downloadBlob(blob, `${baseName}.webm`);
+      } else if (format === 'video') {
+        this.dom.exportStatusText.textContent = 'Đang render Video Karaoke (vui lòng chờ theo thời lượng bài)...';
+        const { blob, ext } = await StudioExporter.renderKaraokeVideo({
+          audioBuffer: rendered,
+          segments: this.timeline.segments,
+          lyricsManager: this.lyrics,
+          preferMp4: true,
+          onProgress: (p) => {
+            this.dom.exportProgressFill.style.width = `${p * 100}%`;
+          }
+        });
+        StudioExporter.downloadBlob(blob, `${baseName}.${ext}`);
+      }
+
+      this.dom.exportProgressFill.style.width = '100%';
+      this.dom.exportStatusText.textContent = '✅ Xuất file thành công!';
+      setTimeout(() => this.dom.exportProgressWrap.classList.add('hidden'), 2500);
+    } catch (err) {
+      alert('Lỗi khi xuất file: ' + err.message);
+      this.dom.exportProgressWrap.classList.add('hidden');
+    }
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  window.studioApp = new KaraokeStudioApp();
+});
+
+
+</script>
 </body>
 </html>
