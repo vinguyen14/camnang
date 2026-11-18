@@ -256,6 +256,7 @@
         <p class="text-xs text-slate-500 mt-1">Làm <b>một lần</b>. Trên KiotViet, vào màn hình của danh mục (vd Khách hàng) → bấm <b>Import</b> → tải file mẫu về, rồi bấm <b>Tải file mẫu</b> ở đúng dòng bên dưới. Từ đó tool xuất đúng 100% theo file của KiotViet.</p>
       </div>
       <div id="setModelChips" class="flex flex-wrap gap-2"></div>
+      <div class="flex flex-wrap items-center gap-2 text-xs"><span class="font-bold text-slate-500">Áp dụng cho:</span><div id="setScopeChips" class="flex flex-wrap gap-1.5"></div></div>
       <div id="tplTable" class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden"></div>
       <input type="file" id="tRowFile" accept=".xlsx,.xls,.csv" class="hidden">
       <details id="compFormatCard" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
@@ -476,11 +477,36 @@ function undo() {
 // =====================================================================
 // 6. TEMPLATE: ĐỌC FILE MẪU CHÍNH THỨC
 // =====================================================================
-function inferType(name) {
-  const n = canon(name);
-  if (/^(gia|so luong|ton kho|dinh muc|so ghe|quy doi|trong luong|diem|chiet khau|giam gia|so tien|tien|phan tram|so lan|so dem|so gio|suc chua|so nguoi|gia tri|han muc|cong no|no can|so thu tu|tong)\b/.test(n) || /\b(gia ban|gia von|gia phong|don gia)\b/.test(n)) return "number";
-  return "text";
+// Đoán kiểu cột từ TÊN cột + DÒNG VÍ DỤ trong file mẫu (học linh động theo từng file của từng ngành)
+const TEXT_ONLY = /\b(ma|ma vach|barcode|dien thoai|sdt|so dien thoai|mst|ma so thue|so tai khoan|serial|imei|so lo|lo|cccd|cmnd|so giay to|so hop dong)\b/;
+const DATE_NAME = /\b(ngay|han su dung|hsd|nsx|ngay het han|het han|ngay san xuat|ngay sinh|tu ngay|den ngay|hieu luc)\b/;
+const BOOL_NAME = /^(quan ly|la |co |dang |cho phep|theo doi|tich diem|ap dung|ban truc tiep|duoc ban|su dung|bat buoc)/;
+const isDateLike = (v) => /^\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}$/.test(String(v).trim()) || /^\d{4}-\d{1,2}-\d{1,2}/.test(String(v).trim());
+function inferType(name, samples = []) {
+  const n = canon(name), s = samples.map(x => String(x ?? "").trim()).filter(Boolean);
+  const yn = s.length && s.every(v => ["co", "khong"].includes(norm(v)));
+  // Cột cờ ("Quản lý theo lô…", "Quản lý Serial/IMEI", "Đang kinh doanh"…) xét trước, kể cả khi tên chứa "hạn sử dụng"/"serial"
+  if (BOOL_NAME.test(n + " ")) {
+    if (yn) return { type: "select", options: ["Có", "Không"] };
+    if (!s.length || s.every(v => v === "0" || v === "1")) return { type: "bool" };
+  }
+  if (yn) return { type: "select", options: ["Có", "Không"] };
+  if (TEXT_ONLY.test(n) && !DATE_NAME.test(n)) return { type: "text" };
+  if (DATE_NAME.test(n) || (s.length && s.every(isDateLike))) return { type: "date" };
+  if (/^(gia|so luong|ton kho|ton|dinh muc|so ghe|quy doi|trong luong|diem|chiet khau|giam gia|so tien|tien|phan tram|so lan|so dem|so gio|suc chua|so nguoi|gia tri|han muc|cong no|no can|so thu tu|tong|thue suat|thue|vat|phi)\b/.test(n) || /\b(gia ban|gia von|gia phong|don gia|thue suat|vat)\b/.test(n)) return { type: "number" };
+  if (s.length && s.every(v => !parseNumber(v).bad && /^[\d.,\s%-]+$/.test(v))) return { type: "number" };
+  return { type: "text" };
 }
+// Chuẩn hóa ngày về dd/mm/yyyy (nhận cả số serial Excel, yyyy-mm-dd, d/m/yy)
+function toDateStr(v) {
+  if (v === null || v === undefined || v === "") return "";
+  if (typeof v === "number" && v > 20000 && v < 80000) { const d = new Date(Math.round((v - 25569) * 86400000)); return `${pad2(d.getUTCDate())}/${pad2(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`; }
+  const s = String(v).trim(); let m;
+  if ((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return `${pad2(m[3])}/${pad2(m[2])}/${m[1]}`;
+  if ((m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/))) return `${pad2(m[1])}/${pad2(m[2])}/${m[3].length === 2 ? "20" + m[3] : m[3]}`;
+  return s;
+}
+const pad2 = (x) => String(x).padStart(2, "0");
 function detectTemplateSheet(wb) {
   let best = null;
   wb.SheetNames.forEach(sn => {
@@ -498,15 +524,18 @@ function templateFromWorkbook(wb, meta) {
   const d = detectTemplateSheet(wb);
   if (!d || d.max < 2) throw new Error("Không tìm thấy dòng tiêu đề (cần ít nhất 2 cột).");
   const header = d.aoa[d.headerRow];
+  const sampleRows = d.aoa.slice(d.headerRow + 1, d.headerRow + 4).filter(r => r.some(x => String(x).trim()));
   const columns = [];
   header.forEach((h, ci) => {
     const raw = String(h).trim(); if (!raw) return;
     const required = /\*/.test(raw) || /bat buoc/.test(norm(raw));
-    columns.push({ name: raw, ci, type: inferType(raw), options: null, required });
+    const samples = sampleRows.map(r => r[ci]).filter(x => String(x ?? "").trim() !== "");
+    const t = inferType(raw, samples);
+    columns.push({ name: raw, ci, type: t.type, options: t.options || null, required, sample: samples[0] !== undefined ? String(samples[0]) : "" });
   });
   const key = columns.find(c => /^ma\b/.test(canon(c.name)) && !/vach|dvt|lien quan|nhom|giam gia|voucher cha/.test(canon(c.name)));
   const nm = columns.find(c => /^ten\b/.test(canon(c.name)));
-  return { id: "tpl-" + uid(), builtin: false, model: meta.model, kind: meta.kind, name: meta.name || meta.kind, sheetName: d.sheetName, headerRow: d.headerRow,
+  return { id: "tpl-" + uid(), builtin: false, model: meta.model, kind: meta.kind, industry: meta.industry || null, name: meta.name || meta.kind, sheetName: d.sheetName, headerRow: d.headerRow,
     columns, keyCol: key ? key.name : null, nameCol: nm ? nm.name : (key ? key.name : columns[0].name), fileName: meta.fileName, fileB64: meta.fileB64, createdAt: Date.now() };
 }
 function handleTemplateFile(file, meta) {
@@ -515,10 +544,10 @@ function handleTemplateFile(file, meta) {
     try {
       const u8 = new Uint8Array(e.target.result);
       const wb = XLSX.read(u8, { type: "array" });
-      const { model, kind } = meta;
-      const tpl = templateFromWorkbook(wb, { model, kind, name: `${kind} – file mẫu KiotViet`, fileName: file.name, fileB64: b64FromBytes(u8) });
+      const { model, kind } = meta; const industry = meta.industry || null;
+      const tpl = templateFromWorkbook(wb, { model, kind, industry, name: `${kind} – file mẫu KiotViet${industry ? " (" + industry + ")" : ""}`, fileName: file.name, fileB64: b64FromBytes(u8) });
       // Thay file: giữ nguyên id để các bộ dữ liệu đang dùng không bị đứt
-      const old = userTemplates.findIndex(t => t.model === model && t.kind === kind && t.fileB64);
+      const old = userTemplates.findIndex(t => t.model === model && t.kind === kind && t.fileB64 && (t.industry || null) === industry);
       if (old >= 0) { tpl.id = userTemplates[old].id; userTemplates[old] = tpl; } else userTemplates.push(tpl);
       if (!lsSet(K_TPL, userTemplates)) showToast("Bộ nhớ trình duyệt đầy", "File mẫu vẫn dùng được trong phiên này nhưng chưa lưu lâu dài.", "warn");
       renderTemplates(); renderTemplateSelects(); if (ws) refreshWorkspace();
@@ -595,6 +624,7 @@ function finalizeGeneric(tpl, o) {
     const v = o[c.name];
     if (c.type === "number") { const p = parseNumber(v); if (p.bad) { bad = true; row[c.name] = String(v); } else row[c.name] = p.empty ? row[c.name] : p.value; }
     else if (c.type === "bool") row[c.name] = parseBool(v);
+    else if (c.type === "date") row[c.name] = toDateStr(v);
     else if (c.type === "select" && c.options) { const m = c.options.find(op => canon(op) === canon(v)); row[c.name] = m || String(v ?? ""); }
     else row[c.name] = String(v ?? "").trim();
   });
@@ -616,7 +646,14 @@ const SYN = [
   ["dvt", "don vi", "don vi tinh", "unit"], ["ton kho", "so luong", "sl", "ton", "ton kho hien tai"],
   ["ghi chu", "note"], ["mo ta", "description"], ["khu vuc", "khu", "tang"], ["so ghe", "suc chua", "so cho"],
   ["ten ban", "ban", "phong", "ten phong", "ten ban phong"], ["hang phong", "loai phong"], ["ma nhan vien", "ma nv"], ["ten nhan vien", "nhan vien", "ho ten nhan vien"],
-  ["quan ly ton kho", "theo doi ton kho", "ql kho"], ["mon thanh phan", "thanh phan", "hang thanh phan"]
+  ["quan ly ton kho", "theo doi ton kho", "ql kho"], ["mon thanh phan", "thanh phan", "hang thanh phan"],
+  // cột đặc thù ngành
+  ["so lo", "lo", "ma lo", "lo hang", "so lo san xuat", "batch", "lot"], ["han su dung", "hsd", "ngay het han", "het han", "han dung", "exp", "expiry date"],
+  ["ngay san xuat", "nsx", "mfg"], ["serial imei", "serial", "imei", "so serial", "so imei", "ma serial", "serial number"],
+  ["quan ly theo lo", "quan ly lo", "theo doi lo", "quan ly lo han su dung", "quan ly theo lo han su dung"], ["quan ly serial", "quan ly imei", "quan ly serial imei", "theo doi serial"],
+  ["thue suat", "vat", "thue vat", "thue gtgt", "thue suat gtgt", "phan tram thue", "thue"], ["gia ban da gom thue", "gia sau thue", "gia gom vat"],
+  ["bao hanh", "bao hanh thang", "thoi gian bao hanh", "so thang bao hanh"], ["ma vach", "barcode", "ma barcode"],
+  ["thuong hieu", "hang san xuat", "nhan hieu", "brand"], ["thuoc tinh", "bien the", "mau size"], ["hoat chat", "thanh phan hoat chat"], ["ham luong", "nong do"]
 ];
 function matchScore(t, s) {
   const a = canon(t), b = canon(s);
@@ -671,8 +708,37 @@ function analyzeRaw(tplId, aoa) {
   const mapping = headerIdx >= 0 ? autoMap(tpl, srcHeaders) : {};
   return { tplId, aoa, headerIdx, srcHeaders, mapping, defaults: {} };
 }
+// Cột chưa ghép được → tìm ở DANH MỤC KHÁC của bộ dữ liệu (vd "Số lô", "Hạn sử dụng" ở tab "Lô - Hạn sử dụng"), ghép theo mã
+const GENERIC_COLS = /^(ghi chu|mo ta|trang thai|so luong|stt|so thu tu|ten|ten hang|ten mon|nhom|loai)$/;
+function keyColOfRows(rows, tplKey) {
+  const cols = rows.length ? Object.keys(rows[0]).filter(k => k !== "_id") : [];
+  return (tplKey && cols.includes(tplKey) && tplKey) || cols.find(c => /^ma( hang| mon| san pham)?$/.test(canon(c))) || cols.find(c => /^ma\b/.test(canon(c))) || null;
+}
+function addLookups(st) {
+  st.lookups = [];
+  const tpl = getTpl(st.tplId);
+  if (!ws || !tpl.keyCol || st.mapping[tpl.keyCol] === undefined) return;
+  const srcIdx = st.fromConvert && pendingConvert ? pendingConvert.sheetIdx : -1;
+  tpl.columns.forEach(c => {
+    if (st.mapping[c.name] !== undefined || c.name === tpl.keyCol || GENERIC_COLS.test(canon(c.name))) return;
+    let best = null;
+    ws.sheets.forEach((s, j) => {
+      if (j === srcIdx || !s.rows.length) return;
+      const kc = keyColOfRows(s.rows, getTpl(s.templateId)?.keyCol); if (!kc) return;
+      Object.keys(s.rows[0]).filter(k => k !== "_id" && k !== kc).forEach(col => { const sc = matchScore(c.name, col); if (sc >= 0.9 && (!best || sc > best.sc)) best = { sc, sheetIdx: j, col, key: kc }; });
+    });
+    if (best) { st.lookups.push({ ...best, label: `${getTpl(ws.sheets[best.sheetIdx].templateId)?.kind} › ${best.col}` }); st.mapping[c.name] = "L" + (st.lookups.length - 1); }
+  });
+}
+function lookupIndex(st, li) {
+  st._lk = st._lk || {};
+  if (!st._lk[li]) { const l = st.lookups[li]; const m = new Map(); (ws.sheets[l.sheetIdx]?.rows || []).forEach(r => { const k = String(r[l.key] ?? "").trim().toUpperCase(); if (k && !m.has(k) && r[l.col] !== "" && r[l.col] != null) m.set(k, r[l.col]); }); st._lk[li] = m; }
+  return st._lk[li];
+}
 function buildRowsFromParse(st, existingRows) {
   const tpl = getTpl(st.tplId);
+  st._lk = null;
+  const keySrc = tpl.keyCol !== null && typeof st.mapping[tpl.keyCol] === "number" ? st.mapping[tpl.keyCol] : -1;
   const isMenu = tpl.profile === "fnb-menu";
   const useGuess = st.headerIdx < 0 && isMenu && Object.keys(st.mapping).length === 0;
   const hdr = st.headerIdx >= 0 ? st.aoa[st.headerIdx].map(canon) : null;
@@ -692,7 +758,9 @@ function buildRowsFromParse(st, existingRows) {
       o = {};
       tpl.columns.forEach(c => {
         const idx = st.mapping[c.name];
-        const v = idx !== undefined && idx >= 0 ? (cols[idx] ?? "") : "";
+        let v = "";
+        if (typeof idx === "string" && idx[0] === "L") { const k = keySrc >= 0 ? String(cols[keySrc] ?? "").trim().toUpperCase() : ""; v = k ? (lookupIndex(st, +idx.slice(1)).get(k) ?? "") : ""; }
+        else if (idx !== undefined && idx >= 0) v = cols[idx] ?? "";
         if (v !== "") o[c.name] = v;
         else if (st.defaults[c.name]) o[c.name] = st.defaults[c.name];
       });
@@ -727,6 +795,7 @@ function validateSheet(sheet) {
       const empty = v === undefined || v === null || String(v).trim() === "";
       if (c.required && empty) add(r, i, c.name, "error", `Thiếu "${c.name}" (bắt buộc)`);
       if (!empty && c.type === "number") { const n = Number(v); if (!isFinite(n)) add(r, i, c.name, "error", `"${c.name}" phải là số`); else if (n < 0) add(r, i, c.name, "error", `"${c.name}" âm`); }
+      if (!empty && c.type === "date" && !/^\d{2}\/\d{2}\/\d{4}$/.test(String(v).trim())) add(r, i, c.name, "warn", `"${c.name}" nên ghi dạng dd/mm/yyyy`);
       if (!empty && c.type === "select" && c.options && !c.options.includes(v)) add(r, i, c.name, "error", `"${v}" không hợp lệ cho "${c.name}"`);
     });
     if (tpl.keyCol) { const k = String(r[tpl.keyCol] ?? "").trim(); if (k && keyCount[k.toUpperCase()] > 1) add(r, i, tpl.keyCol, "error", `Trùng "${k}"`); }
@@ -771,6 +840,7 @@ function cellHtml(c, val, tpl) {
   if (tpl && tpl.profile === "fnb-menu" && c.name === COMP_COL) return `<div class="flex items-center gap-1"><input type="text" data-key="${k}" value="${esc(val)}" placeholder="vd: 10 tiger + 1 trái cây nhỏ" class="cell-in text-slate-700 font-mono"><button data-role="comp" class="shrink-0 px-1.5 py-0.5 rounded-lg border border-violet-200 bg-violet-50 hover:bg-violet-100" title="Chọn món thành phần">🧩</button></div>`;
   if (c.type === "select" && c.options) { const opts = c.options.includes(val) ? c.options : [val, ...c.options]; return `<select data-key="${k}" class="cell-in">${opts.map(o => `<option value="${esc(o)}" ${o === val ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>`; }
   if (c.type === "bool") return `<input type="checkbox" data-key="${k}" ${Number(val) === 1 ? "checked" : ""} class="rounded text-violet-600 cursor-pointer">`;
+  if (c.type === "date") return `<input type="text" data-key="${k}" value="${esc(val)}" placeholder="dd/mm/yyyy" class="cell-in font-mono text-slate-700">`;
   if (c.type === "number") return `<input type="text" inputmode="decimal" data-key="${k}" value="${esc(val)}" class="cell-in text-right font-mono text-slate-700">`;
   return `<input type="text" data-key="${k}" value="${esc(val)}" class="cell-in text-slate-700">`;
 }
@@ -789,10 +859,14 @@ function isImportable(tpl) {
   return tpl.fileB64 ? true : DEFAULT_IMPORTABLE.has(tpl.kind);
 }
 function setImportable(tplId, v) { settings.importOverride = settings.importOverride || {}; settings.importOverride[tplId] = v; lsSet(K_SET, settings); }
+// File mẫu dùng được cho ngành hiện tại: file riêng ngành > file chung mô hình (file của ngành khác không dùng)
+const fitsIndustry = (t, industry) => !t.industry || t.industry === industry;
 function convertCandidates(tpl) {
-  return allTemplates().filter(t => t.id !== tpl.id && t.model === tpl.model)
-    .map(t => ({ t, score: (t.kind === tpl.kind ? 2 : 0) + (t.fileB64 ? 1 : 0) })).sort((a, b) => b.score - a.score);
+  const ind = ws && ws.industry;
+  return allTemplates().filter(t => t.id !== tpl.id && t.model === tpl.model && fitsIndustry(t, ind))
+    .map(t => ({ t, score: (t.kind === tpl.kind ? 4 : 0) + (t.fileB64 ? 2 : 0) + (t.industry ? 1 : 0) })).sort((a, b) => b.score - a.score);
 }
+const scopeLabel = (t) => t.industry ? `riêng ngành ${t.industry}` : `chung mô hình ${MODELS[t.model]?.name || ""}`;
 // ---------- Danh sách danh mục (xếp dọc, có trạng thái) ----------
 function sheetStatus(s) {
   if (!s.rows.length) return { icon: "○", cls: "text-slate-300", label: "Chưa có dữ liệu" };
@@ -854,9 +928,9 @@ const DEFAULT_KINDS = {
   salon: ["Dịch vụ & Sản phẩm", "Gói dịch vụ / Liệu trình", "Nhà cung cấp", "Khách hàng", "Nhân viên"],
   hotel: ["Hạng phòng", "Buồng phòng", "Hàng hóa & Dịch vụ", "Khách hàng", "Nhân viên"]
 };
-function pickTemplate(model, kind) {
-  const ts = allTemplates().filter(t => t.model === model && t.kind === kind);
-  return ts.find(t => t.fileB64) || ts.find(t => t.builtin) || ts[0] || null;
+function pickTemplate(model, kind, industry) {
+  const ts = allTemplates().filter(t => t.model === model && t.kind === kind && fitsIndustry(t, industry));
+  return ts.find(t => t.fileB64 && t.industry === industry) || ts.find(t => t.fileB64 && !t.industry) || ts.find(t => t.builtin) || ts.find(t => !t.fileB64) || ts[0] || null;
 }
 function openNewWizard() {
   const m0 = (ws && ws.model) || "fnb";
@@ -869,11 +943,11 @@ function openNewWizard() {
       </div>
       <div><div class="text-[11px] font-bold text-slate-500 mb-1">Danh mục sẽ chuẩn bị (bỏ tick nếu không cần)</div><div id="nwKinds" class="grid grid-cols-2 gap-1"></div></div>
     </div>`, [{ label: "Tạo & bắt đầu nhập dữ liệu", primary: true, onClick: createFromWizard }]);
-  const fill = () => { const m = $("nwModel").value;
-    $("nwInd").innerHTML = MODELS[m].industries.map(i => `<option>${esc(i)}</option>`).join("");
-    $("nwKinds").innerHTML = [...new Set([...DEFAULT_KINDS[m], ...allTemplates().filter(t => t.model === m).map(t => t.kind)])].sort((a, b) => kindOrder(a) - kindOrder(b)).map(k => { const t = pickTemplate(m, k);
-      return `<label class="flex items-center gap-1.5 text-xs ${t ? "" : "text-slate-300"}"><input type="checkbox" data-nwkind="${esc(k)}" ${t && DEFAULT_KINDS[m].includes(k) ? "checked" : ""} ${t ? "" : "disabled"}> ${esc(k)} ${t && t.fileB64 ? '<span class="text-[9px] text-emerald-600 font-black">KV</span>' : ""}</label>`; }).join(""); };
-  fill(); $("nwModel").onchange = fill;
+  const fillKinds = () => { const m = $("nwModel").value, ind = $("nwInd").value;
+    $("nwKinds").innerHTML = [...new Set([...DEFAULT_KINDS[m], ...allTemplates().filter(t => t.model === m && fitsIndustry(t, ind)).map(t => t.kind)])].sort((a, b) => kindOrder(a) - kindOrder(b)).map(k => { const t = pickTemplate(m, k, ind);
+      return `<label class="flex items-center gap-1.5 text-xs ${t ? "" : "text-slate-300"}" title="${t && t.fileB64 ? "File mẫu KiotViet " + esc(scopeLabel(t)) : ""}"><input type="checkbox" data-nwkind="${esc(k)}" ${t && DEFAULT_KINDS[m].includes(k) ? "checked" : ""} ${t ? "" : "disabled"}> ${esc(k)} ${t && t.fileB64 ? `<span class="text-[9px] text-emerald-600 font-black">${t.industry ? "KV·NGÀNH" : "KV"}</span>` : ""}</label>`; }).join(""); };
+  const fill = () => { const m = $("nwModel").value; $("nwInd").innerHTML = MODELS[m].industries.map(i => `<option>${esc(i)}</option>`).join(""); fillKinds(); };
+  fill(); $("nwModel").onchange = fill; $("nwInd").onchange = fillKinds;
 }
 function createFromWizard() {
   const m = $("nwModel").value, ind = $("nwInd").value;
@@ -881,7 +955,7 @@ function createFromWizard() {
   if (!kinds.length) { showToast("Chưa chọn danh mục", "Tick ít nhất 1 danh mục.", "warn"); return; }
   if (ws && ws.sheets.some(s => s.rows.length)) pushUndo();
   ws = { packageId: null, title: $("nwTitle").value.trim() || `${MODELS[m].name} – ${ind}`, model: m, industry: ind, active: 0,
-    sheets: kinds.map(k => ({ templateId: pickTemplate(m, k).id, rows: [] })) };
+    sheets: kinds.map(k => ({ templateId: pickTemplate(m, k, ind).id, rows: [] })) };
   ws.active = orderedSheetIdx(true)[0] ?? 0;
   closeModal(); selected.clear(); navigateTo("workspace"); refreshWorkspace(); saveWs();
   showToast("Đã tạo bộ dữ liệu", `${kinds.length} danh mục. Bắt đầu với “${getTpl(curSheet().templateId).kind}”: bấm “Dán / tải dữ liệu”.`);
@@ -911,8 +985,10 @@ function renderDataTable() {
   $("btnToggleCols").textContent = showAllCols ? "↔ Thu gọn cột" : `↔ Mở đủ ${tpl.columns.length} cột`;
   const imp = isImportable(tpl);
   const official = convertCandidates(tpl).filter(x => x.t.fileB64 && x.t.kind === tpl.kind);
+  const better = tpl.fileB64 && !tpl.industry ? official.find(x => x.t.industry === ws.industry) : null;
   $("tplNote").innerHTML = (tpl.fileB64
-    ? `<span class="text-emerald-700">✓ Đang dùng <b>file mẫu KiotViet</b> (“${esc(tpl.fileName)}”) – tải về sẽ ghi đúng vào file này.</span>`
+    ? `<span class="text-emerald-700">✓ Đang dùng <b>file mẫu KiotViet</b> ${esc(scopeLabel(tpl))} (“${esc(tpl.fileName)}”) – tải về sẽ ghi đúng vào file này.</span>`
+      + (better ? ` <button id="btnConvert" class="btn !py-0.5 !border-emerald-300 !text-emerald-700">🔁 Chuyển sang file riêng ngành ${esc(ws.industry)}</button>` : "")
     : official.length
       ? `<span class="text-emerald-700 font-semibold">Đã có file mẫu KiotViet cho “${esc(tpl.kind)}”.</span> <button id="btnConvert" class="btn !py-0.5 !border-emerald-300 !text-emerald-700">🔁 Chuyển sang file mẫu KiotViet</button>`
       : `<span class="text-slate-500">Đang dùng mẫu tạm của tool.</span> <button data-nav-go="templates" class="text-violet-700 font-semibold underline">Cài file mẫu KiotViet</button> <span class="text-slate-400">để import chắc chắn đúng.</span>`)
@@ -1153,42 +1229,69 @@ function renderTemplateSelects() {
   const cur = $("pTemplate").value || (curSheet() && curSheet().templateId);
   $("pTemplate").innerHTML = groups; if (cur && getTpl(cur)) $("pTemplate").value = cur;
 }
-// ---------- Cài đặt file mẫu: 1 bảng / mô hình, mỗi danh mục 1 dòng ----------
-let settingsModel = null;
+// ---------- Cài đặt file mẫu: 1 bảng / mô hình, mỗi danh mục 1 dòng; chọn phạm vi: cả mô hình hoặc riêng 1 ngành ----------
+let settingsModel = null, settingsScope = null; // settingsScope: null = file chung cả mô hình, hoặc tên ngành
 function setKindImportable(model, kind, v) { allTemplates().filter(t => t.model === model && t.kind === kind).forEach(t => setImportable(t.id, v)); }
 function renderTemplates() {
   const m = settingsModel || (ws && ws.model) || "fnb";
-  $("setModelChips").innerHTML = Object.entries(MODELS).map(([k, x]) => { const n = [...new Set([...DEFAULT_KINDS[k]])].filter(kind => allTemplates().some(t => t.model === k && t.kind === kind && t.fileB64)).length;
+  if (settingsScope && !MODELS[m].industries.includes(settingsScope)) settingsScope = null;
+  const sc = settingsScope;
+  $("setModelChips").innerHTML = Object.entries(MODELS).map(([k, x]) => { const n = DEFAULT_KINDS[k].filter(kind => allTemplates().some(t => t.model === k && t.kind === kind && t.fileB64)).length;
     return `<button data-setmodel="${k}" class="chip ${k === m ? "on" : ""}">${x.icon} ${x.name} · ${n}/${DEFAULT_KINDS[k].length} đã cài</button>`; }).join("");
+  $("setScopeChips").innerHTML = [`<button data-setscope="" class="chip ${!sc ? "on" : ""}">Tất cả ngành (file chung)</button>`, ...MODELS[m].industries.map(i => {
+    const n = allTemplates().filter(t => t.model === m && t.industry === i && t.fileB64).length;
+    return `<button data-setscope="${esc(i)}" class="chip ${sc === i ? "on" : ""}">${esc(i)}${n ? ` · ${n} file riêng` : ""}</button>`; })].join("");
   const kinds = [...new Set([...DEFAULT_KINDS[m], ...MODELS[m].kinds, ...allTemplates().filter(t => t.model === m).map(t => t.kind)])].sort((a, b) => kindOrder(a) - kindOrder(b));
   const row = (kind) => {
-    const ts = allTemplates().filter(t => t.model === m && t.kind === kind), off = ts.find(t => t.fileB64), any = off || ts[0];
+    const ts = allTemplates().filter(t => t.model === m && t.kind === kind);
+    const own = ts.find(t => t.fileB64 && (t.industry || null) === sc);                      // file đúng phạm vi đang chọn
+    const inherited = sc ? ts.find(t => t.fileB64 && !t.industry) : null;                      // ngành chưa có file riêng → dùng file chung
+    const tmp = ts.find(t => !t.fileB64), any = own || inherited || tmp;
     const imp = any ? isImportable(any) : DEFAULT_IMPORTABLE.has(kind);
     const main = DEFAULT_KINDS[m].includes(kind);
+    const status = own ? `<span class="text-emerald-700 font-semibold">✓ ${esc(own.fileName || "file mẫu")}</span><div class="text-[10px] text-slate-400">${own.columns.length} cột · ${own.columns.filter(c => c.required).length} bắt buộc${sc ? " · riêng ngành này" : " · dùng chung mọi ngành"}</div>`
+      : inherited ? `<span class="text-emerald-600">↳ Dùng file chung: ${esc(inherited.fileName)}</span><div class="text-[10px] text-slate-400">Ngành này có cột khác (lô, serial, VAT…)? Tải file riêng.</div>`
+      : tmp ? '<span class="text-amber-600">Mẫu tạm của tool</span>' : '<span class="text-slate-400">Chưa có</span>';
     return `<tr class="border-t ${main ? "" : "text-slate-500"}">
       <td class="p-2.5 font-semibold">${esc(kind)}${main ? ' <span class="text-[9px] font-black text-violet-600">CHÍNH</span>' : ""}</td>
-      <td class="p-2.5">${off ? `<span class="text-emerald-700 font-semibold">✓ ${esc(off.fileName || "file mẫu")}</span><div class="text-[10px] text-slate-400">${off.columns.length} cột · ${off.columns.filter(c => c.required).length} bắt buộc</div>` : any ? '<span class="text-amber-600">Mẫu tạm của tool</span>' : '<span class="text-slate-400">Chưa có</span>'}</td>
+      <td class="p-2.5">${status}</td>
       <td class="p-2.5 text-center"><input type="checkbox" data-impkind="${esc(kind)}" ${imp ? "checked" : ""} ${any ? "" : "disabled"} title="Có màn hình Import trên KiotViet"></td>
       <td class="p-2.5 text-right whitespace-nowrap">
-        <button data-upkind="${esc(kind)}" class="btn ${off || !main ? "" : "btn-p"}">${off ? "Thay file" : "⬆ Tải file mẫu"}</button>
+        <button data-upkind="${esc(kind)}" class="btn ${own || !main ? "" : "btn-p"}">${own ? "Thay file" : sc ? "⬆ Tải file riêng ngành" : "⬆ Tải file mẫu"}</button>
         ${any ? `<button data-tpledit="${esc(any.id)}" class="btn" title="Xem các cột">Xem cột</button>` : ""}
-        ${off ? `<button data-tpldel="${esc(off.id)}" class="btn text-red-600" title="Gỡ file mẫu, quay về mẫu tạm">Gỡ</button>` : ""}</td></tr>`;
+        ${own ? `<button data-tpldel="${esc(own.id)}" class="btn text-red-600" title="Gỡ file mẫu">Gỡ</button>` : ""}</td></tr>`;
   };
-  $("tplTable").innerHTML = `<table class="w-full text-xs"><thead class="bg-slate-50 text-slate-500"><tr><th class="p-2.5 text-left">Danh mục ${MODELS[m].icon} ${MODELS[m].name}</th><th class="p-2.5 text-left">File mẫu đang dùng</th><th class="p-2.5">Có Import?</th><th class="p-2.5"></th></tr></thead>
+  $("tplTable").innerHTML = `<table class="w-full text-xs"><thead class="bg-slate-50 text-slate-500"><tr><th class="p-2.5 text-left">Danh mục ${MODELS[m].icon} ${MODELS[m].name}${sc ? " · " + esc(sc) : ""}</th><th class="p-2.5 text-left">File mẫu đang dùng</th><th class="p-2.5">Có Import?</th><th class="p-2.5"></th></tr></thead>
     <tbody>${kinds.filter(k => DEFAULT_KINDS[m].includes(k)).map(row).join("")}
       <tr><td colspan="4" class="px-2.5 pt-4 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50/60">Danh mục khác (tải khi cần)</td></tr>
       ${kinds.filter(k => !DEFAULT_KINDS[m].includes(k)).map(row).join("")}</tbody></table>
-    <div class="p-3 text-[11px] text-slate-500 border-t bg-slate-50/60"><b>Mẫu tạm của tool</b>: vẫn xuất được để demo; <b>✓ file mẫu</b>: tool ghi đúng vào file của KiotViet. Bỏ tick “Có Import?” với danh mục không có nút Import trên KiotViet – khi tải về, file đó nằm trong thư mục <code>tham_khao/</code>.</div>`;
+    <div class="p-3 text-[11px] text-slate-500 border-t bg-slate-50/60 space-y-1"><div><b>File chung</b> dùng cho mọi ngành của mô hình. Ngành nào có cột riêng (vd Nhà thuốc có Số lô/Hạn sử dụng, Điện máy có Serial/IMEI, cửa hàng có thuế VAT) thì chọn ngành ở “Áp dụng cho” và tải <b>file riêng ngành</b> – tool sẽ ưu tiên file riêng.</div><div><b>Mẫu tạm của tool</b>: vẫn xuất được để demo. Bỏ tick “Có Import?” với danh mục không có nút Import – khi tải về, file đó nằm trong <code>tham_khao/</code>.</div></div>`;
   if ($("view-home") && !$("view-home").classList.contains("hidden")) renderHome();
+}
+// So sánh file mẫu KiotViet với mẫu tạm của tool: cột thêm / cột thiếu
+function templateDiff(t) {
+  const ref = allTemplates().find(x => x.model === t.model && x.kind === t.kind && !x.fileB64);
+  if (!ref) return null;
+  const has = (cols, name) => cols.some(c => matchScore(c.name, name) >= 0.9);
+  return { ref, added: t.columns.filter(c => !has(ref.columns, c.name)).map(c => c.name), missing: ref.columns.filter(c => !has(t.columns, c.name)).map(c => c.name) };
 }
 function openColumnEditor(id) {
   const t = getTpl(id); const editable = userTemplates.some(u => u.id === id);
-  openModal(`Cột của template: ${t.name}`, `<p class="mb-2 text-slate-500">${editable ? "Chỉnh kiểu dữ liệu và cột bắt buộc để hệ thống kiểm tra trước khi xuất. Cột chính (mã) dùng để phát hiện trùng." : "Template có sẵn — chỉ xem."}</p>
+  const df = t.fileB64 ? templateDiff(t) : null;
+  const typeOpts = [["text", "Chữ"], ["number", "Số"], ["date", "Ngày (dd/mm/yyyy)"], ["bool", "Có/Không (1/0)"], ["select", "Danh sách"]];
+  openModal(`Cột của file mẫu: ${t.kind}${t.industry ? " · " + t.industry : ""}`, `
+    ${t.fileB64 ? `<div class="mb-3 p-3 rounded-xl bg-violet-50 border border-violet-200 text-slate-700 space-y-1">
+      <div>Tool đã đọc <b>${t.columns.length} cột</b> từ “${esc(t.fileName)}” (sheet “${esc(t.sheetName)}”, tiêu đề ở dòng ${t.headerRow + 1}) · áp dụng <b>${esc(scopeLabel(t))}</b>. Kiểu cột được đoán từ tên cột và dòng ví dụ trong file.</div>
+      ${df ? `<div>${df.added.length ? `➕ <b>Cột mới so với mẫu tạm (${df.added.length}):</b> ${df.added.map(esc).join(", ")}` : "Không có cột mới so với mẫu tạm."}</div>
+      ${df.missing.length ? `<div class="text-slate-500">➖ Mẫu tạm có nhưng file này không có (${df.missing.length}): ${df.missing.map(esc).join(", ")} – sẽ bỏ khi chuyển.</div>` : ""}
+      <div class="text-[11px] text-slate-500">Khi chuyển dữ liệu sang file này, cột mới được tự lấy từ danh mục khác cùng mã nếu có (vd “Số lô”, “Hạn sử dụng” từ danh mục Lô - Hạn sử dụng), hoặc bạn nhập giá trị mặc định (vd Thuế VAT = 8).</div>` : ""}</div>`
+      : `<p class="mb-2 text-slate-500">Mẫu tạm của tool – chỉ xem.</p>`}
     <div class="flex gap-3 mb-3 flex-wrap"><label>Cột mã (chống trùng): <select id="edKey" class="inp" ${editable ? "" : "disabled"}><option value="">— không —</option>${t.columns.map(c => `<option ${c.name === t.keyCol ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>
     <label>Cột tên: <select id="edName" class="inp" ${editable ? "" : "disabled"}>${t.columns.map(c => `<option ${c.name === t.nameCol ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label></div>
-    <table class="w-full"><thead><tr class="text-left text-slate-500"><th class="p-1">#</th><th class="p-1">Tên cột</th><th class="p-1">Kiểu</th><th class="p-1">Bắt buộc</th><th class="p-1">Danh sách giá trị (cách nhau dấu ;)</th></tr></thead><tbody>
-    ${t.columns.map((c, i) => `<tr class="border-t"><td class="p-1 text-slate-400">${XLSX.utils.encode_col(c.ci)}</td><td class="p-1 font-semibold">${esc(c.name)}</td>
-      <td class="p-1"><select data-ed="type" data-i="${i}" class="inp" ${editable ? "" : "disabled"}>${[["text", "Chữ"], ["number", "Số"], ["bool", "Có/Không (1/0)"], ["select", "Danh sách"]].map(([v, l]) => `<option value="${v}" ${c.type === v ? "selected" : ""}>${l}</option>`).join("")}</select></td>
+    <table class="w-full"><thead><tr class="text-left text-slate-500"><th class="p-1">#</th><th class="p-1">Tên cột</th><th class="p-1">Ví dụ trong file</th><th class="p-1">Kiểu</th><th class="p-1">Bắt buộc</th><th class="p-1">Danh sách giá trị (;)</th></tr></thead><tbody>
+    ${t.columns.map((c, i) => `<tr class="border-t ${df && df.added.includes(c.name) ? "bg-violet-50/60" : ""}"><td class="p-1 text-slate-400">${XLSX.utils.encode_col(c.ci)}</td><td class="p-1 font-semibold">${esc(c.name)}${df && df.added.includes(c.name) ? ' <span class="text-[9px] text-violet-600 font-black">MỚI</span>' : ""}</td>
+      <td class="p-1 text-slate-400 max-w-[120px] truncate">${esc(c.sample || "")}</td>
+      <td class="p-1"><select data-ed="type" data-i="${i}" class="inp" ${editable ? "" : "disabled"}>${typeOpts.map(([v, l]) => `<option value="${v}" ${c.type === v ? "selected" : ""}>${l}</option>`).join("")}</select></td>
       <td class="p-1 text-center"><input type="checkbox" data-ed="req" data-i="${i}" ${c.required ? "checked" : ""} ${editable ? "" : "disabled"}></td>
       <td class="p-1"><input data-ed="opts" data-i="${i}" class="inp w-full" value="${esc((c.options || []).join("; "))}" ${editable ? "" : "disabled"}></td></tr>`).join("")}</tbody></table>`,
     editable ? [{ label: "Lưu", primary: true, onClick: () => {
@@ -1196,10 +1299,11 @@ function openColumnEditor(id) {
         if (el.dataset.ed === "type") c.type = el.value; else if (el.dataset.ed === "req") c.required = el.checked; else c.options = el.value.split(";").map(s => s.trim()).filter(Boolean); });
       t.columns.forEach(c => { if (c.type !== "select" || !(c.options && c.options.length)) { if (c.type === "select") c.type = "text"; c.options = null; } });
       t.keyCol = $("edKey").value || null; t.nameCol = $("edName").value;
-      lsSet(K_TPL, userTemplates); closeModal(); renderTemplates(); refreshWorkspace(); showToast("Đã lưu template", t.name);
-      // Đề nghị chuyển ngay dữ liệu đang có cùng loại sang khuôn vừa tải
-      if (t.fileB64 && ws) { const i = ws.sheets.findIndex(s => { const st = getTpl(s.templateId); return st && st.id !== t.id && st.model === t.model && st.kind === t.kind && s.rows.length; });
-        if (i >= 0 && confirm(`Bàn làm việc đang có tab “${t.kind}” (${ws.sheets[i].rows.length} dòng) dùng khuôn tự soạn.\nChuyển dữ liệu tab này sang khuôn file mẫu vừa tải?`)) startConvert(t.id, i); }
+      lsSet(K_TPL, userTemplates); closeModal(); renderTemplates(); refreshWorkspace(); showToast("Đã lưu file mẫu", t.name);
+      // Đề nghị chuyển dữ liệu đang có cùng loại (đúng ngành) sang file mẫu vừa tải
+      if (t.fileB64 && ws && ws.model === t.model && fitsIndustry(t, ws.industry)) {
+        const i = ws.sheets.findIndex(s => { const st = getTpl(s.templateId); return st && st.id !== t.id && st.kind === t.kind && s.rows.length && !(st.fileB64 && st.industry && !t.industry); });
+        if (i >= 0 && confirm(`Bộ dữ liệu đang làm có danh mục “${t.kind}” (${ws.sheets[i].rows.length} dòng).\nChuyển dữ liệu sang file mẫu vừa tải (${scopeLabel(t)})?`)) startConvert(t.id, i); }
     } }] : []);
 }
 
@@ -1218,6 +1322,7 @@ function analyze() {
     parseState.fromConvert = true;
     if (parseState.headerIdx !== 0) { parseState.headerIdx = 0; parseState.srcHeaders = aoa[0].map((h, i) => h || `Cột ${i + 1}`); parseState.mapping = autoMap(getTpl(tplId), parseState.srcHeaders); }
   }
+  addLookups(parseState);
   tourEmit("analyzed");
   renderMapping();
   if (parseState.fromConvert) $("mapInfo").textContent = `🔁 Chuyển tab “${pendingConvert.fromKind}” → “${getTpl(tplId).name}” · ` + $("mapInfo").textContent;
@@ -1230,13 +1335,18 @@ function renderMapping() {
   const mapped = Object.keys(st.mapping).length;
   const guess = st.headerIdx < 0 && tpl.profile === "fnb-menu" && !mapped;
   $("mapInfo").textContent = `${st.aoa.length - st.headerIdx - 1} dòng dữ liệu · ghép tự động ${mapped}/${tpl.columns.length} cột` + (guess ? " · không có tiêu đề: thực đơn sẽ được đoán cột theo nội dung (có thể chọn cột thủ công bên dưới)" : "");
-  const opts = (sel) => `<option value="-1">— bỏ trống —</option>` + st.srcHeaders.map((h, i) => `<option value="${i}" ${sel === i ? "selected" : ""}>${esc(h)}</option>`).join("");
+  const lks = st.lookups || [];
+  const keySrc = tpl.keyCol && typeof st.mapping[tpl.keyCol] === "number" ? st.mapping[tpl.keyCol] : -1;
+  const opts = (sel) => `<option value="-1">— bỏ trống —</option>` + st.srcHeaders.map((h, i) => `<option value="${i}" ${sel === i ? "selected" : ""}>${esc(h)}</option>`).join("")
+    + (lks.length ? `<optgroup label="Lấy từ danh mục khác (ghép theo mã)">${lks.map((l, i) => `<option value="L${i}" ${sel === "L" + i ? "selected" : ""}>${esc(l.label)}</option>`).join("")}</optgroup>` : "");
+  const typeLbl = { number: "số", date: "ngày dd/mm/yyyy", bool: "1/0", select: "danh sách" };
   $("mapBody").innerHTML = tpl.columns.map(c => {
     const idx = st.mapping[c.name];
-    const sample = idx !== undefined && idx >= 0 ? (firstData[idx] ?? "") : (st.defaults[c.name] || "");
-    return `<tr class="border-t ${idx !== undefined ? "" : c.required ? "bg-red-50/60" : ""}"><td class="p-2 font-semibold">${esc(c.name)}${c.required ? ' <span class="text-red-500">*</span>' : ""}</td>
-      <td class="p-2"><select data-map="${esc(c.name)}" class="inp w-full">${opts(idx !== undefined ? idx : -1)}</select></td>
-      <td class="p-2"><input data-def="${esc(c.name)}" class="inp w-full" value="${esc(st.defaults[c.name] || "")}" placeholder="${c.type === "bool" ? "1 hoặc 0" : ""}"></td>
+    const isLk = typeof idx === "string";
+    const sample = isLk ? (keySrc >= 0 ? (lookupIndex(st, +idx.slice(1)).get(String(firstData[keySrc] ?? "").trim().toUpperCase()) ?? "") : "") : idx !== undefined && idx >= 0 ? (firstData[idx] ?? "") : (st.defaults[c.name] || "");
+    return `<tr class="border-t ${idx !== undefined ? (isLk ? "bg-violet-50/60" : "") : c.required ? "bg-red-50/60" : ""}"><td class="p-2 font-semibold">${esc(c.name)}${c.required ? ' <span class="text-red-500">*</span>' : ""}${typeLbl[c.type] ? `<div class="text-[10px] font-normal text-slate-400">${typeLbl[c.type]}${c.options ? ": " + esc(c.options.join(" / ")) : ""}</div>` : ""}</td>
+      <td class="p-2"><select data-map="${esc(c.name)}" class="inp w-full">${opts(idx !== undefined ? idx : -1)}</select>${isLk ? '<div class="text-[10px] text-violet-700 mt-0.5">↳ tự lấy từ danh mục khác theo mã</div>' : ""}</td>
+      <td class="p-2"><input data-def="${esc(c.name)}" class="inp w-full" value="${esc(st.defaults[c.name] || "")}" placeholder="${c.type === "bool" ? "1 hoặc 0" : c.type === "date" ? "dd/mm/yyyy" : c.sample ? "vd: " + esc(c.sample) : ""}"></td>
       <td class="p-2 text-slate-500 max-w-[220px] truncate">${esc(sample)}</td></tr>`;
   }).join("");
 }
@@ -1782,6 +1892,7 @@ $("tableBody").addEventListener("change", (e) => {
   const tpl = getTpl(sh.templateId); const c = colDef(tpl, key);
   pushUndo();
   if (c.type === "bool") row[key] = t.checked ? 1 : 0;
+  else if (c.type === "date") { row[key] = toDateStr(t.value.trim()); t.value = row[key]; }
   else if (c.type === "number") { if (t.value.trim() === "") row[key] = c.required ? 0 : ""; else { const p = parseNumber(t.value); row[key] = p.bad ? t.value : p.value; t.value = row[key]; } delete row._bad; }
   else if (tpl.profile === "fnb-menu" && key === COMP_COL) {
     // Gõ tự do "10 tiger + 1 khô gà" → tự hiểu thành mã món
@@ -1822,15 +1933,19 @@ $("pHasHeader").addEventListener("change", (e) => {
 });
 $("mapBody").addEventListener("change", (e) => {
   const m = e.target.dataset.map, d = e.target.dataset.def;
-  if (m !== undefined) { const v = +e.target.value; if (v < 0) delete parseState.mapping[m]; else { Object.keys(parseState.mapping).forEach(k => { if (parseState.mapping[k] === v) delete parseState.mapping[k]; }); parseState.mapping[m] = v; } renderMapping(); }
+  if (m !== undefined) { const raw = e.target.value; const v = raw[0] === "L" ? raw : +raw;
+    if (v === -1) delete parseState.mapping[m];
+    else { if (typeof v === "number") Object.keys(parseState.mapping).forEach(k => { if (parseState.mapping[k] === v) delete parseState.mapping[k]; }); parseState.mapping[m] = v; }
+    renderMapping(); }
   if (d !== undefined) { parseState.defaults[d] = e.target.value; }
 });
 $("btnApply").onclick = applyParse;
 // Template
 let upKind = null;
-$("setModelChips").addEventListener("click", (e) => { const b = e.target.closest("[data-setmodel]"); if (b) { settingsModel = b.dataset.setmodel; renderTemplates(); } });
+$("setModelChips").addEventListener("click", (e) => { const b = e.target.closest("[data-setmodel]"); if (b) { settingsModel = b.dataset.setmodel; settingsScope = null; renderTemplates(); } });
+$("setScopeChips").addEventListener("click", (e) => { const b = e.target.closest("[data-setscope]"); if (b) { settingsScope = b.dataset.setscope || null; renderTemplates(); } });
 $("tplTable").addEventListener("click", (e) => {
-  const up = e.target.closest("[data-upkind]"); if (up) { upKind = { model: settingsModel || (ws && ws.model) || "fnb", kind: up.dataset.upkind }; $("tRowFile").click(); return; }
+  const up = e.target.closest("[data-upkind]"); if (up) { upKind = { model: settingsModel || (ws && ws.model) || "fnb", kind: up.dataset.upkind, industry: settingsScope }; $("tRowFile").click(); return; }
   const ed = e.target.closest("[data-tpledit]"); if (ed) return openColumnEditor(ed.dataset.tpledit);
   const del = e.target.closest("[data-tpldel]");
   if (del) { const t = getTpl(del.dataset.tpldel); const fb = allTemplates().find(x => x.id !== t.id && x.model === t.model && x.kind === t.kind);
