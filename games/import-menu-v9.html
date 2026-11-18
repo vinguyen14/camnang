@@ -6,6 +6,7 @@
   <title>KiotViet Import Studio V9</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -229,7 +230,7 @@ const MODELS = {
     kinds: ["Hàng hóa", "Bảng giá", "Khách hàng", "Nhà cung cấp", "Khuyến mãi", "Voucher", "Nhân viên", "Ca làm việc", "Lịch làm việc", "Kiểm kho"] },
   fnb: { name: "FnB", label: "Ăn uống, giải trí", icon: "🍹",
     industries: ["Quán ăn", "Cafe, Trà sữa", "Karaoke, Bida", "Bar, Pub & Club", "Căng tin & Trạm dừng nghỉ", "Nhà hàng"],
-    kinds: ["Thực đơn", "Phòng/Bàn", "Nguyên vật liệu", "Bảng giá", "Khách hàng", "Khuyến mãi", "Voucher", "Nhân viên", "Ca làm việc", "Lịch làm việc"] },
+    kinds: ["Thực đơn", "Phòng/Bàn", "Nguyên vật liệu", "Nhà cung cấp", "Bảng giá", "Khách hàng", "Khuyến mãi", "Voucher", "Nhân viên", "Ca làm việc", "Lịch làm việc"] },
   salon: { name: "Salon", label: "Sức khỏe, làm đẹp", icon: "💅",
     industries: ["Thẩm mỹ viện", "Hair Salon", "Nail & Mi", "Phòng khám", "Spa & Massage", "Gym, Yoga & Pilates"],
     kinds: ["Dịch vụ & Sản phẩm", "Gói dịch vụ / Liệu trình", "Bảng giá", "Khách hàng", "Nhân viên", "Ca làm việc", "Lịch làm việc", "Khuyến mãi", "Voucher"] },
@@ -737,9 +738,9 @@ function renderDataTable() {
   $("btnToggleCols").classList.toggle("hidden", !tpl.compact);
   $("btnCompBulk").classList.toggle("hidden", tpl.profile !== "fnb-menu");
   $("btnToggleCols").textContent = showAllCols ? "↔ Thu gọn cột" : `↔ Mở đủ ${tpl.columns.length} cột`;
-  $("tplNote").innerHTML = tpl.fileB64
+  $("tplNote").innerHTML = `<span class="text-slate-500">Mỗi tab = 1 file import riêng. Khi bấm Xuất, tool gom thành 1 gói và đánh số thứ tự import.</span><br>` + (tpl.fileB64
     ? `<span class="text-emerald-700 font-semibold">✓ Template từ file mẫu “${esc(tpl.fileName)}” — xuất file sẽ ghi vào đúng file mẫu này.</span>`
-    : `<span class="text-amber-700 font-semibold">⚠ Template có sẵn (chưa đối chiếu file mẫu chính thức). Nên tải file mẫu của KiotViet ở mục Quản lý template.</span>`;
+    : `<span class="text-amber-700 font-semibold">⚠ Khuôn tự soạn (chưa đối chiếu file mẫu chính thức). Nên tải file mẫu của KiotViet ở mục Quản lý template.</span>`);
   const cols = displayCols(tpl).map(n => colDef(tpl, n));
   const freeze = Math.min(2, [tpl.keyCol, tpl.nameCol].filter((v, i, a) => v && a.indexOf(v) === i).length);
   const off = []; let left = 44; cols.forEach((c, i) => { if (i < freeze) { off[i] = left; left += colWidth(tpl, c); } });
@@ -858,21 +859,51 @@ function exportAll() {
     return;
   }
   if (warns.length && !confirm(`Có ${warns.length} cảnh báo (vd: ${warns[0].msg}).\nVẫn xuất file?`)) return;
-  const date = new Date().toISOString().slice(0, 10);
-  const files = [];
+  // Gom thành 1 gói: mỗi danh mục 1 file, đánh số theo thứ tự import
+  const parts = [];
   targets.forEach(s => {
-    const t = getTpl(s.templateId); const base = `KiotViet_${slug(t.kind)}_${slug(ws.title)}_${date}`;
+    const t = getTpl(s.templateId);
     const combos = t.profile === "fnb-menu" ? s.rows.filter(isComboRow) : [];
     if (combos.length && $("optSplitCombo").checked) {
-      // Bước 1: món đơn (để KiotViet có sẵn món thành phần) · Bước 2: combo
-      const singles = s.rows.filter(r => !isComboRow(r));
-      XLSX.writeFile(buildWorkbook({ ...s, rows: singles, allRows: s.rows }), base + "_B1_mon_le.xlsx"); files.push(base + "_B1_mon_le.xlsx");
-      XLSX.writeFile(buildWorkbook({ ...s, rows: combos, allRows: s.rows }), base + "_B2_combo.xlsx"); files.push(base + "_B2_combo.xlsx");
-    } else { XLSX.writeFile(buildWorkbook(s), base + ".xlsx"); files.push(base + ".xlsx"); }
+      parts.push({ kind: t.kind, label: `${t.kind} – món lẻ`, order: kindOrder(t.kind), sub: 0, rows: s.rows.length - combos.length, wb: buildWorkbook({ ...s, rows: s.rows.filter(r => !isComboRow(r)), allRows: s.rows }), note: "Import trước để KiotViet có sẵn các món thành phần." });
+      parts.push({ kind: t.kind, label: `${t.kind} – combo`, order: kindOrder(t.kind), sub: 1, rows: combos.length, wb: buildWorkbook({ ...s, rows: combos, allRows: s.rows }), note: "Import sau file món lẻ." });
+    } else parts.push({ kind: t.kind, label: t.kind, order: kindOrder(t.kind), sub: 0, rows: s.rows.length, wb: buildWorkbook(s), note: "" });
   });
-  showToast("Xuất Excel thành công", files.join(", ") + (files.some(f => f.includes("_B2_")) ? " — import file B1 trước, B2 sau." : ""));
+  parts.sort((a, b) => a.order - b.order || a.sub - b.sub);
+  parts.forEach((p, i) => { p.file = `${String(i + 1).padStart(2, "0")}_${slug(p.label)}.xlsx`; p.bytes = XLSX.write(p.wb, { type: "array", bookType: "xlsx" }); });
+  lastExport = { title: ws.title || "Bo du lieu", parts, date: new Date().toISOString().slice(0, 10) };
+  showExportPackage();
   tourEmit("exported");
   if (settings.autoSave) saveToLibrary("export", true);
+}
+// Thứ tự import gợi ý: danh mục nền trước (NCC, NVL, hàng hóa…), danh mục tham chiếu sau (bảng giá, khuyến mãi…)
+const KIND_ORDER = ["Nhóm hàng", "Nhóm món", "Nhà cung cấp", "Nguyên vật liệu", "Vật tư tiêu hao", "Hàng hóa", "Dịch vụ & Sản phẩm", "Hạng phòng", "Buồng phòng", "Hàng hóa & Dịch vụ", "Thực đơn", "Định lượng", "Định mức tiêu hao", "Gói dịch vụ / Liệu trình", "Khu vực", "Phòng/Bàn", "Bảng giá", "Bảng giá phòng theo mùa", "Phụ thu", "Nhóm khách hàng", "Khách hàng", "Nhân viên", "Ca làm việc", "Lịch làm việc", "Khuyến mãi", "Voucher"];
+const kindOrder = (k) => { const i = KIND_ORDER.indexOf(k); return i < 0 ? 100 : i; };
+let lastExport = null;
+function exportGuideText(ex) {
+  return [`HƯỚNG DẪN IMPORT LÊN KIOTVIET – ${ex.title} (${ex.date})`, "", "Import lần lượt theo số thứ tự ở đầu tên file. Mỗi file import ở đúng màn hình của danh mục đó trên KiotViet (nút Import cạnh nút thêm mới).", "",
+    ...ex.parts.map((p, i) => `${i + 1}. ${p.file}  →  màn hình "${p.kind}" › Import  (${p.rows} dòng)${p.note ? "  – " + p.note : ""}`), "",
+    "Lưu ý: danh mục có nhãn 'khuôn tự soạn' trong tool chưa đối chiếu file mẫu chính thức; nếu KiotViet báo sai cột, hãy tải file mẫu chính thức vào mục Quản lý template rồi xuất lại."].join("\r\n");
+}
+function downloadBlob(name, blob) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+function showExportPackage() {
+  const ex = lastExport;
+  openModal(`📦 Gói import: ${ex.title}`, `
+    <p class="text-slate-600 mb-3">Mỗi danh mục (mỗi tab) là <b>1 file import riêng</b>. Import lần lượt theo số thứ tự; mỗi file import ở đúng màn hình của danh mục đó trên KiotViet (nút <b>Import</b>).</p>
+    <table class="w-full"><thead><tr class="text-left text-slate-500"><th class="p-1.5">#</th><th class="p-1.5">File</th><th class="p-1.5">Import ở màn hình</th><th class="p-1.5 text-right">Số dòng</th><th></th></tr></thead><tbody>
+    ${ex.parts.map((p, i) => `<tr class="border-t"><td class="p-1.5 font-bold">${i + 1}</td><td class="p-1.5 font-mono">${esc(p.file)}${p.note ? `<div class="text-[10px] text-amber-700 font-sans">${esc(p.note)}</div>` : ""}</td><td class="p-1.5">${esc(p.kind)} › Import</td><td class="p-1.5 text-right">${p.rows}</td><td class="p-1.5 text-right"><button data-dlpart="${i}" class="btn">⬇ Tải</button></td></tr>`).join("")}
+    </tbody></table>`,
+    [{ label: `⬇ Tải tất cả (${ex.parts.length} file, .zip)`, primary: true, id: "btnZip", onClick: downloadZip }]);
+}
+async function downloadZip() {
+  const ex = lastExport;
+  if (typeof JSZip === "undefined") { showToast("Không tải được thư viện nén", "Hãy tải từng file bằng nút ⬇ Tải.", "warn"); return; }
+  const zip = new JSZip();
+  ex.parts.forEach(p => zip.file(p.file, p.bytes));
+  zip.file("00_HUONG_DAN_IMPORT.txt", "﻿" + exportGuideText(ex));
+  const blob = await zip.generateAsync({ type: "blob" });
+  downloadBlob(`KiotViet_${slug(ex.title)}_${ex.date}.zip`, blob);
+  showToast("Đã tải gói import", `${ex.parts.length} file Excel + hướng dẫn thứ tự import.`);
 }
 
 // =====================================================================
@@ -942,7 +973,14 @@ function renderTemplates() {
   if (renderTemplates._model) $("tModel").value = renderTemplates._model;
   const fillKinds = () => { $("tKind").innerHTML = MODELS[$("tModel").value].kinds.map(k => `<option>${esc(k)}</option>`).join(""); };
   fillKinds(); $("tModel").onchange = () => { renderTemplates._model = $("tModel").value; fillKinds(); };
-  $("tplCoverage").innerHTML = Object.entries(MODELS).map(([k, m]) => `<div class="bg-white border rounded-2xl p-4"><div class="font-extrabold text-xs mb-2">${m.icon} ${m.name} – ${m.label}</div><ul class="space-y-1 text-[11px]">${m.kinds.map(kind => { const ts = allTemplates().filter(t => t.model === k && t.kind === kind); const official = ts.some(t => t.fileB64); return `<li class="flex justify-between gap-2"><span>${esc(kind)}</span><span class="${official ? "text-emerald-600" : ts.length ? "text-amber-600" : "text-slate-400"} font-bold">${official ? "✓ có file mẫu" : ts.length ? "⚠ có sẵn, chưa xác minh" : "chưa có"}</span></li>`; }).join("")}</ul></div>`).join("");
+  const legend = `<div class="md:col-span-2 xl:col-span-4 bg-slate-50 border rounded-2xl p-3 text-[11px] text-slate-600 flex flex-wrap gap-x-6 gap-y-1">
+    <span><b class="text-emerald-600">✓ File mẫu KiotViet</b>: đã tải file mẫu chính thức, xuất ra ghi đúng vào file đó.</span>
+    <span><b class="text-amber-600">⚠ Khuôn tự soạn</b>: dùng được để demo; nên tải file mẫu KiotViet để import thật cho chắc.</span>
+    <span><b class="text-slate-400">Chưa có khuôn</b>: chưa xuất được loại này.</span></div>`;
+  $("tplCoverage").innerHTML = legend + Object.entries(MODELS).map(([k, m]) => {
+    const kinds = [...new Set([...m.kinds, ...allTemplates().filter(t => t.model === k).map(t => t.kind)])];
+    return `<div class="bg-white border rounded-2xl p-4"><div class="font-extrabold text-xs mb-2">${m.icon} ${m.name} – ${m.label}</div><ul class="space-y-1 text-[11px]">${kinds.map(kind => { const ts = allTemplates().filter(t => t.model === k && t.kind === kind); const official = ts.some(t => t.fileB64); return `<li class="flex justify-between gap-2"><span>${esc(kind)}</span><span class="${official ? "text-emerald-600" : ts.length ? "text-amber-600" : "text-slate-400"} font-bold whitespace-nowrap">${official ? "✓ File mẫu KiotViet" : ts.length ? "⚠ Khuôn tự soạn" : "Chưa có khuôn"}</span></li>`; }).join("")}</ul></div>`;
+  }).join("");
   $("tplGrid").innerHTML = allTemplates().map(t => `<div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm space-y-2">
     <div class="flex items-start gap-2"><span class="text-2xl">${MODELS[t.model]?.icon || "📄"}</span><div><div class="font-extrabold text-sm">${esc(t.name)}</div><div class="text-[11px] text-slate-400">${esc(MODELS[t.model]?.name || "")} · ${esc(t.kind)}</div></div>
       <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full ${t.fileB64 ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}">${t.fileB64 ? "File mẫu" : "Có sẵn"}</span></div>
@@ -1290,11 +1328,11 @@ const TOURS = [
     { sel: "#cbSearch", title: "Gõ để thêm món nhanh", body: "Gõ vài ký tự tên hoặc mã món, có thể kèm số lượng: <b>“10 tiger”</b>, <b>“2 snack”</b> → chọn gợi ý hoặc Enter. Gõ nhiều món: <b>“10 tiger + 1 khô gà”</b>." },
     { sel: "#cbList", title: "Kiểm tra & chỉnh số lượng", body: "<b class='text-emerald-300'>✓</b> chắc chắn · <b class='text-amber-300'>?</b> có nhiều món giống → chọn lại trong danh sách · <b class='text-red-300'>✗</b> chưa tìm thấy. Có tổng giá vốn để đối chiếu giá combo." },
     { sel: "#cbSave", title: "Lưu thành phần", body: "Bấm <b>Lưu thành phần</b>.", wait: "compSaved" },
-    { view: "workspace", sel: "#optSplitComboWrap", title: "Tách combo ra file bước 2", body: "KiotViet cần <b>các món thành phần có sẵn trước</b> khi tạo combo. Giữ tích ô này để xuất 2 file: <b>_B1_mon_le</b> và <b>_B2_combo</b>." },
-    { view: "workspace", sel: "#btnExport", title: "Xuất 2 file", body: "Bấm <b>📤 Xuất Excel import</b>. Import file B1 trước, B2 sau.", wait: "exported" } ] },
+    { view: "workspace", sel: "#optSplitComboWrap", title: "Tách combo ra file bước 2", body: "KiotViet cần <b>các món thành phần có sẵn trước</b> khi tạo combo. Giữ tích ô này để xuất 2 file: <b>…_thuc_don_mon_le</b> và <b>…_thuc_don_combo</b> (được đánh số thứ tự trong gói)." },
+    { view: "workspace", sel: "#btnExport", title: "Xuất gói import", body: "Bấm <b>📤 Xuất Excel import</b> → bảng <b>Gói import</b> hiện ra → bấm <b>Tải tất cả (.zip)</b>. File được đánh số theo thứ tự import, kèm file hướng dẫn.", wait: "exported" } ] },
   { id: "kv-import", title: "Import lên KiotViet (combo nhận đúng thành phần)", steps: [
-    { title: "Bước 1 – Import món lẻ", body: "Trên KiotViet: menu <b>Thực đơn</b> → nút <b>Import</b> (cạnh <b>+ Món mới</b>) → chọn file <b>…_B1_mon_le.xlsx</b> → Thực hiện." },
-    { title: "Bước 2 – Import combo", body: "Làm lại thao tác <b>Import</b> với file <b>…_B2_combo.xlsx</b>. Lúc này các món thành phần đã tồn tại nên combo liên kết được." },
+    { title: "Bước 1 – Import món lẻ", body: "Trên KiotViet: menu <b>Thực đơn</b> → nút <b>Import</b> (cạnh <b>+ Món mới</b>) → chọn file <b>…_thuc_don_mon_le.xlsx</b> trong gói ZIP → Thực hiện." },
+    { title: "Bước 2 – Import combo", body: "Làm lại thao tác <b>Import</b> với file <b>…_thuc_don_combo.xlsx</b>. Lúc này các món thành phần đã tồn tại nên combo liên kết được." },
     { title: "Bước 3 – Kiểm tra 1 combo", body: "Mở 1 combo trên KiotViet, xem phần thành phần. Nếu đã đúng → xong." },
     { sel: '[data-nav="templates"]', title: "Nếu vẫn chưa nhận thành phần", body: "Tạo tay 1 combo có thành phần trên KiotViet → <b>Xuất file</b> ở màn hình Thực đơn → vào <b>🧩 Quản lý template</b> trong tool này.", wait: "nav:templates" },
     { view: "templates", sel: "#compFormatCard", title: "Học định dạng từ KiotViet", body: "Bấm <b>🎓 Học định dạng từ file KiotViet xuất ra</b> và chọn file vừa xuất. Từ đó tool xuất đúng cách KiotViet ghi thành phần.", wait: "compLearned" } ] },
@@ -1413,6 +1451,8 @@ $("modal").addEventListener("click", (e) => {
   if (e.target === $("modal")) closeModal();
   const b = e.target.closest("[data-addtpl]");
   if (b) { pushUndo(); ws.sheets.push({ templateId: b.dataset.addtpl, rows: [] }); ws.active = ws.sheets.length - 1; closeModal(); refreshWorkspace(); saveWs(); }
+  const dl = e.target.closest("[data-dlpart]");
+  if (dl && lastExport) { const p = lastExport.parts[+dl.dataset.dlpart]; downloadBlob(p.file, new Blob([p.bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })); }
 });
 $("btnUndo").onclick = undo;
 $("btnExport").onclick = exportAll;
