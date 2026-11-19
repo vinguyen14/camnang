@@ -1009,7 +1009,7 @@ input:checked + .slider:before { transform: translateX(18px); }
   <div id="toastHost" class="toast-host"></div>
 
   <script>
-// Bundled Karaoke Studio Pro v2.2
+// Bundled Karaoke Studio Pro v2.3 (Preloaded Default Song)
 const AUTOTUNE_WORKLET_SRC = "// Real-time Auto-Tune AudioWorkletProcessor\n// YIN pitch detection + musical scale quantization + dual-head windowed pitch shifter.\n\nconst SCALES = {\n  chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],\n  major: [0, 2, 4, 5, 7, 9, 11],\n  minor: [0, 2, 3, 5, 7, 8, 10],\n  pentatonic_major: [0, 2, 4, 7, 9],\n  pentatonic_minor: [0, 3, 5, 7, 10]\n};\nconst SCALE_NAMES = [\u0027chromatic\u0027, \u0027major\u0027, \u0027minor\u0027, \u0027pentatonic_major\u0027, \u0027pentatonic_minor\u0027];\n\nclass AutoTuneProcessor extends AudioWorkletProcessor {\n  static get parameterDescriptors() {\n    return [\n      { name: \u0027enabled\u0027, defaultValue: 0, minValue: 0, maxValue: 1, automationRate: \u0027k-rate\u0027 },\n      { name: \u0027retuneSpeed\u0027, defaultValue: 0.25, minValue: 0, maxValue: 1, automationRate: \u0027k-rate\u0027 },\n      { name: \u0027mix\u0027, defaultValue: 1, minValue: 0, maxValue: 1, automationRate: \u0027k-rate\u0027 },\n      { name: \u0027rootNote\u0027, defaultValue: 0, minValue: 0, maxValue: 11, automationRate: \u0027k-rate\u0027 },\n      { name: \u0027scaleIndex\u0027, defaultValue: 1, minValue: 0, maxValue: 4, automationRate: \u0027k-rate\u0027 }\n    ];\n  }\n\n  constructor(options) {\n    super();\n    const po = (options \u0026\u0026 options.processorOptions) || {};\n    this.report = po.report !== false;\n\n    this.analyzeSize = 1024;\n    this.hopSize = 512;\n    this.analyzeBuf = new Float32Array(this.analyzeSize);\n    this.analyzePos = 0;\n    this.yinBuf = new Float32Array(this.analyzeSize / 2);\n\n    this.ringSize = 4096;\n    this.ringBuf = new Float32Array(this.ringSize);\n    this.writePtr = 0;\n\n    this.windowSize = 1024;\n    this.phase = 0;\n\n    this.currentRatio = 1;\n    this.targetRatio = 1;\n    this.currentMix = 0;\n    this.reportCounter = 0;\n  }\n\n  detectPitchYIN(buffer, sr) {\n    const half = buffer.length \u003e\u003e 1;\n    const minLag = Math.floor(sr / 1000);\n    const maxLag = Math.min(half - 1, Math.floor(sr / 70));\n\n    let energy = 0;\n    for (let i = 0; i \u003c buffer.length; i++) energy += buffer[i] * buffer[i];\n    if (Math.sqrt(energy / buffer.length) \u003c 0.006) return { freq: 0, confidence: 0 };\n\n    this.yinBuf[0] = 1;\n    let runningSum = 0;\n    for (let tau = 1; tau \u003c= maxLag; tau++) {\n      let diff = 0;\n      for (let i = 0; i \u003c half; i++) {\n        const d = buffer[i] - buffer[i + tau];\n        diff += d * d;\n      }\n      runningSum += diff;\n      this.yinBuf[tau] = runningSum \u003e 0 ? (diff * tau) / runningSum : 1;\n    }\n\n    let bestTau = -1;\n    for (let tau = minLag; tau \u003c maxLag; tau++) {\n      if (this.yinBuf[tau] \u003c 0.2) {\n        while (tau + 1 \u003c maxLag \u0026\u0026 this.yinBuf[tau + 1] \u003c this.yinBuf[tau]) tau++;\n        bestTau = tau;\n        break;\n      }\n    }\n    if (bestTau === -1) {\n      let minVal = 1;\n      for (let tau = minLag; tau \u003c maxLag; tau++) {\n        if (this.yinBuf[tau] \u003c minVal) {\n          minVal = this.yinBuf[tau];\n          bestTau = tau;\n        }\n      }\n      if (minVal \u003e 0.35 || bestTau === -1) return { freq: 0, confidence: 0 };\n    }\n\n    let betterTau = bestTau;\n    if (bestTau \u003e 0 \u0026\u0026 bestTau \u003c maxLag - 1) {\n      const s0 = this.yinBuf[bestTau - 1];\n      const s1 = this.yinBuf[bestTau];\n      const s2 = this.yinBuf[bestTau + 1];\n      const denom = 2 * (2 * s1 - s2 - s0);\n      if (Math.abs(denom) \u003e 1e-6) betterTau += (s2 - s0) / denom;\n    }\n    return { freq: sr / betterTau, confidence: 1 - Math.min(1, this.yinBuf[bestTau]) };\n  }\n\n  quantize(freq, rootNote, scaleIdx) {\n    const midiFloat = 69 + 12 * Math.log2(freq / 440);\n    const intervals = SCALES[SCALE_NAMES[scaleIdx]] || SCALES.major;\n    let bestMidi = Math.round(midiFloat);\n    let minDist = Infinity;\n    const base = Math.floor(midiFloat) - 12;\n    for (let m = base; m \u003c= base + 24; m++) {\n      const pc = (((m - rootNote) % 12) + 12) % 12;\n      if (intervals.indexOf(pc) !== -1) {\n        const dist = Math.abs(midiFloat - m);\n        if (dist \u003c minDist) {\n          minDist = dist;\n          bestMidi = m;\n        }\n      }\n    }\n    return {\n      targetFreq: 440 * Math.pow(2, (bestMidi - 69) / 12),\n      targetMidi: bestMidi,\n      cents: Math.round((midiFloat - bestMidi) * 100)\n    };\n  }\n\n  readRing(pos) {\n    const mask = this.ringSize - 1;\n    const p = ((pos % this.ringSize) + this.ringSize) % this.ringSize;\n    const i0 = Math.floor(p);\n    const frac = p - i0;\n    return this.ringBuf[i0] * (1 - frac) + this.ringBuf[(i0 + 1) \u0026 mask] * frac;\n  }\n\n  process(inputs, outputs, parameters) {\n    const input = inputs[0];\n    const output = outputs[0];\n    if (!output || output.length === 0) return true;\n    const outCh = output[0];\n    if (!input || input.length === 0 || !input[0]) {\n      outCh.fill(0);\n      return true;\n    }\n    const inCh = input[0];\n\n    const enabled = parameters.enabled[0] \u003e= 0.5;\n    const retuneSpeed = parameters.retuneSpeed[0];\n    const mixTarget = enabled ? parameters.mix[0] : 0;\n    const rootNote = Math.round(parameters.rootNote[0]);\n    const scaleIdx = Math.round(parameters.scaleIndex[0]);\n\n    // retune time constant: 0 =\u003e instant (robot), 1 =\u003e ~250ms (natural)\n    const tau = 0.0004 + retuneSpeed * retuneSpeed * 0.25;\n    const ratioCoeff = 1 - Math.exp(-1 / (tau * sampleRate));\n    const mixCoeff = 1 - Math.exp(-1 / (0.02 * sampleRate));\n    const mask = this.ringSize - 1;\n\n    for (let i = 0; i \u003c inCh.length; i++) {\n      const sample = inCh[i];\n      this.ringBuf[this.writePtr] = sample;\n      this.writePtr = (this.writePtr + 1) \u0026 mask;\n\n      this.analyzeBuf[this.analyzePos++] = sample;\n      if (this.analyzePos \u003e= this.analyzeSize) {\n        const { freq, confidence } = this.detectPitchYIN(this.analyzeBuf, sampleRate);\n        if (freq \u003e 70 \u0026\u0026 freq \u003c 1000 \u0026\u0026 confidence \u003e 0.55) {\n          const q = this.quantize(freq, rootNote, scaleIdx);\n          this.targetRatio = Math.max(0.5, Math.min(2, q.targetFreq / freq));\n          if (this.report \u0026\u0026 ++this.reportCounter \u003e= 3) {\n            this.reportCounter = 0;\n            this.port.postMessage({ type: \u0027pitch\u0027, voiced: true, detectedFreq: freq, targetFreq: q.targetFreq, targetMidi: q.targetMidi, cents: q.cents });\n          }\n        } else {\n          this.targetRatio = 1;\n          if (this.report \u0026\u0026 ++this.reportCounter \u003e= 6) {\n            this.reportCounter = 0;\n            this.port.postMessage({ type: \u0027pitch\u0027, voiced: false });\n          }\n        }\n        this.analyzeBuf.copyWithin(0, this.hopSize);\n        this.analyzePos = this.analyzeSize - this.hopSize;\n      }\n\n      this.currentMix += (mixTarget - this.currentMix) * mixCoeff;\n      if (this.currentMix \u003c 0.0005 \u0026\u0026 !enabled) {\n        outCh[i] = sample;\n        continue;\n      }\n\n      this.currentRatio += (this.targetRatio - this.currentRatio) * ratioCoeff;\n      const shiftRate = 1 - this.currentRatio;\n      this.phase = (this.phase + shiftRate / this.windowSize) % 1;\n      if (this.phase \u003c 0) this.phase += 1;\n\n      const phaseA = this.phase;\n      const phaseB = (this.phase + 0.5) % 1;\n      const a = this.readRing(this.writePtr - (phaseA * this.windowSize + 64));\n      const b = this.readRing(this.writePtr - (phaseB * this.windowSize + 64));\n      const gA = 1 - Math.abs(2 * phaseA - 1);\n      const gB = 1 - Math.abs(2 * phaseB - 1);\n      const wet = a * gA + b * gB;\n      outCh[i] = sample * (1 - this.currentMix) + wet * this.currentMix;\n    }\n\n    for (let c = 1; c \u003c output.length; c++) output[c].set(outCh);\n    return true;\n  }\n}\n\nregisterProcessor(\u0027autotune-processor\u0027, AutoTuneProcessor);\n";
 const PCM_WORKLET_SRC = "// Sample-accurate multi-channel PCM recorder (AudioWorklet)\n// Supports scheduled start (startAt in AudioContext time) and reports the exact time of the first recorded frame.\nclass PCMRecorderProcessor extends AudioWorkletProcessor {\n  constructor(options) {\n    super();\n    const po = (options \u0026\u0026 options.processorOptions) || {};\n    this.numCh = po.channels || 1;\n    this.blockSize = 4096;\n    this.recording = false;\n    this.startAt = 0;\n    this.firstFrameTime = null;\n    this._resetBatch();\n\n    this.port.onmessage = (e) =\u003e {\n      const d = e.data || {};\n      if (d.command === \u0027start\u0027) {\n        this.recording = true;\n        this.startAt = d.startAt || 0;\n        this.firstFrameTime = null;\n        this._resetBatch();\n      } else if (d.command === \u0027stop\u0027) {\n        this.recording = false;\n        this._flush();\n        this.port.postMessage({ type: \u0027stopped\u0027, firstFrameTime: this.firstFrameTime });\n      }\n    };\n  }\n\n  _resetBatch() {\n    this.batch = [];\n    for (let c = 0; c \u003c this.numCh; c++) this.batch.push(new Float32Array(this.blockSize));\n    this.batchPos = 0;\n  }\n\n  _flush() {\n    if (this.batchPos === 0) return;\n    const out = this.batch.map((b) =\u003e b.slice(0, this.batchPos));\n    this.port.postMessage({ type: \u0027chunk\u0027, channels: out }, out.map((a) =\u003e a.buffer));\n    this._resetBatch();\n  }\n\n  process(inputs) {\n    if (!this.recording) return true;\n    const input = inputs[0];\n    const frames = input \u0026\u0026 input[0] ? input[0].length : 128;\n\n    if (currentTime + frames / sampleRate \u003c= this.startAt) return true;\n    let startIdx = 0;\n    if (currentTime \u003c this.startAt) {\n      startIdx = Math.min(frames, Math.max(0, Math.round((this.startAt - currentTime) * sampleRate)));\n    }\n    if (this.firstFrameTime === null) this.firstFrameTime = currentTime + startIdx / sampleRate;\n\n    for (let i = startIdx; i \u003c frames; i++) {\n      for (let c = 0; c \u003c this.numCh; c++) {\n        const src = input \u0026\u0026 input.length ? input[c] || input[0] : null;\n        this.batch[c][this.batchPos] = src ? src[i] : 0;\n      }\n      this.batchPos++;\n      if (this.batchPos \u003e= this.blockSize) this._flush();\n    }\n    return true;\n  }\n}\n\nregisterProcessor(\u0027pcm-recorder-processor\u0027, PCMRecorderProcessor);\n";
 // Studio vocal presets (every preset defines ALL FX keys so switching is deterministic)
@@ -2704,6 +2704,107 @@ class StudioAudioEngine {
 // Karaoke Studio Pro v2 - Main Controller
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const DEFAULT_SONG = {
+  title: 'Chúc Mừng Sinh Nhật Sếp Vân (Như Một Người Rưng)',
+  beatUrl: 'https://www.youtube.com/watch?v=yXD8pFTki1w',
+  refUrl: 'https://www.youtube.com/watch?v=hGu7BVQy5G0',
+  customLrc: `[00:11.00] (Look, it's Vân)
+[00:14.98] Mừng ngày vui mãi bên Vân, sếp yêu đang mong ước điều gì?
+[00:18.88] Cùng nhau bước chung team có khiến cho Vân tràn mãi vui?
+[00:22.82] Dẫu cho nhiều khi lo phiền, Vân cười thật tươi vui, chẳng còn ngại?
+[00:26.71] Và team cũng chúc cho Vân luôn đẹp tươi
+[00:29.46] Cầu mong sếp sang xuân mãi luôn vui tươi đón sinh nhật
+[00:33.14] Cùng team chúc Eo-En-Đi tiến lên vươn tỏa ánh quang
+[00:36.95] Chúc cho Vân mãi đắc lộc Ki-ot-Việt rực màu tiến~~~ xa mau
+[00:41.07] Cùng nhau xây đắp bao năm dài thật lâu
+[00:44.25] Chúc mãi cho tuổi / mừng vui (mừng vui)
+[00:46.57] Cùng đàn em chỉ biết chúc mừng Vân (mừng Vân)
+[00:47.97] Hoàng Sơn chúc Vân bình an
+[00:49.78] Thu Phương mong cho / phòng mình luôn vững (yeah)
+[00:51.54] Hòa cùng em Linh Trang đã gửi lời (yeah)
+[00:53.83] Em Lê Thắng vui tươi cười
+[00:55.58] Vũ Nga chúc người ngày càng xinh, ya ya
+[00:58.77] Q-q-quá nhiều quà / mừng đã sẵn sàng
+[01:00.43] ... Cả Nhật / Vi luôn tươi xinh / mãi chúc sếp cười
+[01:02.17] Chỉ chúc sếp vạn điều lành / để luôn luôn mãi phát tài, ooh-woah
+[01:04.92] Giữ tình người / Huyền Trang điên cuồng
+[01:07.96] Và mỉm cười / chúc Vân mãi tươi xinh
+[01:09.60] Mãi luôn đồng lòng để cùng vượt chông gai
+[01:12.97] Mừng ngày vui mãi bên Vân, sếp yêu đang mong ước điều gì?
+[01:16.14] Cùng nhau bước chung team có khiến cho Vân tràn mãi vui?
+[01:20.17] Dẫu cho nhiều khi lo phiền, Vân cười thật tươi vui, chẳng còn ngại?
+[01:24.01] Và team cũng chúc cho Vân luôn đẹp tươi
+[01:26.79] Cầu mong sếp sang xuân mãi luôn vui tươi đón sinh nhật
+[01:30.43] Cùng team chúc Eo-En-Đi tiến lên vươn tỏa ánh quang
+[01:34.13] Chúc cho Vân mãi đắc lộc Ki-ot-Việt rực màu tiến~~~ xa mau
+[01:38.73] Cùng nhau xây đắp bao năm dài thật lâu
+[01:42.34] Mãi cho nàng mỗi bước đi tràn niềm đắm say
+[01:44.65] Toàn điều tốt may về đong cánh tay
+[01:45.83] Vạn điều khó trôi Theo gió bay
+[01:48.80] Chỉ tràn những vui cười
+[01:50.79] Cùng con ấm áp êm gia đình
+[01:52.59] Thỏ nhỏ cùng bé mãi chúc an khang mẹ
+[01:55.17] Là-là-là-là cùng chàng Gấu Mèo là em hiền chẳng sai
+[01:58.87] Là-là-là-là cùng đoàn sếp chẳng phải Vân thì chẳng ai
+[02:02.63] Để ngày này đàn mình / mừng mãi an / càng vững vàng / càng tỏa sang
+[02:06.24] Luôn vững vàng / để cùng Vân / vượt đèo vươn mãi sang
+[02:09.82] Mừng ngày vui mãi bên Vân, sếp yêu đang mong ước điều gì?
+[02:13.48] Cùng nhau bước chung team có khiến cho Vân tràn mãi vui?
+[02:17.18] Dẫu cho nhiều khi lo phiền, Vân cười thật tươi vui, chẳng còn ngại?
+[02:21.25] Và team cũng chúc cho Vân luôn đẹp tươi
+[02:24.41] Cầu mong sếp sang xuân mãi luôn vui tươi đón sinh nhật
+[02:27.88] Cùng team chúc Eo-En-Đi tiến lên vươn tỏa ánh quang
+[02:31.46] Chúc cho Vân mãi đắc lộc Ki-ot-Việt rực màu tiến~~~ xa mau
+[02:35.97] Cùng nhau xây đắp bao năm dài thật lâu`,
+  origLrc: `[00:11.00] (Look, it's Gaz)
+[00:14.98] Từng ngày anh vẫn bên em, thế nhưng em vương vấn điều gì?
+[00:18.88] Tình yêu bấy lâu nay có khiến em thôi ngừng nghĩ suy?
+[00:22.82] Mỗi đêm mình anh u hoài, nên dừng lại hay yêu, chẳng ngần ngại?
+[00:26.71] Và anh cũng biết đau khi em nhạt phai
+[00:29.46] Chờ bao tháng năm qua vẫn mong bao yêu dấu quay lại
+[00:33.14] Đành buông cánh tay em khi trái tim em chẳng có anh
+[00:36.95] Biết đâu em cũng chấp nhận không ân hận một lần khóc~~~ cho em
+[00:41.07] Và quên đi tháng năm ta từng đậm sâu
+[00:44.25] Có lẽ anh phải / rời đi (rời đi)
+[00:46.57] Giờ này anh chẳng biết phải làm chi (làm chi)
+[00:47.97] Lòng ôm biết bao hoài nghi
+[00:49.78] Sau bao đêm thâu / giày vò suy nghĩ (yeah)
+[00:51.54] Giờ này trong tim em đã chẳng còn (yeah)
+[00:53.83] Anh như phút giây ban đầu
+[00:55.58] Những yêu dấu ngày nào còn đâu, ya ya
+[00:58.77] Q-q-quá nhiều lần / người đã hững hờ...
+[01:00.43] ... Để lại / anh trong cơn mưa / vẫn cứ đứng chờ
+[01:02.17] Chỉ biết trách một điều rằng / phải chăng anh đã quá khờ, ooh-woah
+[01:04.92] Những ngày mình / từng yêu điên cuồng
+[01:07.96] Giờ chỉ còn / thấy trong những cơn mơ
+[01:09.60] Đã xa rồi giờ chỉ còn lại anh thôi
+[01:12.97] Từng ngày anh vẫn bên em, thế nhưng em vương vấn điều gì?
+[01:16.14] Tình yêu bấy lâu nay có khiến em thôi ngừng nghĩ suy?
+[01:20.17] Mỗi đêm mình anh u hoài, nên dừng lại hay yêu, chẳng ngần ngại?
+[01:24.01] Và anh cũng biết đau khi em nhạt phai
+[01:26.79] Chờ bao tháng năm qua vẫn mong bao yêu dấu quay lại
+[01:30.43] Đành buông cánh tay em khi trái tim em chẳng có anh
+[01:34.13] Biết đâu em cũng chấp nhận không ân hận một lần khóc~~~ cho em
+[01:38.73] Và quên đi tháng năm ta từng đậm sâu
+[01:42.34] Đã không còn những phút giây mình từng đắm say
+[01:44.65] Ngày còn nắm tay giờ ôm đắng cay
+[01:45.83] Mọi lời hứa trôi Theo gió bay
+[01:48.80] Chỉ còn những đêm dài
+[01:50.79] Mình anh cứ ngóng trông em hoài
+[01:52.59] Chẳng thể nào níu giữ bước chân em lại
+[01:55.17] Là-là-là-là lần người nói rằng tình yêu này chẳng phai
+[01:58.87] Là-là-là-là lần người nói chẳng phải anh thì chẳng ai
+[02:02.63] Để giờ này tình mình / đành vỡ tan / đành lỡ làng / đành dở dang
+[02:06.24] Anh ngỡ ngàng / để giờ đây / đường về ta rẽ ngang
+[02:09.82] Từng ngày anh vẫn bên em, thế nhưng em vương vấn điều gì?
+[02:13.48] Tình yêu bấy lâu nay có khiến em thôi ngừng nghĩ suy?
+[02:17.18] Mỗi đêm mình anh u hoài, nên dừng lại hay yêu, chẳng ngần ngại?
+[02:21.25] Và anh cũng biết đau khi em nhạt phai
+[02:24.41] Chờ bao tháng năm qua vẫn mong bao yêu dấu quay lại
+[02:27.88] Đành buông cánh tay em khi trái tim em chẳng có anh
+[02:31.46] Biết đâu em cũng chấp nhận không ân hận một lần khóc~~~ cho em
+[02:35.97] Và quên đi tháng năm ta từng đậm sâu`
+};
 function midiToNote(midi) {
   const m = Math.round(midi);
   return `${NOTE_NAMES[((m % 12) + 12) % 12]}${Math.floor(m / 12) - 1}`;
@@ -2792,7 +2893,35 @@ class KaraokeStudioApp {
       navigator.mediaDevices.addEventListener('devicechange', () => this._populateMicDevices());
     }
     this._renderRuler();
+    this._loadDefaultSong();
     this._startRenderLoop();
+  }
+
+  _loadDefaultSong() {
+    this.beatTitle = DEFAULT_SONG.title;
+    // Preload synced custom lyrics
+    this.dom.lyricsTextarea.value = DEFAULT_SONG.customLrc;
+    this._parseAndRefreshLyrics();
+    // Preload original synced lyrics & reference YouTube URL
+    this.dom.origLrcTextarea.value = DEFAULT_SONG.origLrc;
+    this.dom.refEmbedUrlInput.value = DEFAULT_SONG.refUrl;
+    this.dom.lrcSearchInput.value = 'Như Một Người Rưng';
+    // Switch Beat tab to YouTube / Link & load default beat
+    const embedBtn = document.querySelector('#beatTabs [data-tab="embed"]');
+    if (embedBtn) embedBtn.click();
+    this.dom.embedUrlInput.value = DEFAULT_SONG.beatUrl;
+    this.handleLoadEmbed();
+    // Switch Ref tab to YouTube / Link & load default reference song
+    const refEmbedBtn = document.querySelector('#refTabs [data-tab="refEmbed"]');
+    if (refEmbedBtn) refEmbedBtn.click();
+    this.handleLoadRefEmbed();
+    // Upgrade iframes to full YT.Player API once YouTube API finishes loading
+    const prevReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      if (typeof prevReady === 'function') prevReady();
+      if (this.embedType === 'youtube' && !this.ytPlayer) this.handleLoadEmbed();
+      if (this.refEmbedType === 'youtube' && !this.refYtPlayer) this.handleLoadRefEmbed();
+    };
   }
 
   toast(msg, type = '') {
