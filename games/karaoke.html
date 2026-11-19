@@ -617,6 +617,9 @@ input:checked + .slider:before { transform: translateX(18px); }
 .progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.15s; }
 .help-list { padding-left: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; line-height: 1.5; }
 .align-section { display: flex; flex-direction: column; gap: 8px; padding: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; }
+.ref-tab { display: none; }
+.ref-tab.active { display: block; }
+#refYtPlayerContainer, iframe#refYtPlayerContainer, #refYtPlayerContainer iframe { width: 100%; max-width: 100%; height: 185px; display: block; border: none; }
 .align-offset-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
 .align-offset-row input { width: 76px; background: var(--input); border: 1px solid var(--border); color: var(--text); padding: 4px 6px; border-radius: 5px; }
 .align-textarea { width: 100%; height: 110px; background: var(--input); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px; font-family: inherit; font-size: 12px; overflow-y: auto; resize: vertical; }
@@ -930,11 +933,43 @@ input:checked + .slider:before { transform: translateX(18px); }
       <p class="hint-text">Tải bản nhạc gốc có ca sĩ hát (hoặc dán LRC gốc) để tool tự căn độ lệch với Beat và gắn nhịp chạy chữ chuẩn xác cho lời tự chế của bạn.</p>
 
       <div class="align-section">
-        <div class="export-label">1. Tải bản nhạc gốc có lời (MP3, WAV, M4A, MP4)</div>
-        <label class="upload-dropzone" for="refFileInput">
-          <input type="file" id="refFileInput" accept="audio/*,video/*" hidden />
-          <span id="refFileName">📂 Chọn file bản nhạc gốc có ca sĩ hát...</span>
-        </label>
+        <div class="module-header-row">
+          <div class="export-label">1. Bản nhạc gốc có ca sĩ hát</div>
+          <div class="tab-group" id="refTabs">
+            <button class="tab-btn active" data-tab="refFile">File nhạc gốc</button>
+            <button class="tab-btn" data-tab="refEmbed">YouTube / Link</button>
+          </div>
+        </div>
+
+        <div id="tabRefFile" class="ref-tab active">
+          <label class="upload-dropzone" for="refFileInput">
+            <input type="file" id="refFileInput" accept="audio/*,video/*" hidden />
+            <span id="refFileName">📂 Chọn file bản nhạc gốc (MP3, WAV, M4A, MP4...)</span>
+          </label>
+        </div>
+
+        <div id="tabRefEmbed" class="ref-tab">
+          <div class="embed-input-row">
+            <input type="text" id="refEmbedUrlInput" placeholder="Dán link YouTube bản gốc có ca sĩ hát hoặc link MP3..." />
+            <button id="btnLoadRefEmbed" class="btn-accent">Nhúng</button>
+          </div>
+          <div id="refEmbedContainer" class="embed-box hidden">
+            <div id="refYtPlayerContainer"></div>
+            <audio id="refUrlAudioPlayer" controls class="hidden" style="width:100%"></audio>
+          </div>
+          <div id="refConvertBox" class="convert-box hidden">
+            <p id="refConvertStatus" class="convert-status warn">⚠️ Bấm nút dưới → chọn "Tab này" + tick "Chia sẻ âm thanh thẻ" để phân tích giọng hát tự động (hoặc dùng nút "🎤 Nghe bản gốc" trực tiếp).</p>
+            <div class="convert-actions">
+              <button id="btnConvertRef" class="btn-accent">⬇️ Thu âm thanh bản gốc để tự khớp</button>
+              <button id="btnStopConvertRef" class="btn-small hidden">⏹ Dừng & phân tích ngay</button>
+            </div>
+            <div id="refConvertProgressWrap" class="progress-row hidden">
+              <div class="progress-bar"><div id="refConvertProgressFill" class="progress-fill"></div></div>
+              <span id="refConvertProgressText">00:00</span>
+            </div>
+          </div>
+        </div>
+
         <div id="alignInfoBox" class="beat-status hidden" style="margin:6px 0 0"></div>
         <div class="align-offset-row">
           <label>Độ lệch Beat ↔ Bản gốc (giây): <input type="number" id="alignOffsetSec" value="0" step="0.05" /></label>
@@ -943,9 +978,13 @@ input:checked + .slider:before { transform: translateX(18px); }
       </div>
 
       <div class="align-section">
-        <div class="export-label">2. Hoặc chuyển nhịp từ Lời gốc có timestamp (.LRC) sang Lời tự chế</div>
-        <textarea id="origLrcTextarea" class="align-textarea" placeholder="Dán lời gốc dạng LRC vào đây (VD: [00:12.40] Câu hát gốc 1...)&#10;Tool sẽ giữ đúng nhịp gốc (+ độ lệch Beat) và gán sang từng câu lời tự chế bạn đã dán!"></textarea>
-        <button id="btnRunLrcTransfer" class="btn-small btn-accent">⚡ Chuyển nhịp LRC gốc → Lời tự chế</button>
+        <div class="export-label">2. Khớp nhịp từ Lời bài gốc (hỗ trợ lời thường, LRC, hoặc tự tìm online)</div>
+        <div class="embed-input-row">
+          <input type="text" id="lrcSearchInput" placeholder="Nhập tên bài gốc để tự tìm nhịp chuẩn (VD: Đừng làm trái tim anh đau)..." />
+          <button id="btnSearchLrc" class="btn-small btn-accent">🔍 Tìm nhịp gốc</button>
+        </div>
+        <textarea id="origLrcTextarea" class="align-textarea" placeholder="Dán lời bài gốc vào đây (dán lời thường cũng được, không bắt buộc phải có [mm:ss.xx]; hoặc bấm 'Tìm nhịp gốc' ở trên để lấy nhịp chuẩn tự động!)."></textarea>
+        <button id="btnRunLrcTransfer" class="btn-small btn-accent">⚡ Khớp nhịp bài gốc → Lời tự chế</button>
       </div>
     </div>
   </div>
@@ -970,7 +1009,7 @@ input:checked + .slider:before { transform: translateX(18px); }
   <div id="toastHost" class="toast-host"></div>
 
   <script>
-// Bundled Karaoke Studio Pro v2.1 (Auto-Align + Scrollable Lyrics)
+// Bundled Karaoke Studio Pro v2.2
 const AUTOTUNE_WORKLET_SRC = "// Real-time Auto-Tune AudioWorkletProcessor\n// YIN pitch detection + musical scale quantization + dual-head windowed pitch shifter.\n\nconst SCALES = {\n  chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],\n  major: [0, 2, 4, 5, 7, 9, 11],\n  minor: [0, 2, 3, 5, 7, 8, 10],\n  pentatonic_major: [0, 2, 4, 7, 9],\n  pentatonic_minor: [0, 3, 5, 7, 10]\n};\nconst SCALE_NAMES = [\u0027chromatic\u0027, \u0027major\u0027, \u0027minor\u0027, \u0027pentatonic_major\u0027, \u0027pentatonic_minor\u0027];\n\nclass AutoTuneProcessor extends AudioWorkletProcessor {\n  static get parameterDescriptors() {\n    return [\n      { name: \u0027enabled\u0027, defaultValue: 0, minValue: 0, maxValue: 1, automationRate: \u0027k-rate\u0027 },\n      { name: \u0027retuneSpeed\u0027, defaultValue: 0.25, minValue: 0, maxValue: 1, automationRate: \u0027k-rate\u0027 },\n      { name: \u0027mix\u0027, defaultValue: 1, minValue: 0, maxValue: 1, automationRate: \u0027k-rate\u0027 },\n      { name: \u0027rootNote\u0027, defaultValue: 0, minValue: 0, maxValue: 11, automationRate: \u0027k-rate\u0027 },\n      { name: \u0027scaleIndex\u0027, defaultValue: 1, minValue: 0, maxValue: 4, automationRate: \u0027k-rate\u0027 }\n    ];\n  }\n\n  constructor(options) {\n    super();\n    const po = (options \u0026\u0026 options.processorOptions) || {};\n    this.report = po.report !== false;\n\n    this.analyzeSize = 1024;\n    this.hopSize = 512;\n    this.analyzeBuf = new Float32Array(this.analyzeSize);\n    this.analyzePos = 0;\n    this.yinBuf = new Float32Array(this.analyzeSize / 2);\n\n    this.ringSize = 4096;\n    this.ringBuf = new Float32Array(this.ringSize);\n    this.writePtr = 0;\n\n    this.windowSize = 1024;\n    this.phase = 0;\n\n    this.currentRatio = 1;\n    this.targetRatio = 1;\n    this.currentMix = 0;\n    this.reportCounter = 0;\n  }\n\n  detectPitchYIN(buffer, sr) {\n    const half = buffer.length \u003e\u003e 1;\n    const minLag = Math.floor(sr / 1000);\n    const maxLag = Math.min(half - 1, Math.floor(sr / 70));\n\n    let energy = 0;\n    for (let i = 0; i \u003c buffer.length; i++) energy += buffer[i] * buffer[i];\n    if (Math.sqrt(energy / buffer.length) \u003c 0.006) return { freq: 0, confidence: 0 };\n\n    this.yinBuf[0] = 1;\n    let runningSum = 0;\n    for (let tau = 1; tau \u003c= maxLag; tau++) {\n      let diff = 0;\n      for (let i = 0; i \u003c half; i++) {\n        const d = buffer[i] - buffer[i + tau];\n        diff += d * d;\n      }\n      runningSum += diff;\n      this.yinBuf[tau] = runningSum \u003e 0 ? (diff * tau) / runningSum : 1;\n    }\n\n    let bestTau = -1;\n    for (let tau = minLag; tau \u003c maxLag; tau++) {\n      if (this.yinBuf[tau] \u003c 0.2) {\n        while (tau + 1 \u003c maxLag \u0026\u0026 this.yinBuf[tau + 1] \u003c this.yinBuf[tau]) tau++;\n        bestTau = tau;\n        break;\n      }\n    }\n    if (bestTau === -1) {\n      let minVal = 1;\n      for (let tau = minLag; tau \u003c maxLag; tau++) {\n        if (this.yinBuf[tau] \u003c minVal) {\n          minVal = this.yinBuf[tau];\n          bestTau = tau;\n        }\n      }\n      if (minVal \u003e 0.35 || bestTau === -1) return { freq: 0, confidence: 0 };\n    }\n\n    let betterTau = bestTau;\n    if (bestTau \u003e 0 \u0026\u0026 bestTau \u003c maxLag - 1) {\n      const s0 = this.yinBuf[bestTau - 1];\n      const s1 = this.yinBuf[bestTau];\n      const s2 = this.yinBuf[bestTau + 1];\n      const denom = 2 * (2 * s1 - s2 - s0);\n      if (Math.abs(denom) \u003e 1e-6) betterTau += (s2 - s0) / denom;\n    }\n    return { freq: sr / betterTau, confidence: 1 - Math.min(1, this.yinBuf[bestTau]) };\n  }\n\n  quantize(freq, rootNote, scaleIdx) {\n    const midiFloat = 69 + 12 * Math.log2(freq / 440);\n    const intervals = SCALES[SCALE_NAMES[scaleIdx]] || SCALES.major;\n    let bestMidi = Math.round(midiFloat);\n    let minDist = Infinity;\n    const base = Math.floor(midiFloat) - 12;\n    for (let m = base; m \u003c= base + 24; m++) {\n      const pc = (((m - rootNote) % 12) + 12) % 12;\n      if (intervals.indexOf(pc) !== -1) {\n        const dist = Math.abs(midiFloat - m);\n        if (dist \u003c minDist) {\n          minDist = dist;\n          bestMidi = m;\n        }\n      }\n    }\n    return {\n      targetFreq: 440 * Math.pow(2, (bestMidi - 69) / 12),\n      targetMidi: bestMidi,\n      cents: Math.round((midiFloat - bestMidi) * 100)\n    };\n  }\n\n  readRing(pos) {\n    const mask = this.ringSize - 1;\n    const p = ((pos % this.ringSize) + this.ringSize) % this.ringSize;\n    const i0 = Math.floor(p);\n    const frac = p - i0;\n    return this.ringBuf[i0] * (1 - frac) + this.ringBuf[(i0 + 1) \u0026 mask] * frac;\n  }\n\n  process(inputs, outputs, parameters) {\n    const input = inputs[0];\n    const output = outputs[0];\n    if (!output || output.length === 0) return true;\n    const outCh = output[0];\n    if (!input || input.length === 0 || !input[0]) {\n      outCh.fill(0);\n      return true;\n    }\n    const inCh = input[0];\n\n    const enabled = parameters.enabled[0] \u003e= 0.5;\n    const retuneSpeed = parameters.retuneSpeed[0];\n    const mixTarget = enabled ? parameters.mix[0] : 0;\n    const rootNote = Math.round(parameters.rootNote[0]);\n    const scaleIdx = Math.round(parameters.scaleIndex[0]);\n\n    // retune time constant: 0 =\u003e instant (robot), 1 =\u003e ~250ms (natural)\n    const tau = 0.0004 + retuneSpeed * retuneSpeed * 0.25;\n    const ratioCoeff = 1 - Math.exp(-1 / (tau * sampleRate));\n    const mixCoeff = 1 - Math.exp(-1 / (0.02 * sampleRate));\n    const mask = this.ringSize - 1;\n\n    for (let i = 0; i \u003c inCh.length; i++) {\n      const sample = inCh[i];\n      this.ringBuf[this.writePtr] = sample;\n      this.writePtr = (this.writePtr + 1) \u0026 mask;\n\n      this.analyzeBuf[this.analyzePos++] = sample;\n      if (this.analyzePos \u003e= this.analyzeSize) {\n        const { freq, confidence } = this.detectPitchYIN(this.analyzeBuf, sampleRate);\n        if (freq \u003e 70 \u0026\u0026 freq \u003c 1000 \u0026\u0026 confidence \u003e 0.55) {\n          const q = this.quantize(freq, rootNote, scaleIdx);\n          this.targetRatio = Math.max(0.5, Math.min(2, q.targetFreq / freq));\n          if (this.report \u0026\u0026 ++this.reportCounter \u003e= 3) {\n            this.reportCounter = 0;\n            this.port.postMessage({ type: \u0027pitch\u0027, voiced: true, detectedFreq: freq, targetFreq: q.targetFreq, targetMidi: q.targetMidi, cents: q.cents });\n          }\n        } else {\n          this.targetRatio = 1;\n          if (this.report \u0026\u0026 ++this.reportCounter \u003e= 6) {\n            this.reportCounter = 0;\n            this.port.postMessage({ type: \u0027pitch\u0027, voiced: false });\n          }\n        }\n        this.analyzeBuf.copyWithin(0, this.hopSize);\n        this.analyzePos = this.analyzeSize - this.hopSize;\n      }\n\n      this.currentMix += (mixTarget - this.currentMix) * mixCoeff;\n      if (this.currentMix \u003c 0.0005 \u0026\u0026 !enabled) {\n        outCh[i] = sample;\n        continue;\n      }\n\n      this.currentRatio += (this.targetRatio - this.currentRatio) * ratioCoeff;\n      const shiftRate = 1 - this.currentRatio;\n      this.phase = (this.phase + shiftRate / this.windowSize) % 1;\n      if (this.phase \u003c 0) this.phase += 1;\n\n      const phaseA = this.phase;\n      const phaseB = (this.phase + 0.5) % 1;\n      const a = this.readRing(this.writePtr - (phaseA * this.windowSize + 64));\n      const b = this.readRing(this.writePtr - (phaseB * this.windowSize + 64));\n      const gA = 1 - Math.abs(2 * phaseA - 1);\n      const gB = 1 - Math.abs(2 * phaseB - 1);\n      const wet = a * gA + b * gB;\n      outCh[i] = sample * (1 - this.currentMix) + wet * this.currentMix;\n    }\n\n    for (let c = 1; c \u003c output.length; c++) output[c].set(outCh);\n    return true;\n  }\n}\n\nregisterProcessor(\u0027autotune-processor\u0027, AutoTuneProcessor);\n";
 const PCM_WORKLET_SRC = "// Sample-accurate multi-channel PCM recorder (AudioWorklet)\n// Supports scheduled start (startAt in AudioContext time) and reports the exact time of the first recorded frame.\nclass PCMRecorderProcessor extends AudioWorkletProcessor {\n  constructor(options) {\n    super();\n    const po = (options \u0026\u0026 options.processorOptions) || {};\n    this.numCh = po.channels || 1;\n    this.blockSize = 4096;\n    this.recording = false;\n    this.startAt = 0;\n    this.firstFrameTime = null;\n    this._resetBatch();\n\n    this.port.onmessage = (e) =\u003e {\n      const d = e.data || {};\n      if (d.command === \u0027start\u0027) {\n        this.recording = true;\n        this.startAt = d.startAt || 0;\n        this.firstFrameTime = null;\n        this._resetBatch();\n      } else if (d.command === \u0027stop\u0027) {\n        this.recording = false;\n        this._flush();\n        this.port.postMessage({ type: \u0027stopped\u0027, firstFrameTime: this.firstFrameTime });\n      }\n    };\n  }\n\n  _resetBatch() {\n    this.batch = [];\n    for (let c = 0; c \u003c this.numCh; c++) this.batch.push(new Float32Array(this.blockSize));\n    this.batchPos = 0;\n  }\n\n  _flush() {\n    if (this.batchPos === 0) return;\n    const out = this.batch.map((b) =\u003e b.slice(0, this.batchPos));\n    this.port.postMessage({ type: \u0027chunk\u0027, channels: out }, out.map((a) =\u003e a.buffer));\n    this._resetBatch();\n  }\n\n  process(inputs) {\n    if (!this.recording) return true;\n    const input = inputs[0];\n    const frames = input \u0026\u0026 input[0] ? input[0].length : 128;\n\n    if (currentTime + frames / sampleRate \u003c= this.startAt) return true;\n    let startIdx = 0;\n    if (currentTime \u003c this.startAt) {\n      startIdx = Math.min(frames, Math.max(0, Math.round((this.startAt - currentTime) * sampleRate)));\n    }\n    if (this.firstFrameTime === null) this.firstFrameTime = currentTime + startIdx / sampleRate;\n\n    for (let i = startIdx; i \u003c frames; i++) {\n      for (let c = 0; c \u003c this.numCh; c++) {\n        const src = input \u0026\u0026 input.length ? input[c] || input[0] : null;\n        this.batch[c][this.batchPos] = src ? src[i] : 0;\n      }\n      this.batchPos++;\n      if (this.batchPos \u003e= this.blockSize) this._flush();\n    }\n    return true;\n  }\n}\n\nregisterProcessor(\u0027pcm-recorder-processor\u0027, PCMRecorderProcessor);\n";
 // Studio vocal presets (every preset defines ALL FX keys so switching is deterministic)
@@ -1550,35 +1589,74 @@ function mapLyricsToVocalPhrases(lines, phrases, fallbackDuration = 180) {
   });
 }
 
-// Transfer timestamps from an original LRC text to custom/parody lyric lines (+ beat offset)
-function transferLrcToCustomLyrics(origLrcText, customLyricsText, offsetSec = 0) {
-  const lead = /^\s*\[(\d{1,3}):(\d{1,2}(?:[.:]\d{1,3})?)\]/;
-  const origTimes = [];
-  (origLrcText || '').split(/\r?\n/).forEach((line) => {
-    const m = line.trim().match(lead);
-    if (m) {
-      origTimes.push(parseInt(m[1], 10) * 60 + parseFloat(m[2].replace(':', '.')));
-    }
-  });
+// Transfer timestamps from original lyrics (LRC, YouTube mm:ss, OR plain text) to custom/parody lyric lines
+function transferLrcToCustomLyrics(origText, customLyricsText, offsetSec = 0, totalDurationSec = 180, vocalPhrases = null) {
+  const bracketTs = /^\s*\[(\d{1,3}):(\d{1,2}(?:[.:]\d{1,3})?)\]/;
+  const plainTs = /^\s*(\d{1,2}):(\d{2})(?:\.(\d{1,3}))?(?:\s+|[-–]\s*)/;
 
   const customLines = (customLyricsText || '')
     .split(/\r?\n/)
-    .map((s) => s.trim().replace(lead, '').trim())
+    .map((s) => s.trim().replace(bracketTs, '').replace(plainTs, '').trim())
     .filter(Boolean);
 
-  if (!origTimes.length || !customLines.length) return null;
+  if (!customLines.length) return null;
 
-  return customLines.map((text, i) => {
-    let t;
-    if (i < origTimes.length) {
-      t = origTimes[i];
-    } else {
-      const last = origTimes[origTimes.length - 1];
-      const avgGap = origTimes.length > 1 ? (last - origTimes[0]) / (origTimes.length - 1) : 3.5;
-      t = last + avgGap * (i - origTimes.length + 1);
+  const origLinesRaw = (origText || '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+  const origTimes = [];
+  for (const line of origLinesRaw) {
+    let m = line.match(bracketTs);
+    if (m) {
+      origTimes.push(parseInt(m[1], 10) * 60 + parseFloat(m[2].replace(':', '.')));
+      continue;
     }
-    return { time: Math.max(0, Number((t + offsetSec).toFixed(2))), text };
+    m = line.match(plainTs);
+    if (m) {
+      const frac = m[3] ? parseFloat('0.' + m[3]) : 0;
+      origTimes.push(parseInt(m[1], 10) * 60 + parseInt(m[2], 10) + frac);
+    }
+  }
+
+  // Case 1: Original lyrics have real timestamps (LRC or mm:ss)
+  if (origTimes.length >= 2) {
+    const mapped = customLines.map((text, i) => {
+      let t;
+      if (i < origTimes.length) {
+        t = origTimes[i];
+      } else {
+        const last = origTimes[origTimes.length - 1];
+        const avgGap = (last - origTimes[0]) / Math.max(1, origTimes.length - 1);
+        t = last + avgGap * (i - origTimes.length + 1);
+      }
+      return { time: Math.max(0, Number((t + offsetSec).toFixed(2))), text };
+    });
+    return { mode: 'timestamps', lines: mapped };
+  }
+
+  // Case 2: Plain text original lyrics (no timestamps) -> syllable-weighted mapping
+  // Uses detected vocal phrases if available, otherwise distributes across beat/song duration
+  const lineObjs = customLines.map((text, i) => {
+    // Weight by average word count of original + custom line so pacing matches original song phrasing
+    const origWords = origLinesRaw[i] ? origLinesRaw[i].split(/\s+/).filter(Boolean).length : 0;
+    const customWords = text.split(/\s+/).filter(Boolean).length;
+    const weight = Math.max(2, origWords ? Math.round((origWords + customWords) / 2) : customWords);
+    return { text, weight };
   });
+
+  if (vocalPhrases && vocalPhrases.length) {
+    const mapped = mapLyricsToVocalPhrases(lineObjs, vocalPhrases, totalDurationSec);
+    return { mode: 'vocal_phrases', lines: mapped };
+  }
+
+  const totalW = lineObjs.reduce((a, b) => a + b.weight, 0);
+  const intro = Math.min(8, totalDurationSec * 0.06);
+  const span = Math.max(15, totalDurationSec * 0.86);
+  let acc = 0;
+  const mapped = lineObjs.map((item) => {
+    const t = Math.max(0, intro + (acc / totalW) * span + offsetSec);
+    acc += item.weight;
+    return { time: Number(t.toFixed(2)), text: item.text };
+  });
+  return { mode: 'syllable_estimate', lines: mapped };
 }
 
 
@@ -2697,6 +2775,12 @@ class KaraokeStudioApp {
     this.refBuffer = null;
     this.refOffsetSec = 0;
     this.listenReference = false;
+    this.refYtPlayer = null;
+    this.refEmbedType = null; // 'youtube' | 'url' | null
+    this.isConvertingRef = false;
+    this.refConvertStream = null;
+    this.refConvertTimer = null;
+    this.refConvertStartPerf = 0;
 
     this._bindDOM();
     this._initPresetsUI();
@@ -2745,8 +2829,15 @@ class KaraokeStudioApp {
       lyricsModeHint: $('lyricsModeHint'), teleprompter: $('teleprompter'),
       alignModal: $('alignModal'), btnCloseAlign: $('btnCloseAlign'),
       refFileInput: $('refFileInput'), refFileName: $('refFileName'),
+      refEmbedUrlInput: $('refEmbedUrlInput'), btnLoadRefEmbed: $('btnLoadRefEmbed'),
+      refEmbedContainer: $('refEmbedContainer'), refYtPlayerContainer: $('refYtPlayerContainer'),
+      refUrlAudioPlayer: $('refUrlAudioPlayer'), refConvertBox: $('refConvertBox'),
+      refConvertStatus: $('refConvertStatus'), btnConvertRef: $('btnConvertRef'),
+      btnStopConvertRef: $('btnStopConvertRef'), refConvertProgressWrap: $('refConvertProgressWrap'),
+      refConvertProgressFill: $('refConvertProgressFill'), refConvertProgressText: $('refConvertProgressText'),
       alignInfoBox: $('alignInfoBox'), alignOffsetSec: $('alignOffsetSec'),
-      btnRunAudioAlign: $('btnRunAudioAlign'), origLrcTextarea: $('origLrcTextarea'),
+      btnRunAudioAlign: $('btnRunAudioAlign'), lrcSearchInput: $('lrcSearchInput'),
+      btnSearchLrc: $('btnSearchLrc'), origLrcTextarea: $('origLrcTextarea'),
       btnRunLrcTransfer: $('btnRunLrcTransfer'),
 
       stageBox: $('stageBox'), cameraPreview: $('cameraPreview'), spectrumCanvas: $('spectrumCanvas'),
@@ -2817,8 +2908,12 @@ class KaraokeStudioApp {
     this.dom.btnCloseAlign.addEventListener('click', () => this.dom.alignModal.classList.add('hidden'));
     this.dom.alignModal.addEventListener('click', (e) => { if (e.target === this.dom.alignModal) this.dom.alignModal.classList.add('hidden'); });
     this.dom.refFileInput.addEventListener('change', (e) => this.handleReferenceFile(e.target.files[0]));
+    this.dom.btnLoadRefEmbed.addEventListener('click', () => this.handleLoadRefEmbed());
+    this.dom.btnConvertRef.addEventListener('click', () => this.startConvertRef());
+    this.dom.btnStopConvertRef.addEventListener('click', () => this.finishConvertRef());
     this.dom.alignOffsetSec.addEventListener('change', (e) => { this.refOffsetSec = parseFloat(e.target.value) || 0; });
     this.dom.btnRunAudioAlign.addEventListener('click', () => this.runAudioAlignLyrics());
+    this.dom.btnSearchLrc.addEventListener('click', () => this.searchOnlineLrc());
     this.dom.btnRunLrcTransfer.addEventListener('click', () => this.runLrcTransferLyrics());
     this.dom.btnTapSync.addEventListener('click', () => this.toggleSyncMode());
     this.dom.btnStampLine.addEventListener('click', () => this.stampCurrentLine());
@@ -3014,6 +3109,7 @@ class KaraokeStudioApp {
     };
     setup('beatTabs', { file: 'tabFile', embed: 'tabEmbed' });
     setup('lyricsTabs', { editor: 'tabLyricsEditor', list: 'tabLyricsList' });
+    setup('refTabs', { refFile: 'tabRefFile', refEmbed: 'tabRefEmbed' });
   }
 
   _initPresetsUI() {
@@ -3358,40 +3454,168 @@ class KaraokeStudioApp {
   }
 
   // ---------- Reference Vocal Song Auto-Align ----------
+  _setReferenceBuffer(buf, label) {
+    this.refBuffer = buf;
+    this.dom.btnRunAudioAlign.disabled = false;
+    this.dom.btnToggleRef.classList.remove('hidden');
+
+    if (this.audio.beatBuffer) {
+      const res = alignBeatAndReference(this.audio.beatBuffer, buf);
+      this.refOffsetSec = res.offsetSec;
+      this.dom.alignOffsetSec.value = res.offsetSec;
+      this.dom.alignInfoBox.className = 'beat-status ok';
+      this.dom.alignInfoBox.classList.remove('hidden');
+      this.dom.alignInfoBox.textContent = `✅ Đã căn khớp "${label}" ↔ Beat: lệch ${res.offsetSec >= 0 ? '+' : ''}${res.offsetSec}s (độ tương đồng ${Math.round(res.confidence * 100)}%).`;
+    } else {
+      this.refOffsetSec = 0;
+      this.dom.alignOffsetSec.value = 0;
+      this.dom.alignInfoBox.className = 'beat-status warn';
+      this.dom.alignInfoBox.classList.remove('hidden');
+      this.dom.alignInfoBox.textContent = `💡 Đã nạp "${label}". Nếu bạn tải thêm File Beat, tool sẽ tự đo độ lệch giữa Beat và bản gốc.`;
+    }
+  }
+
   async handleReferenceFile(file) {
     if (!file) return;
     this.dom.refFileName.textContent = `⏳ Đang phân tích ${file.name}...`;
     try {
       await this.audio.init();
       const buf = await this.audio.ctx.decodeAudioData(await file.arrayBuffer());
-      this.refBuffer = buf;
       this.dom.refFileName.textContent = `✅ ${file.name} (${fmtTime(buf.duration)})`;
-      this.dom.btnRunAudioAlign.disabled = false;
-      this.dom.btnToggleRef.classList.remove('hidden');
-
-      if (this.audio.beatBuffer) {
-        const res = alignBeatAndReference(this.audio.beatBuffer, buf);
-        this.refOffsetSec = res.offsetSec;
-        this.dom.alignOffsetSec.value = res.offsetSec;
-        this.dom.alignInfoBox.className = 'beat-status ok';
-        this.dom.alignInfoBox.classList.remove('hidden');
-        this.dom.alignInfoBox.textContent = `✅ Đã căn khớp Bản gốc ↔ Beat: lệch ${res.offsetSec >= 0 ? '+' : ''}${res.offsetSec}s (độ tương đồng ${Math.round(res.confidence * 100)}%).`;
-      } else {
-        this.refOffsetSec = 0;
-        this.dom.alignOffsetSec.value = 0;
-        this.dom.alignInfoBox.className = 'beat-status warn';
-        this.dom.alignInfoBox.classList.remove('hidden');
-        this.dom.alignInfoBox.textContent = '💡 Đã nạp bản gốc. Nếu bạn tải thêm File Beat, tool sẽ tự đo độ lệch giữa Beat và bản gốc.';
-      }
+      this.refEmbedType = null;
+      this._setReferenceBuffer(buf, file.name);
       this.toast('Đã nạp bản nhạc gốc có lời!', 'ok');
     } catch (err) {
-      this.dom.refFileName.textContent = '📂 Chọn file bản nhạc gốc có ca sĩ hát...';
+      this.dom.refFileName.textContent = '📂 Chọn file bản nhạc gốc (MP3, WAV, M4A, MP4...)';
       this.toast('Không đọc được file bản gốc: ' + err.message, 'err');
     }
   }
 
+  async handleLoadRefEmbed() {
+    const url = this.dom.refEmbedUrlInput.value.trim();
+    if (!url) return;
+    this.dom.refEmbedContainer.classList.remove('hidden');
+    const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+    if (ytMatch) {
+      const id = ytMatch[1];
+      this.refEmbedType = 'youtube';
+      this.dom.refUrlAudioPlayer.classList.add('hidden');
+      this.dom.refYtPlayerContainer.classList.remove('hidden');
+      if (window.YT && window.YT.Player) {
+        if (this.refYtPlayer && this.refYtPlayer.loadVideoById) this.refYtPlayer.loadVideoById(id);
+        else this.refYtPlayer = new window.YT.Player('refYtPlayerContainer', { videoId: id, playerVars: { rel: 0, modestbranding: 1 } });
+      } else {
+        this.dom.refYtPlayerContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?enablejsapi=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      }
+      this.dom.refConvertBox.classList.remove('hidden');
+      this.dom.btnToggleRef.classList.remove('hidden');
+      this.toast('Đã nhúng YouTube bản gốc! Bấm "Thu âm thanh bản gốc" để tự khớp lời, hoặc bật "🎤 Nghe bản gốc".', 'ok');
+      return;
+    }
+
+    // Direct audio URL
+    this.refEmbedType = 'url';
+    this.dom.refYtPlayerContainer.classList.add('hidden');
+    this.dom.refUrlAudioPlayer.classList.remove('hidden');
+    this.dom.refUrlAudioPlayer.crossOrigin = 'anonymous';
+    this.dom.refUrlAudioPlayer.src = url;
+    this.dom.btnToggleRef.classList.remove('hidden');
+    try {
+      await this.audio.init();
+      const resp = await fetch(url);
+      const buf = await this.audio.ctx.decodeAudioData(await resp.arrayBuffer());
+      this.dom.refConvertBox.classList.add('hidden');
+      this._setReferenceBuffer(buf, 'Bản gốc từ link');
+      this.toast('Đã tải bản gốc từ link để tự đối chiếu!', 'ok');
+    } catch (_) {
+      this.dom.refConvertBox.classList.remove('hidden');
+      this.dom.refConvertStatus.textContent = 'Link bị chặn CORS. Bấm "Thu âm thanh bản gốc để tự khớp" để thu âm thanh từ tab.';
+    }
+  }
+
+  async startConvertRef() {
+    if (this.isConvertingRef) return;
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+        preferCurrentTab: true
+      });
+      const audioTracks = stream.getAudioTracks();
+      if (!audioTracks.length) {
+        stream.getTracks().forEach((t) => t.stop());
+        return this.toast('Bạn chưa tick chọn "Chia sẻ âm thanh thẻ"!', 'warn');
+      }
+      stream.getVideoTracks().forEach((t) => t.stop());
+      this.refConvertStream = new MediaStream(audioTracks);
+      await this.audio.startCapture(this.refConvertStream);
+
+      this.isConvertingRef = true;
+      this.refConvertStartPerf = performance.now();
+      if (this.refEmbedType === 'youtube' && this.refYtPlayer && this.refYtPlayer.seekTo) {
+        this.refYtPlayer.seekTo(0, true);
+        this.refYtPlayer.playVideo();
+      } else if (this.refEmbedType === 'url') {
+        this.dom.refUrlAudioPlayer.currentTime = 0;
+        this.dom.refUrlAudioPlayer.play().catch(() => {});
+      }
+
+      this.dom.btnConvertRef.classList.add('hidden');
+      this.dom.btnStopConvertRef.classList.remove('hidden');
+      this.dom.refConvertProgressWrap.classList.remove('hidden');
+      this.dom.refConvertStatus.className = 'convert-status busy';
+      this.dom.refConvertStatus.textContent = '⏳ Đang thu âm thanh bản gốc... Hết bài sẽ tự dừng (hoặc bấm Dừng bất cứ lúc nào).';
+
+      this.refConvertTimer = setInterval(() => {
+        const elapsed = (performance.now() - this.refConvertStartPerf) / 1000;
+        const dur = (this.refYtPlayer && this.refYtPlayer.getDuration && this.refYtPlayer.getDuration()) || 210;
+        this.dom.refConvertProgressFill.style.width = `${Math.min(99, (elapsed / Math.max(10, dur)) * 100)}%`;
+        this.dom.refConvertProgressText.textContent = `${fmtMMSS(elapsed)} / ${fmtMMSS(dur)}`;
+        if (this.refYtPlayer && this.refYtPlayer.getPlayerState && this.refYtPlayer.getPlayerState() === 0 && elapsed > 3) {
+          this.finishConvertRef();
+        }
+      }, 300);
+    } catch (err) {
+      this.toast('Đã hủy thu bản gốc: ' + err.message, 'warn');
+    }
+  }
+
+  async finishConvertRef() {
+    if (!this.isConvertingRef) return;
+    this.isConvertingRef = false;
+    clearInterval(this.refConvertTimer);
+    if (this.refYtPlayer && this.refYtPlayer.pauseVideo) { try { this.refYtPlayer.pauseVideo(); } catch (_) {} }
+    if (this.refEmbedType === 'url') this.dom.refUrlAudioPlayer.pause();
+
+    const res = await this.audio.stopCapture();
+    if (this.refConvertStream) {
+      this.refConvertStream.getTracks().forEach((t) => t.stop());
+      this.refConvertStream = null;
+    }
+    this.dom.btnConvertRef.classList.remove('hidden');
+    this.dom.btnStopConvertRef.classList.add('hidden');
+    this.dom.refConvertProgressWrap.classList.add('hidden');
+
+    if (res && res.buffer && res.buffer.duration > 0.5) {
+      const ch0 = res.buffer.getChannelData(0);
+      let firstNonZero = 0;
+      for (let i = 0; i < ch0.length; i++) {
+        if (Math.abs(ch0[i]) > 0.004) { firstNonZero = Math.max(0, i - 1024); break; }
+      }
+      const clean = sliceAudioBuffer(this.audio.ctx, res.buffer, firstNonZero / res.buffer.sampleRate);
+      const title = (this.refYtPlayer && this.refYtPlayer.getVideoData && this.refYtPlayer.getVideoData().title) || 'YouTube bản gốc';
+      this._setReferenceBuffer(clean, title);
+      this.dom.refConvertStatus.className = 'convert-status ok';
+      this.dom.refConvertStatus.textContent = `✅ Đã thu xong "${title}" (${fmtTime(clean.duration)}) — giờ hãy bấm "✨ Tự dò giọng & Khớp lời tự chế"!`;
+      this.toast('Đã phân tích xong bản gốc YouTube!', 'ok');
+    } else {
+      this.dom.refConvertStatus.className = 'convert-status warn';
+      this.dom.refConvertStatus.textContent = 'Không thu được âm thanh. Hãy chắc chắn video đang phát và có tick "Chia sẻ âm thanh thẻ".';
+    }
+  }
+
   runAudioAlignLyrics() {
-    if (!this.refBuffer) return this.toast('Hãy tải bản nhạc gốc có lời trước.', 'warn');
+    if (!this.refBuffer) return this.toast('Hãy tải hoặc thu âm thanh bản nhạc gốc trước.', 'warn');
     if (!this.lyrics.lines.length) return this.toast('Hãy dán lời tự chế vào ô "Soạn lời" trước.', 'warn');
     const offset = parseFloat(this.dom.alignOffsetSec.value) || 0;
     this.refOffsetSec = offset;
@@ -3405,23 +3629,65 @@ class KaraokeStudioApp {
     this.toast(`✅ Đã dò ${phrases.length} đoạn giọng hát và khớp nhịp cho ${mapped.length} câu lời tự chế!`, 'ok');
   }
 
+  async searchOnlineLrc() {
+    let q = this.dom.lrcSearchInput.value.trim();
+    if (!q) {
+      // Fallback: try first meaningful line of original lyrics
+      const first = (this.dom.origLrcTextarea.value || '').split(/\r?\n/).map((s) => s.trim()).find((s) => s.length > 6 && !s.startsWith('('));
+      if (first) { q = first; this.dom.lrcSearchInput.value = q; }
+    }
+    if (!q) return this.toast('Hãy nhập tên bài hát gốc vào ô tìm kiếm.', 'warn');
+
+    const prevText = this.dom.btnSearchLrc.textContent;
+    this.dom.btnSearchLrc.disabled = true;
+    this.dom.btnSearchLrc.textContent = '⏳ Đang tìm...';
+    try {
+      const resp = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(q)}`);
+      const results = await resp.json();
+      const best = Array.isArray(results) ? (results.find((r) => r.syncedLyrics) || results[0]) : null;
+      if (!best || (!best.syncedLyrics && !best.plainLyrics)) {
+        this.toast('Không tìm thấy nhịp bài này trên LRCLIB. Bạn vẫn có thể dán lời thường rồi bấm Khớp nhịp!', 'warn');
+      } else if (best.syncedLyrics) {
+        this.dom.origLrcTextarea.value = best.syncedLyrics;
+        this.toast(`✅ Đã tìm thấy nhịp chuẩn: ${best.trackName} - ${best.artistName}!`, 'ok');
+      } else {
+        this.dom.origLrcTextarea.value = best.plainLyrics;
+        this.toast(`Đã tìm thấy lời (chưa có giây): ${best.trackName}. Bấm Khớp nhịp để ước lượng tự động!`, 'ok');
+      }
+    } catch (err) {
+      this.toast('Không kết nối được kho nhịp LRCLIB: ' + err.message, 'warn');
+    } finally {
+      this.dom.btnSearchLrc.disabled = false;
+      this.dom.btnSearchLrc.textContent = prevText;
+    }
+  }
+
   runLrcTransferLyrics() {
     const orig = this.dom.origLrcTextarea.value.trim();
     const custom = this.dom.lyricsTextarea.value.trim();
-    if (!orig) return this.toast('Hãy dán lời gốc có timestamp [mm:ss.xx] vào ô trên.', 'warn');
     if (!custom) return this.toast('Hãy dán lời tự chế vào ô "Soạn lời" ở cột trái trước.', 'warn');
+    if (!orig) return this.toast('Hãy dán lời bài gốc (hoặc bấm "Tìm nhịp gốc") trước.', 'warn');
     const offset = parseFloat(this.dom.alignOffsetSec.value) || 0;
-    const mapped = transferLrcToCustomLyrics(orig, custom, offset);
-    if (!mapped) return this.toast('Lời gốc chưa đúng định dạng [mm:ss.xx].', 'warn');
-    this.lyrics.lines = mapped;
+    const phrases = this.refBuffer ? detectVocalPhrases(this.refBuffer, this.audio.beatBuffer, offset) : null;
+    const res = transferLrcToCustomLyrics(orig, custom, offset, this.getProjectDuration(), phrases);
+    if (!res || !res.lines.length) return this.toast('Không có câu lời nào để khớp.', 'warn');
+
+    this.lyrics.lines = res.lines;
     this.dom.lyricsTextarea.value = this.lyrics.toLRCString();
     this._refreshLyricsViews();
     this.dom.alignModal.classList.add('hidden');
-    this.toast(`✅ Đã chuyển nhịp LRC gốc (+${offset}s) sang ${mapped.length} câu lời tự chế!`, 'ok');
+
+    if (res.mode === 'timestamps') {
+      this.toast(`✅ Đã chuyển nhịp gốc chuẩn (${offset >= 0 ? '+' : ''}${offset}s) sang ${res.lines.length} câu lời tự chế!`, 'ok');
+    } else if (res.mode === 'vocal_phrases') {
+      this.toast(`✅ Đã đối chiếu lời gốc + giọng ca sĩ sang ${res.lines.length} câu lời tự chế!`, 'ok');
+    } else {
+      this.toast(`✅ Đã tự chia nhịp theo số chữ bài gốc cho ${res.lines.length} câu lời tự chế (bạn có thể chỉnh thêm ở ô Lệch chữ / Gắn nhịp tay)!`, 'ok');
+    }
   }
 
   toggleReferenceListen() {
-    if (!this.refBuffer) return;
+    if (!this.refBuffer && !this.refEmbedType) return;
     this.listenReference = !this.listenReference;
     this.dom.btnToggleRef.classList.toggle('ref-on', this.listenReference);
     this.dom.btnToggleRef.textContent = this.listenReference ? '🎤 Đang nghe bản gốc' : '🎤 Nghe bản gốc: TẮT';
@@ -3592,6 +3858,12 @@ class KaraokeStudioApp {
         src.start(now - refPos, 0);
       }
       this.beatPlaySource = src;
+    } else if (this.listenReference && this.refEmbedType === 'youtube' && this.refYtPlayer && this.refYtPlayer.playVideo) {
+      this.refYtPlayer.seekTo(Math.max(0, this.playheadSec - this.refOffsetSec), true);
+      this.refYtPlayer.playVideo();
+    } else if (this.listenReference && this.refEmbedType === 'url' && this.dom.refUrlAudioPlayer.src) {
+      this.dom.refUrlAudioPlayer.currentTime = Math.max(0, this.playheadSec - this.refOffsetSec);
+      this.dom.refUrlAudioPlayer.play().catch(() => {});
     } else if (this.audio.beatBuffer && this.playheadSec < this.audio.beatBuffer.duration) {
       const src = ctx.createBufferSource();
       src.buffer = this.audio.beatBuffer;
@@ -3653,6 +3925,10 @@ class KaraokeStudioApp {
       try { this.ytPlayer.pauseVideo(); } catch (_) {}
     }
     if (this.embedType === 'url' && !this.dom.urlAudioPlayer.paused) this.dom.urlAudioPlayer.pause();
+    if (this.refEmbedType === 'youtube' && this.refYtPlayer && this.refYtPlayer.pauseVideo) {
+      try { this.refYtPlayer.pauseVideo(); } catch (_) {}
+    }
+    if (this.refEmbedType === 'url' && !this.dom.refUrlAudioPlayer.paused) this.dom.refUrlAudioPlayer.pause();
     this.timeline.stopAllPlayback();
   }
 
