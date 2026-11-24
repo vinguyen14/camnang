@@ -17,11 +17,18 @@ function makeSheet(name, rows) {
     getLastRow: () => data.length,
     getLastColumn: () => data.reduce((m, r) => Math.max(m, r.length), 0),
     getDataRange: () => ({ getValues: () => data.map(r => r.slice()) }),
-    getRange: (row, col, nr, nc) => ({
+    getRange: (row, col, nr, nc) => {
+      if (typeof row === 'string') { // Hỗ trợ dạng "A3:F10"
+        const m = row.match(/^([A-Z])(\d+):([A-Z])(\d+)$/);
+        const c1 = m[1].charCodeAt(0) - 64, r1 = +m[2], c2 = m[3].charCodeAt(0) - 64, r2 = +m[4];
+        row = r1; col = c1; nr = r2 - r1 + 1; nc = c2 - c1 + 1;
+      }
+      return {
       getValues: () => data.slice(row - 1, row - 1 + (nr || 1)).map(r => r.slice(col - 1, col - 1 + (nc || 1))),
       setValues: (vals) => { vals.forEach((v, i) => { data[row - 1 + i] = data[row - 1 + i] || []; v.forEach((x, j) => data[row - 1 + i][col - 1 + j] = x); }); },
       clearContent: () => { for (let i = row - 1; i < row - 1 + nr; i++) for (let j = col - 1; j < col - 1 + nc; j++) if (data[i]) data[i][j] = ''; },
-    }),
+      };
+    },
     appendRow: (r) => data.push(r.slice()),
     clear: () => { data = []; },
     deleteRow: (i) => data.splice(i - 1, 1),
@@ -29,7 +36,7 @@ function makeSheet(name, rows) {
   };
 }
 
-function freshEnv(props) {
+function freshEnv(props, fetchResponder) {
   const sheets = {
     MasterDB: makeSheet('MasterDB', [['Timestamp', 'Nhóm Khóa', 'Mã Khóa'], [1, 'SPCB', '26KV01']]),
     KetQuaHocVien: makeSheet('KetQuaHocVien', [
@@ -38,8 +45,10 @@ function freshEnv(props) {
     ]),
     Settings: makeSheet('Settings', [['Key', 'Value'], ['kv_api_url', "'https://evil.example/exec"], ['kv_trainer_profile', "'{\"name\":\"X\"}"]]),
   };
+  sheets.KhoQua = makeSheet('KhoQua', [['Tên Quà', 'Tồn Đầu', 'Xuất Kho', 'Tồn Cuối'], ['Bình nước', 30, 5, 25]]);
   const sentEmails = [];
   const fetched = [];
+  const openedIds = [];
   const ss = {
     getSheetByName: (n) => sheets[n] || null,
     insertSheet: (n) => (sheets[n] = makeSheet(n, [])),
@@ -47,20 +56,29 @@ function freshEnv(props) {
     getName: () => 'MockSS',
   };
   const ctx = {
-    console,
-    SpreadsheetApp: { openById: (id) => { if (id === '1amqxx2UojQPvK2hqJohvHZNjrw5LV0_V9FoZa_0qzRg') throw new Error('no access'); return ss; } },
+    console: { log: () => {} }, // Ẩn log thời gian của ask_ai khi chạy test
+    SpreadsheetApp: { openById: (id) => {
+      openedIds.push(id);
+      if (id === 'NO_ACCESS_GIFT_ID') throw new Error('Bạn không có quyền truy cập vào tài liệu yêu cầu.');
+      if (id === 'EXTERNAL_GIFT_ID') return { getSheetByName: (n) => n === 'Kho' ? makeSheet('Kho', [['h'], ['h'], ['Túi', '', '10.000', 50, 5, '']]) : null, getName: () => 'Kho quà' };
+      return ss;
+    } },
     PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => (props[k] === undefined ? null : props[k]), setProperty: (k, v) => { props[k] = v; } }) },
-    ContentService: { MimeType: { JSON: 'json' }, createTextOutput: (s) => ({ setMimeType: () => ({ body: JSON.parse(s) }) }) },
+    ContentService: { MimeType: { JSON: 'json' }, createTextOutput: (s) => ({ setMimeType: () => ({ body: JSON.parse(s), getContent: () => s }) }) },
     GmailApp: { sendEmail: (to, s, b) => sentEmails.push({ to, s, b }) },
-    UrlFetchApp: { fetch: (url) => { fetched.push(url); return { getContentText: () => '{"candidates":[{"content":{"parts":[{"text":"ok"}]}}]}' }; } },
-    Utilities: { formatDate: () => '2026-11-21 10:00:00', getUuid: () => 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' },
+    UrlFetchApp: { fetch: (url) => {
+      fetched.push(url);
+      const body = fetchResponder ? fetchResponder(url) : '{"candidates":[{"content":{"parts":[{"text":"ok"}]}}]}';
+      return { getContentText: () => body };
+    } },
+    Utilities: { formatDate: () => '2026-11-21 10:00:00', getUuid: () => 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', sleep: () => {} },
     Logger: { log: () => {} },
   };
   vm.createContext(ctx);
   vm.runInContext(code, ctx);
   const post = (obj) => ctx.doPost({ postData: { contents: JSON.stringify(obj) } }).body;
   const get = (params) => ctx.doGet({ parameter: params || {} }).body;
-  return { ctx, sheets, sentEmails, fetched, post, get, props };
+  return { ctx, sheets, sentEmails, fetched, openedIds, post, get, props };
 }
 
 const TOKEN = 'T'.repeat(40);
@@ -175,7 +193,80 @@ function check(name, cond, detail) {
   check('generateApiToken() không ghi đè token đã có', props.API_TOKEN === before);
 }
 
-// 10. Mirror files
+// 10. Sheet Kho quà bên ngoài (lỗi CORS 24/11: mở file không có quyền làm hỏng cả lượt doGet)
+{
+  const env = freshEnv({ API_TOKEN: TOKEN });
+  const g = env.get({ token: TOKEN });
+  check('Không cấu hình GIFT_SPREADSHEET_ID -> chỉ mở Sheet chính', env.openedIds.every(id => id === env.openedIds[0]) && env.openedIds.length >= 1, env.openedIds);
+  check('Không cấu hình GIFT_SPREADSHEET_ID -> dùng tab KhoQua', g.gifts.length === 1 && g.gifts[0].name === 'Bình nước', g.gifts);
+  check('Mã nguồn không còn ID Sheet Kho quà hardcode', code.indexOf('1amqxx2UojQPvK2hqJohvHZNjrw5LV0_V9FoZa_0qzRg') === -1);
+  const env2 = freshEnv({ API_TOKEN: TOKEN, GIFT_SPREADSHEET_ID: 'EXTERNAL_GIFT_ID' });
+  const g2 = env2.get({ token: TOKEN });
+  check('Có GIFT_SPREADSHEET_ID hợp lệ -> đọc Kho quà bên ngoài', g2.gifts.length === 1 && g2.gifts[0].name === 'Túi' && g2.gifts[0].in === 50, g2.gifts);
+  const env3 = freshEnv({ API_TOKEN: TOKEN, GIFT_SPREADSHEET_ID: 'NO_ACCESS_GIFT_ID' });
+  const g3 = env3.get({ token: TOKEN });
+  check('GIFT_SPREADSHEET_ID không có quyền -> vẫn trả dữ liệu, dùng KhoQua', g3.status === 'success' && g3.gifts[0].name === 'Bình nước', g3);
+  // Tab KhoQua_Import (IMPORTRANGE) được ưu tiên, không mở file ngoài
+  const env5 = freshEnv({ API_TOKEN: TOKEN, GIFT_SPREADSHEET_ID: 'NO_ACCESS_GIFT_ID' });
+  env5.sheets.KhoQua_Import = makeSheet('KhoQua_Import', [['Túi tote', '', '45.000', 30, 8, ''], ['', '', '', '', '', ''], ['Áo mưa', '', '', 53, 9, '']]);
+  const g5 = env5.get({ token: TOKEN });
+  check('Có tab KhoQua_Import -> đọc từ IMPORTRANGE', g5.gifts.length === 2 && g5.gifts[0].name === 'Túi tote' && g5.gifts[0].in === 30 && g5.gifts[0].out === 8 && g5.gifts[1].cost === '-', g5.gifts);
+  check('Có tab KhoQua_Import -> không mở file Kho quà ngoài', env5.openedIds.indexOf('NO_ACCESS_GIFT_ID') === -1, env5.openedIds);
+  check('Tab KhoQua_Import bị ẩn khỏi danh sách sheet', g5.sheetList.indexOf('KhoQua_Import') === -1);
+  const env6 = freshEnv({ API_TOKEN: TOKEN });
+  env6.sheets.KhoQua_Import = makeSheet('KhoQua_Import', [['#REF!']]);
+  const g6 = env6.get({ token: TOKEN });
+  check('KhoQua_Import lỗi #REF! -> quay về tab KhoQua', g6.status === 'success' && g6.gifts.length === 1 && g6.gifts[0].name === 'Bình nước', g6.gifts);
+  check('testAuth() chạy được khi có KhoQua_Import', (() => { try { env5.ctx.testAuth(); return true; } catch (e) { return false; } })());
+  const env4 = freshEnv({ API_TOKEN: TOKEN });
+  check('debugDoGet() chạy được', (() => { try { env4.ctx.debugDoGet(); return true; } catch (e) { return false; } })());
+}
+
+// 11. Gemini quá tải -> chuyển model dự phòng
+{
+  const BUSY = JSON.stringify({ error: { code: 503, status: 'UNAVAILABLE', message: 'This model is currently experiencing high demand.' } });
+  const OK = (t) => JSON.stringify({ candidates: [{ content: { parts: [{ text: t }] } }] });
+  const modelOf = (u) => decodeURIComponent(u.split('/models/')[1].split(':')[0]);
+
+  check('Model mặc định không còn gemini-2.5-flash (đã ngừng cấp)', !/gemini-2\.5-flash/.test(code.split('DEFAULT_GEMINI_MODELS =')[1].split('\n')[0]));
+
+  const env = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k' }, (u) => modelOf(u) === 'gemini-flash-lite-latest' ? BUSY : OK('từ ' + modelOf(u)));
+  const r = env.post({ action: 'ask_ai', prompt: 'kho quà', token: TOKEN });
+  check('Model chính quá tải -> tự chuyển model dự phòng và trả lời', r.reply === 'từ gemini-flash-latest' && env.fetched.length === 2, { reply: r.reply, n: env.fetched.length });
+
+  const env2 = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k' }, () => BUSY);
+  const r2 = env2.post({ action: 'ask_ai', prompt: 'x', token: TOKEN });
+  check('Mọi model quá tải -> thử hết 3 model, báo bận kèm lý do từng model', env2.fetched.length === 3 && /đang bận/.test(r2.reply) && (r2.reply.match(/đang quá tải/g) || []).length === 3, { n: env2.fetched.length, reply: r2.reply });
+
+  // Tình huống 24/11: model ngừng cấp cho người dùng mới
+  const GONE = JSON.stringify({ error: { code: 404, status: 'NOT_FOUND', message: 'This model models/gemini-2.5-flash is no longer available to new users.' } });
+  const env7 = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k', GEMINI_MODELS: 'gemini-2.5-flash, gemini-3.8-flash' }, (u) => modelOf(u) === 'gemini-2.5-flash' ? GONE : OK('ok 3.8'));
+  check('Model ngừng hỗ trợ -> chuyển model kế tiếp', env7.post({ action: 'ask_ai', prompt: 'x', token: TOKEN }).reply === 'ok 3.8');
+  const env8 = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k', GEMINI_MODELS: 'old-a, old-b' }, () => GONE);
+  const r8 = env8.post({ action: 'ask_ai', prompt: 'x', token: TOKEN });
+  check('Mọi model ngừng hỗ trợ -> nhắc Admin cập nhật GEMINI_MODELS', /GEMINI_MODELS/.test(r8.reply) && /không còn khả dụng/.test(r8.reply), r8.reply);
+
+  const BADKEY = JSON.stringify({ error: { code: 400, status: 'INVALID_ARGUMENT', message: 'API key not valid.' } });
+  const env3 = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k' }, () => BADKEY);
+  const r3 = env3.post({ action: 'ask_ai', prompt: 'x', token: TOKEN });
+  check('Sai key (lỗi cố định) -> không thử model khác', env3.fetched.length === 1 && /^⚠️ Lỗi từ Google AI: API key not valid/.test(r3.reply), { n: env3.fetched.length });
+
+  const env4 = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k', GEMINI_MODELS: 'model-a, model-b' }, (u) => modelOf(u) === 'model-a' ? BUSY : OK('b'));
+  const r4 = env4.post({ action: 'ask_ai', prompt: 'x', token: TOKEN });
+  check('GEMINI_MODELS ghi đè danh sách model', r4.reply === 'b' && env4.fetched.map(modelOf).join() === 'model-a,model-b');
+  check('Key Gemini không lộ trong câu trả lời lỗi', JSON.stringify(r2).indexOf('key=') === -1);
+
+  // Câu trả lời chia nhiều part (lỗi mất chữ 24/11) -> ghép đủ, bỏ phần "thought"
+  const MULTI = JSON.stringify({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: 'suy nghĩ nội bộ', thought: true }, { text: '### 📊 TỔNG KẾT BÁO C' }, { text: 'ÁO\n- Ý 1\n- Ý 2' }] } }] });
+  const env5 = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k' }, () => MULTI);
+  const r5 = env5.post({ action: 'ask_ai', prompt: 'tổng kết', token: TOKEN });
+  check('Câu trả lời nhiều part -> ghép đủ nội dung', r5.reply === '### 📊 TỔNG KẾT BÁO CÁO\n- Ý 1\n- Ý 2', r5.reply);
+  const LONG = JSON.stringify({ candidates: [{ finishReason: 'MAX_TOKENS', content: { parts: [{ text: 'Rất dài' }] } }] });
+  const env6 = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k' }, () => LONG);
+  check('Bị cắt vì quá dài -> có ghi chú cho người dùng', /quá dài/.test(env6.post({ action: 'ask_ai', prompt: 'x', token: TOKEN }).reply));
+}
+
+// 12. Mirror files
 {
   for (const f of ['trainer_database.js', 'trainer_database codejs.txt']) {
     check(`Mirror ${f} giống hệt code.js`, fs.readFileSync(path.join(ROOT, f), 'utf8') === code);

@@ -22,11 +22,14 @@ const SHEET_KETQUA_HOCVIEN = 'KetQuaHocVien';
 //   - API_TOKEN       (bắt buộc): chuỗi ngẫu nhiên >= 32 ký tự. Mọi request phải gửi kèm.
 //   - ADMIN_PASSWORD  (bắt buộc cho clear_data): mật khẩu dài, KHÔNG có giá trị mặc định.
 //   - GEMINI_API_KEY  (bắt buộc cho ask_ai): KHÔNG có giá trị mặc định.
+//   - GEMINI_MODELS   (tùy chọn): danh sách model thử lần lượt khi quá tải, cách nhau dấu phẩy.
 //   - ALLOWED_EMAIL_DOMAINS (tùy chọn): danh sách domain cách nhau dấu phẩy, mặc định "kiotviet.com".
+//   - GIFT_SPREADSHEET_ID (tùy chọn): ID Google Sheet Kho quà bên ngoài (tab "Kho"). Chỉ đặt khi tài khoản
+//     deploy CÓ QUYỀN XEM file đó. Khuyên dùng thay thế: tab KhoQua_Import với =IMPORTRANGE(...) trong Sheet chính.
 // ============================================================================
 const KNOWN_ACTIONS = ["clear_data", "save_gifts", "add_knowledge", "delete_knowledge", "ask_ai", "send_email", "sync_up", "sync_down", "submit_report"];
 const SYNC_EXCLUDED_KEYS = ["kv_api_url", "kv_api_token"]; // Không bao giờ đồng bộ cấu hình kết nối lên/xuống Cloud
-const HIDDEN_SHEETS_IN_DUMP = [SHEET_SETTINGS]; // Không trả về trong doGet().sheets
+const HIDDEN_SHEETS_IN_DUMP = [SHEET_SETTINGS, 'KhoQua_Import']; // Không trả về trong doGet().sheets
 const HIDDEN_COLUMNS_IN_DUMP = ["password", "mật khẩu", "mat khau"]; // Không trả về cột chứa mật khẩu
 const MAX_EMAIL_RECIPIENTS = 200;
 
@@ -55,6 +58,92 @@ function isAuthorized(token) {
 
 function unauthorizedResponse() {
   return jsonOut({ status: "error", code: "UNAUTHORIZED", message: "Thiếu hoặc sai API Token. Vào Cài đặt > Kết nối Cloud để nhập token." });
+}
+
+// Tab chứa =IMPORTRANGE("<link Sheet Kho quà>"; "Kho!A3:F") - cùng bố cục cột với tab "Kho" gốc:
+// A: Tên quà | B: (bỏ qua) | C: Đơn giá | D: Tồn đầu | E: Xuất kho | F: (bỏ qua)
+const SHEET_GIFT_IMPORT = 'KhoQua_Import';
+
+function parseKhoRows(rows) {
+  const gifts = [];
+  (rows || []).forEach(r => {
+    const name = String(r[0] ?? '').trim();
+    if (!name || name.charAt(0) === '#') return; // Bỏ dòng trống và lỗi IMPORTRANGE (#REF!, #N/A...)
+    gifts.push({
+      name: name,
+      in: parseInt(r[3]) || 0,
+      out: parseInt(r[4]) || 0,
+      cost: r[2] ? String(r[2]) : '-'
+    });
+  });
+  return gifts;
+}
+
+function readGiftImportTab(ss) {
+  const sheet = ss.getSheetByName(SHEET_GIFT_IMPORT);
+  if (!sheet || sheet.getLastRow() < 1) return [];
+  return parseKhoRows(sheet.getDataRange().getValues());
+}
+
+// Danh sách model Gemini thử lần lượt. Ghi đè bằng Script Property GEMINI_MODELS (cách nhau dấu phẩy).
+// Thứ tự: model nhẹ, phản hồi nhanh nhất trước; model suy luận (chậm hơn) làm dự phòng.
+// Các alias "-latest" được Google tự trỏ tới bản mới nhất, không bị ngừng hỗ trợ.
+const DEFAULT_GEMINI_MODELS = ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-3.8-flash'];
+
+function getGeminiModels() {
+  const raw = getScriptProp('GEMINI_MODELS');
+  const list = raw ? raw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  return list.length > 0 ? list : DEFAULT_GEMINI_MODELS;
+}
+
+// Ghép TẤT CẢ các phần văn bản của câu trả lời (model mới hay chia câu trả lời dài thành nhiều part),
+// bỏ qua phần "suy nghĩ" (thought) của model. Báo rõ nếu Google cắt câu trả lời vì quá dài.
+function extractGeminiText(json) {
+  const cand = json && json.candidates && json.candidates[0];
+  if (!cand || !cand.content || !Array.isArray(cand.content.parts)) return '';
+  const text = cand.content.parts
+    .filter(p => p && typeof p.text === 'string' && !p.thought)
+    .map(p => p.text)
+    .join('');
+  if (!text) return '';
+  if (cand.finishReason === 'MAX_TOKENS') {
+    return text + '\n\n_(Câu trả lời quá dài nên bị cắt bớt. Hãy hỏi cụ thể hơn hoặc chia nhỏ yêu cầu.)_';
+  }
+  return text;
+}
+
+// Phân loại lỗi Gemini:
+//   'unavailable' - model không tồn tại / ngừng hỗ trợ (404, "no longer available") -> chuyển model ngay
+//   'busy'        - quá tải / vượt hạn mức (503, 429, 500, "high demand")            -> chờ rồi chuyển model
+//   'fatal'       - lỗi cố định (sai key, nội dung bị chặn...)                        -> dừng, báo ngay
+function classifyGeminiError(err) {
+  const code = Number(err.code) || 0;
+  const status = String(err.status || '');
+  const msg = String(err.message || '').toLowerCase();
+  if (code === 404 || status === 'NOT_FOUND' || msg.indexOf('no longer available') !== -1 ||
+      msg.indexOf('is not found') !== -1 || msg.indexOf('not supported for generatecontent') !== -1) {
+    return 'unavailable';
+  }
+  if (code === 503 || code === 429 || code === 500 || status === 'UNAVAILABLE' || status === 'RESOURCE_EXHAUSTED' ||
+      msg.indexOf('high demand') !== -1 || msg.indexOf('overloaded') !== -1) {
+    return 'busy';
+  }
+  return 'fatal';
+}
+
+function isTransientGeminiError(err) {
+  return classifyGeminiError(err) !== 'fatal';
+}
+
+function buildGeminiFailureMessage(failures) {
+  const last = failures[failures.length - 1];
+  if (last.kind === 'fatal') return "⚠️ Lỗi từ Google AI: " + last.message;
+  const shorten = (s) => s.length > 90 ? s.substring(0, 90) + '…' : s;
+  const reasons = failures.map(f => "- " + f.model + ": " + (f.kind === 'busy' ? 'đang quá tải' : 'không còn khả dụng') + " (" + shorten(f.message) + ")").join("\n");
+  if (failures.every(f => f.kind === 'unavailable')) {
+    return "⚠️ Các model AI đang cấu hình không còn khả dụng. Admin cần cập nhật Script Property GEMINI_MODELS.\n" + reasons;
+  }
+  return "⚠️ Trợ lý AI đang bận, vui lòng thử lại sau ít phút.\n" + reasons;
 }
 
 function getAllowedEmailDomains() {
@@ -153,14 +242,12 @@ function doPost(e) {
         return jsonOut({ status: "error", message: "Chưa cấu hình GEMINI_API_KEY trong Script Properties" });
       }
 
-      // Sử dụng model gemini-flash-lite-latest: Mô hình thế hệ mới ổn định, phản hồi tức thì và phân tích báo cáo L&D
-      const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=" + GEMINI_API_KEY;
-      
       const payload = {
         "contents": [{ "parts": [{ "text": data.prompt }] }],
         "systemInstruction": { 
-          "parts": [{ "text": "Bạn là Kevin - Trợ lý Đào tạo (L&D Director) của KiotViet. Luôn trả lời chuyên nghiệp, cấu trúc rõ ràng, dùng bullet point và format Markdown đẹp mắt." }]
-        }
+          "parts": [{ "text": "Bạn là Kevin - Trợ lý Đào tạo (L&D Director) của KiotViet. Luôn trả lời chuyên nghiệp, ngắn gọn, cấu trúc rõ ràng bằng gạch đầu dòng (-). Khung chat chỉ hiển thị được **chữ đậm**, *chữ nghiêng* và xuống dòng: KHÔNG dùng tiêu đề Markdown (#, ##, ###), bảng hay khối code; thay tiêu đề bằng một dòng **chữ đậm**." }]
+        },
+        "generationConfig": { "maxOutputTokens": 8192 }
       };
       
       const options = {
@@ -171,16 +258,46 @@ function doPost(e) {
       };
       
       try {
-        const response = UrlFetchApp.fetch(url, options);
-        const json = JSON.parse(response.getContentText());
+        // Thử lần lượt từng model; model bị quá tải / giới hạn tạm thời -> chờ ngắn rồi chuyển model dự phòng
+        const models = getGeminiModels();
         let aiText = "Xin lỗi, hiện tại tôi đang xử lý tác vụ khác. Hãy thử lại sau giây lát!";
-        
-        if (json.error) {
-          aiText = "⚠️ Lỗi từ Google AI: " + json.error.message;
-        } else if (json.candidates && json.candidates.length > 0 && json.candidates[0].content && json.candidates[0].content.parts) {
-          aiText = json.candidates[0].content.parts[0].text;
+        const failures = []; // { model, kind: 'busy' | 'unavailable' | 'fatal', message }
+        let answered = false;
+        for (let m = 0; m < models.length; m++) {
+          const url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(models[m]) + ":generateContent?key=" + GEMINI_API_KEY;
+          let json;
+          const t0 = Date.now();
+          try {
+            json = JSON.parse(UrlFetchApp.fetch(url, options).getContentText());
+          } catch (fetchErr) {
+            failures.push({ model: models[m], kind: 'busy', message: 'Không kết nối được' });
+            continue;
+          } finally {
+            // Ghi thời gian từng model vào nhật ký "Lượt thực thi" để chẩn đoán độ chậm
+            console.log('ask_ai ' + models[m] + ': ' + (Date.now() - t0) + ' ms' + (json && json.error ? ' (lỗi ' + (json.error.code || '') + ')' : ''));
+          }
+          if (json.error) {
+            const kind = classifyGeminiError(json.error);
+            failures.push({ model: models[m], kind: kind, message: String(json.error.message || json.error.status || 'Lỗi không xác định') });
+            if (kind === 'busy') {
+              if (m < models.length - 1) Utilities.sleep(800);
+              continue; // Quá tải -> thử model kế tiếp
+            }
+            if (kind === 'unavailable') continue; // Model ngừng hỗ trợ / sai tên -> thử model kế tiếp ngay
+            break; // Lỗi cố định (sai key, nội dung bị chặn...) -> không thử tiếp
+          }
+          const candidateText = extractGeminiText(json);
+          if (candidateText) {
+            aiText = candidateText;
+            answered = true;
+            break;
+          }
+          failures.push({ model: models[m], kind: 'busy', message: 'Câu trả lời trống' });
         }
-        
+        if (!answered && failures.length > 0) {
+          aiText = buildGeminiFailureMessage(failures);
+        }
+
         return ContentService.createTextOutput(JSON.stringify({ status: "success", reply: aiText })).setMimeType(ContentService.MimeType.JSON);
       } catch (e) {
         return ContentService.createTextOutput(JSON.stringify({ status: "error", message: e.toString() })).setMimeType(ContentService.MimeType.JSON);
@@ -495,24 +612,27 @@ function doGet(e) {
       }
     }
 
-    let gifts = []; 
-    try {
-      const externalGiftSS = SpreadsheetApp.openById('1amqxx2UojQPvK2hqJohvHZNjrw5LV0_V9FoZa_0qzRg');
-      const sheetKho = externalGiftSS.getSheetByName('Kho');
-      if(sheetKho && sheetKho.getLastRow() >= 3) {
-        const gData = sheetKho.getRange("A3:F" + sheetKho.getLastRow()).getValues();
-        for(let i = 0; i < gData.length; i++) {
-          if(gData[i][0]) {
-            gifts.push({ 
-              name: gData[i][0].toString().trim(), 
-              in: parseInt(gData[i][3]) || 0,
-              out: parseInt(gData[i][4]) || 0,
-              cost: gData[i][2] ? gData[i][2].toString() : '-' 
-            });
+    // KHO QUÀ - thứ tự ưu tiên:
+    //   1. Tab KhoQua_Import trong Sheet chính (=IMPORTRANGE từ Sheet Kho quà gốc, tự cập nhật)
+    //   2. Sheet Kho quà ngoài qua Script Property GIFT_SPREADSHEET_ID (tài khoản deploy phải có quyền xem)
+    //   3. Tab KhoQua trong Sheet chính (do trang Tools lưu)
+    // Lưu ý: mở một file không có quyền sẽ khiến Google đánh dấu cả lượt chạy thất bại dù đã try/catch
+    // -> Web App trả trang lỗi (CORS). Vì vậy ưu tiên IMPORTRANGE, không mở file ngoài khi không cần.
+    let gifts = readGiftImportTab(ss);
+    if (gifts.length === 0) {
+      const externalGiftId = getScriptProp('GIFT_SPREADSHEET_ID');
+      if (externalGiftId) {
+        try {
+          const sheetKho = SpreadsheetApp.openById(externalGiftId).getSheetByName('Kho');
+          if (sheetKho && sheetKho.getLastRow() >= 3) {
+            gifts = parseKhoRows(sheetKho.getRange("A3:F" + sheetKho.getLastRow()).getValues());
           }
+        } catch(err) {
+          gifts = [];
         }
       }
-    } catch(err) {
+    }
+    if (gifts.length === 0) {
       let localGiftSheet = ss.getSheetByName(SHEET_GIFT);
       if(localGiftSheet && localGiftSheet.getLastRow() > 1) {
         const localGData = localGiftSheet.getDataRange().getValues();
@@ -611,6 +731,36 @@ function testAuth() {
   ['API_TOKEN', 'ADMIN_PASSWORD', 'GEMINI_API_KEY'].forEach(k => {
     Logger.log((props.getProperty(k) ? "✅ " : "❌ CHƯA CẤU HÌNH ") + k);
   });
+  const importGifts = readGiftImportTab(ss);
+  if (importGifts.length > 0) {
+    Logger.log("✅ Kho quà đọc từ tab " + SHEET_GIFT_IMPORT + " (IMPORTRANGE): " + importGifts.length + " món");
+    return;
+  }
+  if (ss.getSheetByName(SHEET_GIFT_IMPORT)) {
+    Logger.log("⚠️ Tab " + SHEET_GIFT_IMPORT + " đang trống hoặc lỗi #REF! - mở tab và bấm 'Cho phép truy cập'");
+  }
+  const giftId = props.getProperty('GIFT_SPREADSHEET_ID');
+  if (giftId) {
+    try {
+      SpreadsheetApp.openById(giftId).getName();
+      Logger.log("✅ Có quyền đọc Sheet Kho quà (GIFT_SPREADSHEET_ID)");
+    } catch (e) {
+      Logger.log("❌ KHÔNG có quyền đọc Sheet Kho quà - hãy xin quyền xem hoặc xóa GIFT_SPREADSHEET_ID");
+    }
+  } else {
+    Logger.log("ℹ️ Không cấu hình GIFT_SPREADSHEET_ID - dùng tab " + SHEET_GIFT + " trong Sheet chính");
+  }
+}
+
+// Chạy trong trình soạn thảo để kiểm tra doGet giống như Web App (không in token ra log)
+function debugDoGet() {
+  const start = Date.now();
+  const out = doGet({ parameter: { token: getScriptProp('API_TOKEN') } });
+  const s = out.getContent();
+  const data = JSON.parse(s);
+  Logger.log('Trạng thái: ' + data.status + (data.message ? ' - ' + data.message : ''));
+  Logger.log('Thời gian: ' + (Date.now() - start) + ' ms; kích thước: ' + (s.length / 1024).toFixed(0) + ' KB');
+  Logger.log('MasterDB: ' + (data.master || []).length + ' khóa; Kho quà: ' + (data.gifts || []).length + ' món');
 }
 
 // CHẠY 1 LẦN: Tạo API_TOKEN ngẫu nhiên (in ra Log để dán vào trang Cài đặt). Không ghi đè nếu đã có.

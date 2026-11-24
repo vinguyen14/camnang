@@ -29,6 +29,17 @@ Vào **Project Settings (⚙️) → Script Properties → Add script property**
 | `GEMINI_API_KEY` | Key mới tạo ở bước 1 | Có (dùng cho Trợ lý AI) |
 | `ALLOWED_EMAIL_DOMAINS` | Ví dụ `kiotviet.com` hoặc `kiotviet.com, citigo.com.vn` | Không (mặc định `kiotviet.com`) |
 | `API_TOKEN` | **Không tự gõ**, để bước 4 tạo tự động | Có |
+| `GIFT_SPREADSHEET_ID` | ID Google Sheet Kho quà của team khác (tab `Kho`). **Chỉ đặt khi tài khoản deploy có quyền xem file đó**, nếu không Web App sẽ lỗi CORS. Nên dùng tab `KhoQua_Import` (bên dưới) thay cho cách này. | Không |
+
+### Kho quà tự cập nhật từ file gốc (khuyên dùng)
+
+1. Trong Sheet chính `Trainer_Database`, tạo tab mới tên đúng **`KhoQua_Import`**. Không dùng tab `KhoQua`, vì trang Tools xóa trắng tab đó mỗi lần lưu.
+2. Ô **A1** của tab mới, gõ công thức. Google Sheet tiếng Việt dùng dấu **chấm phẩy** giữa các tham số:
+   ```
+   =IMPORTRANGE("https://docs.google.com/spreadsheets/d/ID_FILE_KHO_QUA"; "Kho!A3:F")
+   ```
+3. Ô báo `#REF!` thì rê chuột vào và bấm **Cho phép truy cập**.
+4. Backend tự đọc tab này trước tiên. Dữ liệu tự cập nhật theo file gốc, và không bao giờ gây lỗi CORS như khi mở trực tiếp file ngoài.
 
 ## Bước 4 — Chạy 3 hàm tiện ích (một lần)
 

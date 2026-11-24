@@ -169,3 +169,13 @@
 
 ### 4.3. Việc Admin phải làm thủ công (ngoài mã nguồn)
 Xem `HUONG-DAN-TRIEN-KHAI-SPRINT0.md`.
+
+### 4.4. Bản vá 24/11/2026 — Web App lỗi CORS khi token đúng
+- **Nguyên nhân:** `doGet` luôn mở Sheet Kho quà của team khác (ID hardcode). Tài khoản deploy mới không có quyền xem file đó; dù đã `try/catch`, Google vẫn đánh dấu cả lượt chạy thất bại nên Web App trả trang lỗi HTML → trình duyệt báo CORS, Dashboard hiện "API Error (Offline)".
+- **Sửa:** chỉ đọc Sheet Kho quà ngoài khi cấu hình Script Property `GIFT_SPREADSHEET_ID`; mặc định dùng tab `KhoQua` trong Sheet chính. Bỏ ID hardcode khỏi mã nguồn.
+- `testAuth()` báo thêm trạng thái quyền đọc Sheet Kho quà; thêm `debugDoGet()` để chạy thử `doGet` trong trình soạn thảo.
+- **Kho quà qua IMPORTRANGE:** `doGet` ưu tiên đọc tab `KhoQua_Import` (công thức `=IMPORTRANGE(...; "Kho!A3:F")` trong Sheet chính), sau đó mới tới `GIFT_SPREADSHEET_ID`, cuối cùng là tab `KhoQua`. Bỏ qua dòng lỗi `#REF!`; ẩn tab `KhoQua_Import` khỏi danh sách sheet của Master Data Hub.
+- **Trợ lý AI chịu quá tải:** `ask_ai` thử lần lượt các model (mặc định `gemini-flash-lite-latest` → `gemini-flash-latest` → `gemini-3.8-flash`, model nhanh nhất trước; ghi đè bằng Script Property `GEMINI_MODELS`). Gặp lỗi tạm thời (503 quá tải, 429 hết hạn mức, 404 model không tồn tại) thì chờ 0,8 giây rồi chuyển model; lỗi cố định (sai key…) thì báo ngay.
+- **Trợ lý AI mất chữ:** ghép đủ mọi phần văn bản của câu trả lời Gemini (trước đây chỉ lấy `parts[0]` nên câu trả lời dài bị cắt giữa chừng), bỏ phần "thought"; ghi chú khi bị cắt do `MAX_TOKENS`. Hướng dẫn Kevin không dùng tiêu đề `#` vì khung chat chỉ hiển thị chữ đậm/nghiêng và xuống dòng.
+- **Model Gemini ngừng hỗ trợ:** bỏ `gemini-2.5-flash` / `gemini-2.5-flash-lite` (Google ngừng cấp cho người dùng mới) khỏi danh sách mặc định. Phân loại lỗi thành *quá tải* / *model không còn khả dụng* / *lỗi cố định*; khi tất cả đều thất bại, thông báo liệt kê lý do của từng model và nhắc Admin cập nhật `GEMINI_MODELS` nếu mọi model đều ngừng hỗ trợ.
+- **Lưu lịch sử chat Trợ lý AI:** thêm `chat-history.js` (nạp ở `index.html`, `tools.html`). Lịch sử khung chat của từng trang được lưu trên máy (tối đa 60 tin) và khôi phục khi quay lại trang; tin đang chờ trả lời lúc rời trang được ghi chú rõ; thêm nút 🗑 xóa lịch sử. Không đồng bộ lên Cloud.
