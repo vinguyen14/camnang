@@ -12,8 +12,12 @@
   'use strict';
 
   // 1. LINK WEB APP GOOGLE APPS SCRIPT MẶC ĐỊNH DUY NHẤT CỦA TOÀN DỰ ÁN
-  const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbw_-mVQH6OLCPSuz78lY_kAmZUtmFOa6WB__Oo6VUJ_9IPukh4C0y8c5LZ7C98_cE4hbQ/exec';
-  const API_URL_PATTERN = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
+  const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbxk_ZgUBCTN4ShKpQNgWilmXc12QFPIJf2Mdbk0XE6IOzGW01KGjAfbrXHZSQ2dVlbGGA/exec';
+  // Link cũ đã ngừng dùng (bản cũ từng tự lưu vào localStorage của mọi máy) -> tự động gỡ để chuyển sang link mới
+  const LEGACY_API_URLS = [
+    'https://script.google.com/macros/s/AKfycbw_-mVQH6OLCPSuz78lY_kAmZUtmFOa6WB__Oo6VUJ_9IPukh4C0y8c5LZ7C98_cE4hbQ/exec'
+  ];
+  const API_URL_PATTERN =/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
   const TOKEN_KEY = 'kv_api_token';
 
   function isValidApiUrl(url) {
@@ -60,7 +64,7 @@
   // 5. DỌN DẸP: link cũ bị lưu sai định dạng hoặc trùng mặc định -> xóa để luôn dùng link chuẩn
   try {
     const existing = localStorage.getItem('kv_api_url');
-    if (existing !== null && (!isValidApiUrl(existing) || existing.trim() === DEFAULT_API_URL)) {
+    if (existing !== null && (!isValidApiUrl(existing) || existing.trim() === DEFAULT_API_URL || LEGACY_API_URLS.indexOf(existing.trim()) !== -1)) {
       localStorage.removeItem('kv_api_url');
     }
   } catch (e) {}
