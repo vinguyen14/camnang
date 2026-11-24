@@ -175,3 +175,4 @@ Xem `HUONG-DAN-TRIEN-KHAI-SPRINT0.md`.
 - **Sửa:** chỉ đọc Sheet Kho quà ngoài khi cấu hình Script Property `GIFT_SPREADSHEET_ID`; mặc định dùng tab `KhoQua` trong Sheet chính. Bỏ ID hardcode khỏi mã nguồn.
 - `testAuth()` báo thêm trạng thái quyền đọc Sheet Kho quà; thêm `debugDoGet()` để chạy thử `doGet` trong trình soạn thảo.
 - **Kho quà qua IMPORTRANGE:** `doGet` ưu tiên đọc tab `KhoQua_Import` (công thức `=IMPORTRANGE(...; "Kho!A3:F")` trong Sheet chính), sau đó mới tới `GIFT_SPREADSHEET_ID`, cuối cùng là tab `KhoQua`. Bỏ qua dòng lỗi `#REF!`; ẩn tab `KhoQua_Import` khỏi danh sách sheet của Master Data Hub.
+- **Trợ lý AI chịu quá tải:** `ask_ai` thử lần lượt các model (`gemini-flash-lite-latest` → `gemini-flash-latest` → `gemini-2.5-flash-lite` → `gemini-2.5-flash`, ghi đè bằng Script Property `GEMINI_MODELS`). Gặp lỗi tạm thời (503 quá tải, 429 hết hạn mức, 404 model không tồn tại) thì chờ 0,8 giây rồi chuyển model; lỗi cố định (sai key…) thì báo ngay.

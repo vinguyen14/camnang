@@ -22,6 +22,7 @@ const SHEET_KETQUA_HOCVIEN = 'KetQuaHocVien';
 //   - API_TOKEN       (bắt buộc): chuỗi ngẫu nhiên >= 32 ký tự. Mọi request phải gửi kèm.
 //   - ADMIN_PASSWORD  (bắt buộc cho clear_data): mật khẩu dài, KHÔNG có giá trị mặc định.
 //   - GEMINI_API_KEY  (bắt buộc cho ask_ai): KHÔNG có giá trị mặc định.
+//   - GEMINI_MODELS   (tùy chọn): danh sách model thử lần lượt khi quá tải, cách nhau dấu phẩy.
 //   - ALLOWED_EMAIL_DOMAINS (tùy chọn): danh sách domain cách nhau dấu phẩy, mặc định "kiotviet.com".
 //   - GIFT_SPREADSHEET_ID (tùy chọn): ID Google Sheet Kho quà bên ngoài (tab "Kho"). Chỉ đặt khi tài khoản
 //     deploy CÓ QUYỀN XEM file đó. Khuyên dùng thay thế: tab KhoQua_Import với =IMPORTRANGE(...) trong Sheet chính.
@@ -82,6 +83,25 @@ function readGiftImportTab(ss) {
   const sheet = ss.getSheetByName(SHEET_GIFT_IMPORT);
   if (!sheet || sheet.getLastRow() < 1) return [];
   return parseKhoRows(sheet.getDataRange().getValues());
+}
+
+// Danh sách model Gemini thử lần lượt. Ghi đè bằng Script Property GEMINI_MODELS (cách nhau dấu phẩy).
+const DEFAULT_GEMINI_MODELS = ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'];
+
+function getGeminiModels() {
+  const raw = getScriptProp('GEMINI_MODELS');
+  const list = raw ? raw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  return list.length > 0 ? list : DEFAULT_GEMINI_MODELS;
+}
+
+// Lỗi tạm thời: quá tải (503/UNAVAILABLE), vượt hạn mức (429/RESOURCE_EXHAUSTED), model không tồn tại (404)
+function isTransientGeminiError(err) {
+  const code = Number(err.code) || 0;
+  const status = String(err.status || '');
+  const msg = String(err.message || '').toLowerCase();
+  return code === 503 || code === 429 || code === 500 || code === 404 ||
+    status === 'UNAVAILABLE' || status === 'RESOURCE_EXHAUSTED' || status === 'NOT_FOUND' ||
+    msg.indexOf('high demand') !== -1 || msg.indexOf('overloaded') !== -1;
 }
 
 function getAllowedEmailDomains() {
@@ -180,9 +200,6 @@ function doPost(e) {
         return jsonOut({ status: "error", message: "Chưa cấu hình GEMINI_API_KEY trong Script Properties" });
       }
 
-      // Sử dụng model gemini-flash-lite-latest: Mô hình thế hệ mới ổn định, phản hồi tức thì và phân tích báo cáo L&D
-      const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=" + GEMINI_API_KEY;
-      
       const payload = {
         "contents": [{ "parts": [{ "text": data.prompt }] }],
         "systemInstruction": { 
@@ -198,16 +215,41 @@ function doPost(e) {
       };
       
       try {
-        const response = UrlFetchApp.fetch(url, options);
-        const json = JSON.parse(response.getContentText());
+        // Thử lần lượt từng model; model bị quá tải / giới hạn tạm thời -> chờ ngắn rồi chuyển model dự phòng
+        const models = getGeminiModels();
         let aiText = "Xin lỗi, hiện tại tôi đang xử lý tác vụ khác. Hãy thử lại sau giây lát!";
-        
-        if (json.error) {
-          aiText = "⚠️ Lỗi từ Google AI: " + json.error.message;
-        } else if (json.candidates && json.candidates.length > 0 && json.candidates[0].content && json.candidates[0].content.parts) {
-          aiText = json.candidates[0].content.parts[0].text;
+        let lastError = "";
+        let lastTransient = true;
+        for (let m = 0; m < models.length; m++) {
+          const url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(models[m]) + ":generateContent?key=" + GEMINI_API_KEY;
+          let json;
+          try {
+            json = JSON.parse(UrlFetchApp.fetch(url, options).getContentText());
+          } catch (fetchErr) {
+            lastError = String(fetchErr);
+            continue;
+          }
+          if (json.error) {
+            lastError = json.error.message || String(json.error.status || 'Lỗi không xác định');
+            lastTransient = isTransientGeminiError(json.error);
+            if (lastTransient) {
+              if (m < models.length - 1) Utilities.sleep(800);
+              continue; // Thử model kế tiếp
+            }
+            break; // Lỗi cố định (sai key, nội dung bị chặn...) -> không thử tiếp
+          }
+          if (json.candidates && json.candidates.length > 0 && json.candidates[0].content && json.candidates[0].content.parts) {
+            aiText = json.candidates[0].content.parts[0].text;
+            lastError = "";
+            break;
+          }
         }
-        
+        if (lastError) {
+          aiText = lastTransient
+            ? "⚠️ Trợ lý AI đang bận (Google AI: " + lastError + "). Vui lòng thử lại sau ít phút."
+            : "⚠️ Lỗi từ Google AI: " + lastError;
+        }
+
         return ContentService.createTextOutput(JSON.stringify({ status: "success", reply: aiText })).setMimeType(ContentService.MimeType.JSON);
       } catch (e) {
         return ContentService.createTextOutput(JSON.stringify({ status: "error", message: e.toString() })).setMimeType(ContentService.MimeType.JSON);
