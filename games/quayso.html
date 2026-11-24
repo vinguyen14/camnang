@@ -5,6 +5,7 @@
     <title>THE CHOSEN ONE V8.3 - STABLE HUD</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800;italic&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="../system-config.js"></script>
     <style>
         :root {
             --primary: #00f0ff; --secondary: #ff003c; --accent: #fcee09;
@@ -226,10 +227,17 @@
         let state = { sess: 1, ptr: 0, names: [], logs: [], curW: "", curT: null, spinning: false };
         let decodeBlocksTimeout; 
 
+        // Sprint 3: link API riêng của game lưu ở khóa riêng (trước đây dùng chung kv_api_url với Trainer OS -> đè link của nhau)
+        const GAME_API_KEY = 'kv_game_api_url';
+        function escGame(s) {
+            return String(s === null || s === undefined ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;'); // &apos; không chứa chữ số (game tô đậm các con số)
+        }
+
         window.onload = () => {
             const savedNames = localStorage.getItem('bk_names_v75_problem');
             if(savedNames) { document.getElementById('names').value = savedNames; updateCount(); }
-            if(localStorage.getItem('kv_api_url')) { fetchDataFromSheet(); } 
+            fetchDataFromSheet();
         };
 
         function updateCount() {
@@ -243,32 +251,55 @@
         function toggleApiModal() {
             const m = document.getElementById('apiModal');
             if(m.style.display === 'flex') m.style.display = 'none';
-            else { document.getElementById('apiUrlInput').value = localStorage.getItem('kv_api_url') || ""; m.style.display = 'flex'; }
+            else { document.getElementById('apiUrlInput').value = localStorage.getItem(GAME_API_KEY) || ""; m.style.display = 'flex'; }
         }
 
+        // Để trống = dùng dữ liệu Trainer OS (đọc sheet có cột Day, Title, Question, Answer)
         function saveApiUrl() {
             const url = document.getElementById('apiUrlInput').value.trim();
-            if(!url) return alert("Vui lòng nhập Link API!");
-            localStorage.setItem('kv_api_url', url); toggleApiModal(); fetchDataFromSheet();
+            if (url && !/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(url)) {
+                return alert("Link không hợp lệ. Link phải có dạng https://script.google.com/macros/s/.../exec (hoặc để trống để dùng dữ liệu Trainer OS).");
+            }
+            if (url) localStorage.setItem(GAME_API_KEY, url); else localStorage.removeItem(GAME_API_KEY);
+            toggleApiModal(); fetchDataFromSheet();
+        }
+
+        async function loadGameRows() {
+            const customUrl = (localStorage.getItem(GAME_API_KEY) || '').trim();
+            if (customUrl) {
+                // Apps Script riêng của game (giao thức cũ: POST action GET_DATA)
+                const res = await fetch(customUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "GET_DATA" }) });
+                const result = await res.json();
+                if (result.status !== 'success' || !Array.isArray(result.data)) throw new Error(result.message || 'Link API của game không trả về dữ liệu');
+                return result.data;
+            }
+            if (typeof getGlobalApiUrl !== 'function') throw new Error('Không tải được cấu hình Trainer OS');
+            const data = await fetch(getGlobalApiUrl()).then(r => r.json());
+            if (data.status === 'error') throw new Error(data.message || 'Trainer OS từ chối truy cập');
+            const sheets = data.sheets || {};
+            const need = ['Day', 'Title', 'Question', 'Answer'];
+            const name = Object.keys(sheets).find(n => need.every(h => (sheets[n].headers || []).indexOf(h) !== -1));
+            if (!name) throw new Error('Chưa có sheet nào trong Trainer_Database có đủ các cột Day, Title, Question, Answer');
+            return sheets[name].items || [];
         }
 
         async function fetchDataFromSheet() {
-            let apiUrl = localStorage.getItem('kv_api_url');
-            if (!apiUrl) return;
-            document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:var(--primary); margin-top:50px;">Đang kết nối Google Sheets... ⏳</div>';
+            const box = document.getElementById('scBox');
+            box.innerHTML = '<div style="text-align:center; color:var(--primary); margin-top:50px;">Đang kết nối Google Sheets... ⏳</div>';
             try {
-                let res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "GET_DATA" }) });
-                let result = await res.json();
-                if (result.status === 'success') {
-                    scripts.buoi1 = []; scripts.buoi2 = [];
-                    result.data.forEach(item => {
-                        if (item.Day.includes('1')) scripts.buoi1.push(item);
-                        else scripts.buoi2.push(item);
-                    });
-                    document.getElementById('scBox').innerHTML = '<div style="text-align:center; color:#00ff88; margin-top:50px">✅ Dữ liệu đã đồng bộ sẵn sàng!</div>';
-                    state.ptr = 0;
-                }
-            } catch (e) { console.error(e); }
+                const rows = await loadGameRows();
+                scripts.buoi1 = []; scripts.buoi2 = [];
+                rows.forEach(item => {
+                    if (!item || !item.Question) return;
+                    if (String(item.Day || '').includes('1')) scripts.buoi1.push(item);
+                    else scripts.buoi2.push(item);
+                });
+                box.innerHTML = `<div style="text-align:center; color:#00ff88; margin-top:50px">✅ Dữ liệu đã đồng bộ sẵn sàng! (Buổi 1: ${scripts.buoi1.length} • Buổi 2: ${scripts.buoi2.length} tình huống)</div>`;
+                state.ptr = 0;
+            } catch (e) {
+                console.error(e);
+                box.innerHTML = `<div style="text-align:center; color:#ff003c; margin-top:50px">⚠️ ${escGame(e.message || 'Không tải được dữ liệu')}<br><span style="font-size:12px; color:#64748b">Bấm ⚙️ để đặt link API riêng của game, hoặc kiểm tra API Token trong Cài đặt Trainer OS.</span></div>`;
+            }
         }
 
         function setSess(n) {
@@ -280,6 +311,7 @@
         // Tối ưu thuật toán Format chữ tránh lỗi regex trên các trình duyệt cũ
         function formatSmartText(text, isHint = false) {
             if(!text) return [];
+            text = escGame(text); // Sprint 3: nội dung từ Sheet được escape trước khi tô màu từ khóa
             const keywords = /(KiotViet|phần mềm|tồn kho|chuyển khoản|tiền mặt|sổ sách|thất thoát|hóa đơn|mã vạch|offline|online|đồng bộ|trả hàng|công nợ|nhà cung cấp|đại lý|thu ngân|nhân viên)/gi;
             
             let normalized = text.replace(/([.?!])\s+/g, "$1\n");
@@ -430,7 +462,7 @@
                     ${obj.Roadmap ? `<span class="sc-tag tag-roadmap">${obj.Roadmap}</span>` : ''}
                     ${obj.Type ? `<span class="sc-tag tag-type">${obj.Type}</span>` : ''}
                 </div>
-                <div class="sc-biz">${obj.Title}</div>
+                <div class="sc-biz">${escGame(obj.Title)}</div>
                 <div class="sc-goal">${obj.Goal}</div>
                 <div class="formatted-list" style="background: rgba(0,240,255,0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(0,240,255,0.1);">
                     <b style="color:var(--primary); font-size:11px; display:block; margin-bottom:10px;">LỜI KHÁCH HÀNG:</b>
@@ -457,7 +489,7 @@
                         <b style="color:${l.res=='Vắng'?'#ff003c':'#00ff88'}">${l.name}</b>
                         <span style="font-size:10px; color:var(--primary); font-weight:800; background:rgba(0,240,255,0.1); padding: 3px 8px; border-radius: 4px;">${l.taskObj.Roadmap || l.taskObj.Type || 'KỊCH BẢN'}</span>
                     </div>
-                    <div style="font-size:11px; color:#64748b; margin-top:3px">${l.taskObj.Title}</div>
+                    <div style="font-size:11px; color:#64748b; margin-top:3px">${escGame(l.taskObj.Title)}</div>
                 </div>`).join(''); 
         }
 

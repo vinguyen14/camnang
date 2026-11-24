@@ -228,3 +228,30 @@ Ngày giờ theo giờ địa phương, ngày lễ Việt Nam theo từng năm (
 - **SPCB / KV1 / Chuyên ngành / Thuế / Tools (kho quà):** Cloud báo lỗi thì báo lỗi, không còn hiện "HOÀN THÀNH XUẤT SẮC" / "Đã lưu thành công".
 - **Tools:** không báo "Cloud API Active" khi Cloud từ chối; dữ liệu kho quà hỏng không làm sập trang.
 - **Cài đặt:** Backup có hộp xác nhận, đẩy MasterDB 1 lần (`batch_upsert`); "Kéo về" chỉ tải xuống — không còn đẩy MasterDB cũ trên máy lên ghi đè dữ liệu mới trên Cloud.
+
+---
+
+## 7. Sprint 3 — Nền Tảng Kỹ Thuật (24/11/2026)
+
+> Snapshot trước khi sửa: `_backups/snapshot_20261124_111505_Pre_Sprint3_Foundation`.
+
+### 7.1. An toàn nội dung (XSS / chèn mã)
+- **Master Data Hub (`knowledge-hub.html`):** 57 đối số trong các nút `onclick` chuyển từ `'${escapeHtml(x)}'` sang `${jsArg(x)}`. `escapeHtml` không có tác dụng bên trong chuỗi JS của thuộc tính (trình duyệt giải mã `&#039;` thành `'` trước khi chạy) → tên tài liệu có dấu `'` / nội dung xuống dòng làm nút "Sao chép đề bài", "Mở tài liệu"… không chạy; nội dung độc có thể chạy mã.
+- Dashboard: escape tên quà (đọc từ Sheet của team khác) và link trong file Excel xuất ra.
+- Vault: chỉ mở link `http(s)://`, kèm `noopener` (chặn `javascript:` / `data:`).
+
+### 7.2. Game Quay số (`games/quayso.html`)
+- Nạp `system-config.js` → có API Token; mặc định đọc dữ liệu từ Trainer OS (sheet có cột `Day, Title, Question, Answer`).
+- Link API riêng của game lưu ở khóa riêng `kv_game_api_url` (trước đây dùng chung `kv_api_url` → đè link Trainer OS).
+- Báo lỗi rõ ràng thay vì im lặng; escape nội dung từ Sheet.
+
+### 7.3. Thư viện CDN
+- Khóa phiên bản: `chart.js@4.4.1` (trước đây không ghi phiên bản), `d3@7.9.0` (trước đây `d3@7`).
+- *Còn tồn đọng:* Tailwind vẫn dùng bản CDN (cần npm để build CSS tĩnh).
+
+### 7.4. Quy trình & công cụ
+- `scripts/sync_mirrors.js`: tự đồng bộ 21 cặp file `.txt` (gồm `code.js` → `trainer_database.js` / `trainer_database codejs.txt`); `--check` để chỉ kiểm tra.
+- `scripts/run_all_tests.js [--sync]`: 1 lệnh chạy toàn bộ — mirror, cú pháp V8 (kể cả `games/`), unit test, test backend; kết quả ở `scratch/test_report.json`.
+- Đưa các script công cụ (`backup_manager`, `run_regression_report`, `serve_preview`) vào git.
+- Xóa thư mục `test/` (9 trang thử nghiệm cũ, có mật khẩu cũ) khỏi repo — vẫn khôi phục được từ lịch sử git.
+- `.gitignore`: bỏ qua `scratch/`, file `.txt`, `trainer_database.js`. Dọn 176 MB bộ nhớ đệm Chrome trong `scratch/`.
