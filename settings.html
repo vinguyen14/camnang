@@ -90,7 +90,15 @@
                             <span class="info-tip"><i class="fas fa-info-circle"></i><span class="info-tip-box">Đường dẫn kết nối đến Google Sheets (Cloud Database). Dùng chung cho MasterDB, KetQuaHocVien, Multi-sheet Scanner và Kho quà.</span></span>
                         </label>
                         <input type="text" id="api-url" class="saas-input font-mono text-[11px] text-blue-600" placeholder="https://script.google.com/macros/s/.../exec">
-                        <p class="text-[10px] text-slate-400 mt-1 italic">Dán link triển khai Web App quyền truy cập công khai (Who has access: Anyone).</p>
+                        <p class="text-[10px] text-slate-400 mt-1 italic">Dán link triển khai Web App (dạng https://script.google.com/macros/s/.../exec). Để trống = dùng link mặc định của hệ thống.</p>
+                        <label class="form-label mt-3">
+                            API Token (bảo mật)
+                            <span class="info-tip"><i class="fas fa-info-circle"></i><span class="info-tip-box">Mã bí mật do Admin cấp (Script Properties: API_TOKEN). Bắt buộc để đọc/ghi dữ liệu Cloud. Chỉ lưu trên máy này, KHÔNG được đồng bộ lên Cloud.</span></span>
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="password" id="api-token" autocomplete="off" class="saas-input font-mono text-[11px]" placeholder="Dán API Token do Admin cung cấp">
+                            <button type="button" onclick="const i=document.getElementById('api-token'); i.type = i.type==='password' ? 'text' : 'password';" class="shrink-0 px-3 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-blue-600 hover:border-blue-300 transition" title="Hiện / Ẩn token"><i class="fas fa-eye"></i></button>
+                        </div>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-6">
@@ -270,8 +278,9 @@
         let dynamicCalTemp = {};
 
         // DANH SÁCH 100% KHÓA DỮ LIỆU ĐƯỢC SAO LƯU CLOUD
+        // Lưu ý bảo mật: KHÔNG đồng bộ kv_api_url / kv_api_token (cấu hình kết nối chỉ thuộc về từng máy)
         const KEYS_TO_SYNC = [
-            'kv_api_url', 'kv_trainer_profile', 'kv_dynamic_calendar', 
+            'kv_trainer_profile', 'kv_dynamic_calendar',
             'kv_global_notepad', 'kv_global_whiteboard', 'kv_employee_db', 
             'kv_employee_trash', 'kv_vault_folders', 'kv_vault_items', 
             'kv_vault_trash', 'kv_master_db', 'kv_gift_db', 
@@ -305,7 +314,8 @@
         }
 
         function loadAPI() { 
-            document.getElementById("api-url").value = typeof getGlobalApiUrl === "function" ? getGlobalApiUrl() : (localStorage.getItem("kv_api_url") || ""); 
+            document.getElementById("api-url").value = typeof getGlobalApiUrl === "function" ? getGlobalApiUrl() : (localStorage.getItem("kv_api_url") || "");
+            document.getElementById("api-token").value = typeof getApiToken === "function" ? getApiToken() : "";
         }
 
         function loadProfile() { 
@@ -363,7 +373,13 @@
             const profName = document.getElementById('prof-name').value.trim() || 'L&D KiotViet';
             const profTitle = document.getElementById('prof-title').value.trim() || 'Administrator';
             
-            if (typeof setGlobalApiUrl === "function") setGlobalApiUrl(apiUrl); else localStorage.setItem("kv_api_url", apiUrl);
+            if (typeof setGlobalApiUrl === "function") {
+                if (setGlobalApiUrl(apiUrl) === false) {
+                    alert("⚠️ Link API không hợp lệ.\nLink phải có dạng: https://script.google.com/macros/s/.../exec");
+                    return;
+                }
+            }
+            if (typeof setApiToken === "function") setApiToken(document.getElementById('api-token').value);
             localStorage.setItem('kv_trainer_profile', JSON.stringify({ name: profName, title: profTitle }));
             updateCalTemp(); 
             localStorage.setItem('kv_dynamic_calendar', JSON.stringify(dynamicCalTemp));
@@ -372,36 +388,26 @@
             showToast('Đã lưu toàn bộ Thiết lập Hệ thống!');
         }
 
-        // --- XÓA AN TOÀN 3 LỚP (BẢO VỆ GOOGLE SHEETS & GIỮ LẠI LINK API) ---
-        async function sha256Hash(text) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode("TRAINER_OS_SALT_v64:" + text);
-            const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-        }
+        // --- XÓA BỘ NHỚ TẠM TRÊN MÁY (CHỈ ẢNH HƯỞNG TRÌNH DUYỆT NÀY, GIỮ LẠI LINK API & TOKEN) ---
+        // Sprint 0: Bỏ "mật khẩu" phía trình duyệt (không có giá trị bảo mật thực - ai cũng có thể xóa localStorage bằng F12).
+        // Thay bằng xác nhận gõ cụm từ để chống bấm nhầm.
+        const WIPE_CONFIRM_PHRASE = "XOA DU LIEU";
 
-        async function executeWipe() { 
-            const pwd = prompt("🔒 XÁC THỰC BẢO MẬT (LỚP 2/3):\nBạn đang yêu cầu XÓA SẠCH bộ nhớ tạm trên trình duyệt máy này.\n(Dữ liệu trên Google Sheets hoàn toàn KHÔNG bị ảnh hưởng).\n\nNhập MẬT KHẨU HỆ THỐNG để tiếp tục:");
-            if (!pwd) return;
-            
-            try {
-                const hashed = await sha256Hash(pwd);
-                // Hash SHA-256 kèm salt bảo vệ tuyệt đối, không lộ plaintext trong code giao diện
-                if (hashed === "76a5dc867d536026a228e89457f43ef2c95e80f94a038080cf1206f7974d8256") {
-                    const finalConfirm = confirm("⚠️ XÁC NHẬN CUỐI CÙNG (LỚP 3/3):\nToàn bộ CSDL hiển thị trên trình duyệt này sẽ biến mất.\n(Bạn luôn có thể bấm nút 'Kéo Data Từ Google Sheets' để phục hồi lại bất cứ lúc nào).\n\nĐồng ý thực hiện?");
-                    if (finalConfirm) {
-                        const currentApi = localStorage.getItem('kv_api_url');
-                        localStorage.clear();
-                        if (currentApi) localStorage.setItem('kv_api_url', currentApi); // Giữ lại link API để cứu sinh
-                        alert("✅ Đã dọn dẹp sạch bộ nhớ tạm trên trình duyệt!");
-                        location.reload(); 
-                    }
-                } else {
-                    alert("❌ Sai mật khẩu xác thực! Thao tác xóa đã bị hủy bỏ an toàn.");
-                }
-            } catch (err) {
-                alert("⚠️ Trình duyệt không hỗ trợ xác thực mã hóa an toàn.");
+        async function executeWipe() {
+            const typed = prompt("⚠️ XÁC NHẬN (LỚP 2/3):\nBạn đang yêu cầu XÓA SẠCH bộ nhớ tạm trên trình duyệt máy này.\n(Dữ liệu trên Google Sheets hoàn toàn KHÔNG bị ảnh hưởng).\n\nGõ chính xác cụm từ: " + WIPE_CONFIRM_PHRASE);
+            if (typed === null) return;
+            if (typed.trim().toUpperCase() !== WIPE_CONFIRM_PHRASE) {
+                alert("❌ Cụm từ xác nhận không khớp. Thao tác xóa đã bị hủy.");
+                return;
+            }
+            const finalConfirm = confirm("⚠️ XÁC NHẬN CUỐI CÙNG (LỚP 3/3):\nToàn bộ CSDL hiển thị trên trình duyệt này sẽ biến mất.\n(Bạn luôn có thể bấm nút 'Kéo Data Từ Google Sheets' để phục hồi lại bất cứ lúc nào).\n\nĐồng ý thực hiện?");
+            if (finalConfirm) {
+                const keep = {};
+                ['kv_api_url', 'kv_api_token'].forEach(k => { const v = localStorage.getItem(k); if (v) keep[k] = v; });
+                localStorage.clear();
+                Object.keys(keep).forEach(k => localStorage.setItem(k, keep[k])); // Giữ lại cấu hình kết nối để cứu sinh
+                alert("✅ Đã dọn dẹp sạch bộ nhớ tạm trên trình duyệt!");
+                location.reload();
             }
         }
 
@@ -514,7 +520,10 @@
                 
                 if (data.status === 'success' && data.payload && data.payload !== "{}") {
                     const cloudData = typeof data.payload === 'string' ? JSON.parse(data.payload) : data.payload;
+                    // Chỉ khôi phục các key dữ liệu đã biết - không bao giờ ghi đè link API / token từ Cloud
+                    const ALLOWED_RESTORE_KEYS = KEYS_TO_SYNC.concat(['kv_employee_db', 'kv_vault_folders', 'kv_vault_items']);
                     for (let key in cloudData) {
+                        if (ALLOWED_RESTORE_KEYS.indexOf(key) === -1) continue;
                         if (cloudData[key] !== null && cloudData[key] !== undefined) {
                             const strVal = typeof cloudData[key] === 'object' ? JSON.stringify(cloudData[key]) : String(cloudData[key]);
                             localStorage.setItem(key, strVal);
@@ -530,6 +539,8 @@
                     showToast("Khôi phục thành công! Đang làm mới hệ thống...");
                     setTimeout(() => location.reload(), 1200);
 
+                } else if (data.status === 'error') {
+                    alert("⚠️ Cloud từ chối yêu cầu: " + (data.message || "Lỗi Server"));
                 } else {
                     alert("☁️ Cloud hiện tại đang trống hoặc chưa có bản Backup nào!");
                 }
