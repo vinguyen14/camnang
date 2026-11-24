@@ -52,6 +52,7 @@
         .floating-tool { bottom: 20px; right: 30px; z-index: 100; }
     </style>
     <script src="system-config.js"></script>
+    <script src="trainer-utils.js"></script>
     <script src="chat-history.js"></script>
 </head>
 <body>
@@ -938,7 +939,7 @@
         }
 
         function generateSmartAlerts() {
-            const today = new Date(); 
+            const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // Sprint 1: so theo ngày, không theo giờ 
             const calData = getDynamicCalendar(); 
             let alertsHTML = '';
             
@@ -961,7 +962,7 @@
 
             const checkUpcoming = (dateStr, eventName, type) => {
                 if(!dateStr) return; 
-                const evDate = new Date(dateStr); 
+                const evDate = (window.TrainerUtils && window.TrainerUtils.parseLocalDate(dateStr)) || new Date(dateStr);
                 const diffDays = Math.ceil((evDate - today) / (1000 * 60 * 60 * 24));
                 if (diffDays >= 0 && diffDays <= 7) {
                     let dayTxt = diffDays === 0 ? "Hôm nay" : `Còn ${diffDays} ngày`;
@@ -1000,9 +1001,16 @@
             openModal('hrmFilterModal');
         }
 
+        // Năm của "tháng mục tiêu" = năm gần hôm nay nhất (dùng chung cho giải thích & bộ lọc HRM)
+        function getHrmRefYear(tMonth) {
+            const now = new Date(), y = now.getFullYear();
+            return [y - 1, y, y + 1].reduce((best, cand) =>
+                Math.abs(new Date(cand, tMonth - 1, 1) - now) < Math.abs(new Date(best, tMonth - 1, 1) - now) ? cand : best, y);
+        }
+
         function updateHrmMonthExplanation() {
             const tMonth = parseInt(document.getElementById('hrmTargetMonth').value);
-            const currentYear = new Date().getFullYear();
+            const currentYear = getHrmRefYear(tMonth);
 
             let m2 = tMonth - 2;
             let y2 = currentYear;
@@ -1045,8 +1053,15 @@
 
             if (!raw) return alert('Vui lòng dán dữ liệu Excel thô!');
 
-            let m2 = tMonth - 2; if (m2 <= 0) m2 += 12;
-            let m3 = tMonth - 3; if (m3 <= 0) m3 += 12;
+            // Sprint 1: so khớp cả NĂM và THÁNG (trước đây chỉ so tháng -> người vào làm tháng 9 của năm bất kỳ
+            // đều lọt danh sách M-2 của tháng 11). Năm của tháng mục tiêu = năm gần hôm nay nhất
+            // (VD: đang tháng 12/2026 chọn Tháng 1 -> 01/2027; đang tháng 1/2027 chọn Tháng 12 -> 12/2026).
+            const refYear = getHrmRefYear(tMonth);
+            const refDate = new Date(refYear, tMonth - 1, 1);
+            const target2 = window.TrainerUtils.monthsBefore(refDate, 2);
+            const target3 = window.TrainerUtils.monthsBefore(refDate, 3);
+            const m2 = target2.m, m3 = target3.m;
+            const unparsedRows = [];
 
             const rows = raw.split('\n');
             if(rows.length < 2) return alert('Dữ liệu không hợp lệ. Hãy copy cả dòng Tiêu đề cột!');
@@ -1071,26 +1086,17 @@
                 if (cols.length <= idxDate) continue;
 
                 const dateStr = cols[idxDate].trim();
-                let joinMonth = -1;
-                const dateParts = dateStr.split(/[\/\-]/);
-                if (dateParts.length >= 2) {
-                    const p0 = parseInt(dateParts[0], 10);
-                    const p1 = parseInt(dateParts[1], 10);
-                    if (dateParts[0].trim().length === 4) {
-                        // YYYY-MM-DD
-                        joinMonth = p1;
-                    } else if (p1 > 12 && p0 >= 1 && p0 <= 12) {
-                        // MM/DD/YYYY (nếu phần tử thứ 2 > 12)
-                        joinMonth = p0;
-                    } else if (p1 >= 1 && p1 <= 12) {
-                        // DD/MM/YYYY (chuẩn Việt Nam phổ biến nhất)
-                        joinMonth = p1;
-                    } else {
-                        joinMonth = p0;
-                    }
+                // Hỗ trợ DD/MM/YYYY, YYYY-MM-DD, MM/DD/YYYY, 05-Mar-2026, số serial Excel (TrainerUtils.parseHrmDate)
+                const joined = window.TrainerUtils.parseHrmDate(dateStr);
+                if (!joined) {
+                    if (dateStr) unparsedRows.push(`Dòng ${i + 1}: "${dateStr}"`);
+                    continue;
                 }
+                const isM2 = joined.y === target2.y && joined.m === target2.m;
+                const isM3 = joined.y === target3.y && joined.m === target3.m;
+                const joinMonth = isM2 ? m2 : (isM3 ? m3 : -1);
 
-                if (joinMonth === m2 || joinMonth === m3) {
+                if (isM2 || isM3) {
                     const code = idxCode !== -1 && cols[idxCode] ? cols[idxCode].trim() : '';
                     const name = idxName !== -1 && cols[idxName] ? cols[idxName].trim() : '';
                     const pos = idxPos !== -1 && cols[idxPos] ? cols[idxPos].trim() : '';
@@ -1120,7 +1126,7 @@
             setHrmView(1, 'raw'); setHrmView(2, 'raw');
 
             let trace = {}; try { trace = JSON.parse(localStorage.getItem('kv_hrm_traceability')) || {}; } catch(e) { trace = {}; }
-            const traceKey = `${currentYear}-${tMonth.toString().padStart(2, '0')}`;
+            const traceKey = `${refYear}-${tMonth.toString().padStart(2, '0')}`;
             trace[traceKey] = {
                 m2_count: countM2,
                 m3_count: countM3,
@@ -1132,7 +1138,13 @@
             const subEl = document.getElementById('toolHrmSubtext');
             if (subEl) subEl.innerText = `Tháng ${tMonth}: ${countM2} M-2 | ${countM3} M-3`;
 
-            alert(`✅ Hoàn tất lọc Tháng ${tMonth}: ${countM2} nhân sự M-2 (KV1/Thuế) | ${countM3} nhân sự M-3 (Chuyên ngành).`);
+            const pad = (n) => String(n).padStart(2, '0');
+            let doneMsg = `✅ Hoàn tất lọc Tháng ${pad(tMonth)}/${refYear}:\n- ${countM2} nhân sự M-2 (vào làm ${pad(target2.m)}/${target2.y}) → KV1/Thuế\n- ${countM3} nhân sự M-3 (vào làm ${pad(target3.m)}/${target3.y}) → Chuyên ngành`;
+            if (unparsedRows.length > 0) {
+                doneMsg += `\n\n⚠️ ${unparsedRows.length} dòng KHÔNG đọc được Ngày gia nhập (đã bỏ qua, hãy kiểm tra):\n` +
+                    unparsedRows.slice(0, 8).join('\n') + (unparsedRows.length > 8 ? '\n...' : '');
+            }
+            alert(doneMsg);
         }
 
         function setHrmView(box, type) {
@@ -1472,16 +1484,31 @@
             }
         }
 
+        // Sprint 1: năm lịch theo thời gian thực + chuyển năm (trước đây gán cứng 2026 và ngày Tết 2026)
+        let vanillaCalendarYear = new Date().getFullYear();
+        function shiftCalendarYear(delta) {
+            vanillaCalendarYear += delta;
+            renderVanillaCalendar();
+        }
+
         function renderVanillaCalendar() {
-            const currentYear = 2026;
-            const holidays = { "1-1": "Tết Dương Lịch", "2-16": "Giao Thừa", "2-17": "Mùng 1 Tết", "2-18": "Mùng 2 Tết", "2-19": "Mùng 3 Tết", "2-20": "Mùng 4 Tết", "2-21": "Mùng 5 Tết", "4-30": "Giải Phóng", "5-1": "Quốc Tế LĐ", "9-2": "Quốc Khánh" };
+            const currentYear = vanillaCalendarYear;
+            const holidays = window.TrainerUtils ? window.TrainerUtils.getVietnamHolidays(currentYear) : { "1-1": "Tết Dương Lịch", "4-30": "Giải Phóng", "5-1": "Quốc Tế LĐ", "9-2": "Quốc Khánh" };
             const isHoliday = (d) => !!holidays[`${d.getMonth()+1}-${d.getDate()}`];
             const isWeekend = (d) => d.getDay() === 0 || d.getDay() === 6;
             
             let dynamicCal = {}; try { dynamicCal = JSON.parse(localStorage.getItem('kv_dynamic_calendar')) || {}; } catch(e) { dynamicCal = {}; }
             const mNames = ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"];
 
-            let html = '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">';
+            const tetNote = (window.TrainerUtils && !window.TrainerUtils.hasLunarNewYearData(currentYear))
+                ? `<span class="text-[10px] text-amber-600 ml-2">(Chưa có dữ liệu ngày Tết năm ${currentYear})</span>` : '';
+            let html = `
+                <div class="flex items-center justify-center gap-3 mt-2">
+                    <button type="button" onclick="shiftCalendarYear(-1)" class="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600" title="Năm trước"><i class="fas fa-chevron-left text-xs"></i></button>
+                    <span class="text-sm font-bold text-slate-800">Năm ${currentYear}</span>${tetNote}
+                    <button type="button" onclick="shiftCalendarYear(1)" class="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600" title="Năm sau"><i class="fas fa-chevron-right text-xs"></i></button>
+                </div>`;
+            html += '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">';
             
             mNames.forEach((n, m) => {
                 const mData = dynamicCal[`${currentYear}-${m+1}`] || {};
@@ -1502,8 +1529,8 @@
                     if(mData.onboards) {
                         mData.onboards.forEach(obStart => {
                             if(obStart) {
-                                const obD = new Date(obStart);
-                                const obE = new Date(obStart); 
+                                const obD = (window.TrainerUtils && window.TrainerUtils.parseLocalDate(obStart)) || new Date(obStart); // Sprint 1: 00:00 giờ VN, không bỏ sót ngày đầu
+                                const obE = new Date(obD);
                                 obE.setDate(obD.getDate()+4);
                                 if(curDate >= obD && curDate <= obE && !isW && !isHol) isOnboard = true;
                             }

@@ -98,6 +98,7 @@
         .modal.active .modal-content { transform: scale(1) translateY(0); opacity: 1; }
     </style>
     <script src="system-config.js"></script>
+    <script src="trainer-utils.js"></script>
     <script src="chat-history.js"></script>
 </head>
 <body>
@@ -298,7 +299,7 @@
                     <div class="tech-stat-card" style="--accent: #3b82f6"><div class="tech-stat-val" id="sl-total-class">0</div><p class="tech-stat-label">Tổng Lớp Học</p></div>
                     <div class="tech-stat-card" style="--accent: #10b981"><div class="tech-stat-val" id="sl-total-hv">0</div><p class="tech-stat-label">Học Viên</p></div>
                     <div class="tech-stat-card" style="--accent: #f59e0b"><div class="tech-stat-val" id="sl-pass-rate">0%</div><p class="tech-stat-label">Tỷ lệ Pass</p></div>
-                    <div class="tech-stat-card" style="--accent: #8b5cf6"><div class="tech-stat-val" id="sl-csat">4.8/5</div><p class="tech-stat-label">Mức Hài Lòng (CSAT)</p></div>
+                    <div class="tech-stat-card" style="--accent: #8b5cf6"><div class="tech-stat-val" id="sl-csat">N/A</div><p class="tech-stat-label">Mức Hài Lòng (CSAT)</p></div>
                 </div>
                 
                 <div class="mt-12 grid grid-cols-2 gap-8">
@@ -417,7 +418,25 @@
         let fCanvas = null;
 
         let currentReportTimeRange = 'all';
+        // Sprint 1: Năm báo cáo động (trước đây gán cứng 2026 -> hỏng từ 01/01/2027)
+        let currentReportYear = new Date().getFullYear();
         let masterTableSearchKeyword = '';
+
+        // Danh sách năm có dữ liệu + năm hiện tại, mới nhất trước
+        function getAvailableReportYears() {
+            const years = new Set([new Date().getFullYear(), currentReportYear]);
+            (Array.isArray(globalMasterDB) ? globalMasterDB : []).forEach(d => {
+                const { y } = parseRecordMonthAndYear(d);
+                if (y >= 2000 && y <= 2100) years.add(y);
+            });
+            return Array.from(years).sort((a, b) => b - a);
+        }
+
+        function applyReportYear(yearVal) {
+            const y = parseInt(yearVal, 10);
+            if (y) currentReportYear = y;
+            applyReportFilter(currentReportTimeRange);
+        }
 
         let secretClickCount = 0;
         function secretOpenWorkflow(e) {
@@ -554,7 +573,7 @@
 
             return data.filter(d => {
                 const { m, y } = parseRecordMonthAndYear(d);
-                const matchYear = (!y || y === 2026);
+                const matchYear = (!y || y === currentReportYear);
                 if (!matchYear) return false;
 
                 if (r === 'year') return true;
@@ -573,12 +592,13 @@
         function getTimeRangeLabel() {
             const r = currentReportTimeRange;
             if (r === 'all') return 'Toàn bộ thời gian';
-            if (r === 'year') return 'Cả năm 2026';
-            if (r === 'q1') return 'Quý 1/2026 (Tháng 1 - 3)';
-            if (r === 'q2') return 'Quý 2/2026 (Tháng 4 - 6)';
-            if (r === 'q3') return 'Quý 3/2026 (Tháng 7 - 9)';
-            if (r === 'q4') return 'Quý 4/2026 (Tháng 10 - 12)';
-            if (r.startsWith('m')) return `Tháng ${r.replace('m', '').padStart(2, '0')}/2026`;
+            const Y = currentReportYear;
+            if (r === 'year') return `Cả năm ${Y}`;
+            if (r === 'q1') return `Quý 1/${Y} (Tháng 1 - 3)`;
+            if (r === 'q2') return `Quý 2/${Y} (Tháng 4 - 6)`;
+            if (r === 'q3') return `Quý 3/${Y} (Tháng 7 - 9)`;
+            if (r === 'q4') return `Quý 4/${Y} (Tháng 10 - 12)`;
+            if (r.startsWith('m')) return `Tháng ${r.replace('m', '').padStart(2, '0')}/${Y}`;
             return 'Toàn bộ thời gian';
         }
 
@@ -740,7 +760,7 @@
                                 <td class="text-center font-bold text-slate-800">${p}</td>
                                 <td class="text-center"><span class="font-bold text-emerald-600">${s}</span> / <span class="font-bold text-rose-500">${parseInt(d.failedTrainees) || 0}</span></td>
                                 <td class="text-center"><span class="px-2 py-0.5 rounded-full text-xs font-black ${rate>=80?'bg-emerald-50 text-emerald-700 border border-emerald-200':'bg-rose-50 text-rose-700 border border-rose-200'}">${rate}%</span></td>
-                                <td class="text-center font-bold text-purple-600">${escapeHtml(d.csat || '4.8/5')}</td>
+                                <td class="text-center font-bold text-purple-600">${escapeHtml(d.csat || 'N/A')}</td>
                                 <td>
                                     <p class="text-[11px] text-slate-700 line-clamp-1" title="${escapeHtml(d.highlights || '')}"><b class="text-emerald-600">Sáng:</b> ${escapeHtml(d.highlights || '-')}</p>
                                     <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5" title="${escapeHtml(d.issues || '')}"><b class="text-rose-500">Tồn:</b> ${escapeHtml(d.issues || '-')}</p>
@@ -763,7 +783,7 @@
                             </span>
                             <select id="reportTimeRange" onchange="applyReportFilter()" class="saas-input py-1.5 px-3 text-xs font-bold text-blue-700 bg-blue-50 border-blue-200 rounded-lg cursor-pointer w-48">
                                 <option value="all" ${currentReportTimeRange==='all'?'selected':''}>Toàn bộ thời gian</option>
-                                <option value="year" ${currentReportTimeRange==='year'?'selected':''}>Cả năm 2026</option>
+                                <option value="year" ${currentReportTimeRange==='year'?'selected':''}>Cả năm</option>
                                 <option value="q1" ${currentReportTimeRange==='q1'?'selected':''}>Quý 1 (Tháng 1 - 3)</option>
                                 <option value="q2" ${currentReportTimeRange==='q2'?'selected':''}>Quý 2 (Tháng 4 - 6)</option>
                                 <option value="q3" ${currentReportTimeRange==='q3'?'selected':''}>Quý 3 (Tháng 7 - 9)</option>
@@ -782,6 +802,9 @@
                                     <option value="m11" ${currentReportTimeRange==='m11'?'selected':''}>Tháng 11</option>
                                     <option value="m12" ${currentReportTimeRange==='m12'?'selected':''}>Tháng 12</option>
                                 </optgroup>
+                            </select>
+                            <select id="reportYear" onchange="applyReportYear(this.value)" title="Năm báo cáo (không áp dụng cho 'Toàn bộ thời gian')" ${currentReportTimeRange==='all'?'disabled':''} class="saas-input py-1.5 px-3 text-xs font-bold text-blue-700 bg-blue-50 border-blue-200 rounded-lg cursor-pointer w-28 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                                ${getAvailableReportYears().map(y => `<option value="${y}" ${y===currentReportYear?'selected':''}>Năm ${y}</option>`).join('')}
                             </select>
                             <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-md border border-slate-200">
                                 ${filteredData.length} Khóa Học
@@ -847,7 +870,7 @@
                                 <div class="flex justify-between items-center mb-4">
                                     <div class="flex items-center gap-3">
                                         <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm"><i class="fas fa-chart-line"></i></div>
-                                        <div><h3 class="text-[14px] font-bold text-slate-800">Xu Hướng Số Lượng Học Viên & Tỷ Lệ Pass Năm 2026</h3><p class="text-[11px] text-slate-400">Đo lường sự biến thiên quy mô qua 12 tháng</p></div>
+                                        <div><h3 class="text-[14px] font-bold text-slate-800">Xu Hướng Số Lượng Học Viên & Tỷ Lệ Pass Năm ${currentReportYear}</h3><p class="text-[11px] text-slate-400">Đo lường sự biến thiên quy mô qua 12 tháng</p></div>
                                     </div>
                                 </div>
                                 <div class="flex-grow relative w-full h-full"><canvas id="trendChart"></canvas></div>
@@ -1008,7 +1031,7 @@
                         <td class="text-center font-bold text-slate-800">${p}</td>
                         <td class="text-center"><span class="font-bold text-emerald-600">${s}</span> / <span class="font-bold text-rose-500">${parseInt(d.failedTrainees) || 0}</span></td>
                         <td class="text-center"><span class="px-2 py-0.5 rounded-full text-xs font-black ${rate>=80?'bg-emerald-50 text-emerald-700 border border-emerald-200':'bg-rose-50 text-rose-700 border border-rose-200'}">${rate}%</span></td>
-                        <td class="text-center font-bold text-purple-600">${escapeHtml(d.csat || '4.8/5')}</td>
+                        <td class="text-center font-bold text-purple-600">${escapeHtml(d.csat || 'N/A')}</td>
                         <td>
                             <p class="text-[11px] text-slate-700 line-clamp-1" title="${escapeHtml(d.highlights || '')}"><b class="text-emerald-600">Sáng:</b> ${escapeHtml(d.highlights || '-')}</p>
                             <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5" title="${escapeHtml(d.issues || '')}"><b class="text-rose-500">Tồn:</b> ${escapeHtml(d.issues || '-')}</p>
@@ -1105,7 +1128,7 @@
                         <td style="text-align: center; font-weight: bold; color: #107c41;">${s}</td>
                         <td style="text-align: center; font-weight: bold; color: #d83b01;">${fail}</td>
                         <td style="text-align: center; font-weight: bold; background-color: #f2f9f5;">${rate}</td>
-                        <td style="text-align: center; font-weight: bold; color: #5c2d91;">${d.csat || '4.8/5'}</td>
+                        <td style="text-align: center; font-weight: bold; color: #5c2d91;">${d.csat || 'N/A'}</td>
                         <td style="vertical-align: top;">${highlightsClean || '-'}</td>
                         <td style="vertical-align: top;">${issuesClean || '-'}</td>
                         <td style="vertical-align: top;">${planClean || '-'}</td>
@@ -1121,7 +1144,7 @@
             const blob = new Blob([excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = `BaoCao_L&D_MasterDB_${currentReportTimeRange}_${new Date().toISOString().split('T')[0]}.xls`;
+            link.download = `BaoCao_L&D_MasterDB_${currentReportTimeRange}_${window.TrainerUtils ? window.TrainerUtils.formatLocalIsoDate(new Date()) : new Date().toISOString().split('T')[0]}.xls`;
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
@@ -1171,7 +1194,7 @@
 
             fullData.forEach(d => {
                 const { m, y } = parseRecordMonthAndYear(d);
-                if((!y || y === 2026) && m >= 1 && m <= 12) {
+                if((!y || y === currentReportYear) && m >= 1 && m <= 12) {
                     monthlyHV[m - 1] += parseInt(d.totalTrainees) || 0;
                     monthlyPass[m - 1] += parseInt(d.passedTrainees) || 0;
                 }
@@ -1276,7 +1299,6 @@
             const hasHeader = firstLineLower.includes('timestamp') || firstLineLower.includes('khóa') || firstLineLower.includes('đánh giá') || firstLineLower.includes('thời gian') || firstLineLower.includes('họ tên');
             const dataLines = hasHeader ? lines.slice(1) : lines;
 
-            const scores = [];
             const feedbacks = [];
             const courses = new Set();
             const trivialRegex = /^(không|không có|ko|k|không ạ|không ý kiến|ko có|k có|ok|quá ok|tốt|rất tốt|tuyệt vời|none|-|\.|dạ không|chưa có|rất dễ hiểu ạ|quá ok la, có nguồn kiến thức đầy đủ để tự học|ko ý kiến|chưa có ý kiến|không có ý kiến|không nha)?$/i;
@@ -1291,12 +1313,6 @@
                         courses.add(col);
                     }
 
-                    // Điểm số đánh giá từ 1 đến 5
-                    const num = parseFloat(col);
-                    if (!isNaN(num) && num >= 1 && num <= 5 && Number.isInteger(num)) {
-                        scores.push(num);
-                    }
-
                     // Ý kiến định tính thực tế (loại bỏ số, ngày giờ, câu ngắn vô nghĩa)
                     if (idx > 1 && col.length > 8 && isNaN(col) && !/^\d{2}[A-Za-z0-9_-]+$/i.test(col) && !col.includes('/202') && !col.includes(':') && !trivialRegex.test(col.toLowerCase())) {
                         feedbacks.push(col);
@@ -1305,7 +1321,10 @@
             });
 
             const uniqueFeedbacks = [...new Set(feedbacks)];
-            const avgScore = scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : '5.0';
+            // Sprint 1: điểm CSAT chỉ lấy từ cột điểm 1-5 (TrainerUtils), không tính timestamp/cột số khác,
+            // và không mặc định 5.0 khi không có dữ liệu
+            const csatCalc = window.TrainerUtils ? window.TrainerUtils.computeSurveyCsat(rawText, '') : { avg: null };
+            const avgScore = csatCalc.avg !== null ? csatCalc.avg.toFixed(1) : 'N/A';
 
             return {
                 totalRows: dataLines.length,
@@ -1328,7 +1347,7 @@
                 if (pSpcb.totalRows > 0) {
                     bSpcb.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-100 text-blue-700 animate-pulse";
                     bSpcb.innerHTML = `<i class="fas fa-check-circle mr-1"></i> Đã nhận ${pSpcb.totalRows} phản hồi`;
-                    prevSpcb.innerHTML = `<span class="text-blue-800 font-semibold"><i class="fas fa-star text-amber-500 mr-1"></i>CSAT: ${pSpcb.avgRating}/5</span> &bull; <span class="text-slate-700 font-medium ml-1.5">${pSpcb.feedbackCount} góp ý chất lượng</span> &bull; <span class="text-slate-500 text-[10px] ml-1.5">Khóa: ${pSpcb.courses.slice(0, 4).join(', ')}${pSpcb.courses.length > 4 ? '...' : ''}</span>`;
+                    prevSpcb.innerHTML = `<span class="text-blue-800 font-semibold"><i class="fas fa-star text-amber-500 mr-1"></i>CSAT: ${pSpcb.avgRating}${pSpcb.avgRating === 'N/A' ? '' : '/5'}</span> &bull; <span class="text-slate-700 font-medium ml-1.5">${pSpcb.feedbackCount} góp ý chất lượng</span> &bull; <span class="text-slate-500 text-[10px] ml-1.5">Khóa: ${pSpcb.courses.slice(0, 4).join(', ')}${pSpcb.courses.length > 4 ? '...' : ''}</span>`;
                 } else {
                     bSpcb.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-slate-100 text-slate-500";
                     bSpcb.innerText = "Chưa có dữ liệu";
@@ -1344,7 +1363,7 @@
                 if (pTax.totalRows > 0) {
                     bTax.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700 animate-pulse";
                     bTax.innerHTML = `<i class="fas fa-check-circle mr-1"></i> Đã nhận ${pTax.totalRows} phản hồi`;
-                    prevTax.innerHTML = `<span class="text-emerald-800 font-semibold"><i class="fas fa-star text-amber-500 mr-1"></i>CSAT: ${pTax.avgRating}/5</span> &bull; <span class="text-slate-700 font-medium ml-1.5">${pTax.feedbackCount} góp ý</span> &bull; <span class="text-slate-500 text-[10px] ml-1.5">${pTax.courses.slice(0, 3).join(', ')}</span>`;
+                    prevTax.innerHTML = `<span class="text-emerald-800 font-semibold"><i class="fas fa-star text-amber-500 mr-1"></i>CSAT: ${pTax.avgRating}${pTax.avgRating === 'N/A' ? '' : '/5'}</span> &bull; <span class="text-slate-700 font-medium ml-1.5">${pTax.feedbackCount} góp ý</span> &bull; <span class="text-slate-500 text-[10px] ml-1.5">${pTax.courses.slice(0, 3).join(', ')}</span>`;
                 } else {
                     bTax.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-slate-100 text-slate-500";
                     bTax.innerText = "Chưa có dữ liệu";
@@ -1411,18 +1430,18 @@
                 groupStats[g].pass += parseInt(d.passedTrainees) || 0;
                 totalHV += parseInt(d.totalTrainees) || 0;
                 totalPass += parseInt(d.passedTrainees) || 0;
-                const csatVal = parseFloat(String(d.csat || '4.8').replace(',', '.'));
+                const csatVal = parseFloat(String(d.csat || '').replace(',', '.'));
                 if (!isNaN(csatVal) && csatVal > 0 && csatVal <= 5) {
                     csatSum += csatVal;
                     csatCount++;
                 }
             });
 
-            const avgCsat = csatCount > 0 ? (Math.round((csatSum / csatCount) * 10) / 10).toFixed(1) : '4.8';
+            const avgCsat = csatCount > 0 ? (Math.round((csatSum / csatCount) * 10) / 10).toFixed(1) : null; // Sprint 1: không có CSAT thì hiện N/A, không bịa 4.8
             document.getElementById('sl-total-class').innerText = data.length;
             document.getElementById('sl-total-hv').innerText = totalHV;
             document.getElementById('sl-pass-rate').innerText = totalHV > 0 ? Math.round((totalPass/totalHV)*100) + '%' : '0%';
-            if (document.getElementById('sl-csat')) document.getElementById('sl-csat').innerText = `${avgCsat}/5`;
+            if (document.getElementById('sl-csat')) document.getElementById('sl-csat').innerText = avgCsat ? `${avgCsat}/5` : 'N/A';
 
             let taughtHtml = '', selfHtml = '';
             for(let key in groupStats) {
@@ -1460,7 +1479,7 @@
 
                 const allComments = [...pSpcb.feedbacks, ...pTax.feedbacks];
                 const topComments = allComments.slice(0, 15);
-                const surveyCsat = pSpcb.totalRows > 0 ? pSpcb.avgRating : '4.8';
+                const surveyCsat = pSpcb.totalRows > 0 ? pSpcb.avgRating : 'chưa có dữ liệu';
                 const passRate = totalHV > 0 ? Math.round((totalPass/totalHV)*100) : 0;
 
                 const promptInsight = `Bạn là Giám đốc Đào tạo L&D KiotViet. Phân tích kết quả khảo sát thực tế sau từ học viên:

@@ -79,6 +79,7 @@
         .modal.active .modal-content { transform: scale(1) translateY(0); opacity: 1; }
     </style>
     <script src="system-config.js"></script>
+    <script src="trainer-utils.js"></script>
 </head>
 <body>
 
@@ -144,7 +145,7 @@
                                 </div>
                                 <div>
                                     <label class="form-label text-blue-600">Tên Mã Khóa Học (VD: 26KV14)</label>
-                                    <input type="text" id="conf-course-code" class="saas-input font-bold" value="26KV14" oninput="renderDynamicTemplates()">
+                                    <input type="text" id="conf-course-code" class="saas-input font-bold" value="" placeholder="VD: 26KV15" oninput="renderDynamicTemplates()">
                                 </div>
                             </div>
                             <div class="grid grid-cols-3 gap-4 mb-4">
@@ -420,7 +421,7 @@
                         
                         <div class="space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div><label class="form-label text-slate-300">Mã Khóa <span class="text-rose-400">*</span></label><input type="text" id="courseId" value="26KV14" oninput="if(window.autoUpdateCsatField) window.autoUpdateCsatField(this.value)" class="saas-input uppercase font-bold text-slate-900 bg-white border-none"></div>
+                                <div><label class="form-label text-slate-300">Mã Khóa <span class="text-rose-400">*</span></label><input type="text" id="courseId" value="" placeholder="VD: 26KV15" oninput="if(window.autoUpdateCsatField) window.autoUpdateCsatField(this.value)" class="saas-input uppercase font-bold text-slate-900 bg-white border-none"></div>
                                 <div><label class="form-label text-slate-300">Trạng thái</label><select id="status" class="saas-input text-slate-900 bg-white border-none"><option value="Hoàn thành" selected>Hoàn thành</option><option value="Đang diễn ra">Đang diễn ra</option><option value="Hủy">Hủy</option></select></div>
                             </div>
 
@@ -438,7 +439,7 @@
                                             <label class="form-label text-purple-400">CSAT Khảo sát</label>
                                             <button type="button" onclick="if(window.openQuickSurveyModal) window.openQuickSurveyModal()" class="text-[9px] text-purple-300 hover:text-white underline"><i class="fas fa-poll-h mr-0.5"></i>Nạp</button>
                                         </div>
-                                        <input type="text" id="csat" value="4.8/5" class="saas-input text-center font-bold text-lg bg-purple-900/40 text-purple-300 border-purple-800">
+                                        <input type="text" id="csat" value="" placeholder="Chưa có CSAT" class="saas-input text-center font-bold text-lg bg-purple-900/40 text-purple-300 border-purple-800">
                                     </div>
                                 </div>
                             </div>
@@ -637,7 +638,7 @@
             const dFri = new Date(dTue); dFri.setDate(dTue.getDate() + 3);
             const dSat = new Date(dTue); dSat.setDate(dTue.getDate() + 4);
 
-            document.getElementById('courseId').value = courseCode;
+            document.getElementById('courseId').value = document.getElementById('conf-course-code').value.trim(); // Sprint 1: không điền chữ "[Mã Khóa]" vào ô mã khóa thật
             if (typeof window.autoUpdateCsatField === 'function') {
                 window.autoUpdateCsatField(courseCode);
             }
@@ -793,12 +794,21 @@
                                 dept: iDept!==-1 && cols[iDept] ? cols[iDept].trim() : '', 
                                 location: iLoc!==-1 && cols[iLoc] ? cols[iLoc].trim() : '', 
                                 region: iReg!==-1 && cols[iReg] ? cols[iReg].trim() : '', 
-                                attempt: 0, score: 0, status: 'Miss' 
+                                attempt: 0, score: 0, status: 'Miss'
                             });
                         }
                     }
                 }
             }
+            // Sprint 1: khôi phục kết quả chấm Lần 1 đã lưu (F5 / sửa danh sách không làm mất kết quả L1)
+            if (window.TrainerUtils && rosterData.length > 0) {
+                window.TrainerUtils.restoreRoundOneResults(localStorage, getSpcbL1Key(), rosterData);
+            }
+        }
+
+        function getSpcbL1Key() {
+            const codeEl = document.getElementById('conf-course-code');
+            return window.TrainerUtils.roundOneStorageKey('SPCB', codeEl ? codeEl.value : '');
         }
 
         function saveSpcbConfig() {
@@ -1075,7 +1085,10 @@
                 const cols = lmsRows[i].split('\t');
                 if(cols.length > Math.max(iEmail, iA)) {
                     let em = cols[iEmail].trim().toLowerCase();
-                    let tQ = iQ!==-1 ? parseInt(cols[iQ]) : 30; 
+                    if (!em) continue;
+                    // Sprint 1: ô "Số câu hỏi" trống/#N/A/0 -> dùng mặc định 30 (trước đây ra NaN = Fail, hoặc Infinity = Pass)
+                    const tQRaw = iQ !== -1 ? parseInt(cols[iQ], 10) : NaN;
+                    let tQ = tQRaw > 0 ? tQRaw : 30;
                     let tA = parseInt(cols[iA].replace(',', '.').trim()) || 0;
                     let p = Math.round((tA / tQ) * 100);
                     if (p > 100) p = 100;
@@ -1093,6 +1106,9 @@
                         if(r.score >= 80) { r.status = 'Pass'; r.statusL1 = 'Pass'; gradedStats.pass++; }
                         else { r.status = 'Fail'; r.statusL1 = 'Fail'; gradedStats.fail++; }
                     } else { r.score = 0; r.scoreL1 = 0; r.attempt = 0; r.status = 'Miss'; r.statusL1 = 'Miss'; gradedStats.fail++; }
+                    if (window.TrainerUtils && r === rosterData[rosterData.length - 1]) {
+                        window.TrainerUtils.saveRoundOneResults(localStorage, getSpcbL1Key(), rosterData);
+                    }
                 } else {
                     const baseStatus = r.statusL1 !== undefined ? r.statusL1 : r.status;
                     const baseScore = r.scoreL1 !== undefined ? r.scoreL1 : (r.score || 0);
@@ -1185,13 +1201,16 @@
                 totalTrainees: document.getElementById('totalTrainees').value || "0",
                 passedTrainees: document.getElementById('passedTrainees').value || "0",
                 failedTrainees: document.getElementById('failedTrainees').value || "0",
-                csat: document.getElementById('csat') ? document.getElementById('csat').value : "4.8/5",
+                csat: document.getElementById('csat') ? document.getElementById('csat').value.trim() : "",
                 highlights: document.getElementById('highlights') ? document.getElementById('highlights').value : "Lớp hoàn thành đúng tiến độ Onboard",
                 issues: document.getElementById('issues') ? document.getElementById('issues').value : "Cần bám sát học viên thực hành",
                 actionPlan: document.getElementById('actionPlan') ? document.getElementById('actionPlan').value : "Tiếp tục duy trì kèm cặp trên LMS",
                 listLink: document.getElementById('listLink').value || '',
                 quizLink: document.getElementById('quizLink').value || ''
             };
+            // Sprint 1: kiểm tra mã khóa và số liệu trước khi lưu/gửi
+            const reportError = window.TrainerUtils ? window.TrainerUtils.validateCourseReport(payload) : '';
+            if (reportError) return alert(reportError);
 
             const btn = document.getElementById('btnSubmit');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang đồng bộ Database...';
@@ -1254,6 +1273,10 @@
                     if (savedMeta.record) document.getElementById('conf-record').value = savedMeta.record;
                 }
             } catch (e) {}
+            // Sprint 1: mã khóa vừa được nạp lại -> khôi phục kết quả Lần 1 đúng theo mã khóa
+            if (window.TrainerUtils && rosterData.length > 0) {
+                window.TrainerUtils.restoreRoundOneResults(localStorage, getSpcbL1Key(), rosterData);
+            }
             
             try {
                 const GOOGLE_API_URL = typeof getGlobalApiUrl === "function" ? getGlobalApiUrl() : (localStorage.getItem("kv_api_url") || "");

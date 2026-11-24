@@ -327,13 +327,15 @@
             let isPass = false;
             let resultDisplay = 'Fail';
 
-            if (rawRes.includes('đậu') || rawRes.includes('đạt') || rawRes.includes('pass')) {
-                isPass = true;
-                resultDisplay = 'Pass';
-            } else if (rawRes.includes('rớt') || rawRes.includes('trượt') || rawRes.includes('fail')) {
+            // Sprint 1: kiểm tra "Không đạt / Chưa đạt" TRƯỚC "Đạt" (trước đây "Không đạt" bị tính là Pass)
+            const resultClass = window.TrainerUtils ? window.TrainerUtils.classifyResult(rawRes) : '';
+            if (resultClass === 'fail') {
                 isPass = false;
                 resultDisplay = 'Fail';
-            } else if (rawRes.includes('#n/a') || rawScore.includes('#n/a') || rawPct.includes('#n/a')) {
+            } else if (resultClass === 'pass') {
+                isPass = true;
+                resultDisplay = 'Pass';
+            } else if (rawRes.includes('#n/a') || rawScore.toLowerCase().includes('#n/a') || rawPct.toLowerCase().includes('#n/a')) {
                 isPass = false;
                 resultDisplay = '#N/A';
             } else {
@@ -406,8 +408,6 @@
         // Tự động tính toán điểm CSAT từ data khảo sát thực tế của khóa này
         if (typeof window.autoUpdateCsatField === 'function') {
             window.autoUpdateCsatField();
-        } else if (document.getElementById('csat')) {
-            document.getElementById('csat').value = '4.8/5';
         }
 
         if (document.getElementById('highlights')) document.getElementById('highlights').value = highlights;
@@ -494,7 +494,7 @@
             const total = document.getElementById('totalTrainees')?.value || '0';
             const pass = document.getElementById('passedTrainees')?.value || '0';
             const fail = document.getElementById('failedTrainees')?.value || '0';
-            const csat = document.getElementById('csat')?.value || '4.8/5';
+            const csat = document.getElementById('csat')?.value || '';
             const highlights = document.getElementById('highlights')?.value || '';
             const issues = document.getElementById('issues')?.value || '';
             const actionPlan = document.getElementById('actionPlan')?.value || '';
@@ -540,22 +540,16 @@
     }
 
     // ==================== BỘ TỰ ĐỘNG TÍNH CSAT THEO TỪNG MÃ KHÓA ====================
+    // Sprint 1: so khớp chính xác theo mã/từ (trước đây "26KV14" khớp nhầm "26KV141", "SPCB" khớp mọi khóa)
     window.isCourseCodeMatch = function (cellValue, targetCourseCode) {
+        if (window.TrainerUtils) return window.TrainerUtils.isCourseCodeMatch(cellValue, targetCourseCode);
         if (!cellValue || !targetCourseCode) return false;
-        const cleanCell = String(cellValue).trim().toUpperCase();
-        const cleanTarget = String(targetCourseCode).trim().toUpperCase();
-        if (cleanCell === cleanTarget) return true;
-
-        const normCell = cleanCell.replace(/[^A-Z0-9]/g, '');
-        const normTarget = cleanTarget.replace(/[^A-Z0-9]/g, '');
-        if (normCell && normTarget && normCell === normTarget) return true;
-
-        if (normCell.length >= 4 && normTarget.length >= 4) {
-            if (normCell.includes(normTarget) || normTarget.includes(normCell)) return true;
-        }
-        return false;
+        return String(cellValue).trim().toUpperCase().replace(/[^A-Z0-9]/g, '') === String(targetCourseCode).trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     };
 
+    // Sprint 1: tính CSAT bằng TrainerUtils.computeSurveyCsat - chỉ đọc CỘT ĐIỂM (1-5) của ĐÚNG mã khóa.
+    // Trước đây: lấy mọi số 1-5 ở mọi cột (kể cả timestamp "3/11/2026" -> 3, cột "số buổi"),
+    // khớp mã khóa theo chuỗi con, và trả về 4.8/5 khi không có dữ liệu.
     window.getCourseSurveyStats = function (targetCourseCode, customSurveyText = null) {
         let allSurveyText = customSurveyText;
         if (typeof allSurveyText !== 'string' || allSurveyText.trim() === '') {
@@ -563,87 +557,47 @@
             const sTax = localStorage.getItem('kv_survey_tax') || '';
             allSurveyText = `${sSpcb}\n${sTax}`.trim();
         }
-
-        if (!allSurveyText) {
-            return { found: false, hasAnySurvey: false, avgCsat: '4.8/5', message: 'Chưa có dữ liệu khảo sát trong hệ thống' };
+        const empty = { found: false, hasAnySurvey: false, avgCsat: '', scoreVal: null, feedbacks: [] };
+        if (!allSurveyText || !window.TrainerUtils) {
+            return Object.assign(empty, { message: 'Chưa có dữ liệu khảo sát trong hệ thống' });
         }
 
-        const lines = allSurveyText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-        if (lines.length <= 1) {
-            return { found: false, hasAnySurvey: false, avgCsat: '4.8/5', message: 'Dữ liệu khảo sát trống' };
-        }
-
-        const scores = [];
-        const feedbacks = [];
-        const allScoresFallback = [];
-        let matchCount = 0;
+        const U = window.TrainerUtils;
         const target = targetCourseCode ? String(targetCourseCode).trim() : '';
+        const overall = U.computeSurveyCsat(allSurveyText, '');
+        if (overall.avg === null) {
+            return Object.assign(empty, { message: 'Dữ liệu khảo sát không có cột điểm 1-5' });
+        }
 
-        const trivialRegex = /^(không|không có|ko|k|không ạ|không ý kiến|ko có|k có|ok|quá ok|tốt|rất tốt|tuyệt vời|none|-|\.|dạ không|chưa có)?$/i;
-
-        lines.forEach(line => {
-            const cols = line.split('\t').map(c => c.trim());
-            if (cols.length < 2) return;
-
-            const firstColLower = cols[0].toLowerCase();
-            if (firstColLower.includes('timestamp') || firstColLower.includes('thời gian') || firstColLower.includes('đánh giá')) return;
-
-            cols.forEach(col => {
-                const num = parseFloat(col);
-                if (!isNaN(num) && num >= 1 && num <= 5 && Number.isInteger(num)) {
-                    allScoresFallback.push(num);
-                }
-            });
-
-            if (target) {
-                const isMatch = window.isCourseCodeMatch(cols[1], target) || 
-                                window.isCourseCodeMatch(cols[0], target) || 
-                                (cols[2] && window.isCourseCodeMatch(cols[2], target));
-
-                if (isMatch) {
-                    matchCount++;
-                    cols.forEach((col, idx) => {
-                        const num = parseFloat(col);
-                        if (!isNaN(num) && num >= 1 && num <= 5 && Number.isInteger(num)) {
-                            scores.push(num);
-                        }
-                        if (idx > 1 && col.length > 8 && isNaN(col) && !col.includes('/202') && !trivialRegex.test(col.toLowerCase())) {
-                            feedbacks.push(col);
-                        }
-                    });
-                }
+        if (target) {
+            const specific = U.computeSurveyCsat(allSurveyText, target);
+            if (specific.avg !== null) {
+                return {
+                    found: true,
+                    hasAnySurvey: true,
+                    isSpecific: true,
+                    courseCode: target,
+                    responseCount: specific.responseCount,
+                    avgCsat: `${specific.avg.toFixed(1)}/5`,
+                    scoreVal: specific.avg,
+                    feedbacks: specific.feedbacks
+                };
             }
-        });
-
-        if (target && matchCount > 0 && scores.length > 0) {
-            const avg = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
-            return {
-                found: true,
-                hasAnySurvey: true,
-                isSpecific: true,
-                courseCode: target,
-                responseCount: matchCount,
-                avgCsat: `${avg}/5`,
-                scoreVal: parseFloat(avg),
-                feedbacks: [...new Set(feedbacks)]
-            };
         }
 
-        if (allScoresFallback.length > 0) {
-            const generalAvg = (allScoresFallback.reduce((a, b) => a + b, 0) / allScoresFallback.length).toFixed(1);
-            return {
-                found: false,
-                hasAnySurvey: true,
-                isSpecific: false,
-                courseCode: target,
-                avgCsat: `${generalAvg}/5`,
-                scoreVal: parseFloat(generalAvg),
-                responseCount: lines.length - 1,
-                message: `Chưa có khảo sát riêng cho ${target || 'khóa này'} (Điểm CSAT chung: ${generalAvg}/5)`
-            };
-        }
-
-        return { found: false, hasAnySurvey: false, avgCsat: '4.8/5', message: 'Chưa có dữ liệu khảo sát' };
+        // Không có khảo sát riêng cho khóa này -> chỉ báo CSAT chung để tham khảo, KHÔNG tự điền vào khóa
+        return {
+            found: false,
+            hasAnySurvey: true,
+            isSpecific: false,
+            courseCode: target,
+            avgCsat: '',
+            generalCsat: `${overall.avg.toFixed(1)}/5`,
+            scoreVal: null,
+            responseCount: overall.responseCount,
+            feedbacks: [],
+            message: `Chưa có khảo sát riêng cho ${target || 'khóa này'} (CSAT chung toàn hệ thống: ${overall.avg.toFixed(1)}/5)`
+        };
     };
 
     window.autoUpdateCsatField = function (customCourseCode) {
@@ -680,8 +634,14 @@
         const stats = window.getCourseSurveyStats(courseCode);
         const isDark = csatInput.closest('.bg-slate-800, .bg-slate-900, .bg-slate-700') !== null;
 
+        if (!csatInput.dataset.manualWatch) {
+            csatInput.dataset.manualWatch = '1';
+            csatInput.addEventListener('input', function () { csatInput.dataset.autoFilled = '0'; });
+        }
+
         if (stats.found && stats.isSpecific) {
             csatInput.value = stats.avgCsat;
+            csatInput.dataset.autoFilled = '1';
             csatInput.classList.remove('border-purple-800', 'bg-purple-900/40', 'text-purple-300', 'border-purple-200', 'text-purple-700', 'bg-white', 'bg-slate-50');
             if (isDark) {
                 csatInput.classList.add('border-emerald-500', 'bg-emerald-900/30', 'text-emerald-300');
@@ -704,20 +664,24 @@
                     issueInput.value = stats.feedbacks[0];
                 }
             }
-        } else if (stats.hasAnySurvey) {
-            csatInput.value = stats.avgCsat || '4.8/5';
+        } else {
+            // Sprint 1: Không tự điền số không có thật. Chỉ xóa giá trị do hệ thống tự điền trước đó
+            // (hoặc mặc định cũ 4.8/5), giữ nguyên số Trainer tự gõ tay.
+            if (csatInput.dataset.autoFilled === '1' || csatInput.value.trim() === '4.8/5') {
+                csatInput.value = '';
+                csatInput.dataset.autoFilled = '0';
+            }
+            csatInput.placeholder = 'Chưa có CSAT';
+            const safeCode = String(courseCode).replace(/[^A-Za-z0-9_\-]/g, '');
+            const linkCls = `underline ${isDark ? 'text-blue-300 hover:text-white' : 'text-blue-600 hover:text-blue-800'} font-bold ml-1`;
+            const useGeneralBtn = stats.generalCsat
+                ? `&bull; <button type="button" class="${linkCls}" onclick="(function(){var i=document.getElementById('csat'); if(i){ i.value='${stats.generalCsat}'; i.dataset.autoFilled='0'; }})()">Dùng CSAT chung ${stats.generalCsat}</button>`
+                : '';
             hintEl.innerHTML = `
                 <span class="${isDark ? 'text-amber-400' : 'text-amber-700'} font-semibold flex items-center justify-center gap-1 flex-wrap">
-                    <i class="fas fa-info-circle text-amber-500"></i> CSAT chung (${stats.avgCsat}) &bull; 
-                    <button type="button" onclick="window.openQuickSurveyModal('${courseCode}')" class="underline ${isDark ? 'text-blue-300 hover:text-white' : 'text-blue-600 hover:text-blue-800'} font-bold ml-1">Nạp data khóa ${courseCode}</button>
-                </span>
-            `;
-        } else {
-            csatInput.value = '4.8/5';
-            hintEl.innerHTML = `
-                <span class="${isDark ? 'text-slate-400' : 'text-slate-500'} flex items-center justify-center gap-1 flex-wrap">
-                    <i class="fas fa-exclamation-triangle text-amber-500"></i> Chưa có data khảo sát &bull; 
-                    <button type="button" onclick="window.openQuickSurveyModal('${courseCode}')" class="underline ${isDark ? 'text-blue-300 hover:text-white' : 'text-blue-600 hover:text-blue-800'} font-bold ml-1">Nạp ngay</button>
+                    <i class="fas fa-exclamation-triangle text-amber-500"></i> ${stats.hasAnySurvey ? 'Chưa có khảo sát riêng cho khóa này' : 'Chưa có data khảo sát'} &bull;
+                    <button type="button" onclick="window.openQuickSurveyModal('${safeCode}')" class="${linkCls}">Nạp data khóa ${safeCode}</button>
+                    ${useGeneralBtn}
                 </span>
             `;
         }
@@ -837,7 +801,7 @@
         if (stats.found && stats.isSpecific) {
             prevEl.innerHTML = `<span class="text-emerald-700 font-bold"><i class="fas fa-star text-amber-500 mr-1"></i>CSAT Khóa ${stats.courseCode}: ${stats.avgCsat}</span> &bull; <span class="text-slate-700 font-medium ml-1.5">${stats.responseCount} học viên đánh giá</span>${stats.feedbacks && stats.feedbacks.length > 0 ? ` &bull; <span class="text-slate-500 text-[10px] ml-1.5">${stats.feedbacks.length} góp ý chi tiết</span>` : ''}`;
         } else {
-            prevEl.innerHTML = `<span class="text-blue-700 font-bold"><i class="fas fa-calculator text-blue-500 mr-1"></i>CSAT Chung: ${stats.avgCsat}</span> &bull; <span class="text-slate-600 font-medium ml-1.5">${lines.length - 1} phản hồi toàn hệ thống</span> &bull; <span class="text-amber-700 text-[10px] ml-1.5">Chưa có dòng nào ghi mã khóa [${code || 'này'}]</span>`;
+            prevEl.innerHTML = `<span class="text-blue-700 font-bold"><i class="fas fa-calculator text-blue-500 mr-1"></i>CSAT Chung: ${stats.generalCsat || 'Chưa đọc được cột điểm 1-5'}</span> &bull; <span class="text-slate-600 font-medium ml-1.5">${lines.length - 1} phản hồi toàn hệ thống</span> &bull; <span class="text-amber-700 text-[10px] ml-1.5">Chưa có dòng nào ghi mã khóa [${code || 'này'}]</span>`;
         }
     };
 
@@ -860,7 +824,7 @@
         window.autoUpdateCsatField(code);
 
         const stats = window.getCourseSurveyStats(code);
-        alert(`⚡ ĐÃ ĐỒNG BỘ THÀNH CÔNG DỮ LIỆU KHẢO SÁT!\n\n- Mã khóa: ${code || 'Toàn hệ thống'}\n- Điểm CSAT: ${stats.avgCsat || '4.8/5'}\n${stats.isSpecific ? `- Số lượng học viên đánh giá: ${stats.responseCount}` : '- Đang áp dụng điểm CSAT trung bình'}`);
+        alert(`⚡ ĐÃ ĐỒNG BỘ THÀNH CÔNG DỮ LIỆU KHẢO SÁT!\n\n- Mã khóa: ${code || 'Toàn hệ thống'}\n- Điểm CSAT: ${stats.avgCsat || 'Chưa có'}\n${stats.isSpecific ? `- Số lượng học viên đánh giá: ${stats.responseCount}` : `- Chưa có khảo sát riêng cho khóa này${stats.generalCsat ? ' (CSAT chung: ' + stats.generalCsat + ')' : ''}`}`);
     };
 
     const originalFetch = window.fetch;
@@ -915,7 +879,7 @@
         document.getElementById('memoPassHV').innerText = pass;
         document.getElementById('memoFailHV').innerText = fail;
         document.getElementById('memoPassRate').innerText = `${rate}%`;
-        document.getElementById('memoCsat').innerText = `${courseData.csat || '4.8/5'} ★`;
+        document.getElementById('memoCsat').innerText = `${courseData.csat || 'N/A'} ★`;
 
         document.getElementById('memoHighlights').innerText = courseData.highlights || 'Học viên hoàn thành tốt nội dung chương trình đào tạo theo kế hoạch.';
         document.getElementById('memoIssues').innerText = courseData.issues || 'Không có khó khăn lớn phát sinh trong quá trình vận hành.';

@@ -524,7 +524,7 @@ function doPost(e) {
         data.totalTrainees || 0, 
         data.passedTrainees || 0, 
         data.failedTrainees || 0, 
-        data.csat || "4.8/5", 
+        data.csat || "", // Sprint 1: không mặc định 4.8/5 
         data.highlights || "", 
         data.issues || "", 
         data.actionPlan || "", 

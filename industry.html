@@ -50,6 +50,7 @@
         .modal.active .modal-content { transform: scale(1) translateY(0); opacity: 1; }
     </style>
     <script src="system-config.js"></script>
+    <script src="trainer-utils.js"></script>
 </head>
 <body>
 
@@ -274,7 +275,7 @@
                                                 <label class="form-label text-purple-600">CSAT</label>
                                                 <button type="button" onclick="if(window.openQuickSurveyModal) window.openQuickSurveyModal(document.getElementById('db-code') ? document.getElementById('db-code').value : '')" class="text-[9px] text-purple-600 hover:underline"><i class="fas fa-poll-h mr-0.5"></i>Nạp</button>
                                             </div>
-                                            <input type="text" id="csat" value="4.8/5" class="saas-input text-center font-bold text-lg border-purple-200 text-purple-700">
+                                            <input type="text" id="csat" value="" placeholder="Chưa có CSAT" class="saas-input text-center font-bold text-lg border-purple-200 text-purple-700">
                                         </div>
                                     </div>
                                 </div>
@@ -477,13 +478,16 @@
                 totalTrainees: document.getElementById('totalTrainees').value || "0",
                 passedTrainees: document.getElementById('passedTrainees').value || "0",
                 failedTrainees: document.getElementById('failedTrainees').value || "0",
-                csat: document.getElementById('csat') ? document.getElementById('csat').value : "4.8/5",
+                csat: document.getElementById('csat') ? document.getElementById('csat').value.trim() : "",
                 highlights: document.getElementById('highlights') ? document.getElementById('highlights').value : "Học viên hoàn thành tốt nghiệp vụ chuyên ngành",
                 issues: document.getElementById('issues') ? document.getElementById('issues').value : "Cần rèn luyện thêm thao tác thiết bị phần cứng",
                 actionPlan: document.getElementById('actionPlan') ? document.getElementById('actionPlan').value : "Bàn giao kết quả cho SM theo dõi thực chiến",
                 listLink: document.getElementById('listLink').value || '',
                 quizLink: document.getElementById('quizLink').value || ''
             };
+            // Sprint 1: kiểm tra mã khóa và số liệu trước khi lưu/gửi
+            const reportError = window.TrainerUtils ? window.TrainerUtils.validateCourseReport(payload) : '';
+            if (reportError) return alert(reportError);
 
             const btn = document.getElementById('btnSubmit');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang đồng bộ Database...';

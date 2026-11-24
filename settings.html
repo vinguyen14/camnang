@@ -41,6 +41,7 @@
         #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
     </style>
     <script src="system-config.js"></script>
+    <script src="trainer-utils.js"></script>
 </head>
 <body class="antialiased min-h-screen flex flex-col relative bg-slate-50">
 
@@ -126,9 +127,12 @@
                         <h2 class="text-xl font-bold text-slate-800">Quản trị Lịch Đào tạo Năm</h2>
                         <p class="text-xs text-slate-500 mt-1">Cấu hình ngày chạy các khóa để tự động kích hoạt Chuông Thông Báo (0 - 7 ngày)</p>
                     </div>
-                    <select id="calMonthSelect" onchange="renderDynamicCalendar()" class="saas-input w-40 cursor-pointer font-bold text-blue-600">
-                        <option value="1">Tháng 1/2026</option><option value="2">Tháng 2/2026</option><option value="3">Tháng 3/2026</option><option value="4">Tháng 4/2026</option><option value="5">Tháng 5/2026</option><option value="6">Tháng 6/2026</option><option value="7">Tháng 7/2026</option><option value="8">Tháng 8/2026</option><option value="9">Tháng 9/2026</option><option value="10">Tháng 10/2026</option><option value="11">Tháng 11/2026</option><option value="12">Tháng 12/2026</option>
+                    <div class="flex gap-2">
+                    <select id="calYearSelect" onchange="renderDynamicCalendar()" class="saas-input w-28 cursor-pointer font-bold text-blue-600" title="Năm của lịch đào tạo"></select>
+                    <select id="calMonthSelect" onchange="renderDynamicCalendar()" class="saas-input w-32 cursor-pointer font-bold text-blue-600">
+                        <option value="1">Tháng 1</option><option value="2">Tháng 2</option><option value="3">Tháng 3</option><option value="4">Tháng 4</option><option value="5">Tháng 5</option><option value="6">Tháng 6</option><option value="7">Tháng 7</option><option value="8">Tháng 8</option><option value="9">Tháng 9</option><option value="10">Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option>
                     </select>
+                    </div>
                 </div>
 
                 <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-6">
@@ -290,7 +294,14 @@
         ];
 
         window.onload = () => {
-            const m = new Date().getMonth() + 1; 
+            const m = new Date().getMonth() + 1;
+            // Sprint 1: chọn được năm (năm trước, năm nay, 2 năm tới); trước đây chỉ ghi được lịch năm 2026
+            const yNow = new Date().getFullYear();
+            const ySel = document.getElementById('calYearSelect');
+            if (ySel) {
+                ySel.innerHTML = [yNow - 1, yNow, yNow + 1, yNow + 2].map(y => `<option value="${y}">Năm ${y}</option>`).join('');
+                ySel.value = String(yNow);
+            }
             document.getElementById('calMonthSelect').value = m;
             loadProfile(); 
             loadAPI();
@@ -336,8 +347,15 @@
             }
         }
 
+        // Khóa lịch "YYYY-M" theo năm + tháng đang chọn (các trang khác đọc theo năm thực tế)
+        function getCalendarKey() {
+            const ySel = document.getElementById('calYearSelect');
+            const y = (ySel && ySel.value) ? ySel.value : new Date().getFullYear();
+            return `${y}-${document.getElementById('calMonthSelect').value}`;
+        }
+
         function renderDynamicCalendar() {
-            const key = `2026-${document.getElementById('calMonthSelect').value}`;
+            const key = getCalendarKey();
             const d = dynamicCalTemp[key] || { kv1: '', tax: '', fnb: '', salon: '', hotel: '', onboards: ['', '', '', ''] };
             document.getElementById('cal-kv1').value = d.kv1 || ''; 
             document.getElementById('cal-tax').value = d.tax || '';
@@ -352,7 +370,7 @@
         }
 
         function updateCalTemp() {
-            const key = `2026-${document.getElementById('calMonthSelect').value}`;
+            const key = getCalendarKey();
             dynamicCalTemp[key] = {
                 kv1: document.getElementById('cal-kv1').value, 
                 tax: document.getElementById('cal-tax').value,
