@@ -179,3 +179,30 @@ Xem `HUONG-DAN-TRIEN-KHAI-SPRINT0.md`.
 - **Trợ lý AI mất chữ:** ghép đủ mọi phần văn bản của câu trả lời Gemini (trước đây chỉ lấy `parts[0]` nên câu trả lời dài bị cắt giữa chừng), bỏ phần "thought"; ghi chú khi bị cắt do `MAX_TOKENS`. Hướng dẫn Kevin không dùng tiêu đề `#` vì khung chat chỉ hiển thị chữ đậm/nghiêng và xuống dòng.
 - **Model Gemini ngừng hỗ trợ:** bỏ `gemini-2.5-flash` / `gemini-2.5-flash-lite` (Google ngừng cấp cho người dùng mới) khỏi danh sách mặc định. Phân loại lỗi thành *quá tải* / *model không còn khả dụng* / *lỗi cố định*; khi tất cả đều thất bại, thông báo liệt kê lý do của từng model và nhắc Admin cập nhật `GEMINI_MODELS` nếu mọi model đều ngừng hỗ trợ.
 - **Lưu lịch sử chat Trợ lý AI:** thêm `chat-history.js` (nạp ở `index.html`, `tools.html`). Lịch sử khung chat của từng trang được lưu trên máy (tối đa 60 tin) và khôi phục khi quay lại trang; tin đang chờ trả lời lúc rời trang được ghi chú rõ; thêm nút 🗑 xóa lịch sử. Không đồng bộ lên Cloud.
+
+---
+
+## 5. Sprint 1 — Đúng Số Liệu (24/11/2026)
+
+> Nguồn: Báo cáo kiểm thử hồi quy 21/11/2026 (DATA-03 → DATA-06, BUG-02 → BUG-06, BUG-10). Snapshot trước khi sửa: `_backups/snapshot_20261124_101112_Pre_Sprint1_Data_Accuracy`.
+
+### 5.1. Thư viện dùng chung `trainer-utils.js` (+ `scripts/test_trainer_utils.js`, 62 test)
+Ngày giờ theo giờ địa phương, ngày lễ Việt Nam theo từng năm (bảng Tết 2025–2030), phân loại Đạt/Không đạt, đọc ngày vào làm HRM, tính CSAT từ khảo sát, kiểm tra số liệu đóng khóa, lưu kết quả chấm Lần 1. Nạp ở `index`, `tools`, `settings`, `spcb`, `kv1`, `industry`, `thuehkd`.
+
+### 5.2. Năm 2026 gán cứng (hỏng từ 01/01/2027)
+- **Dashboard:** thêm bộ chọn **Năm** (mặc định năm hiện tại, danh sách từ dữ liệu thật); bộ lọc Năm/Quý/Tháng, nhãn kỳ báo cáo, biểu đồ xu hướng theo năm đang chọn.
+- **Tools – Lịch onboarding:** năm theo thời gian thực, nút chuyển năm, ngày Tết đúng từng năm; sửa lỗi bỏ sót ngày onboarding đầu tiên và đếm ngược lệch do giờ UTC.
+- **Cài đặt – Lịch đào tạo:** chọn được năm (năm trước → 2 năm tới); trước đây chỉ ghi được lịch 2026 nên sang 2027 các trang khóa học không có lịch.
+
+### 5.3. Số liệu sai / bịa
+- **"Không đạt", "Chưa đạt" bị tính là Đạt** khi dán kết quả học viên → sửa, kiểm tra Không đạt trước.
+- **CSAT:** chỉ lấy cột điểm 1–5 của đúng mã khóa (trước đây lấy cả timestamp "3/11/2026" → 3 điểm, cột số buổi…); khớp mã khóa chính xác (26KV14 ≠ 26KV141); không còn tự điền 4.8/5 hay CSAT chung vào khóa — có nút "Dùng CSAT chung" nếu Trainer muốn; Dashboard/slide hiện N/A khi không có CSAT (trước đây coi là 4.8, khảo sát trống coi là 5.0); backend không mặc định 4.8/5.
+- **Lọc HRM:** so cả năm và tháng (trước đây người vào làm tháng 9 năm bất kỳ đều lọt danh sách M-2), đọc thêm số serial Excel và dạng 05-Mar-2026, báo các dòng không đọc được ngày.
+
+### 5.4. Chấm điểm & đóng khóa
+- SPCB: ô "Số câu hỏi" trống/0 không còn cho ra NaN (Fail) hoặc Infinity (Pass).
+- SPCB/KV1: lưu kết quả Lần 1 theo mã khóa; F5 hoặc sửa danh sách không còn biến học viên đã Pass Lần 1 thành Miss khi chấm Lần 2.
+- SPCB/KV1/Chuyên ngành/Thuế: chặn đóng khóa khi thiếu mã khóa hoặc Đạt + Trượt > Tổng; bỏ mã khóa điền sẵn `26KV14` (dễ ghi đè nhầm khóa cũ).
+- Radar, xuất Excel Dashboard: ngày theo giờ Việt Nam thay cho `toISOString()`.
+
+> ⚠️ Backend `code.js` có thay đổi nhỏ (không mặc định CSAT 4.8/5): cần dán lại vào Apps Script và deploy New version.
