@@ -56,7 +56,7 @@ function freshEnv(props, fetchResponder) {
     getName: () => 'MockSS',
   };
   const ctx = {
-    console,
+    console: { log: () => {} }, // Ẩn log thời gian của ask_ai khi chạy test
     SpreadsheetApp: { openById: (id) => {
       openedIds.push(id);
       if (id === 'NO_ACCESS_GIFT_ID') throw new Error('Bạn không có quyền truy cập vào tài liệu yêu cầu.');
@@ -230,7 +230,7 @@ function check(name, cond, detail) {
 
   check('Model mặc định không còn gemini-2.5-flash (đã ngừng cấp)', !/gemini-2\.5-flash/.test(code.split('DEFAULT_GEMINI_MODELS =')[1].split('\n')[0]));
 
-  const env = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k' }, (u) => modelOf(u) === 'gemini-3.8-flash' ? BUSY : OK('từ ' + modelOf(u)));
+  const env = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k' }, (u) => modelOf(u) === 'gemini-flash-lite-latest' ? BUSY : OK('từ ' + modelOf(u)));
   const r = env.post({ action: 'ask_ai', prompt: 'kho quà', token: TOKEN });
   check('Model chính quá tải -> tự chuyển model dự phòng và trả lời', r.reply === 'từ gemini-flash-latest' && env.fetched.length === 2, { reply: r.reply, n: env.fetched.length });
 

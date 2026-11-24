@@ -86,8 +86,9 @@ function readGiftImportTab(ss) {
 }
 
 // Danh sách model Gemini thử lần lượt. Ghi đè bằng Script Property GEMINI_MODELS (cách nhau dấu phẩy).
-// Ưu tiên model Google khuyến nghị + các alias "-latest" (Google tự trỏ tới bản mới nhất, không bị ngừng hỗ trợ).
-const DEFAULT_GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
+// Thứ tự: model nhẹ, phản hồi nhanh nhất trước; model suy luận (chậm hơn) làm dự phòng.
+// Các alias "-latest" được Google tự trỏ tới bản mới nhất, không bị ngừng hỗ trợ.
+const DEFAULT_GEMINI_MODELS = ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-3.8-flash'];
 
 function getGeminiModels() {
   const raw = getScriptProp('GEMINI_MODELS');
@@ -265,11 +266,15 @@ function doPost(e) {
         for (let m = 0; m < models.length; m++) {
           const url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(models[m]) + ":generateContent?key=" + GEMINI_API_KEY;
           let json;
+          const t0 = Date.now();
           try {
             json = JSON.parse(UrlFetchApp.fetch(url, options).getContentText());
           } catch (fetchErr) {
             failures.push({ model: models[m], kind: 'busy', message: 'Không kết nối được' });
             continue;
+          } finally {
+            // Ghi thời gian từng model vào nhật ký "Lượt thực thi" để chẩn đoán độ chậm
+            console.log('ask_ai ' + models[m] + ': ' + (Date.now() - t0) + ' ms' + (json && json.error ? ' (lỗi ' + (json.error.code || '') + ')' : ''));
           }
           if (json.error) {
             const kind = classifyGeminiError(json.error);
