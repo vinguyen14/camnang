@@ -206,3 +206,25 @@ Ngày giờ theo giờ địa phương, ngày lễ Việt Nam theo từng năm (
 - Radar, xuất Excel Dashboard: ngày theo giờ Việt Nam thay cho `toISOString()`.
 
 > ⚠️ Backend `code.js` có thay đổi nhỏ (không mặc định CSAT 4.8/5): cần dán lại vào Apps Script và deploy New version.
+
+---
+
+## 6. Sprint 2 — Đồng Bộ Cloud Tin Cậy (24/11/2026)
+
+> Nguồn: Báo cáo kiểm thử hồi quy 21/11/2026 (DATA-01, DATA-02, DATA-07, DATA-08, BUG-05, BUG-08). Snapshot trước khi sửa: `_backups/snapshot_20261124_105055_Pre_Sprint2_Cloud_Sync`.
+
+### 6.1. Backend (`code.js`) — cần dán lại vào Apps Script và deploy New version
+- **Khóa ghi (LockService):** mỗi lúc chỉ 1 yêu cầu đọc/ghi Sheet; người thứ hai chờ tối đa 30 giây rồi nhận thông báo "Hệ thống đang bận" thay vì làm sheet trống giữa chừng / trùng / mất dòng. Trợ lý AI và gửi email không bị khóa.
+- **Backup GỘP thay vì xóa trắng:** mục nào máy gửi lên trống thì giữ nguyên bản trên Cloud (trước đây Backup từ máy mới xóa sạch lịch, roster…). Danh sách nhân sự / Vault rỗng không xóa dữ liệu Cloud.
+- **Tự lưu bản sao** sheet Settings (ẩn, tên `Settings_bk_<ngày giờ>`) trước mỗi lần Backup, giữ 5 bản gần nhất.
+- **Ghi 1 lần** (`setValues`) thay vì từng dòng; nộp lại kết quả học viên đọc–lọc–ghi 1 lần (không trùng, không mất dòng khóa khác).
+- **Action `batch_upsert`:** ghi nhiều khóa học vào MasterDB trong 1 request.
+- **Giữ đúng dữ liệu:** bỏ mẹo dấu `'` khi đọc (trước đây mất 1 ký tự, có thể làm hỏng JSON ở ranh giới chunk); mã `00123` không thành `123`; nội dung bắt đầu bằng `=` `+` `-` `@` không bị chạy như công thức; ghép chunk kiểm tra đủ phần, thiếu thì bỏ qua thay vì trả JSON hỏng.
+- `scripts/test_backend_security.js`: 82 test (thêm 23 test Sprint 2, mô phỏng cách Google Sheets nhận giá trị).
+
+### 6.2. Client
+- **`system-config.js`:** timeout 30 giây cho mọi request tới Apps Script; trạng thái kết nối chung (`getApiStatus`, sự kiện `kv_api_status`); hàm `ensureApiSuccess`.
+- **Sidebar:** dòng trạng thái Cloud hiển thị thật (Active / Thiếu–sai API Token / Đang bận / Mất kết nối), cùng màu chấm; trước đây luôn ghi cứng "Cloud API Active".
+- **SPCB / KV1 / Chuyên ngành / Thuế / Tools (kho quà):** Cloud báo lỗi thì báo lỗi, không còn hiện "HOÀN THÀNH XUẤT SẮC" / "Đã lưu thành công".
+- **Tools:** không báo "Cloud API Active" khi Cloud từ chối; dữ liệu kho quà hỏng không làm sập trang.
+- **Cài đặt:** Backup có hộp xác nhận, đẩy MasterDB 1 lần (`batch_upsert`); "Kéo về" chỉ tải xuống — không còn đẩy MasterDB cũ trên máy lên ghi đè dữ liệu mới trên Cloud.

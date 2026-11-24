@@ -27,11 +27,204 @@ const SHEET_KETQUA_HOCVIEN = 'KetQuaHocVien';
 //   - GIFT_SPREADSHEET_ID (tùy chọn): ID Google Sheet Kho quà bên ngoài (tab "Kho"). Chỉ đặt khi tài khoản
 //     deploy CÓ QUYỀN XEM file đó. Khuyên dùng thay thế: tab KhoQua_Import với =IMPORTRANGE(...) trong Sheet chính.
 // ============================================================================
-const KNOWN_ACTIONS = ["clear_data", "save_gifts", "add_knowledge", "delete_knowledge", "ask_ai", "send_email", "sync_up", "sync_down", "submit_report"];
+const KNOWN_ACTIONS = ["clear_data", "save_gifts", "add_knowledge", "delete_knowledge", "ask_ai", "send_email", "sync_up", "sync_down", "batch_upsert", "submit_report"];
 const SYNC_EXCLUDED_KEYS = ["kv_api_url", "kv_api_token"]; // Không bao giờ đồng bộ cấu hình kết nối lên/xuống Cloud
 const HIDDEN_SHEETS_IN_DUMP = [SHEET_SETTINGS, 'KhoQua_Import']; // Không trả về trong doGet().sheets
 const HIDDEN_COLUMNS_IN_DUMP = ["password", "mật khẩu", "mat khau"]; // Không trả về cột chứa mật khẩu
 const MAX_EMAIL_RECIPIENTS = 200;
+
+// ======================= ĐỒNG BỘ CLOUD TIN CẬY (Sprint 2 - 24/11/2026) =======================
+const NO_LOCK_ACTIONS = ["ask_ai", "send_email"]; // Không đọc/ghi Sheet -> không cần khóa
+const LOCK_WAIT_MS = 30000;
+const SETTINGS_CHUNK_SIZE = 45000;            // Giới hạn 1 ô Google Sheets là 50.000 ký tự
+const SETTINGS_BACKUP_PREFIX = 'Settings_bk_'; // Bản sao Settings trước mỗi lần Backup
+const SETTINGS_BACKUP_KEEP = 5;
+const SYNCED_SETTING_KEYS = [
+  'kv_trainer_profile', 'kv_dynamic_calendar',
+  'kv_global_notepad', 'kv_global_whiteboard', 'kv_master_db',
+  'kv_gift_db', 'kv_roster_SPCB', 'kv_roster_KV1',
+  'kv_employee_trash', 'kv_vault_trash', 'kv_product_radar',
+  'kv_wp_docs', 'kv_wp_docs_v2', 'kv_survey_spcb', 'kv_survey_tax',
+  'kv_doc_hub_backlog', 'kv_w3_compliance_done', 'kv_hrm_traceability'
+];
+
+// Ô VĂN BẢN: thêm dấu ' phía trước -> Google Sheets lưu NGUYÊN VĂN (dấu ' không được lưu):
+// "00123" không thành 123, "2026-01-05" không thành ngày, "=IMPORTXML(...)" không chạy như công thức.
+function textCell(v) {
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'number' || typeof v === 'boolean' || v instanceof Date) return v;
+  return "'" + String(v);
+}
+
+// Như textCell nhưng để số thuần (VD "20") là số thật - dùng cho MasterDB / KetQuaHocVien.
+// Chuỗi số có số 0 ở đầu ("0007", mã NV) vẫn giữ là văn bản.
+function cellForWrite(v) {
+  if (typeof v === 'string' && /^-?(0|[1-9]\d*)(\.\d+)?$/.test(v.trim())) return v.trim();
+  return textCell(v);
+}
+
+function normalizeCourseId(v) {
+  return (v === null || v === undefined ? '' : String(v)).trim().toUpperCase();
+}
+
+// Đọc sheet Settings -> { key: value }, tự ráp các phần __chunk_i_of_N. Bỏ qua key thiếu chunk
+// (trước đây ráp thiếu -> JSON hỏng được nạp thẳng vào máy).
+function readSettingsMap(ss) {
+  const sheet = ss.getSheetByName(SHEET_SETTINGS);
+  const map = {};
+  if (!sheet || sheet.getLastRow() < 2) return map;
+  const rows = sheet.getDataRange().getValues();
+  const chunks = {};
+  for (let i = 1; i < rows.length; i++) {
+    const key = String(rows[i][0] === null || rows[i][0] === undefined ? '' : rows[i][0]).trim();
+    if (!key) continue;
+    const val = rows[i][1] === null || rows[i][1] === undefined ? '' : String(rows[i][1]);
+    const m = key.match(/^(.*?)__chunk_(\d+)_of_(\d+)$/);
+    if (m) {
+      if (!chunks[m[1]]) chunks[m[1]] = { total: parseInt(m[3], 10), parts: {} };
+      chunks[m[1]].parts[parseInt(m[2], 10)] = val;
+    } else {
+      map[key] = val;
+    }
+  }
+  Object.keys(chunks).forEach(k => {
+    const c = chunks[k];
+    let joined = '';
+    for (let i = 0; i < c.total; i++) {
+      if (!(i in c.parts)) { console.log('Settings: bỏ qua ' + k + ' vì thiếu phần ' + i + '/' + c.total); return; }
+      joined += c.parts[i];
+    }
+    map[k] = joined;
+  });
+  return map;
+}
+
+// Ghi { key: value } vào Settings trong 1 lần setValues (tự chia chunk > 45.000 ký tự)
+function writeSettingsMap(ss, map) {
+  let sheet = ss.getSheetByName(SHEET_SETTINGS);
+  if (!sheet) sheet = ss.insertSheet(SHEET_SETTINGS);
+  const rows = [["Key", "Value"]];
+  Object.keys(map).forEach(k => {
+    if (SYNC_EXCLUDED_KEYS.indexOf(k) !== -1) return;
+    const raw = String(map[k]);
+    if (raw.length > SETTINGS_CHUNK_SIZE) {
+      const total = Math.ceil(raw.length / SETTINGS_CHUNK_SIZE);
+      for (let c = 0; c < total; c++) {
+        rows.push([k + "__chunk_" + c + "_of_" + total, textCell(raw.substring(c * SETTINGS_CHUNK_SIZE, (c + 1) * SETTINGS_CHUNK_SIZE))]);
+      }
+    } else {
+      rows.push([k, textCell(raw)]);
+    }
+  });
+  sheet.clear();
+  sheet.getRange(1, 1, rows.length, 2).setValues(rows);
+}
+
+// Chụp bản sao sheet Settings (ẩn) trước khi ghi đè; giữ SETTINGS_BACKUP_KEEP bản mới nhất
+function snapshotSettingsSheet(ss) {
+  const sheet = ss.getSheetByName(SHEET_SETTINGS);
+  if (!sheet || sheet.getLastRow() < 2) return '';
+  const baseName = SETTINGS_BACKUP_PREFIX + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd_HHmmss");
+  let name = baseName;
+  let n = 1;
+  while (ss.getSheetByName(name)) name = baseName + '_' + (++n); // Trùng giây -> thêm _2, _3...
+  const copy = sheet.copyTo(ss);
+  copy.setName(name);
+  try { copy.hideSheet(); } catch (e) {}
+  ss.getSheets()
+    .map(s => s.getName())
+    .filter(nm => nm.indexOf(SETTINGS_BACKUP_PREFIX) === 0)
+    .sort()
+    .reverse()
+    .slice(SETTINGS_BACKUP_KEEP)
+    .forEach(nm => ss.deleteSheet(ss.getSheetByName(nm)));
+  return name;
+}
+
+// Ghi đè 1 sheet danh sách CHỈ KHI máy gửi lên danh sách có dữ liệu. Danh sách rỗng/không gửi -> giữ nguyên Cloud.
+function replaceListSheetIfProvided(ss, sheetName, headers, raw, mapper) {
+  if (raw === undefined || raw === null || raw === '') return 'kept';
+  let arr;
+  try { arr = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (e) { return 'invalid'; }
+  if (!Array.isArray(arr) || arr.length === 0) return 'kept';
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) sheet = ss.insertSheet(sheetName);
+  const rows = [headers].concat(arr.map(o => mapper(o || {}).map(textCell)));
+  sheet.clear();
+  sheet.getRange(1, 1, rows.length, headers.length).setValues(rows);
+  return arr.length;
+}
+
+// Đọc sheet danh sách -> mảng object. Ngày -> chuỗi ISO, giá trị khác -> chuỗi (giữ boolean). null nếu chưa có dữ liệu.
+function readListSheet(ss, sheetName, mapper) {
+  const sheet = ss.getSheetByName(sheetName);
+  if (!sheet || sheet.getLastRow() < 2) return null;
+  const rows = sheet.getDataRange().getValues().slice(1)
+    .filter(r => r.some(c => c !== '' && c !== null && c !== undefined));
+  return rows.map(r => mapper(r.map(c => {
+    if (typeof c === 'boolean') return c;
+    if (c instanceof Date) return Utilities.formatDate(c, "GMT+7", "yyyy-MM-dd'T'HH:mm:ss");
+    return c === null || c === undefined ? '' : String(c);
+  })));
+}
+
+const MASTER_HEADERS = ["Timestamp", "Nhóm Khóa", "Mã Khóa", "Tháng", "Bắt Đầu", "Kết Thúc", "Tổng HV", "Đạt", "Fail", "CSAT", "Highlights", "Issues", "ActionPlan", "Trạng Thái", "Link DS", "Link Quiz"];
+
+function masterRowFromItem(d, courseId) {
+  return [
+    d.timestamp || new Date().getTime(), d.groupName || "Chung", courseId, d.month || "",
+    d.startDate || "", d.finishDate || "", d.totalTrainees || 0, d.passedTrainees || 0, d.failedTrainees || 0,
+    d.csat || "", // Sprint 1: không mặc định 4.8/5
+    d.highlights || "", d.issues || "", d.actionPlan || "", d.status || "Hoàn thành", d.listLink || "", d.quizLink || ""
+  ];
+}
+
+// Thêm mới / cập nhật nhiều khóa học trong MasterDB: đọc 1 lần, sửa trong bộ nhớ, ghi lại 1 lần
+function upsertMasterRows(ss, items) {
+  const sheet = ss.getSheetByName(SHEET_MASTER);
+  if (!sheet) return { error: "Sheet MasterDB không tồn tại", upserted: 0, skipped: items.length };
+  const values = sheet.getLastRow() > 0 ? sheet.getDataRange().getValues() : [MASTER_HEADERS.slice()];
+  const index = {};
+  for (let i = 1; i < values.length; i++) {
+    const id = normalizeCourseId(values[i][2]);
+    if (id && !(id in index)) index[id] = i;
+  }
+  let upserted = 0, skipped = 0;
+  items.forEach(item => {
+    const id = normalizeCourseId(item && item.courseId);
+    if (!id) { skipped++; return; }
+    const row = masterRowFromItem(item, id);
+    if (id in index) values[index[id]] = row;
+    else { index[id] = values.length; values.push(row); }
+    upserted++;
+  });
+  const width = MASTER_HEADERS.length;
+  const out = values.map(r => {
+    const row = r.slice(0, width);
+    while (row.length < width) row.push('');
+    return row.map(cellForWrite);
+  });
+  sheet.getRange(1, 1, out.length, width).setValues(out);
+  return { upserted: upserted, skipped: skipped };
+}
+
+const RESULT_HEADERS = ["Timestamp", "Mã Khóa", "Nhóm Khóa", "STT", "Mã NV", "Họ Tên", "Phòng Ban", "Email Công Ty", "Lần Kiểm Tra", "Điểm", "Kết Quả", "Username LMS", "Password", "Điểm Danh"];
+
+// Thay toàn bộ dòng học viên của 1 khóa trong KetQuaHocVien (nộp lại không bị trùng), ghi 1 lần
+function replaceCourseRowsInResultSheet(ss, courseId, newRows) {
+  let sheet = ss.getSheetByName(SHEET_KETQUA_HOCVIEN);
+  if (!sheet) { sheet = ss.insertSheet(SHEET_KETQUA_HOCVIEN); }
+  const width = RESULT_HEADERS.length;
+  const existing = sheet.getLastRow() > 0 ? sheet.getDataRange().getValues() : [RESULT_HEADERS.slice()];
+  const kept = [existing[0]].concat(existing.slice(1).filter(r => normalizeCourseId(r[1]) !== courseId));
+  const all = kept.concat(newRows).map(r => {
+    const row = r.slice(0, width);
+    while (row.length < width) row.push('');
+    return row.map(cellForWrite);
+  });
+  sheet.clearContents();
+  sheet.getRange(1, 1, all.length, width).setValues(all);
+}
 
 function jsonOut(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
@@ -163,8 +356,24 @@ function doPost(e) {
       return jsonOut({ status: "error", code: "UNKNOWN_ACTION", message: "Action không hợp lệ: " + String(data.action).substring(0, 50) });
     }
 
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    // Sprint 2: KHÓA GHI - mỗi lúc chỉ 1 yêu cầu được đọc/ghi Sheet, tránh 2 người sync cùng lúc
+    // làm sheet trống giữa chừng, trùng hoặc mất dòng. AI và gửi email không chạm Sheet nên không cần khóa.
+    const needsLock = NO_LOCK_ACTIONS.indexOf(data.action) === -1;
+    const lock = needsLock ? LockService.getScriptLock() : null;
+    if (lock && !lock.tryLock(LOCK_WAIT_MS)) {
+      return jsonOut({ status: "error", code: "BUSY", message: "Hệ thống đang bận ghi dữ liệu của người khác, vui lòng thử lại sau vài giây." });
+    }
+    try {
+      return routePost(data, SpreadsheetApp.openById(SPREADSHEET_ID));
+    } finally {
+      if (lock) lock.releaseLock();
+    }
+  } catch (error) {
+    return jsonOut({ status: "error", message: error.message });
+  }
+}
 
+function routePost(data, ss) {
     // 1. XÓA DATA BÁO CÁO CÓ MẬT KHẨU
     if(data.action === "clear_data") {
       const adminPwd = getScriptProp('ADMIN_PASSWORD');
@@ -189,7 +398,7 @@ function doPost(e) {
       sheetGift.clear();
       sheetGift.appendRow(["Tên Quà", "Tồn Đầu", "Xuất Kho", "Tồn Cuối"]);
       if(data.gifts && data.gifts.length > 0) {
-        const rows = data.gifts.map(g => [g.name, g.in, g.out, (parseInt(g.in) || 0) - (parseInt(g.out) || 0)]);
+        const rows = data.gifts.map(g => [textCell(g.name), parseInt(g.in) || 0, parseInt(g.out) || 0, (parseInt(g.in) || 0) - (parseInt(g.out) || 0)]);
         sheetGift.getRange(2, 1, rows.length, 4).setValues(rows);
       }
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
@@ -328,269 +537,95 @@ function doPost(e) {
     }
 
     // 7. ĐỒNG BỘ CẤU HÌNH LÊN CLOUD (SYNC UP)
+    // Sprint 2: GỘP thay vì xóa trắng - key nào máy gửi lên (khác null) thì ghi đè, key nào không gửi thì GIỮ NGUYÊN
+    // bản trên Cloud (trước đây Backup từ máy mới chưa Restore sẽ xóa sạch lịch, roster... trên Cloud).
+    // Luôn chụp bản sao Settings trước khi ghi đè (giữ 5 bản gần nhất) để khôi phục khi cần.
     else if (data.action === "sync_up") {
       const payloadData = typeof data.payload === 'string' ? JSON.parse(data.payload) : (data.payload || {});
-      
-      let sheetSet = ss.getSheetByName(SHEET_SETTINGS);
-      if(!sheetSet) sheetSet = ss.insertSheet(SHEET_SETTINGS);
-      sheetSet.clear();
-      sheetSet.appendRow(["Key", "Value"]);
-      
-      const directKeys = [
-        'kv_trainer_profile', 'kv_dynamic_calendar',
-        'kv_global_notepad', 'kv_global_whiteboard', 'kv_master_db', 
-        'kv_gift_db', 'kv_roster_SPCB', 'kv_roster_KV1',
-        'kv_employee_trash', 'kv_vault_trash', 'kv_product_radar',
-        'kv_wp_docs', 'kv_wp_docs_v2', 'kv_survey_spcb', 'kv_survey_tax',
-        'kv_doc_hub_backlog', 'kv_w3_compliance_done', 'kv_hrm_traceability'
-      ];
-      directKeys.forEach(k => {
-        if(payloadData[k] !== undefined && payloadData[k] !== null) {
-          const rawVal = typeof payloadData[k] === 'object' ? JSON.stringify(payloadData[k]) : String(payloadData[k]);
-          // Chia nhỏ nếu chuỗi dài hơn 45.000 ký tự (giới hạn cell Google Sheets là 50.000)
-          const CHUNK_SIZE = 45000;
-          if (rawVal.length > CHUNK_SIZE) {
-            const totalChunks = Math.ceil(rawVal.length / CHUNK_SIZE);
-            for (let c = 0; c < totalChunks; c++) {
-              const part = rawVal.substring(c * CHUNK_SIZE, (c + 1) * CHUNK_SIZE);
-              sheetSet.appendRow([k + "__chunk_" + c + "_of_" + totalChunks, "'" + part]);
-            }
-          } else {
-            sheetSet.appendRow([k, "'" + rawVal]);
-          }
-        }
+      const backupName = snapshotSettingsSheet(ss);
+
+      const current = readSettingsMap(ss);
+      let updatedKeys = 0;
+      SYNCED_SETTING_KEYS.forEach(k => {
+        const v = payloadData[k];
+        if (v === undefined || v === null || v === '') return;
+        current[k] = typeof v === 'object' ? JSON.stringify(v) : String(v);
+        updatedKeys++;
       });
+      writeSettingsMap(ss, current);
 
-      if(payloadData.kv_employee_db) {
-        let arr = typeof payloadData.kv_employee_db === 'string' ? JSON.parse(payloadData.kv_employee_db) : payloadData.kv_employee_db;
-        let sheetNS = ss.getSheetByName(SHEET_NHANSU);
-        if(!sheetNS) sheetNS = ss.insertSheet(SHEET_NHANSU);
-        sheetNS.clear(); 
-        sheetNS.appendRow(["Email", "Họ Tên", "Phòng Ban", "Vị Trí", "Vai Trò", "Mã NV"]);
-        if(Array.isArray(arr) && arr.length > 0) {
-          const rows = arr.map(e => [e.email || "", e.name || "", e.dept || "", e.position || "", e.role || "", e.code || ""]);
-          sheetNS.getRange(2, 1, rows.length, 6).setValues(rows);
-        }
-      }
+      const listResults = {
+        employees: replaceListSheetIfProvided(ss, SHEET_NHANSU, ["Email", "Họ Tên", "Phòng Ban", "Vị Trí", "Vai Trò", "Mã NV"],
+          payloadData.kv_employee_db, e => [e.email, e.name, e.dept, e.position, e.role, e.code]),
+        vaultFolders: replaceListSheetIfProvided(ss, SHEET_VAULT_FOLDERS, ["Folder ID", "Parent ID", "Tên Thư Mục", "Icon", "Order", "Is Expanded"],
+          payloadData.kv_vault_folders, f => [f.id, f.parentId, f.name, f.icon || "fa-folder", Number(f.order) || 0, f.isExpanded !== false]),
+        vaultItems: replaceListSheetIfProvided(ss, SHEET_VAULT_ITEMS, ["Item ID", "Folder ID", "Tiêu đề", "Phân loại", "Nội dung", "Ghi chú", "Tags", "Is Pinned", "Ngày tạo", "Order"],
+          payloadData.kv_vault_items, i => [i.id, i.folderId, i.title, i.type || "link", i.content, i.note, i.tags, Boolean(i.isPinned), i.createdAt, Number(i.order) || 0])
+      };
 
-      if(payloadData.kv_vault_folders) {
-        let arr = typeof payloadData.kv_vault_folders === 'string' ? JSON.parse(payloadData.kv_vault_folders) : payloadData.kv_vault_folders;
-        let sheetVF = ss.getSheetByName(SHEET_VAULT_FOLDERS);
-        if(!sheetVF) sheetVF = ss.insertSheet(SHEET_VAULT_FOLDERS);
-        sheetVF.clear(); 
-        sheetVF.appendRow(["Folder ID", "Parent ID", "Tên Thư Mục", "Icon", "Order", "Is Expanded"]);
-        if(Array.isArray(arr) && arr.length > 0) {
-          const rows = arr.map(f => [f.id || "", f.parentId || "", f.name || "", f.icon || "fa-folder", f.order || 0, f.isExpanded !== false]);
-          sheetVF.getRange(2, 1, rows.length, 6).setValues(rows);
-        }
-      }
-
-      if(payloadData.kv_vault_items) {
-        let arr = typeof payloadData.kv_vault_items === 'string' ? JSON.parse(payloadData.kv_vault_items) : payloadData.kv_vault_items;
-        let sheetVI = ss.getSheetByName(SHEET_VAULT_ITEMS);
-        if(!sheetVI) sheetVI = ss.insertSheet(SHEET_VAULT_ITEMS);
-        sheetVI.clear(); 
-        sheetVI.appendRow(["Item ID", "Folder ID", "Tiêu đề", "Phân loại", "Nội dung", "Ghi chú", "Tags", "Is Pinned", "Ngày tạo", "Order"]);
-        if(Array.isArray(arr) && arr.length > 0) {
-          const rows = arr.map(i => [i.id || "", i.folderId || "", i.title || "", i.type || "link", i.content || "", i.note || "", i.tags || "", Boolean(i.isPinned), i.createdAt || "", i.order || 0]);
-          sheetVI.getRange(2, 1, rows.length, 10).setValues(rows);
-        }
-      }
-
-      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+      return jsonOut({ status: "success", updatedKeys: updatedKeys, lists: listResults, backup: backupName });
     }
 
     // 8. TẢI CẤU HÌNH TỪ CLOUD (SYNC DOWN)
     else if (data.action === "sync_down") {
-      let configData = {};
-      
-      let sheetSet = ss.getSheetByName(SHEET_SETTINGS);
-      if(sheetSet && sheetSet.getLastRow() > 1) {
-        let sData = sheetSet.getDataRange().getValues();
-        let chunkStore = {};
-        for(let i = 1; i < sData.length; i++) {
-          if(sData[i][0]) {
-            const rawKey = String(sData[i][0]).trim();
-            let rawVal = String(sData[i][1] || '');
-            if (rawVal.startsWith("'")) rawVal = rawVal.substring(1);
-            if (rawKey.includes('__chunk_')) {
-              const match = rawKey.match(/^(.*?)__chunk_(\d+)_of_(\d+)$/);
-              if (match) {
-                const baseKey = match[1];
-                const chunkIdx = parseInt(match[2], 10);
-                if (!chunkStore[baseKey]) chunkStore[baseKey] = [];
-                chunkStore[baseKey][chunkIdx] = rawVal;
-              }
-            } else {
-              configData[rawKey] = rawVal;
-            }
-          }
-        }
-        for (let bKey in chunkStore) {
-          configData[bKey] = chunkStore[bKey].join('');
-        }
-        // Không trả về cấu hình kết nối (dữ liệu cũ có thể còn lưu kv_api_url)
-        SYNC_EXCLUDED_KEYS.forEach(k => { delete configData[k]; });
-      }
+      const configData = readSettingsMap(ss);
+      SYNC_EXCLUDED_KEYS.forEach(k => { delete configData[k]; });
 
-      let sheetNS = ss.getSheetByName(SHEET_NHANSU);
-      if(sheetNS && sheetNS.getLastRow() > 1) {
-        let nsData = sheetNS.getDataRange().getValues();
-        let arr = [];
-        for(let i = 1; i < nsData.length; i++) {
-          arr.push({
-            email: String(nsData[i][0] ?? ''),
-            name: String(nsData[i][1] ?? ''),
-            dept: String(nsData[i][2] ?? ''),
-            position: String(nsData[i][3] ?? ''),
-            role: String(nsData[i][4] ?? ''),
-            code: String(nsData[i][5] ?? '')
-          });
-        }
-        configData['kv_employee_db'] = JSON.stringify(arr);
-      }
+      const nhanSu = readListSheet(ss, SHEET_NHANSU, r => ({
+        email: r[0], name: r[1], dept: r[2], position: r[3], role: r[4], code: r[5]
+      }));
+      if (nhanSu) configData['kv_employee_db'] = JSON.stringify(nhanSu);
 
-      let sheetVF = ss.getSheetByName(SHEET_VAULT_FOLDERS);
-      if(sheetVF && sheetVF.getLastRow() > 1) {
-        let vfData = sheetVF.getDataRange().getValues();
-        let arr = [];
-        for(let i = 1; i < vfData.length; i++) {
-          arr.push({
-            id: String(vfData[i][0] ?? ''),
-            parentId: vfData[i][1] ? String(vfData[i][1]) : null,
-            name: String(vfData[i][2] ?? ''),
-            icon: String(vfData[i][3] || 'fa-folder'),
-            order: parseInt(vfData[i][4]) || 0,
-            isExpanded: vfData[i][5] !== undefined && vfData[i][5] !== '' ? (vfData[i][5] === true || String(vfData[i][5]).toLowerCase() === 'true') : true
-          });
-        }
-        configData['kv_vault_folders'] = JSON.stringify(arr);
-      }
+      const folders = readListSheet(ss, SHEET_VAULT_FOLDERS, r => ({
+        id: r[0], parentId: r[1] ? r[1] : null, name: r[2], icon: r[3] || 'fa-folder',
+        order: parseInt(r[4]) || 0,
+        isExpanded: r[5] !== '' ? (r[5] === true || String(r[5]).toLowerCase() === 'true') : true
+      }));
+      if (folders) configData['kv_vault_folders'] = JSON.stringify(folders);
 
-      let sheetVI = ss.getSheetByName(SHEET_VAULT_ITEMS);
-      if(sheetVI && sheetVI.getLastRow() > 1) {
-        let viData = sheetVI.getDataRange().getValues();
-        let arr = [];
-        for(let i = 1; i < viData.length; i++) {
-          arr.push({
-            id: String(viData[i][0] ?? ''),
-            folderId: String(viData[i][1] ?? ''),
-            title: String(viData[i][2] ?? ''),
-            type: String(viData[i][3] || 'link'),
-            content: String(viData[i][4] ?? ''),
-            note: String(viData[i][5] ?? ''),
-            tags: String(viData[i][6] ?? ''),
-            isPinned: viData[i][7] === true || String(viData[i][7]).toLowerCase() === 'true',
-            createdAt: String(viData[i][8] ?? ''),
-            order: parseInt(viData[i][9]) || 0
-          });
-        }
-        configData['kv_vault_items'] = JSON.stringify(arr);
-      }
+      const items = readListSheet(ss, SHEET_VAULT_ITEMS, r => ({
+        id: r[0], folderId: r[1], title: r[2], type: r[3] || 'link', content: r[4], note: r[5], tags: r[6],
+        isPinned: r[7] === true || String(r[7]).toLowerCase() === 'true',
+        createdAt: r[8], order: parseInt(r[9]) || 0
+      }));
+      if (items) configData['kv_vault_items'] = JSON.stringify(items);
 
-      return ContentService.createTextOutput(JSON.stringify({ status: "success", payload: JSON.stringify(configData) })).setMimeType(ContentService.MimeType.JSON);
+      return jsonOut({ status: "success", payload: JSON.stringify(configData) });
+    }
+
+    // 8b. GHI NHIỀU KHÓA HỌC VÀO MASTERDB TRONG 1 LẦN (Backup từ trang Cài đặt)
+    // Sprint 2: thay cho việc gửi từng khóa một (N request, lỗi bị nuốt im lặng)
+    else if (data.action === "batch_upsert") {
+      const items = Array.isArray(data.items) ? data.items : [];
+      if (items.length === 0) return jsonOut({ status: "success", upserted: 0 });
+      if (items.length > 2000) return jsonOut({ status: "error", message: "Quá nhiều khóa học trong 1 lần (tối đa 2000)" });
+      const result = upsertMasterRows(ss, items);
+      return jsonOut({ status: "success", upserted: result.upserted, skipped: result.skipped });
     }
 
     // 9. ĐÓNG KHÓA VÀO MASTER DB VÀ TAB KETQUAHOCVIEN (TOÀN DIỆN 100%)
     else {
-      // 9.1. Ghi nhận 16 cột tổng quan vào MasterDB
-      const sheet = ss.getSheetByName(SHEET_MASTER);
-      if (!sheet) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Sheet MasterDB không tồn tại" })).setMimeType(ContentService.MimeType.JSON);
-     
-      if (sheet.getLastRow() === 0) {
-        sheet.appendRow(["Timestamp", "Nhóm Khóa", "Mã Khóa", "Tháng", "Bắt Đầu", "Kết Thúc", "Tổng HV", "Đạt", "Fail", "CSAT", "Highlights", "Issues", "ActionPlan", "Trạng Thái", "Link DS", "Link Quiz"]);
-      }
-     
-      const courseIdToMatch = (data.courseId || "").toString().trim().toUpperCase();
+      const courseIdToMatch = normalizeCourseId(data.courseId);
       if (!courseIdToMatch) {
-        return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Thiếu Mã Khóa (courseId)" })).setMimeType(ContentService.MimeType.JSON);
+        return jsonOut({ status: "error", message: "Thiếu Mã Khóa (courseId)" });
       }
-      const allData = sheet.getDataRange().getValues();
-      let rowIndex = -1;
-      for(let i = 1; i < allData.length; i++) { 
-        if(allData[i][2] && allData[i][2].toString().trim().toUpperCase() === courseIdToMatch) { 
-          rowIndex = i + 1; 
-          break; 
-        } 
-      }
+      const result = upsertMasterRows(ss, [data]);
+      if (result.error) return jsonOut({ status: "error", message: result.error });
 
-      const rowData = [
-        data.timestamp || new Date().getTime(), 
-        data.groupName || "Chung", 
-        courseIdToMatch, 
-        data.month || "", 
-        data.startDate || "", 
-        data.finishDate || "", 
-        data.totalTrainees || 0, 
-        data.passedTrainees || 0, 
-        data.failedTrainees || 0, 
-        data.csat || "", // Sprint 1: không mặc định 4.8/5 
-        data.highlights || "", 
-        data.issues || "", 
-        data.actionPlan || "", 
-        data.status || "Hoàn thành", 
-        data.listLink || "", 
-        data.quizLink || ""
-      ];
-      
-      if(rowIndex !== -1) {
-        sheet.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
-      } else {
-        sheet.appendRow(rowData);
-      }
-
-      // 9.2. Ghi nhận chi tiết từng học viên vào tab KetQuaHocVien (Có gắn Mã Khóa & Nhóm Khóa)
+      // 9.2. Chi tiết từng học viên vào KetQuaHocVien: đọc 1 lần, bỏ dòng cũ của khóa này, ghi lại 1 lần
       if (data.traineeDetails && Array.isArray(data.traineeDetails) && data.traineeDetails.length > 0) {
-        let sheetKQ = ss.getSheetByName(SHEET_KETQUA_HOCVIEN);
-        if (!sheetKQ) {
-          sheetKQ = ss.insertSheet(SHEET_KETQUA_HOCVIEN);
-          sheetKQ.appendRow([
-            "Timestamp", "Mã Khóa", "Nhóm Khóa", "STT", "Mã NV", 
-            "Họ Tên", "Phòng Ban", "Email Công Ty", "Lần Kiểm Tra", "Điểm", 
-            "Kết Quả", "Username LMS", "Password", "Điểm Danh"
-          ]);
-        }
-        
-        // Chống trùng lặp: Xóa các dòng học viên cũ của Mã Khóa này nếu nộp lại
-        const lastRowKQ = sheetKQ.getLastRow();
-        if (lastRowKQ > 1) {
-          const kqValues = sheetKQ.getRange(2, 2, lastRowKQ - 1, 1).getValues(); // Cột B: Mã Khóa
-          for (let r = kqValues.length - 1; r >= 0; r--) {
-            if (kqValues[r][0] && kqValues[r][0].toString().trim().toUpperCase() === courseIdToMatch) {
-              sheetKQ.deleteRow(r + 2);
-            }
-          }
-        }
-        
-        // Tạo các dòng mới chuẩn 14 cột
         const timeNowStr = Utilities.formatDate(new Date(), "GMT+7", "yyyy-MM-dd HH:mm:ss");
-        const rowsToInsert = data.traineeDetails.map((t, idx) => [
-          timeNowStr,
-          courseIdToMatch,
-          data.groupName || "",
-          t.stt || (idx + 1),
-          t.code || "",
-          t.name || "",
-          t.dept || "",
-          t.email || "",
-          t.attempt || "1",
-          t.score || "",
-          t.result || "",
-          t.username || "",
+        const newRows = data.traineeDetails.map((t, idx) => [
+          timeNowStr, courseIdToMatch, data.groupName || "", t.stt || (idx + 1), t.code, t.name, t.dept, t.email,
+          t.attempt || "1", t.score, t.result, t.username,
           "", // Sprint 0: KHÔNG lưu mật khẩu LMS lên Sheet (giữ cột để không lệch cấu trúc)
-          t.attendance || ""
+          t.attendance
         ]);
-        
-        if (rowsToInsert.length > 0) {
-          sheetKQ.getRange(sheetKQ.getLastRow() + 1, 1, rowsToInsert.length, 14).setValues(rowsToInsert);
-        }
+        replaceCourseRowsInResultSheet(ss, courseIdToMatch, newRows);
       }
-     
-      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+
+      return jsonOut({ status: "success" });
     }
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: error.message })).setMimeType(ContentService.MimeType.JSON);
-  }
 }
 
 function doGet(e) {
@@ -680,7 +715,7 @@ function doGet(e) {
     
     allSheets.forEach(s => {
       const sName = s.getName();
-      if (HIDDEN_SHEETS_IN_DUMP.indexOf(sName) !== -1) return; // Ẩn sheet cấu hình nội bộ
+      if (HIDDEN_SHEETS_IN_DUMP.indexOf(sName) !== -1 || sName.indexOf(SETTINGS_BACKUP_PREFIX) === 0) return; // Ẩn sheet cấu hình nội bộ & bản sao lưu
       sheetList.push(sName);
       if(s.getLastRow() > 0) {
         const rawValues = s.getDataRange().getValues();

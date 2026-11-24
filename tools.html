@@ -793,6 +793,8 @@
                 if(!GOOGLE_API_URL) throw new Error("Local");
                 const response = await fetch(GOOGLE_API_URL);
                 const data = await response.json();
+                // Sprint 2: Cloud từ chối (sai token...) thì không báo "Active"
+                if (data && data.status === 'error') throw new Error(data.message || 'Cloud từ chối');
                 if (data && data.master) {
                     globalMasterDB = data.master;
                     localStorage.setItem('kv_master_db', JSON.stringify(data.master));
@@ -803,9 +805,13 @@
                 }
                 document.getElementById('db-status-indicator').innerHTML = `<i class="fas fa-circle text-[8px] text-emerald-500"></i> Cloud API Active`;
             } catch (err) {
-                globalMasterDB = JSON.parse(localStorage.getItem('kv_master_db')) || [];
-                globalGiftsDB = JSON.parse(localStorage.getItem('kv_gift_db')) || defaultGifts;
-                document.getElementById('db-status-indicator').innerHTML = `<i class="fas fa-circle text-[8px] text-amber-500"></i> Local Mode`;
+                // Dữ liệu dự phòng trên máy (bọc try/catch: dữ liệu hỏng không làm sập trang)
+                try { globalMasterDB = JSON.parse(localStorage.getItem('kv_master_db')) || []; } catch (e) { globalMasterDB = []; }
+                globalGiftsDB = loadGiftData();
+                const st = (typeof window.getApiStatus === 'function') ? window.getApiStatus() : null;
+                const label = (st && st.state !== 'ok' && st.state !== 'unknown') ? `Local Mode (${st.label})` : 'Local Mode';
+                const el = document.getElementById('db-status-indicator');
+                if (el) { el.innerHTML = `<i class="fas fa-circle text-[8px] text-amber-500"></i> ${label}`; el.title = err && err.message ? err.message : ''; }
             }
         }
 
@@ -1425,15 +1431,18 @@
             fetch(GOOGLE_API_URL, { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-                body: JSON.stringify({ action: "save_gifts", gifts: loadGiftData() }) 
+                body: JSON.stringify({ action: "save_gifts", gifts: loadGiftData() })
             })
+            // Sprint 2: đọc kết quả trả về (trước đây không đọc -> Cloud báo lỗi vẫn hiện "Đã lưu thành công")
+            .then(r => r.json())
+            .then(d => (window.ensureApiSuccess ? window.ensureApiSuccess(d) : d))
             .then(() => {
                 btn.innerHTML = '<i class="fas fa-check mr-1"></i> Đã Lưu Thành Công';
                 showToast("Đã lưu tồn kho quà tặng lên Google Sheets!");
                 setTimeout(() => { btn.innerHTML = old; btn.classList.remove('opacity-70', 'pointer-events-none'); }, 2000);
             })
-            .catch(() => {
-                alert("Lỗi kết nối API!");
+            .catch((err) => {
+                alert("⚠️ Chưa lưu được lên Google Sheets: " + (err && err.message ? err.message : "Lỗi kết nối API"));
                 btn.innerHTML = old;
                 btn.classList.remove('opacity-70', 'pointer-events-none');
             });
@@ -1683,7 +1692,7 @@
             loadEmployeeDB();
             checkWeek3ComplianceReminders();
             // Nạp dữ liệu tức thì từ LocalStorage (0ms), không gọi API ngầm gây lag
-            globalGiftsDB = JSON.parse(localStorage.getItem('kv_gift_db')) || defaultGifts;
+            globalGiftsDB = loadGiftData(); // Sprint 2: không sập trang khi dữ liệu kho quà trên máy bị hỏng
             const statusEl = document.getElementById('db-status-indicator');
             if (statusEl) {
                 statusEl.innerHTML = GOOGLE_API_URL 
