@@ -17,11 +17,18 @@ function makeSheet(name, rows) {
     getLastRow: () => data.length,
     getLastColumn: () => data.reduce((m, r) => Math.max(m, r.length), 0),
     getDataRange: () => ({ getValues: () => data.map(r => r.slice()) }),
-    getRange: (row, col, nr, nc) => ({
+    getRange: (row, col, nr, nc) => {
+      if (typeof row === 'string') { // Hỗ trợ dạng "A3:F10"
+        const m = row.match(/^([A-Z])(\d+):([A-Z])(\d+)$/);
+        const c1 = m[1].charCodeAt(0) - 64, r1 = +m[2], c2 = m[3].charCodeAt(0) - 64, r2 = +m[4];
+        row = r1; col = c1; nr = r2 - r1 + 1; nc = c2 - c1 + 1;
+      }
+      return {
       getValues: () => data.slice(row - 1, row - 1 + (nr || 1)).map(r => r.slice(col - 1, col - 1 + (nc || 1))),
       setValues: (vals) => { vals.forEach((v, i) => { data[row - 1 + i] = data[row - 1 + i] || []; v.forEach((x, j) => data[row - 1 + i][col - 1 + j] = x); }); },
       clearContent: () => { for (let i = row - 1; i < row - 1 + nr; i++) for (let j = col - 1; j < col - 1 + nc; j++) if (data[i]) data[i][j] = ''; },
-    }),
+      };
+    },
     appendRow: (r) => data.push(r.slice()),
     clear: () => { data = []; },
     deleteRow: (i) => data.splice(i - 1, 1),
@@ -38,8 +45,10 @@ function freshEnv(props) {
     ]),
     Settings: makeSheet('Settings', [['Key', 'Value'], ['kv_api_url', "'https://evil.example/exec"], ['kv_trainer_profile', "'{\"name\":\"X\"}"]]),
   };
+  sheets.KhoQua = makeSheet('KhoQua', [['Tên Quà', 'Tồn Đầu', 'Xuất Kho', 'Tồn Cuối'], ['Bình nước', 30, 5, 25]]);
   const sentEmails = [];
   const fetched = [];
+  const openedIds = [];
   const ss = {
     getSheetByName: (n) => sheets[n] || null,
     insertSheet: (n) => (sheets[n] = makeSheet(n, [])),
@@ -48,9 +57,14 @@ function freshEnv(props) {
   };
   const ctx = {
     console,
-    SpreadsheetApp: { openById: (id) => { if (id === '1amqxx2UojQPvK2hqJohvHZNjrw5LV0_V9FoZa_0qzRg') throw new Error('no access'); return ss; } },
+    SpreadsheetApp: { openById: (id) => {
+      openedIds.push(id);
+      if (id === 'NO_ACCESS_GIFT_ID') throw new Error('Bạn không có quyền truy cập vào tài liệu yêu cầu.');
+      if (id === 'EXTERNAL_GIFT_ID') return { getSheetByName: (n) => n === 'Kho' ? makeSheet('Kho', [['h'], ['h'], ['Túi', '', '10.000', 50, 5, '']]) : null, getName: () => 'Kho quà' };
+      return ss;
+    } },
     PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => (props[k] === undefined ? null : props[k]), setProperty: (k, v) => { props[k] = v; } }) },
-    ContentService: { MimeType: { JSON: 'json' }, createTextOutput: (s) => ({ setMimeType: () => ({ body: JSON.parse(s) }) }) },
+    ContentService: { MimeType: { JSON: 'json' }, createTextOutput: (s) => ({ setMimeType: () => ({ body: JSON.parse(s), getContent: () => s }) }) },
     GmailApp: { sendEmail: (to, s, b) => sentEmails.push({ to, s, b }) },
     UrlFetchApp: { fetch: (url) => { fetched.push(url); return { getContentText: () => '{"candidates":[{"content":{"parts":[{"text":"ok"}]}}]}' }; } },
     Utilities: { formatDate: () => '2026-11-21 10:00:00', getUuid: () => 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' },
@@ -60,7 +74,7 @@ function freshEnv(props) {
   vm.runInContext(code, ctx);
   const post = (obj) => ctx.doPost({ postData: { contents: JSON.stringify(obj) } }).body;
   const get = (params) => ctx.doGet({ parameter: params || {} }).body;
-  return { ctx, sheets, sentEmails, fetched, post, get, props };
+  return { ctx, sheets, sentEmails, fetched, openedIds, post, get, props };
 }
 
 const TOKEN = 'T'.repeat(40);
@@ -175,7 +189,24 @@ function check(name, cond, detail) {
   check('generateApiToken() không ghi đè token đã có', props.API_TOKEN === before);
 }
 
-// 10. Mirror files
+// 10. Sheet Kho quà bên ngoài (lỗi CORS 24/11: mở file không có quyền làm hỏng cả lượt doGet)
+{
+  const env = freshEnv({ API_TOKEN: TOKEN });
+  const g = env.get({ token: TOKEN });
+  check('Không cấu hình GIFT_SPREADSHEET_ID -> chỉ mở Sheet chính', env.openedIds.every(id => id === env.openedIds[0]) && env.openedIds.length >= 1, env.openedIds);
+  check('Không cấu hình GIFT_SPREADSHEET_ID -> dùng tab KhoQua', g.gifts.length === 1 && g.gifts[0].name === 'Bình nước', g.gifts);
+  check('Mã nguồn không còn ID Sheet Kho quà hardcode', code.indexOf('1amqxx2UojQPvK2hqJohvHZNjrw5LV0_V9FoZa_0qzRg') === -1);
+  const env2 = freshEnv({ API_TOKEN: TOKEN, GIFT_SPREADSHEET_ID: 'EXTERNAL_GIFT_ID' });
+  const g2 = env2.get({ token: TOKEN });
+  check('Có GIFT_SPREADSHEET_ID hợp lệ -> đọc Kho quà bên ngoài', g2.gifts.length === 1 && g2.gifts[0].name === 'Túi' && g2.gifts[0].in === 50, g2.gifts);
+  const env3 = freshEnv({ API_TOKEN: TOKEN, GIFT_SPREADSHEET_ID: 'NO_ACCESS_GIFT_ID' });
+  const g3 = env3.get({ token: TOKEN });
+  check('GIFT_SPREADSHEET_ID không có quyền -> vẫn trả dữ liệu, dùng KhoQua', g3.status === 'success' && g3.gifts[0].name === 'Bình nước', g3);
+  const env4 = freshEnv({ API_TOKEN: TOKEN });
+  check('debugDoGet() chạy được', (() => { try { env4.ctx.debugDoGet(); return true; } catch (e) { return false; } })());
+}
+
+// 11. Mirror files
 {
   for (const f of ['trainer_database.js', 'trainer_database codejs.txt']) {
     check(`Mirror ${f} giống hệt code.js`, fs.readFileSync(path.join(ROOT, f), 'utf8') === code);

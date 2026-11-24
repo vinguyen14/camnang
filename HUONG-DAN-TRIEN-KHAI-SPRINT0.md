@@ -29,6 +29,7 @@ Vào **Project Settings (⚙️) → Script Properties → Add script property**
 | `GEMINI_API_KEY` | Key mới tạo ở bước 1 | Có (dùng cho Trợ lý AI) |
 | `ALLOWED_EMAIL_DOMAINS` | Ví dụ `kiotviet.com` hoặc `kiotviet.com, citigo.com.vn` | Không (mặc định `kiotviet.com`) |
 | `API_TOKEN` | **Không tự gõ**, để bước 4 tạo tự động | Có |
+| `GIFT_SPREADSHEET_ID` | ID Google Sheet Kho quà của team khác (tab `Kho`). **Chỉ đặt khi tài khoản deploy có quyền xem file đó**, nếu không Web App sẽ lỗi CORS. Bỏ trống thì dùng tab `KhoQua` trong Sheet chính. | Không |
 
 ## Bước 4 — Chạy 3 hàm tiện ích (một lần)
 

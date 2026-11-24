@@ -23,6 +23,8 @@ const SHEET_KETQUA_HOCVIEN = 'KetQuaHocVien';
 //   - ADMIN_PASSWORD  (bắt buộc cho clear_data): mật khẩu dài, KHÔNG có giá trị mặc định.
 //   - GEMINI_API_KEY  (bắt buộc cho ask_ai): KHÔNG có giá trị mặc định.
 //   - ALLOWED_EMAIL_DOMAINS (tùy chọn): danh sách domain cách nhau dấu phẩy, mặc định "kiotviet.com".
+//   - GIFT_SPREADSHEET_ID (tùy chọn): ID Google Sheet Kho quà bên ngoài (tab "Kho"). Chỉ đặt khi tài khoản
+//     deploy CÓ QUYỀN XEM file đó. Bỏ trống = dùng tab KhoQua trong Sheet chính.
 // ============================================================================
 const KNOWN_ACTIONS = ["clear_data", "save_gifts", "add_knowledge", "delete_knowledge", "ask_ai", "send_email", "sync_up", "sync_down", "submit_report"];
 const SYNC_EXCLUDED_KEYS = ["kv_api_url", "kv_api_token"]; // Không bao giờ đồng bộ cấu hình kết nối lên/xuống Cloud
@@ -495,24 +497,35 @@ function doGet(e) {
       }
     }
 
-    let gifts = []; 
-    try {
-      const externalGiftSS = SpreadsheetApp.openById('1amqxx2UojQPvK2hqJohvHZNjrw5LV0_V9FoZa_0qzRg');
-      const sheetKho = externalGiftSS.getSheetByName('Kho');
-      if(sheetKho && sheetKho.getLastRow() >= 3) {
-        const gData = sheetKho.getRange("A3:F" + sheetKho.getLastRow()).getValues();
-        for(let i = 0; i < gData.length; i++) {
-          if(gData[i][0]) {
-            gifts.push({ 
-              name: gData[i][0].toString().trim(), 
-              in: parseInt(gData[i][3]) || 0,
-              out: parseInt(gData[i][4]) || 0,
-              cost: gData[i][2] ? gData[i][2].toString() : '-' 
-            });
+    let gifts = [];
+    // Sheet Kho quà bên ngoài CHỈ được đọc khi cấu hình Script Property GIFT_SPREADSHEET_ID
+    // (và tài khoản deploy có quyền xem file đó). Mở một file không có quyền sẽ khiến Google
+    // đánh dấu cả lượt chạy là thất bại dù đã try/catch -> Web App trả trang lỗi (CORS).
+    const externalGiftId = getScriptProp('GIFT_SPREADSHEET_ID');
+    let externalGiftOk = false;
+    if (externalGiftId) {
+      try {
+        const externalGiftSS = SpreadsheetApp.openById(externalGiftId);
+        const sheetKho = externalGiftSS.getSheetByName('Kho');
+        if(sheetKho && sheetKho.getLastRow() >= 3) {
+          const gData = sheetKho.getRange("A3:F" + sheetKho.getLastRow()).getValues();
+          for(let i = 0; i < gData.length; i++) {
+            if(gData[i][0]) {
+              gifts.push({
+                name: gData[i][0].toString().trim(),
+                in: parseInt(gData[i][3]) || 0,
+                out: parseInt(gData[i][4]) || 0,
+                cost: gData[i][2] ? gData[i][2].toString() : '-'
+              });
+            }
           }
         }
+        externalGiftOk = true;
+      } catch(err) {
+        gifts = [];
       }
-    } catch(err) {
+    }
+    if (!externalGiftOk) {
       let localGiftSheet = ss.getSheetByName(SHEET_GIFT);
       if(localGiftSheet && localGiftSheet.getLastRow() > 1) {
         const localGData = localGiftSheet.getDataRange().getValues();
@@ -611,6 +624,28 @@ function testAuth() {
   ['API_TOKEN', 'ADMIN_PASSWORD', 'GEMINI_API_KEY'].forEach(k => {
     Logger.log((props.getProperty(k) ? "✅ " : "❌ CHƯA CẤU HÌNH ") + k);
   });
+  const giftId = props.getProperty('GIFT_SPREADSHEET_ID');
+  if (giftId) {
+    try {
+      SpreadsheetApp.openById(giftId).getName();
+      Logger.log("✅ Có quyền đọc Sheet Kho quà (GIFT_SPREADSHEET_ID)");
+    } catch (e) {
+      Logger.log("❌ KHÔNG có quyền đọc Sheet Kho quà - hãy xin quyền xem hoặc xóa GIFT_SPREADSHEET_ID");
+    }
+  } else {
+    Logger.log("ℹ️ Không cấu hình GIFT_SPREADSHEET_ID - dùng tab " + SHEET_GIFT + " trong Sheet chính");
+  }
+}
+
+// Chạy trong trình soạn thảo để kiểm tra doGet giống như Web App (không in token ra log)
+function debugDoGet() {
+  const start = Date.now();
+  const out = doGet({ parameter: { token: getScriptProp('API_TOKEN') } });
+  const s = out.getContent();
+  const data = JSON.parse(s);
+  Logger.log('Trạng thái: ' + data.status + (data.message ? ' - ' + data.message : ''));
+  Logger.log('Thời gian: ' + (Date.now() - start) + ' ms; kích thước: ' + (s.length / 1024).toFixed(0) + ' KB');
+  Logger.log('MasterDB: ' + (data.master || []).length + ' khóa; Kho quà: ' + (data.gifts || []).length + ' món');
 }
 
 // CHẠY 1 LẦN: Tạo API_TOKEN ngẫu nhiên (in ra Log để dán vào trang Cài đặt). Không ghi đè nếu đã có.
