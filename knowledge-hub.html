@@ -476,7 +476,7 @@
         });
 
         function loadCachedDataOrDefaults() {
-            const cachedUrl = localStorage.getItem('kv_api_url') || '';
+            const cachedUrl = (typeof getGlobalApiUrl === 'function' ? getGlobalApiUrl() : localStorage.getItem('kv_api_url')) || '';
             const cachedDb = localStorage.getItem('kv_doc_hub_db');
             const lastSync = localStorage.getItem('kv_doc_hub_last_sync');
 
@@ -1935,7 +1935,7 @@
 
         // ==================== SYNC API ====================
         async function syncGoogleSheetsData() {
-            const apiUrl = localStorage.getItem('kv_api_url') || '';
+            const apiUrl = (typeof getGlobalApiUrl === 'function' ? getGlobalApiUrl() : localStorage.getItem('kv_api_url')) || '';
             if (!apiUrl) {
                 openConfigModal();
                 return;
@@ -1986,7 +1986,7 @@
         function testAndSaveApiUrl() {
             const url = document.getElementById('cfg-api-url').value.trim();
             if (!url) return alert('Vui lòng nhập Google Apps Script Web App URL!');
-            localStorage.setItem('kv_api_url', url);
+            if (typeof setGlobalApiUrl === 'function') { if (setGlobalApiUrl(url) === false) return alert('Link không hợp lệ. Link phải có dạng https://script.google.com/macros/s/.../exec'); } else { localStorage.setItem('kv_api_url', url); }
             closeConfigModal();
             syncGoogleSheetsData();
         }

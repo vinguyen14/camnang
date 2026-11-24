@@ -400,7 +400,7 @@
             } catch (e) {}
         }
 
-        const apiUrl = localStorage.getItem('kv_api_url') || '';
+        const apiUrl = (typeof getGlobalApiUrl === 'function' ? getGlobalApiUrl() : localStorage.getItem('kv_api_url')) || '';
 
         if (!apiUrl) {
             currentSops = DEFAULT_FALLBACK_SOPS;

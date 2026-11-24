@@ -870,7 +870,12 @@
                 const parsedBody = JSON.parse(options.body);
                 if (parsedBody && parsedBody.courseId && parsedBody.totalTrainees !== undefined) {
                     if (window.currentParsedTrainees && window.currentParsedTrainees.length > 0) {
-                        parsedBody.traineeDetails = window.currentParsedTrainees;
+                        // Sprint 0: Không gửi mật khẩu LMS lên Cloud
+                        parsedBody.traineeDetails = window.currentParsedTrainees.map(t => {
+                            const copy = Object.assign({}, t);
+                            delete copy.password;
+                            return copy;
+                        });
                         options.body = JSON.stringify(parsedBody);
                     }
                 }
