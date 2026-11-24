@@ -409,10 +409,10 @@
       <div class="w-full px-2.5 py-2.5 flex flex-col gap-1 border-t border-slate-200 bg-white shrink-0">
         <div id="btn-secret-api" class="cursor-pointer group flex items-center h-7 px-2 rounded-lg hover:bg-slate-50 transition-colors" title="Nhấp đúp: Mở System Architecture Workflow">
           <span class="flex h-2 w-2 relative flex-shrink-0">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            <span id="sb-api-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-300 opacity-75"></span>
+            <span id="sb-api-dot" class="relative inline-flex rounded-full h-2 w-2 bg-slate-400"></span>
           </span>
-          <span class="sb-text ml-2 text-[11px] font-semibold text-slate-500 truncate">Cloud API Active</span>
+          <span id="sb-api-status" class="sb-text ml-2 text-[11px] font-semibold text-slate-500 truncate">Đang kiểm tra Cloud...</span>
         </div>
 
         <div id="btn-secret-avatar" class="cursor-pointer group flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-50 transition-colors" title="Nhấp đúp: Mở System Architecture Workflow">
@@ -472,7 +472,32 @@
       const el = document.getElementById(id);
       if (el) el.addEventListener('dblclick', openWorkflow);
     });
+    if (typeof window.refreshSidebarApiStatus === 'function') window.refreshSidebarApiStatus();
   }
+
+  // Sprint 2: Trạng thái Cloud thật (trước đây luôn ghi cứng "Cloud API Active" kể cả khi lỗi)
+  const API_STATUS_COLORS = {
+    ok: 'bg-emerald-500', unauthorized: 'bg-amber-500', busy: 'bg-amber-500',
+    error: 'bg-rose-500', offline: 'bg-rose-500', unknown: 'bg-slate-400'
+  };
+  window.refreshSidebarApiStatus = function () {
+    const textEl = document.getElementById('sb-api-status');
+    if (!textEl || typeof window.getApiStatus !== 'function') return;
+    const s = window.getApiStatus();
+    textEl.textContent = s.state === 'unknown' ? 'Đang kiểm tra Cloud...' : s.label;
+    const box = document.getElementById('btn-secret-api');
+    if (box) box.title = (s.message ? s.message + ' — ' : '') + 'Nhấp đúp: Mở System Architecture Workflow';
+    const color = API_STATUS_COLORS[s.state] || API_STATUS_COLORS.unknown;
+    ['sb-api-dot', 'sb-api-ping'].forEach(function (id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      Object.keys(API_STATUS_COLORS).forEach(function (k) { el.classList.remove(API_STATUS_COLORS[k]); });
+      el.classList.remove('bg-slate-300', 'bg-emerald-400');
+      el.classList.add(color);
+      if (id === 'sb-api-ping') el.style.display = (s.state === 'ok') ? '' : 'none';
+    });
+  };
+  window.addEventListener('kv_api_status', function () { window.refreshSidebarApiStatus(); });
 
   window.refreshSidebarProfile = function () {
     try {

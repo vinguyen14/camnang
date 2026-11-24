@@ -434,6 +434,10 @@
             const GOOGLE_API_URL = typeof getGlobalApiUrl === "function" ? getGlobalApiUrl() : (localStorage.getItem("kv_api_url") || "");
             if (!GOOGLE_API_URL) return alert("⚠️ Lỗi: Chưa có Link API. Vui lòng dán Link ở Tab Cá Nhân & API.");
 
+            // Sprint 2: xác nhận trước khi đẩy lên Cloud
+            const filledKeys = KEYS_TO_SYNC.filter(k => { const v = localStorage.getItem(k); return v && v !== '[]' && v !== '{}'; });
+            if (!confirm(`ĐẨY DỮ LIỆU MÁY NÀY LÊN CLOUD:\n- Máy này có ${filledKeys.length}/${KEYS_TO_SYNC.length} mục dữ liệu.\n- Mục nào máy này đang TRỐNG sẽ GIỮ NGUYÊN bản trên Cloud (không bị xóa).\n- Hệ thống tự lưu bản sao Cloud trước khi ghi đè (giữ 5 bản gần nhất, tên Settings_bk_...).\n\nĐồng ý tiếp tục?`)) return;
+
             const btn = document.getElementById('btnBackup');
             const originalHTML = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang nén Data...';
@@ -462,30 +466,28 @@
                     body: JSON.stringify({ action: "sync_up", payload: payloadString })
                 });
                 const data = await res.json();
-                
-                // Đồng thời đẩy trực tiếp MasterDB vào các dòng của Sheet MasterDB nếu đang trống
-                try {
-                    const masterStr = localStorage.getItem('kv_master_db');
-                    if (masterStr) {
-                        const mList = JSON.parse(masterStr);
-                        if (Array.isArray(mList) && mList.length > 0) {
-                            for (const item of mList) {
-                                await fetch(GOOGLE_API_URL, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                                    body: JSON.stringify(item)
-                                });
-                            }
-                        }
-                    }
-                } catch(errMaster) {}
-                
-                if (data.status === 'success') {
-                    btn.innerHTML = '<i class="fas fa-check mr-2"></i> Backup thành công!';
-                    btn.classList.replace('bg-blue-600', 'bg-emerald-500');
-                    btn.classList.replace('border-blue-700', 'border-emerald-600');
-                    showToast("☁️ Đã sao lưu 100% hệ thống lên Cloud!");
-                } else throw new Error(data.message || "Lỗi Server");
+                if (data.status !== 'success') throw new Error(data.message || "Lỗi Server");
+
+                // Sprint 2: đẩy MasterDB trong 1 lần (batch_upsert) thay vì gửi từng khóa (N request, lỗi bị bỏ qua im lặng)
+                let masterNote = '';
+                let mList = [];
+                try { mList = JSON.parse(localStorage.getItem('kv_master_db') || '[]'); } catch (e) { mList = []; }
+                if (Array.isArray(mList) && mList.length > 0) {
+                    btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Đang đồng bộ ${mList.length} khóa học...`;
+                    const r2 = await fetch(GOOGLE_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ action: "batch_upsert", items: mList })
+                    });
+                    const d2 = await r2.json();
+                    if (d2.status !== 'success') throw new Error('Đã sao lưu cấu hình nhưng chưa đồng bộ được MasterDB: ' + (d2.message || 'Lỗi Server'));
+                    masterNote = ` • ${d2.upserted} khóa học`;
+                }
+
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i> Backup thành công!';
+                btn.classList.replace('bg-blue-600', 'bg-emerald-500');
+                btn.classList.replace('border-blue-700', 'border-emerald-600');
+                showToast(`☁️ Đã sao lưu lên Cloud (${data.updatedKeys || 0} mục cấu hình${masterNote})${data.backup ? ' • Bản sao cũ: ' + data.backup : ''}`);
 
             } catch (e) {
                 alert("⚠️ Lỗi đồng bộ: " + e.message);
@@ -518,24 +520,9 @@
                     body: JSON.stringify({ action: "sync_down" })
                 });
                 const data = await res.json();
-                
-                // Đồng thời đẩy trực tiếp MasterDB vào các dòng của Sheet MasterDB nếu đang trống
-                try {
-                    const masterStr = localStorage.getItem('kv_master_db');
-                    if (masterStr) {
-                        const mList = JSON.parse(masterStr);
-                        if (Array.isArray(mList) && mList.length > 0) {
-                            for (const item of mList) {
-                                await fetch(GOOGLE_API_URL, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                                    body: JSON.stringify(item)
-                                });
-                            }
-                        }
-                    }
-                } catch(errMaster) {}
-                
+                // Sprint 2: "Kéo về" CHỈ tải xuống. Trước đây bước này lại đẩy MasterDB cũ trên máy lên trước,
+                // ghi đè các khóa học mới hơn trên Cloud bằng bản cũ.
+
                 if (data.status === 'success' && data.payload && data.payload !== "{}") {
                     const cloudData = typeof data.payload === 'string' ? JSON.parse(data.payload) : data.payload;
                     // Chỉ khôi phục các key dữ liệu đã biết - không bao giờ ghi đè link API / token từ Cloud
