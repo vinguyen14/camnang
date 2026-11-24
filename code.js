@@ -94,6 +94,22 @@ function getGeminiModels() {
   return list.length > 0 ? list : DEFAULT_GEMINI_MODELS;
 }
 
+// Ghép TẤT CẢ các phần văn bản của câu trả lời (model mới hay chia câu trả lời dài thành nhiều part),
+// bỏ qua phần "suy nghĩ" (thought) của model. Báo rõ nếu Google cắt câu trả lời vì quá dài.
+function extractGeminiText(json) {
+  const cand = json && json.candidates && json.candidates[0];
+  if (!cand || !cand.content || !Array.isArray(cand.content.parts)) return '';
+  const text = cand.content.parts
+    .filter(p => p && typeof p.text === 'string' && !p.thought)
+    .map(p => p.text)
+    .join('');
+  if (!text) return '';
+  if (cand.finishReason === 'MAX_TOKENS') {
+    return text + '\n\n_(Câu trả lời quá dài nên bị cắt bớt. Hãy hỏi cụ thể hơn hoặc chia nhỏ yêu cầu.)_';
+  }
+  return text;
+}
+
 // Lỗi tạm thời: quá tải (503/UNAVAILABLE), vượt hạn mức (429/RESOURCE_EXHAUSTED), model không tồn tại (404)
 function isTransientGeminiError(err) {
   const code = Number(err.code) || 0;
@@ -203,8 +219,9 @@ function doPost(e) {
       const payload = {
         "contents": [{ "parts": [{ "text": data.prompt }] }],
         "systemInstruction": { 
-          "parts": [{ "text": "Bạn là Kevin - Trợ lý Đào tạo (L&D Director) của KiotViet. Luôn trả lời chuyên nghiệp, cấu trúc rõ ràng, dùng bullet point và format Markdown đẹp mắt." }]
-        }
+          "parts": [{ "text": "Bạn là Kevin - Trợ lý Đào tạo (L&D Director) của KiotViet. Luôn trả lời chuyên nghiệp, ngắn gọn, cấu trúc rõ ràng bằng gạch đầu dòng (-). Khung chat chỉ hiển thị được **chữ đậm**, *chữ nghiêng* và xuống dòng: KHÔNG dùng tiêu đề Markdown (#, ##, ###), bảng hay khối code; thay tiêu đề bằng một dòng **chữ đậm**." }]
+        },
+        "generationConfig": { "maxOutputTokens": 8192 }
       };
       
       const options = {
@@ -238,8 +255,9 @@ function doPost(e) {
             }
             break; // Lỗi cố định (sai key, nội dung bị chặn...) -> không thử tiếp
           }
-          if (json.candidates && json.candidates.length > 0 && json.candidates[0].content && json.candidates[0].content.parts) {
-            aiText = json.candidates[0].content.parts[0].text;
+          const candidateText = extractGeminiText(json);
+          if (candidateText) {
+            aiText = candidateText;
             lastError = "";
             break;
           }

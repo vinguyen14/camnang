@@ -245,6 +245,15 @@ function check(name, cond, detail) {
   const r4 = env4.post({ action: 'ask_ai', prompt: 'x', token: TOKEN });
   check('GEMINI_MODELS ghi đè danh sách model', r4.reply === 'b' && env4.fetched.map(modelOf).join() === 'model-a,model-b');
   check('Key Gemini không lộ trong câu trả lời lỗi', JSON.stringify(r2).indexOf('key=') === -1);
+
+  // Câu trả lời chia nhiều part (lỗi mất chữ 24/11) -> ghép đủ, bỏ phần "thought"
+  const MULTI = JSON.stringify({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: 'suy nghĩ nội bộ', thought: true }, { text: '### 📊 TỔNG KẾT BÁO C' }, { text: 'ÁO\n- Ý 1\n- Ý 2' }] } }] });
+  const env5 = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k' }, () => MULTI);
+  const r5 = env5.post({ action: 'ask_ai', prompt: 'tổng kết', token: TOKEN });
+  check('Câu trả lời nhiều part -> ghép đủ nội dung', r5.reply === '### 📊 TỔNG KẾT BÁO CÁO\n- Ý 1\n- Ý 2', r5.reply);
+  const LONG = JSON.stringify({ candidates: [{ finishReason: 'MAX_TOKENS', content: { parts: [{ text: 'Rất dài' }] } }] });
+  const env6 = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k' }, () => LONG);
+  check('Bị cắt vì quá dài -> có ghi chú cho người dùng', /quá dài/.test(env6.post({ action: 'ask_ai', prompt: 'x', token: TOKEN }).reply));
 }
 
 // 12. Mirror files
