@@ -86,7 +86,8 @@ function readGiftImportTab(ss) {
 }
 
 // Danh sách model Gemini thử lần lượt. Ghi đè bằng Script Property GEMINI_MODELS (cách nhau dấu phẩy).
-const DEFAULT_GEMINI_MODELS = ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'];
+// Ưu tiên model Google khuyến nghị + các alias "-latest" (Google tự trỏ tới bản mới nhất, không bị ngừng hỗ trợ).
+const DEFAULT_GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
 
 function getGeminiModels() {
   const raw = getScriptProp('GEMINI_MODELS');
@@ -110,14 +111,38 @@ function extractGeminiText(json) {
   return text;
 }
 
-// Lỗi tạm thời: quá tải (503/UNAVAILABLE), vượt hạn mức (429/RESOURCE_EXHAUSTED), model không tồn tại (404)
-function isTransientGeminiError(err) {
+// Phân loại lỗi Gemini:
+//   'unavailable' - model không tồn tại / ngừng hỗ trợ (404, "no longer available") -> chuyển model ngay
+//   'busy'        - quá tải / vượt hạn mức (503, 429, 500, "high demand")            -> chờ rồi chuyển model
+//   'fatal'       - lỗi cố định (sai key, nội dung bị chặn...)                        -> dừng, báo ngay
+function classifyGeminiError(err) {
   const code = Number(err.code) || 0;
   const status = String(err.status || '');
   const msg = String(err.message || '').toLowerCase();
-  return code === 503 || code === 429 || code === 500 || code === 404 ||
-    status === 'UNAVAILABLE' || status === 'RESOURCE_EXHAUSTED' || status === 'NOT_FOUND' ||
-    msg.indexOf('high demand') !== -1 || msg.indexOf('overloaded') !== -1;
+  if (code === 404 || status === 'NOT_FOUND' || msg.indexOf('no longer available') !== -1 ||
+      msg.indexOf('is not found') !== -1 || msg.indexOf('not supported for generatecontent') !== -1) {
+    return 'unavailable';
+  }
+  if (code === 503 || code === 429 || code === 500 || status === 'UNAVAILABLE' || status === 'RESOURCE_EXHAUSTED' ||
+      msg.indexOf('high demand') !== -1 || msg.indexOf('overloaded') !== -1) {
+    return 'busy';
+  }
+  return 'fatal';
+}
+
+function isTransientGeminiError(err) {
+  return classifyGeminiError(err) !== 'fatal';
+}
+
+function buildGeminiFailureMessage(failures) {
+  const last = failures[failures.length - 1];
+  if (last.kind === 'fatal') return "⚠️ Lỗi từ Google AI: " + last.message;
+  const shorten = (s) => s.length > 90 ? s.substring(0, 90) + '…' : s;
+  const reasons = failures.map(f => "- " + f.model + ": " + (f.kind === 'busy' ? 'đang quá tải' : 'không còn khả dụng') + " (" + shorten(f.message) + ")").join("\n");
+  if (failures.every(f => f.kind === 'unavailable')) {
+    return "⚠️ Các model AI đang cấu hình không còn khả dụng. Admin cần cập nhật Script Property GEMINI_MODELS.\n" + reasons;
+  }
+  return "⚠️ Trợ lý AI đang bận, vui lòng thử lại sau ít phút.\n" + reasons;
 }
 
 function getAllowedEmailDomains() {
@@ -235,37 +260,37 @@ function doPost(e) {
         // Thử lần lượt từng model; model bị quá tải / giới hạn tạm thời -> chờ ngắn rồi chuyển model dự phòng
         const models = getGeminiModels();
         let aiText = "Xin lỗi, hiện tại tôi đang xử lý tác vụ khác. Hãy thử lại sau giây lát!";
-        let lastError = "";
-        let lastTransient = true;
+        const failures = []; // { model, kind: 'busy' | 'unavailable' | 'fatal', message }
+        let answered = false;
         for (let m = 0; m < models.length; m++) {
           const url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(models[m]) + ":generateContent?key=" + GEMINI_API_KEY;
           let json;
           try {
             json = JSON.parse(UrlFetchApp.fetch(url, options).getContentText());
           } catch (fetchErr) {
-            lastError = String(fetchErr);
+            failures.push({ model: models[m], kind: 'busy', message: 'Không kết nối được' });
             continue;
           }
           if (json.error) {
-            lastError = json.error.message || String(json.error.status || 'Lỗi không xác định');
-            lastTransient = isTransientGeminiError(json.error);
-            if (lastTransient) {
+            const kind = classifyGeminiError(json.error);
+            failures.push({ model: models[m], kind: kind, message: String(json.error.message || json.error.status || 'Lỗi không xác định') });
+            if (kind === 'busy') {
               if (m < models.length - 1) Utilities.sleep(800);
-              continue; // Thử model kế tiếp
+              continue; // Quá tải -> thử model kế tiếp
             }
+            if (kind === 'unavailable') continue; // Model ngừng hỗ trợ / sai tên -> thử model kế tiếp ngay
             break; // Lỗi cố định (sai key, nội dung bị chặn...) -> không thử tiếp
           }
           const candidateText = extractGeminiText(json);
           if (candidateText) {
             aiText = candidateText;
-            lastError = "";
+            answered = true;
             break;
           }
+          failures.push({ model: models[m], kind: 'busy', message: 'Câu trả lời trống' });
         }
-        if (lastError) {
-          aiText = lastTransient
-            ? "⚠️ Trợ lý AI đang bận (Google AI: " + lastError + "). Vui lòng thử lại sau ít phút."
-            : "⚠️ Lỗi từ Google AI: " + lastError;
+        if (!answered && failures.length > 0) {
+          aiText = buildGeminiFailureMessage(failures);
         }
 
         return ContentService.createTextOutput(JSON.stringify({ status: "success", reply: aiText })).setMimeType(ContentService.MimeType.JSON);

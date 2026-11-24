@@ -228,13 +228,23 @@ function check(name, cond, detail) {
   const OK = (t) => JSON.stringify({ candidates: [{ content: { parts: [{ text: t }] } }] });
   const modelOf = (u) => decodeURIComponent(u.split('/models/')[1].split(':')[0]);
 
-  const env = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k' }, (u) => modelOf(u) === 'gemini-flash-lite-latest' ? BUSY : OK('từ ' + modelOf(u)));
+  check('Model mặc định không còn gemini-2.5-flash (đã ngừng cấp)', !/gemini-2\.5-flash/.test(code.split('DEFAULT_GEMINI_MODELS =')[1].split('\n')[0]));
+
+  const env = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k' }, (u) => modelOf(u) === 'gemini-3.8-flash' ? BUSY : OK('từ ' + modelOf(u)));
   const r = env.post({ action: 'ask_ai', prompt: 'kho quà', token: TOKEN });
   check('Model chính quá tải -> tự chuyển model dự phòng và trả lời', r.reply === 'từ gemini-flash-latest' && env.fetched.length === 2, { reply: r.reply, n: env.fetched.length });
 
   const env2 = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k' }, () => BUSY);
   const r2 = env2.post({ action: 'ask_ai', prompt: 'x', token: TOKEN });
-  check('Mọi model quá tải -> thử hết 4 model rồi báo bận thân thiện', env2.fetched.length === 4 && /đang bận/.test(r2.reply), { n: env2.fetched.length, reply: r2.reply });
+  check('Mọi model quá tải -> thử hết 3 model, báo bận kèm lý do từng model', env2.fetched.length === 3 && /đang bận/.test(r2.reply) && (r2.reply.match(/đang quá tải/g) || []).length === 3, { n: env2.fetched.length, reply: r2.reply });
+
+  // Tình huống 24/11: model ngừng cấp cho người dùng mới
+  const GONE = JSON.stringify({ error: { code: 404, status: 'NOT_FOUND', message: 'This model models/gemini-2.5-flash is no longer available to new users.' } });
+  const env7 = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k', GEMINI_MODELS: 'gemini-2.5-flash, gemini-3.8-flash' }, (u) => modelOf(u) === 'gemini-2.5-flash' ? GONE : OK('ok 3.8'));
+  check('Model ngừng hỗ trợ -> chuyển model kế tiếp', env7.post({ action: 'ask_ai', prompt: 'x', token: TOKEN }).reply === 'ok 3.8');
+  const env8 = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k', GEMINI_MODELS: 'old-a, old-b' }, () => GONE);
+  const r8 = env8.post({ action: 'ask_ai', prompt: 'x', token: TOKEN });
+  check('Mọi model ngừng hỗ trợ -> nhắc Admin cập nhật GEMINI_MODELS', /GEMINI_MODELS/.test(r8.reply) && /không còn khả dụng/.test(r8.reply), r8.reply);
 
   const BADKEY = JSON.stringify({ error: { code: 400, status: 'INVALID_ARGUMENT', message: 'API key not valid.' } });
   const env3 = freshEnv({ API_TOKEN: TOKEN, GEMINI_API_KEY: 'k' }, () => BADKEY);
