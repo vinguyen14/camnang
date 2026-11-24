@@ -202,6 +202,18 @@ function check(name, cond, detail) {
   const env3 = freshEnv({ API_TOKEN: TOKEN, GIFT_SPREADSHEET_ID: 'NO_ACCESS_GIFT_ID' });
   const g3 = env3.get({ token: TOKEN });
   check('GIFT_SPREADSHEET_ID không có quyền -> vẫn trả dữ liệu, dùng KhoQua', g3.status === 'success' && g3.gifts[0].name === 'Bình nước', g3);
+  // Tab KhoQua_Import (IMPORTRANGE) được ưu tiên, không mở file ngoài
+  const env5 = freshEnv({ API_TOKEN: TOKEN, GIFT_SPREADSHEET_ID: 'NO_ACCESS_GIFT_ID' });
+  env5.sheets.KhoQua_Import = makeSheet('KhoQua_Import', [['Túi tote', '', '45.000', 30, 8, ''], ['', '', '', '', '', ''], ['Áo mưa', '', '', 53, 9, '']]);
+  const g5 = env5.get({ token: TOKEN });
+  check('Có tab KhoQua_Import -> đọc từ IMPORTRANGE', g5.gifts.length === 2 && g5.gifts[0].name === 'Túi tote' && g5.gifts[0].in === 30 && g5.gifts[0].out === 8 && g5.gifts[1].cost === '-', g5.gifts);
+  check('Có tab KhoQua_Import -> không mở file Kho quà ngoài', env5.openedIds.indexOf('NO_ACCESS_GIFT_ID') === -1, env5.openedIds);
+  check('Tab KhoQua_Import bị ẩn khỏi danh sách sheet', g5.sheetList.indexOf('KhoQua_Import') === -1);
+  const env6 = freshEnv({ API_TOKEN: TOKEN });
+  env6.sheets.KhoQua_Import = makeSheet('KhoQua_Import', [['#REF!']]);
+  const g6 = env6.get({ token: TOKEN });
+  check('KhoQua_Import lỗi #REF! -> quay về tab KhoQua', g6.status === 'success' && g6.gifts.length === 1 && g6.gifts[0].name === 'Bình nước', g6.gifts);
+  check('testAuth() chạy được khi có KhoQua_Import', (() => { try { env5.ctx.testAuth(); return true; } catch (e) { return false; } })());
   const env4 = freshEnv({ API_TOKEN: TOKEN });
   check('debugDoGet() chạy được', (() => { try { env4.ctx.debugDoGet(); return true; } catch (e) { return false; } })());
 }

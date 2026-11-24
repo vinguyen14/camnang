@@ -174,3 +174,4 @@ Xem `HUONG-DAN-TRIEN-KHAI-SPRINT0.md`.
 - **Nguyên nhân:** `doGet` luôn mở Sheet Kho quà của team khác (ID hardcode). Tài khoản deploy mới không có quyền xem file đó; dù đã `try/catch`, Google vẫn đánh dấu cả lượt chạy thất bại nên Web App trả trang lỗi HTML → trình duyệt báo CORS, Dashboard hiện "API Error (Offline)".
 - **Sửa:** chỉ đọc Sheet Kho quà ngoài khi cấu hình Script Property `GIFT_SPREADSHEET_ID`; mặc định dùng tab `KhoQua` trong Sheet chính. Bỏ ID hardcode khỏi mã nguồn.
 - `testAuth()` báo thêm trạng thái quyền đọc Sheet Kho quà; thêm `debugDoGet()` để chạy thử `doGet` trong trình soạn thảo.
+- **Kho quà qua IMPORTRANGE:** `doGet` ưu tiên đọc tab `KhoQua_Import` (công thức `=IMPORTRANGE(...; "Kho!A3:F")` trong Sheet chính), sau đó mới tới `GIFT_SPREADSHEET_ID`, cuối cùng là tab `KhoQua`. Bỏ qua dòng lỗi `#REF!`; ẩn tab `KhoQua_Import` khỏi danh sách sheet của Master Data Hub.

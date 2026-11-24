@@ -24,11 +24,11 @@ const SHEET_KETQUA_HOCVIEN = 'KetQuaHocVien';
 //   - GEMINI_API_KEY  (bắt buộc cho ask_ai): KHÔNG có giá trị mặc định.
 //   - ALLOWED_EMAIL_DOMAINS (tùy chọn): danh sách domain cách nhau dấu phẩy, mặc định "kiotviet.com".
 //   - GIFT_SPREADSHEET_ID (tùy chọn): ID Google Sheet Kho quà bên ngoài (tab "Kho"). Chỉ đặt khi tài khoản
-//     deploy CÓ QUYỀN XEM file đó. Bỏ trống = dùng tab KhoQua trong Sheet chính.
+//     deploy CÓ QUYỀN XEM file đó. Khuyên dùng thay thế: tab KhoQua_Import với =IMPORTRANGE(...) trong Sheet chính.
 // ============================================================================
 const KNOWN_ACTIONS = ["clear_data", "save_gifts", "add_knowledge", "delete_knowledge", "ask_ai", "send_email", "sync_up", "sync_down", "submit_report"];
 const SYNC_EXCLUDED_KEYS = ["kv_api_url", "kv_api_token"]; // Không bao giờ đồng bộ cấu hình kết nối lên/xuống Cloud
-const HIDDEN_SHEETS_IN_DUMP = [SHEET_SETTINGS]; // Không trả về trong doGet().sheets
+const HIDDEN_SHEETS_IN_DUMP = [SHEET_SETTINGS, 'KhoQua_Import']; // Không trả về trong doGet().sheets
 const HIDDEN_COLUMNS_IN_DUMP = ["password", "mật khẩu", "mat khau"]; // Không trả về cột chứa mật khẩu
 const MAX_EMAIL_RECIPIENTS = 200;
 
@@ -57,6 +57,31 @@ function isAuthorized(token) {
 
 function unauthorizedResponse() {
   return jsonOut({ status: "error", code: "UNAUTHORIZED", message: "Thiếu hoặc sai API Token. Vào Cài đặt > Kết nối Cloud để nhập token." });
+}
+
+// Tab chứa =IMPORTRANGE("<link Sheet Kho quà>"; "Kho!A3:F") - cùng bố cục cột với tab "Kho" gốc:
+// A: Tên quà | B: (bỏ qua) | C: Đơn giá | D: Tồn đầu | E: Xuất kho | F: (bỏ qua)
+const SHEET_GIFT_IMPORT = 'KhoQua_Import';
+
+function parseKhoRows(rows) {
+  const gifts = [];
+  (rows || []).forEach(r => {
+    const name = String(r[0] ?? '').trim();
+    if (!name || name.charAt(0) === '#') return; // Bỏ dòng trống và lỗi IMPORTRANGE (#REF!, #N/A...)
+    gifts.push({
+      name: name,
+      in: parseInt(r[3]) || 0,
+      out: parseInt(r[4]) || 0,
+      cost: r[2] ? String(r[2]) : '-'
+    });
+  });
+  return gifts;
+}
+
+function readGiftImportTab(ss) {
+  const sheet = ss.getSheetByName(SHEET_GIFT_IMPORT);
+  if (!sheet || sheet.getLastRow() < 1) return [];
+  return parseKhoRows(sheet.getDataRange().getValues());
 }
 
 function getAllowedEmailDomains() {
@@ -497,35 +522,27 @@ function doGet(e) {
       }
     }
 
-    let gifts = [];
-    // Sheet Kho quà bên ngoài CHỈ được đọc khi cấu hình Script Property GIFT_SPREADSHEET_ID
-    // (và tài khoản deploy có quyền xem file đó). Mở một file không có quyền sẽ khiến Google
-    // đánh dấu cả lượt chạy là thất bại dù đã try/catch -> Web App trả trang lỗi (CORS).
-    const externalGiftId = getScriptProp('GIFT_SPREADSHEET_ID');
-    let externalGiftOk = false;
-    if (externalGiftId) {
-      try {
-        const externalGiftSS = SpreadsheetApp.openById(externalGiftId);
-        const sheetKho = externalGiftSS.getSheetByName('Kho');
-        if(sheetKho && sheetKho.getLastRow() >= 3) {
-          const gData = sheetKho.getRange("A3:F" + sheetKho.getLastRow()).getValues();
-          for(let i = 0; i < gData.length; i++) {
-            if(gData[i][0]) {
-              gifts.push({
-                name: gData[i][0].toString().trim(),
-                in: parseInt(gData[i][3]) || 0,
-                out: parseInt(gData[i][4]) || 0,
-                cost: gData[i][2] ? gData[i][2].toString() : '-'
-              });
-            }
+    // KHO QUÀ - thứ tự ưu tiên:
+    //   1. Tab KhoQua_Import trong Sheet chính (=IMPORTRANGE từ Sheet Kho quà gốc, tự cập nhật)
+    //   2. Sheet Kho quà ngoài qua Script Property GIFT_SPREADSHEET_ID (tài khoản deploy phải có quyền xem)
+    //   3. Tab KhoQua trong Sheet chính (do trang Tools lưu)
+    // Lưu ý: mở một file không có quyền sẽ khiến Google đánh dấu cả lượt chạy thất bại dù đã try/catch
+    // -> Web App trả trang lỗi (CORS). Vì vậy ưu tiên IMPORTRANGE, không mở file ngoài khi không cần.
+    let gifts = readGiftImportTab(ss);
+    if (gifts.length === 0) {
+      const externalGiftId = getScriptProp('GIFT_SPREADSHEET_ID');
+      if (externalGiftId) {
+        try {
+          const sheetKho = SpreadsheetApp.openById(externalGiftId).getSheetByName('Kho');
+          if (sheetKho && sheetKho.getLastRow() >= 3) {
+            gifts = parseKhoRows(sheetKho.getRange("A3:F" + sheetKho.getLastRow()).getValues());
           }
+        } catch(err) {
+          gifts = [];
         }
-        externalGiftOk = true;
-      } catch(err) {
-        gifts = [];
       }
     }
-    if (!externalGiftOk) {
+    if (gifts.length === 0) {
       let localGiftSheet = ss.getSheetByName(SHEET_GIFT);
       if(localGiftSheet && localGiftSheet.getLastRow() > 1) {
         const localGData = localGiftSheet.getDataRange().getValues();
@@ -624,6 +641,14 @@ function testAuth() {
   ['API_TOKEN', 'ADMIN_PASSWORD', 'GEMINI_API_KEY'].forEach(k => {
     Logger.log((props.getProperty(k) ? "✅ " : "❌ CHƯA CẤU HÌNH ") + k);
   });
+  const importGifts = readGiftImportTab(ss);
+  if (importGifts.length > 0) {
+    Logger.log("✅ Kho quà đọc từ tab " + SHEET_GIFT_IMPORT + " (IMPORTRANGE): " + importGifts.length + " món");
+    return;
+  }
+  if (ss.getSheetByName(SHEET_GIFT_IMPORT)) {
+    Logger.log("⚠️ Tab " + SHEET_GIFT_IMPORT + " đang trống hoặc lỗi #REF! - mở tab và bấm 'Cho phép truy cập'");
+  }
   const giftId = props.getProperty('GIFT_SPREADSHEET_ID');
   if (giftId) {
     try {
