@@ -1,6 +1,16 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="aurora-ui">
 <head>
+    <script>
+        (function () {
+            try {
+                var savedTheme = localStorage.getItem('kv_aurora_theme_mode');
+                document.documentElement.setAttribute('data-aurora', savedTheme === 'dark' ? 'dark' : 'light');
+            } catch (e) {
+                document.documentElement.setAttribute('data-aurora', 'light');
+            }
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trainer OS | Agentic Dashboard & Analytics</title>
@@ -77,25 +87,612 @@
         .tooltip-box { display: none; position: absolute; top: 110%; left: 0; background: #1e293b; color: white; padding: 8px 12px; border-radius: 8px; font-size: 11px; z-index: 9999; width: max-content; box-shadow: 0 10px 25px rgba(0,0,0,0.2); white-space: pre-line; line-height: 1.5;}
         .group:hover > .tooltip-box { display: block; animation: fadeUpIn 0.2s ease forwards; }
 
-        /* FULLSCREEN PRESENTATION */
-        #presentation-overlay { position: fixed; inset: 0; background: #f8fafc; z-index: 99999; display: none; font-family: 'Inter', sans-serif; overflow: hidden; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 30px 30px;}
+        /* ==================== KIOTVIET BRAND GUIDELINE 16:9 INTERACTIVE SLIDE STUDIO ==================== */
+        :root {
+            --kv-primary-blue: #0070F4;
+            --kv-accent-blue: #3AE3FF;
+            --kv-primary-green: #00B63E;
+            --kv-accent-green: #5BE92A;
+            --kv-navy: #002957;
+            --kv-dark-blue: #00418C;
+            --kv-ocean-blue: #005AC0;
+            --kv-coral: #FF5564;
+            --kv-orange: #FFAB3A;
+            --kv-turquoise: #00C8AF;
+            --kv-gradient-dark: linear-gradient(135deg, #002957 0%, #00418C 52%, #005AC0 100%);
+            --kv-shadow-card: 0 14px 32px -8px rgba(0, 41, 87, 0.08);
+            --kv-shadow-dark: 0 20px 48px -12px rgba(0, 0, 0, 0.35);
+        }
+        #presentation-overlay {
+            position: fixed; inset: 0; z-index: 99999; display: none;
+            width: 100vw; height: 100vh; overflow: hidden;
+            background: #002957;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: var(--kv-navy);
+            user-select: text;
+        }
         #presentation-overlay.active { display: block; }
-        .tech-slide { position: absolute; inset: 0; padding: 60px 80px; opacity: 0; transform: translateY(30px); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; pointer-events: none; }
-        .tech-slide.active { opacity: 1; transform: translateY(0); pointer-events: auto; z-index: 10;}
-        .tech-title { font-size: 2.5rem; font-weight: 800; color: #1e293b; margin-bottom: 5px; text-transform: uppercase; letter-spacing: -0.05em;}
-        .tech-subtitle { font-size: 1.1rem; color: #64748b; font-weight: 500; margin-bottom: 40px;}
-        .tech-stat-card { background: rgba(255, 255, 255, 0.95); border: 1px solid #e2e8f0; border-radius: 20px; padding: 28px; text-align: center; box-shadow: 0 10px 35px -10px rgba(0,0,0,0.06); backdrop-filter: blur(10px); }
-        .tech-stat-val { font-size: 3.5rem; font-weight: 800; color: var(--accent); margin: 8px 0; line-height: 1;}
-        .tech-stat-label { font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;}
-        .insight-box { padding: 18px; background: white; border-left: 4px solid #3b82f6; margin-bottom: 12px; border-radius: 0 12px 12px 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); font-size: 14px; color: #334155; line-height: 1.6;}
-        .tech-nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; background: white; padding: 10px 18px; border-radius: 100px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); z-index: 100000; }
-        .tech-nav button { width: 40px; height: 40px; border-radius: 50%; border: none; background: #f1f5f9; color: #475569; font-size: 16px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
-        .tech-nav button:hover { background: #3b82f6; color: white; }
+        #kvSlideProgressBar {
+            position: fixed; top: 0; left: 0; height: 4px;
+            background: linear-gradient(90deg, var(--kv-primary-blue), var(--kv-turquoise), var(--kv-orange));
+            transition: width 0.35s ease; z-index: 100020; width: 11%;
+        }
+        #kv-video-stage {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 10% 15%, rgba(0, 112, 244, 0.07) 0%, transparent 45%),
+                        radial-gradient(circle at 90% 85%, rgba(0, 200, 175, 0.07) 0%, transparent 45%),
+                        linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+            overflow: hidden;
+        }
+        .kv-tech-grid {
+            position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(0, 41, 87, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 41, 87, 0.03) 1px, transparent 1px);
+            background-size: 38px 38px; pointer-events: none; z-index: 1;
+        }
+        @keyframes kvWipeDownActive {
+            from { clip-path: inset(0 0 100% 0); }
+            to { clip-path: inset(0 0 0 0); }
+        }
+        @keyframes kvWipeUpPrevious {
+            from { clip-path: inset(0 0 0 0); }
+            to { clip-path: inset(100% 0 0 0); }
+        }
+        @keyframes kvFadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: none; }
+        }
+        .kv-scene {
+            position: absolute; inset: 0;
+            padding: 1.4rem 3.4rem 3.8rem 3.4rem;
+            display: none !important;
+            flex-direction: column; align-items: center; justify-content: flex-start;
+            background: radial-gradient(circle at 10% 15%, rgba(0, 112, 244, 0.07) 0%, transparent 45%),
+                        radial-gradient(circle at 90% 85%, rgba(0, 200, 175, 0.07) 0%, transparent 45%),
+                        linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+            z-index: 10; overflow-y: auto;
+        }
+        .kv-scene.scene-dark {
+            background: var(--kv-gradient-dark) !important;
+            color: #ffffff;
+        }
+        .kv-scene.previous {
+            display: flex !important; z-index: 15;
+            animation: kvWipeUpPrevious 0.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+        }
+        .kv-scene.active {
+            display: flex !important; z-index: 20;
+            animation: kvWipeDownActive 0.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+        }
+        .kv-scene.no-wipe { animation: none !important; }
+        .kv-scene.active .kv-up { animation: kvFadeUp 0.45s ease-out both; animation-delay: var(--d, 0s); }
+        .kv-scene-logo {
+            position: absolute; top: 1.35rem; right: 3.4rem; z-index: 30;
+            display: flex; align-items: center; gap: 0.6rem;
+        }
+        .kv-scene-logo img { height: 32px; width: auto; }
+        .kv-scene.scene-dark .kv-scene-logo-pill {
+            background: #FFFFFF; padding: 0.35rem 0.9rem; border-radius: 999px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+        }
+        .kv-slide-inner {
+            width: 100%; max-width: 1360px; height: 100%;
+            display: flex; flex-direction: column; justify-content: space-between;
+            position: relative; z-index: 5;
+        }
+        .kv-slide-header {
+            width: 100%; display: flex; flex-direction: column; align-items: flex-start;
+            justify-content: center; gap: 0.3rem; padding-right: 11rem; flex-shrink: 0;
+        }
+        .kv-header-title-row { display: flex; align-items: center; gap: 0.8rem; }
+        .kv-header-icon-box {
+            width: 42px; height: 42px; border-radius: 13px;
+            background: linear-gradient(135deg, var(--kv-primary-blue) 0%, var(--kv-ocean-blue) 100%);
+            color: #ffffff; display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; flex-shrink: 0; box-shadow: 0 6px 14px -3px rgba(0, 112, 244, 0.3);
+        }
+        .kv-section-badge {
+            display: inline-flex; align-items: center; gap: 0.45rem;
+            padding: 0.24rem 0.85rem; border-radius: 999px;
+            background: #EBF5FF; border: 1.5px solid #BFDBFE;
+            color: #005AC0; font-weight: 700; font-size: 0.7rem;
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .kv-text-stage {
+            flex: 1; min-height: 0; width: 100%; padding: 0.55rem 0 0.2rem 0;
+            display: flex; align-items: stretch; justify-content: center;
+        }
+        .kv-bento-card {
+            background: #ffffff; border: 1.5px solid #DBEAFE;
+            box-shadow: var(--kv-shadow-card); border-radius: 24px;
+            color: #0f172a;
+        }
+        .kv-glass-card {
+            background: rgba(255, 255, 255, 0.09);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow: var(--kv-shadow-dark); backdrop-filter: blur(14px);
+            border-radius: 22px; color: #ffffff;
+        }
+        .kv-toc-card {
+            padding: 1.1rem 1.15rem; border-radius: 18px;
+            display: flex; flex-direction: column; justify-content: flex-start;
+            position: relative; background: #ffffff; border: 1.5px solid #DBEAFE;
+        }
+        /* Monthly Bar Chart inside Slide */
+        .kv-month-chart {
+            display: grid; gap: 10px; height: 155px; align-items: end;
+            padding-top: 18px; padding-bottom: 24px; position: relative;
+            border-bottom: 1.5px dashed #CBD5E1; overflow: visible;
+        }
+        .kv-mbar-wrap {
+            height: 100%; display: flex; flex-direction: column; justify-content: flex-end;
+            align-items: center; position: relative;
+        }
+        .kv-mbar {
+            width: 100%; max-width: 42px; border-radius: 8px 8px 3px 3px;
+            background: linear-gradient(180deg, var(--bar-color, #0070F4) 0%, var(--bar-color-soft, rgba(0, 112, 244, 0.35)) 100%);
+            border-top: 2px solid rgba(255,255,255,0.85);
+            box-shadow: 0 4px 12px -2px rgba(0, 112, 244, 0.25);
+            position: relative; transition: all 0.25s ease; cursor: pointer; min-height: 8px;
+        }
+        .kv-mbar:hover { transform: scaleY(1.04) translateY(-2px); filter: brightness(1.08); z-index: 60; }
+        .kv-mbar.empty-bar {
+            background: transparent !important; border: 1.5px dashed #CBD5E1 !important;
+            box-shadow: none !important; height: 6px !important; min-height: 6px !important;
+        }
+        .kv-mbar.dimmed-bar { opacity: 0.22 !important; filter: grayscale(85%); box-shadow: none !important; }
+        .kv-mbar-val {
+            font-size: 0.68rem; font-weight: 800; color: #1e293b; margin-bottom: 3px; line-height: 1;
+        }
+        .kv-mbar-label {
+            position: absolute; bottom: -21px; left: 50%; transform: translateX(-50%);
+            font-size: 0.7rem; font-weight: 700; color: #475569; white-space: nowrap;
+        }
+        .kv-mbar-tooltip {
+            position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%);
+            background: #002957; color: #ffffff; padding: 10px 13px; border-radius: 12px;
+            border: 1px solid #3AE3FF; font-size: 0.73rem; line-height: 1.45;
+            opacity: 0; visibility: hidden; transition: all 0.18s ease;
+            width: max-content; max-width: 240px; z-index: 9999; pointer-events: none;
+            box-shadow: 0 12px 28px rgba(0, 41, 87, 0.35); text-align: left;
+        }
+        .kv-mbar:hover .kv-mbar-tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(-3px); }
+        /* Insight Item inside Slide */
+        .kv-insight-card {
+            padding: 0.7rem 0.95rem; border-radius: 14px;
+            border: 1px solid #E2E8F0; border-left-width: 4px;
+            background: #F8FAFC; transition: all 0.2s ease; position: relative;
+        }
+        .kv-insight-card:hover { background: #ffffff; box-shadow: 0 4px 14px rgba(0, 41, 87, 0.06); }
+        .kv-insight-card.tone-green { border-left-color: #00B63E; background: #F0FDF4; border-color: #BBF7D0; }
+        .kv-insight-card.tone-red { border-left-color: #FF5564; background: #FFF1F2; border-color: #FECDD3; }
+        .kv-insight-card.tone-blue { border-left-color: #0070F4; background: #EFF6FF; border-color: #BFDBFE; }
+        .kv-insight-card.tone-amber { border-left-color: #FFAB3A; background: #FFFBEB; border-color: #FDE68A; }
+        /* Edit mode highlights */
+        #presentation-overlay.kv-edit-mode [data-kv-editable="true"] {
+            outline: 1.5px dashed rgba(0, 112, 244, 0.45);
+            outline-offset: 2px; border-radius: 6px; cursor: text;
+            transition: outline-color 0.15s ease, background-color 0.15s ease;
+        }
+        #presentation-overlay.kv-edit-mode [data-kv-editable="true"]:hover,
+        #presentation-overlay.kv-edit-mode [data-kv-editable="true"]:focus {
+            outline: 2px solid #0070F4;
+            background: rgba(58, 227, 255, 0.12);
+        }
+        #presentation-overlay .kv-edit-only { display: none !important; }
+        #presentation-overlay.kv-edit-mode .kv-edit-only { display: inline-flex !important; }
+        /* Navigation & Bottom HUD */
+        .kv-nav-btn {
+            position: fixed; top: 50%; transform: translateY(-50%);
+            width: 42px; height: 42px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.94); border: 1.5px solid #CBD5E1;
+            color: var(--kv-navy); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 100010; transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 41, 87, 0.12); opacity: 0.72;
+        }
+        .kv-nav-btn:hover { opacity: 1; background: var(--kv-primary-blue); color: #fff; border-color: var(--kv-primary-blue); transform: translateY(-50%) scale(1.08); }
+        .kv-nav-prev { left: 14px; }
+        .kv-nav-next { right: 14px; }
+        .kv-bottom-hud {
+            position: fixed; bottom: 12px; right: 24px; left: 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 8px; z-index: 100010; pointer-events: none;
+        }
+        .kv-hud-group {
+            display: flex; align-items: center; gap: 7px; flex-wrap: wrap; pointer-events: auto;
+        }
+        .kv-hud-pill {
+            background: rgba(255, 255, 255, 0.96); border: 1.5px solid #CBD5E1; color: var(--kv-navy);
+            height: 33px; padding: 0 13px; border-radius: 999px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            font-size: 0.74rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease;
+            box-shadow: 0 2px 10px rgba(0, 41, 87, 0.1);
+        }
+        .kv-hud-pill:hover { background: var(--kv-primary-blue); color: #fff; border-color: var(--kv-primary-blue); }
+        .kv-hud-pill.active-edit {
+            background: #FFAB3A; color: #002957; border-color: #F59E0B;
+            box-shadow: 0 0 0 3px rgba(255, 171, 58, 0.35);
+        }
+        .kv-counter-pill {
+            background: rgba(255, 255, 255, 0.98); border: 1.5px solid #BFDBFE; color: var(--kv-ocean-blue);
+            height: 33px; padding: 0 15px; border-radius: 999px;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 0.78rem; font-weight: 800; box-shadow: 0 2px 8px rgba(0, 112, 244, 0.12);
+        }
+        @media print {
+            @page { size: 1280px 720px; margin: 0mm !important; }
+            body > *:not(#presentation-overlay) { display: none !important; }
+            #presentation-overlay {
+                display: block !important; position: static !important;
+                width: 1280px !important; height: auto !important; overflow: visible !important;
+            }
+            #kvSlideProgressBar, .kv-nav-btn, .kv-bottom-hud, .kv-tech-grid, .kv-edit-only { display: none !important; }
+            #kv-video-stage { position: static !important; width: 1280px !important; height: auto !important; overflow: visible !important; }
+            .kv-scene {
+                position: relative !important; inset: auto !important;
+                width: 1280px !important; height: 720px !important;
+                margin: 0 !important; padding: 1.5rem 3rem 1.8rem 3rem !important;
+                display: flex !important; page-break-after: always !important; break-after: page !important;
+                animation: none !important; clip-path: none !important;
+                -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+            }
+        }
 
         .modal { display: none; opacity: 0; transition: opacity 0.2s; z-index: 99999; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
         .modal.active { display: flex; opacity: 1; }
         .modal-content { transform: scale(0.98) translateY(10px); opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         .modal.active .modal-content { transform: scale(1) translateY(0); opacity: 1; }
+
+        /* ==================== AURORA MESH GLASSMORPHISM THEME (LIGHT & DARK) ==================== */
+        html.aurora-ui {
+            --aurora-text-primary: #18182b;
+            --aurora-text-secondary: #475569;
+            --aurora-text-muted: #64748b;
+            --aurora-glass-bg: rgba(255, 255, 255, 0.76);
+            --aurora-glass-hover: rgba(255, 255, 255, 0.92);
+            --aurora-glass-border: rgba(255, 255, 255, 0.88);
+            --aurora-glass-ring: rgba(139, 92, 246, 0.10);
+            --aurora-glass-shadow: 0 10px 30px -12px rgba(79, 70, 229, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+            --aurora-header-bg: rgba(255, 255, 255, 0.58);
+            --aurora-header-border: rgba(139, 92, 246, 0.11);
+            --aurora-accent: #7c3aed;
+            --aurora-accent-grad: linear-gradient(95deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        html.aurora-ui[data-aurora="dark"] {
+            color-scheme: dark;
+            --aurora-text-primary: #f1f5f9;
+            --aurora-text-secondary: #cbd5e1;
+            --aurora-text-muted: #94a3b8;
+            --aurora-glass-bg: rgba(21, 23, 42, 0.72);
+            --aurora-glass-hover: rgba(28, 31, 56, 0.86);
+            --aurora-glass-border: rgba(255, 255, 255, 0.08);
+            --aurora-glass-ring: rgba(139, 92, 246, 0.18);
+            --aurora-glass-shadow: 0 14px 36px -14px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            --aurora-header-bg: rgba(16, 18, 35, 0.70);
+            --aurora-header-border: rgba(255, 255, 255, 0.07);
+        }
+
+        /* Pastel Mesh Canvas (Light) & Obsidian Glow Canvas (Dark) */
+        html.aurora-ui body {
+            background-color: #f6f5fc;
+            background-image:
+                radial-gradient(circle at 8% 12%, rgba(216, 180, 254, 0.36) 0%, transparent 42%),
+                radial-gradient(circle at 92% 16%, rgba(254, 215, 170, 0.34) 0%, transparent 40%),
+                radial-gradient(circle at 82% 86%, rgba(251, 207, 232, 0.30) 0%, transparent 44%),
+                radial-gradient(circle at 18% 88%, rgba(224, 231, 255, 0.34) 0%, transparent 46%);
+            color: var(--aurora-text-primary);
+            transition: background-color 0.25s ease, color 0.2s ease;
+        }
+
+        html.aurora-ui[data-aurora="dark"] body {
+            background-color: #0b0d19;
+            background-image:
+                radial-gradient(circle at 10% 10%, rgba(139, 92, 246, 0.20) 0%, transparent 42%),
+                radial-gradient(circle at 90% 12%, rgba(236, 72, 153, 0.13) 0%, transparent 40%),
+                radial-gradient(circle at 78% 86%, rgba(99, 102, 241, 0.14) 0%, transparent 46%),
+                radial-gradient(circle at 22% 82%, rgba(56, 189, 248, 0.07) 0%, transparent 44%);
+        }
+
+        html.aurora-ui ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.26); }
+        html.aurora-ui[data-aurora="dark"] ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); }
+
+        /* Frosted Sidebar Footer Alignment */
+        html.aurora-ui #sidebar .sb-footer-box {
+            background: rgba(255, 255, 255, 0.42) !important;
+            border-top-color: rgba(139, 92, 246, 0.10) !important;
+        }
+        html.aurora-ui #sidebar .sb-footer-item:hover {
+            background: rgba(255, 255, 255, 0.72) !important;
+        }
+        html.aurora-ui[data-aurora="dark"] #sidebar .sb-footer-box {
+            background: rgba(13, 15, 30, 0.55) !important;
+            border-top-color: rgba(255, 255, 255, 0.07) !important;
+        }
+        html.aurora-ui[data-aurora="dark"] #sidebar .sb-footer-item:hover {
+            background: rgba(255, 255, 255, 0.06) !important;
+        }
+        html.aurora-ui[data-aurora="dark"] #sidebar #sb-profile-name { color: #f1f5f9 !important; }
+        html.aurora-ui[data-aurora="dark"] #sidebar #sb-profile-title { color: #94a3b8 !important; }
+        html.aurora-ui[data-aurora="dark"] #sidebar .sb-text { color: inherit; }
+
+        /* Aurora Frosted Glass Header */
+        html.aurora-ui header.aurora-header {
+            background: var(--aurora-header-bg) !important;
+            backdrop-filter: blur(18px) saturate(150%);
+            -webkit-backdrop-filter: blur(18px) saturate(150%);
+            border-bottom: 1px solid var(--aurora-header-border) !important;
+            box-shadow: 0 4px 20px -12px rgba(15, 23, 42, 0.10) !important;
+        }
+        html.aurora-ui .aurora-greet-badge {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            box-shadow: 0 6px 14px -4px rgba(124, 58, 237, 0.42);
+        }
+        html.aurora-ui .aurora-search-shell {
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(139, 92, 246, 0.16);
+            box-shadow: 0 4px 14px -6px rgba(79, 70, 229, 0.08);
+            transition: all 0.2s ease;
+        }
+        html.aurora-ui .aurora-search-shell:focus-within {
+            background: rgba(255, 255, 255, 0.96);
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.14);
+        }
+        html.aurora-ui[data-aurora="dark"] .aurora-search-shell {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.10);
+            box-shadow: none;
+        }
+        html.aurora-ui[data-aurora="dark"] .aurora-search-shell:focus-within {
+            background: rgba(255, 255, 255, 0.10);
+            border-color: rgba(167, 139, 250, 0.65);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.22);
+        }
+        html.aurora-ui .aurora-kbd {
+            background: rgba(139, 92, 246, 0.10);
+            color: #6d28d9;
+            border: 1px solid rgba(139, 92, 246, 0.18);
+        }
+        html.aurora-ui[data-aurora="dark"] .aurora-kbd {
+            background: rgba(255, 255, 255, 0.08);
+            color: #cbd5e1;
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+        html.aurora-ui .aurora-theme-btn {
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(139, 92, 246, 0.18);
+            color: #475569;
+            transition: all 0.2s ease;
+        }
+        html.aurora-ui .aurora-theme-btn:hover {
+            background: #ffffff;
+            border-color: #8b5cf6;
+            color: #7c3aed;
+            transform: translateY(-1px);
+        }
+        html.aurora-ui[data-aurora="dark"] .aurora-theme-btn {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #fbbf24;
+        }
+        html.aurora-ui[data-aurora="dark"] .aurora-theme-btn:hover {
+            background: rgba(255, 255, 255, 0.13);
+            border-color: rgba(251, 191, 36, 0.45);
+        }
+
+        /* Aurora Translucent Glass Cards & Corner Pastel Halos */
+        html.aurora-ui .saas-card {
+            background: var(--aurora-glass-bg) !important;
+            backdrop-filter: blur(16px) saturate(140%);
+            -webkit-backdrop-filter: blur(16px) saturate(140%);
+            border: 1px solid var(--aurora-glass-border) !important;
+            outline: 1px solid var(--aurora-glass-ring);
+            box-shadow: var(--aurora-glass-shadow) !important;
+            border-radius: 18px;
+        }
+        html.aurora-ui .saas-card:hover {
+            background: var(--aurora-glass-hover) !important;
+            outline-color: rgba(139, 92, 246, 0.26);
+            transform: translateY(-2px);
+        }
+        html.aurora-ui[data-aurora="dark"] .saas-card:hover {
+            outline-color: rgba(167, 139, 250, 0.34);
+        }
+
+        html.aurora-ui .aurora-toolbar-glass {
+            background: var(--aurora-glass-bg) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--aurora-glass-border) !important;
+            outline: 1px solid var(--aurora-glass-ring);
+            box-shadow: var(--aurora-glass-shadow) !important;
+        }
+
+        /* Signature Top-Right Corner Pastel Blobs (MES OUTILS aesthetic) */
+        html.aurora-ui .aurora-blob {
+            position: absolute;
+            width: 112px;
+            height: 112px;
+            top: -32px;
+            right: -28px;
+            border-radius: 9999px;
+            pointer-events: none;
+            transition: transform 0.35s ease, opacity 0.25s ease;
+            z-index: 0;
+        }
+        html.aurora-ui .saas-card:hover .aurora-blob {
+            transform: scale(1.12);
+        }
+        html.aurora-ui .aurora-blob-violet { background: rgba(196, 181, 253, 0.42); }
+        html.aurora-ui .aurora-blob-peach { background: rgba(254, 215, 170, 0.48); }
+        html.aurora-ui .aurora-blob-emerald { background: rgba(167, 243, 208, 0.48); }
+        html.aurora-ui .aurora-blob-rose { background: rgba(251, 207, 232, 0.48); }
+        html.aurora-ui .aurora-blob-sky { background: rgba(186, 230, 253, 0.50); }
+        html.aurora-ui .aurora-blob-amber { background: rgba(253, 230, 138, 0.48); }
+
+        html.aurora-ui[data-aurora="dark"] .aurora-blob-violet { background: rgba(139, 92, 246, 0.16); }
+        html.aurora-ui[data-aurora="dark"] .aurora-blob-peach { background: rgba(251, 146, 60, 0.14); }
+        html.aurora-ui[data-aurora="dark"] .aurora-blob-emerald { background: rgba(52, 211, 153, 0.14); }
+        html.aurora-ui[data-aurora="dark"] .aurora-blob-rose { background: rgba(244, 114, 182, 0.14); }
+        html.aurora-ui[data-aurora="dark"] .aurora-blob-sky { background: rgba(56, 189, 248, 0.14); }
+        html.aurora-ui[data-aurora="dark"] .aurora-blob-amber { background: rgba(251, 191, 36, 0.14); }
+
+        /* Primary Lavender-to-Violet CTA Pill */
+        html.aurora-ui .btn-primary,
+        html.aurora-ui .aurora-cta-btn {
+            background: linear-gradient(95deg, #8b5cf6 0%, #7c3aed 100%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.18) !important;
+            color: #ffffff !important;
+            box-shadow: 0 6px 16px -4px rgba(124, 58, 237, 0.42) !important;
+            border-radius: 10px;
+        }
+        html.aurora-ui .btn-primary:hover,
+        html.aurora-ui .aurora-cta-btn:hover {
+            background: linear-gradient(95deg, #7c3aed 0%, #6d28d9 100%) !important;
+            box-shadow: 0 8px 22px -4px rgba(124, 58, 237, 0.52) !important;
+            transform: translateY(-1px);
+        }
+
+        html.aurora-ui .btn-outline {
+            background: rgba(255, 255, 255, 0.80);
+            border-color: rgba(139, 92, 246, 0.20);
+            border-radius: 10px;
+        }
+        html.aurora-ui .btn-outline:hover {
+            background: #ffffff;
+            border-color: #8b5cf6;
+        }
+
+        /* ==================== DARK MODE TOKENS FOR DASHBOARD & MODALS ==================== */
+        html.aurora-ui[data-aurora="dark"] .text-slate-800 { color: #f1f5f9 !important; }
+        html.aurora-ui[data-aurora="dark"] .text-slate-700 { color: #cbd5e1 !important; }
+        html.aurora-ui[data-aurora="dark"] .text-slate-600 { color: #94a3b8 !important; }
+        html.aurora-ui[data-aurora="dark"] .text-slate-500 { color: #94a3b8 !important; }
+        html.aurora-ui[data-aurora="dark"] .text-slate-400 { color: #7e8ba4 !important; }
+        html.aurora-ui[data-aurora="dark"] .border-slate-200,
+        html.aurora-ui[data-aurora="dark"] .border-slate-100,
+        html.aurora-ui[data-aurora="dark"] .border-slate-300 { border-color: rgba(255, 255, 255, 0.09) !important; }
+        html.aurora-ui[data-aurora="dark"] .divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255, 255, 255, 0.07) !important; }
+
+        html.aurora-ui[data-aurora="dark"] .bg-white:not(.aurora-keep-light) {
+            background-color: rgba(22, 24, 44, 0.84) !important;
+        }
+        html.aurora-ui[data-aurora="dark"] .bg-slate-50,
+        html.aurora-ui[data-aurora="dark"] .bg-slate-50\/50 {
+            background-color: rgba(255, 255, 255, 0.04) !important;
+        }
+        html.aurora-ui[data-aurora="dark"] .bg-slate-100 {
+            background-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        html.aurora-ui[data-aurora="dark"] .bg-blue-50 { background-color: rgba(59, 130, 246, 0.14) !important; border-color: rgba(96, 165, 250, 0.25) !important; }
+        html.aurora-ui[data-aurora="dark"] .bg-purple-50 { background-color: rgba(139, 92, 246, 0.16) !important; border-color: rgba(167, 139, 250, 0.28) !important; }
+        html.aurora-ui[data-aurora="dark"] .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.14) !important; border-color: rgba(52, 211, 153, 0.25) !important; }
+        html.aurora-ui[data-aurora="dark"] .bg-orange-50 { background-color: rgba(249, 115, 22, 0.15) !important; border-color: rgba(251, 146, 60, 0.25) !important; }
+        html.aurora-ui[data-aurora="dark"] .bg-pink-50,
+        html.aurora-ui[data-aurora="dark"] .bg-rose-50 { background-color: rgba(244, 63, 94, 0.14) !important; border-color: rgba(251, 113, 133, 0.25) !important; }
+        html.aurora-ui[data-aurora="dark"] .bg-amber-50 { background-color: rgba(245, 158, 11, 0.14) !important; border-color: rgba(251, 191, 36, 0.25) !important; }
+        html.aurora-ui[data-aurora="dark"] .bg-indigo-50 { background-color: rgba(99, 102, 241, 0.15) !important; border-color: rgba(129, 140, 248, 0.28) !important; }
+        html.aurora-ui[data-aurora="dark"] .bg-teal-50 { background-color: rgba(20, 184, 166, 0.15) !important; border-color: rgba(45, 212, 191, 0.28) !important; }
+        html.aurora-ui[data-aurora="dark"] .bg-cyan-50 { background-color: rgba(6, 182, 212, 0.15) !important; border-color: rgba(34, 211, 238, 0.28) !important; }
+        html.aurora-ui[data-aurora="dark"] .border-blue-200 { border-color: rgba(96, 165, 250, 0.26) !important; }
+        html.aurora-ui[data-aurora="dark"] .border-emerald-200 { border-color: rgba(52, 211, 153, 0.26) !important; }
+        html.aurora-ui[data-aurora="dark"] .border-cyan-200 { border-color: rgba(34, 211, 238, 0.26) !important; }
+        html.aurora-ui[data-aurora="dark"] .border-orange-200 { border-color: rgba(251, 146, 60, 0.26) !important; }
+        html.aurora-ui[data-aurora="dark"] .border-pink-200 { border-color: rgba(244, 114, 182, 0.26) !important; }
+        html.aurora-ui[data-aurora="dark"] .border-teal-200 { border-color: rgba(45, 212, 191, 0.26) !important; }
+        html.aurora-ui[data-aurora="dark"] .border-purple-200 { border-color: rgba(167, 139, 250, 0.28) !important; }
+        html.aurora-ui[data-aurora="dark"] .border-rose-200 { border-color: rgba(251, 113, 133, 0.28) !important; }
+        html.aurora-ui[data-aurora="dark"] .text-blue-700,
+        html.aurora-ui[data-aurora="dark"] .text-blue-600 { color: #93c5fd !important; }
+        html.aurora-ui[data-aurora="dark"] .text-cyan-700,
+        html.aurora-ui[data-aurora="dark"] .text-cyan-600 { color: #67e8f9 !important; }
+        html.aurora-ui[data-aurora="dark"] .text-orange-600,
+        html.aurora-ui[data-aurora="dark"] .text-orange-500 { color: #fdba74 !important; }
+        html.aurora-ui[data-aurora="dark"] .text-pink-600,
+        html.aurora-ui[data-aurora="dark"] .text-pink-500 { color: #f9a8d4 !important; }
+        html.aurora-ui[data-aurora="dark"] .text-purple-700,
+        html.aurora-ui[data-aurora="dark"] .text-purple-600 { color: #c4b5fd !important; }
+        html.aurora-ui[data-aurora="dark"] .text-emerald-700,
+        html.aurora-ui[data-aurora="dark"] .text-emerald-600 { color: #6ee7b7 !important; }
+        html.aurora-ui[data-aurora="dark"] .text-rose-700,
+        html.aurora-ui[data-aurora="dark"] .text-rose-600 { color: #fda4af !important; }
+        html.aurora-ui[data-aurora="dark"] .text-amber-700,
+        html.aurora-ui[data-aurora="dark"] .text-amber-600 { color: #fcd34d !important; }
+        html.aurora-ui[data-aurora="dark"] .text-indigo-700,
+        html.aurora-ui[data-aurora="dark"] .text-indigo-600 { color: #a5b4fc !important; }
+        html.aurora-ui[data-aurora="dark"] .text-teal-700,
+        html.aurora-ui[data-aurora="dark"] .text-teal-600,
+        html.aurora-ui[data-aurora="dark"] .text-teal-500 { color: #5eead4 !important; }
+
+        html.aurora-ui[data-aurora="dark"] .progress-bar-container {
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+        html.aurora-ui[data-aurora="dark"] .group:hover .group-hover\:bg-white {
+            background-color: rgba(255, 255, 255, 0.10) !important;
+        }
+
+        html.aurora-ui[data-aurora="dark"] .btn-outline {
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: #e2e8f0 !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+        html.aurora-ui[data-aurora="dark"] .btn-outline:hover {
+            background: rgba(139, 92, 246, 0.16) !important;
+            border-color: rgba(167, 139, 250, 0.45) !important;
+        }
+
+        html.aurora-ui[data-aurora="dark"] .saas-input,
+        html.aurora-ui[data-aurora="dark"] select,
+        html.aurora-ui[data-aurora="dark"] input[type="text"]:not(#auroraHeaderSearch),
+        html.aurora-ui[data-aurora="dark"] textarea:not(#stickyNoteText) {
+            background-color: #16182c !important;
+            border-color: rgba(148, 163, 184, 0.22) !important;
+            color: #f1f5f9 !important;
+        }
+        html.aurora-ui[data-aurora="dark"] select option,
+        html.aurora-ui[data-aurora="dark"] select optgroup {
+            background-color: #16182c;
+            color: #f1f5f9;
+        }
+        html.aurora-ui[data-aurora="dark"] table th {
+            background: rgba(15, 17, 34, 0.72) !important;
+            color: #94a3b8 !important;
+            border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        html.aurora-ui[data-aurora="dark"] table td {
+            border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+            color: #cbd5e1;
+        }
+        html.aurora-ui[data-aurora="dark"] tbody tr:hover,
+        html.aurora-ui[data-aurora="dark"] .hover\:bg-slate-50:hover {
+            background-color: rgba(139, 92, 246, 0.09) !important;
+        }
+        html.aurora-ui[data-aurora="dark"] #notiDropdown,
+        html.aurora-ui[data-aurora="dark"] .widget-panel,
+        html.aurora-ui[data-aurora="dark"] .modal-content {
+            background-color: #15172b !important;
+            border-color: rgba(255, 255, 255, 0.10) !important;
+            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.75) !important;
+        }
+        html.aurora-ui[data-aurora="dark"] #chatHistory {
+            background-color: #101223 !important;
+        }
+        html.aurora-ui[data-aurora="dark"] #notesWidget #drawArea,
+        html.aurora-ui[data-aurora="dark"] #notesWidget .bg-white.relative {
+            background-color: #ffffff !important;
+        }
+        html.aurora-ui[data-aurora="dark"] #notesWidget #stickyNoteText {
+            background-color: #fef9c3 !important;
+            color: #1e293b !important;
+        }
+        /* Keep KiotViet Brand Guideline 16:9 Slide Deck colors crisp in both Light & Dark dashboard modes */
+        html.aurora-ui[data-aurora="dark"] #presentation-overlay .kv-bento-card,
+        html.aurora-ui[data-aurora="dark"] #presentation-overlay .kv-toc-card {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
     </style>
     <script src="system-config.js"></script>
     <script src="trainer-utils.js"></script>
@@ -110,27 +707,58 @@
 
         <!-- MAIN LAYOUT -->
         <div class="flex-1 flex flex-col overflow-hidden relative">
-            <header class="h-16 bg-white flex items-center justify-between px-6 z-40 shrink-0 shadow-sm border-b border-slate-200">
-                <div class="flex items-center gap-4">
-                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-blue-50 hover:text-blue-600 transition border border-slate-200" title="Đóng / Mở menu">
-                        <i class="fas fa-bars"></i>
+            <header class="aurora-header h-16 bg-white flex items-center justify-between gap-4 px-5 z-40 shrink-0 shadow-sm border-b border-slate-200">
+                <div class="flex items-center gap-3 min-w-0">
+                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded-lg bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-violet-50 hover:text-violet-600 transition border border-slate-200/80 shrink-0" title="Đóng / Mở menu">
+                        <i class="fas fa-bars text-xs"></i>
                     </button>
-                    <!-- NÚT MỞ SYSTEM-WORKFLOW (NHẤP ĐÚP) -->
-                    <div id="db-status-indicator" onclick="secretOpenWorkflow(event)" class="flex items-center gap-2 text-xs font-semibold text-slate-500 cursor-pointer select-none group" title="Hệ Thống Trạng Thái (Nhấp đúp để mở System Architecture Map)">
-                        <i class="fas fa-circle text-[8px] text-amber-500 group-hover:scale-125 transition-transform"></i>
-                        <span>Local Mode</span>
+                    <div class="w-9 h-9 rounded-xl aurora-greet-badge text-white flex items-center justify-center shrink-0">
+                        <i class="fas fa-layer-group text-sm"></i>
+                    </div>
+                    <div class="min-w-0 leading-tight">
+                        <p class="text-[14px] font-extrabold text-slate-800 truncate flex items-center gap-1.5">
+                            <span>Chào <span id="aurora-greet-name">KiotViet</span></span>
+                            <span aria-hidden="true">👋</span>
+                        </p>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <!-- NÚT MỞ SYSTEM-WORKFLOW (NHẤP ĐÚP) -->
+                            <div id="db-status-indicator" onclick="secretOpenWorkflow(event)" class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 cursor-pointer select-none group truncate" title="Hệ Thống Trạng Thái (Nhấp đúp để mở System Architecture Map)">
+                                <i class="fas fa-circle text-[7px] text-amber-500 group-hover:scale-125 transition-transform"></i>
+                                <span>Local Mode</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-6">
-                    <button onclick="openCanvaReportModal()" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-sm hover:shadow transition flex items-center gap-1.5">
-                        <i class="fas fa-magic text-amber-300"></i> AI Slide Generator
+                <!-- Centered Aurora Pill Search Bar (Ctrl + K) -->
+                <div class="hidden md:flex flex-1 max-w-[340px] mx-2">
+                    <div class="aurora-search-shell w-full h-9 rounded-xl px-3 flex items-center gap-2">
+                        <i class="fas fa-search text-slate-400 text-xs shrink-0"></i>
+                        <input id="auroraHeaderSearch" type="text" oninput="handleAuroraGlobalSearch(this.value)" onkeydown="if(event.key==='Enter') handleAuroraGlobalSearch(this.value, true)" placeholder="Tìm kiếm khóa học, mã lớp..." class="w-full bg-transparent text-xs font-medium text-slate-700 placeholder-slate-400 outline-none border-none p-0" />
+                        <kbd class="aurora-kbd text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 tracking-tight">Ctrl K</kbd>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <!-- Live Clock & Date -->
+                    <div class="hidden xl:flex flex-col items-end leading-tight pr-1">
+                        <span id="auroraClock" class="text-[15px] font-extrabold text-slate-800 tabular-nums tracking-tight">--:--</span>
+                        <span id="auroraDate" class="text-[10px] font-semibold text-slate-400">Hôm nay</span>
+                    </div>
+
+                    <!-- Light / Dark Theme Toggle -->
+                    <button id="btn-aurora-theme-toggle" onclick="window.toggleAuroraTheme && window.toggleAuroraTheme()" class="aurora-theme-btn w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer" title="Chuyển đổi Giao diện Sáng / Tối">
+                        <i id="auroraThemeIcon" class="fas fa-moon text-sm"></i>
+                    </button>
+
+                    <button onclick="openCanvaReportModal()" class="aurora-cta-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-sm hover:shadow transition flex items-center gap-1.5">
+                        <i class="fas fa-magic text-amber-300"></i> <span class="hidden sm:inline">AI Slide</span>
                     </button>
 
                     <!-- Notification Bell -->
                     <div class="relative">
-                        <i id="bellIcon" onclick="toggleNoti(event)" class="far fa-bell text-slate-400 hover:text-blue-600 cursor-pointer text-xl relative">
-                            <span id="unreadDot" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white hidden"></span>
+                        <i id="bellIcon" onclick="toggleNoti(event)" class="far fa-bell text-slate-400 hover:text-violet-600 cursor-pointer text-xl relative p-1">
+                            <span id="unreadDot" class="absolute top-0 right-0 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white hidden"></span>
                         </i>
                         <div id="notiDropdown" class="hidden absolute right-0 top-10 w-[340px] bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
                             <div class="bg-slate-50 px-4 py-3 border-b border-slate-100 flex justify-between items-center">
@@ -142,12 +770,12 @@
                     </div>
 
                     <!-- Profile Header Link -->
-                    <div class="flex items-center gap-3 pl-4 border-l border-slate-200 cursor-pointer" onclick="location.href='settings.html'">
+                    <div class="flex items-center gap-2.5 pl-3 border-l border-slate-200 cursor-pointer" onclick="location.href='settings.html'">
                         <div class="text-right hidden md:block">
-                            <p class="text-sm font-bold text-slate-800 leading-tight" id="header-prof-name">L&D KiotViet</p>
+                            <p class="text-sm font-bold text-slate-800 leading-tight" id="header-prof-name">L&amp;D KiotViet</p>
                             <p class="text-[11px] text-slate-500 font-medium" id="header-prof-title">Administrator</p>
                         </div>
-                        <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center border border-blue-200 overflow-hidden shadow-xs">
+                        <div class="w-9 h-9 rounded-full bg-violet-50 flex items-center justify-center border border-violet-200 overflow-hidden shadow-xs aurora-keep-light">
                             <img src="https://i.postimg.cc/yxQsM5RD/Bong-Hoa-Logo.png" class="w-full h-full object-contain p-1" alt="Avatar">
                         </div>
                     </div>
@@ -277,66 +905,68 @@
         </div>
     </div>
 
-    <!-- TRÌNH CHIẾU SLIDE BÁO CÁO FULLSCREEN -->
-    <div id="presentation-overlay">
-        <button onclick="closePresentation()" class="fixed top-8 right-8 w-10 h-10 bg-white rounded-full text-slate-400 hover:text-rose-500 shadow-md text-xl z-[100000] flex items-center justify-center transition"><i class="fas fa-times"></i></button>
-        <div class="fixed top-8 left-8 z-[100000] font-bold text-slate-800 tracking-widest bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-100"><i class="fas fa-layer-group text-blue-600 mr-2"></i> TRAINER OS REPORT</div>
-        
-        <div class="tech-slide active" id="tslide-1">
-            <div class="h-full flex flex-col items-center justify-center text-center max-w-4xl mx-auto">
-                <div class="w-24 h-24 bg-blue-600 text-white rounded-3xl flex items-center justify-center text-4xl mb-8 shadow-2xl shadow-blue-500/30 transform rotate-12"><i class="fas fa-chart-pie -rotate-12"></i></div>
-                <h1 class="text-6xl font-black text-slate-800 mb-6 tracking-tight leading-tight">Báo Cáo Tổng Kết<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Hoạt Động Đào Tạo</span></h1>
-                <p class="text-2xl text-slate-500 font-medium mb-12" id="slide-period-title">Báo cáo động (Real-time) từ Hệ thống AI</p>
-                <div class="text-5xl font-black text-slate-300" id="slide-year">2026</div>
+    <!-- TRÌNH CHIẾU SLIDE BÁO CÁO FULLSCREEN (KIOTVIET BRAND GUIDELINE 16:9 + LIVE SLIDE STUDIO) -->
+    <div id="presentation-overlay" class="aurora-keep-light">
+        <div id="kvSlideProgressBar"></div>
+
+        <!-- Nút điều hướng Trái / Phải -->
+        <button class="kv-nav-btn kv-nav-prev" onclick="prevKvSlide(event)" title="Slide trước (Mũi tên Trái / Backspace)">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="kv-nav-btn kv-nav-next" onclick="nextKvSlide(event)" title="Slide tiếp (Mũi tên Phải / Space)">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+
+        <!-- Thanh công cụ HUD: Chỉnh sửa Trực tiếp + Điều khiển Trình chiếu -->
+        <div class="kv-bottom-hud">
+            <div class="kv-hud-group">
+                <button id="btn-kv-edit-mode" class="kv-hud-pill" onclick="toggleKvSlideEditMode(event)" title="Bật/Tắt chế độ click sửa trực tiếp chữ, số liệu & thêm/bớt nội dung (Phím E)">
+                    <i class="fas fa-pen-to-square text-blue-600"></i>
+                    <span id="lbl-kv-edit-mode">Chỉnh sửa Slide (E)</span>
+                </button>
+                <button class="kv-hud-pill" onclick="addCustomKvSlide(event)" title="Thêm 1 Slide báo cáo mới vào bộ trình chiếu">
+                    <i class="fas fa-plus-circle text-emerald-600"></i>
+                    <span>+ Thêm Slide</span>
+                </button>
+                <button class="kv-hud-pill" onclick="deleteCurrentKvSlide(event)" title="Xóa Slide đang mở">
+                    <i class="fas fa-trash-alt text-rose-500"></i>
+                    <span>Xóa Slide</span>
+                </button>
+                <button class="kv-hud-pill" onclick="saveKvSlideDeckState(true)" title="Lưu mọi nội dung đã chỉnh sửa trên Slide">
+                    <i class="fas fa-floppy-disk text-indigo-600"></i>
+                    <span>Lưu Bản Sửa</span>
+                </button>
+                <button class="kv-hud-pill" onclick="resetKvSlideDeckToDefault(event)" title="Đồng bộ lại dữ liệu mới nhất từ MasterDB & Khảo sát">
+                    <i class="fas fa-rotate text-amber-600"></i>
+                    <span>Đồng bộ DB</span>
+                </button>
+                <button class="kv-hud-pill" onclick="exportStandaloneSlideHTML(event)" title="Tải về file HTML Slide Báo cáo độc lập (.html) chuẩn 16:9">
+                    <i class="fas fa-download text-teal-600"></i>
+                    <span>Tải File HTML</span>
+                </button>
+            </div>
+
+            <div class="kv-hud-group">
+                <button class="kv-hud-pill" onclick="window.print()" title="Xuất PDF chuẩn 16:9 (Phím P)">
+                    <i class="fas fa-file-pdf text-rose-600"></i>
+                    <span>Xuất PDF (P)</span>
+                </button>
+                <button class="kv-hud-pill" onclick="toggleKvSlideFullScreen(event)" title="Toàn màn hình (Phím F)">
+                    <i class="fas fa-expand text-blue-600"></i>
+                    <span>Fullscreen (F)</span>
+                </button>
+                <button class="kv-hud-pill" onclick="closePresentation()" title="Đóng trình chiếu (Phím ESC)">
+                    <i class="fas fa-times text-slate-600"></i>
+                    <span>Đóng (ESC)</span>
+                </button>
+                <div id="kv-slide-counter" class="kv-counter-pill">01 / 09</div>
             </div>
         </div>
 
-        <div class="tech-slide" id="tslide-2">
-            <div class="max-w-6xl mx-auto w-full">
-                <h2 class="tech-title text-center">I. Hiệu Suất Tổng Quan</h2>
-                <p class="tech-subtitle text-center" id="slide-sub-period">Dữ liệu Master DB cập nhật tức thời</p>
-                
-                <div class="grid grid-cols-4 gap-8 mt-10">
-                    <div class="tech-stat-card" style="--accent: #3b82f6"><div class="tech-stat-val" id="sl-total-class">0</div><p class="tech-stat-label">Tổng Lớp Học</p></div>
-                    <div class="tech-stat-card" style="--accent: #10b981"><div class="tech-stat-val" id="sl-total-hv">0</div><p class="tech-stat-label">Học Viên</p></div>
-                    <div class="tech-stat-card" style="--accent: #f59e0b"><div class="tech-stat-val" id="sl-pass-rate">0%</div><p class="tech-stat-label">Tỷ lệ Pass</p></div>
-                    <div class="tech-stat-card" style="--accent: #8b5cf6"><div class="tech-stat-val" id="sl-csat">N/A</div><p class="tech-stat-label">Mức Hài Lòng (CSAT)</p></div>
-                </div>
-                
-                <div class="mt-12 grid grid-cols-2 gap-8">
-                    <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-lg">
-                        <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2 border-b border-slate-100 pb-3"><i class="fas fa-chalkboard-teacher text-blue-500"></i> Trực Tiếp (Taught)</h3>
-                        <div id="sl-taught-detail" class="space-y-3"></div>
-                    </div>
-                    <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-lg">
-                        <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2 border-b border-slate-100 pb-3"><i class="fas fa-laptop-house text-emerald-500"></i> Tự Học (LMS/Self)</h3>
-                        <div id="sl-self-detail" class="space-y-3"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="tech-slide" id="tslide-3">
-            <div class="max-w-6xl mx-auto w-full h-full flex flex-col">
-                <h2 class="tech-title text-center">II. AI Phân Tích & Insight</h2>
-                <p class="tech-subtitle text-center">Đánh giá chất lượng và định hướng hành động</p>
-                
-                <div class="grid grid-cols-2 gap-10 mt-6 flex-grow overflow-hidden">
-                    <div class="flex flex-col h-full">
-                        <h3 class="text-blue-600 font-bold text-xl mb-4 bg-blue-50 py-2 px-4 rounded-lg inline-block w-max"><i class="fas fa-comment-dots mr-2"></i>Phản hồi từ Khảo sát</h3>
-                        <div id="sl-survey-insights" class="overflow-y-auto pr-4 flex-grow custom-scrollbar"></div>
-                    </div>
-                    <div class="flex flex-col h-full">
-                        <h3 class="text-emerald-600 font-bold text-xl mb-4 bg-emerald-50 py-2 px-4 rounded-lg inline-block w-max"><i class="fas fa-brain mr-2"></i>Đánh giá Hệ thống L&D</h3>
-                        <div id="sl-ai-evaluation" class="overflow-y-auto pr-4 flex-grow custom-scrollbar"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="tech-nav">
-            <button onclick="changeSlide(-1)"><i class="fas fa-chevron-left"></i></button>
-            <button onclick="changeSlide(1)"><i class="fas fa-chevron-right"></i></button>
+        <!-- Sân khấu Slide 16:9 -->
+        <div id="kv-video-stage">
+            <div class="kv-tech-grid"></div>
+            <div id="kv-slides-mount"></div>
         </div>
     </div>
 
@@ -453,9 +1083,9 @@
             { id: 'SPCB', group: 'Retail', title: 'Cơ bản (TS-DS)', desc: 'Quy trình Onboard 3 ngày dành cho nhân viên kinh doanh mới.', link: 'spcb.html', icon: 'fa-box', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
             { id: 'TAX', group: 'Specialist', title: 'Chuyên đề Thuế', desc: 'Hóa đơn điện tử, Chữ ký số & Kế toán Hộ kinh doanh.', link: 'thuehkd.html', icon: 'fa-file-invoice-dollar', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
             { id: 'KV1', group: 'Advanced', title: 'Sản phẩm KV1', desc: 'Chuyên ngành bán lẻ nâng cao và xử lý tình huống KV1.', link: 'kv1.html', icon: 'fa-laptop-code', color: 'text-cyan-600', bg: 'bg-cyan-50', border: 'border-cyan-200' },
-            { id: 'FNB', group: 'Industry', title: 'KiotViet FNB', desc: 'Quy trình vận hành ngành Nhà hàng & Cafe.', link: 'industry.html', icon: 'fa-utensils', color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' },
-            { id: 'SALON', group: 'Industry', title: 'KiotViet Salon', desc: 'Kịch bản vận hành ngành Spa & Thẩm mỹ viện.', link: 'industry.html', icon: 'fa-spa', color: 'text-pink-500', bg: 'bg-pink-50', border: 'border-pink-200' },
-            { id: 'HOTEL', group: 'Industry', title: 'KiotViet Hotel', desc: 'Kịch bản quản lý Khách sạn & Nhà nghỉ.', link: 'industry.html', icon: 'fa-hotel', color: 'text-teal-500', bg: 'bg-teal-50', border: 'border-teal-200' }
+            { id: 'FNB', group: 'Industry', title: 'KiotViet FNB', desc: 'Quy trình vận hành ngành Nhà hàng & Cafe.', link: 'industry.html?type=FNB', icon: 'fa-utensils', color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' },
+            { id: 'SALON', group: 'Industry', title: 'KiotViet Salon', desc: 'Kịch bản vận hành ngành Spa & Thẩm mỹ viện.', link: 'industry.html?type=SALON', icon: 'fa-spa', color: 'text-pink-500', bg: 'bg-pink-50', border: 'border-pink-200' },
+            { id: 'HOTEL', group: 'Industry', title: 'KiotViet Hotel', desc: 'Kịch bản quản lý Khách sạn & Nhà nghỉ.', link: 'industry.html?type=HOTEL', icon: 'fa-hotel', color: 'text-teal-500', bg: 'bg-teal-50', border: 'border-teal-200' }
         ];
 
         const defaultGifts = [ 
@@ -777,12 +1407,12 @@
                 };
 
                 container.innerHTML = `
-                    <div class="flex flex-wrap items-center justify-between gap-4 mb-6 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs animate-fade-up">
+                    <div class="aurora-toolbar-glass flex flex-wrap items-center justify-between gap-4 mb-6 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs animate-fade-up">
                         <div class="flex items-center gap-3">
                             <span class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
-                                <i class="fas fa-calendar-alt text-blue-600"></i> Kỳ Báo Cáo:
+                                <i class="fas fa-calendar-alt text-violet-600"></i> Kỳ Báo Cáo:
                             </span>
-                            <select id="reportTimeRange" onchange="applyReportFilter()" class="saas-input py-1.5 px-3 text-xs font-bold text-blue-700 bg-blue-50 border-blue-200 rounded-lg cursor-pointer w-48">
+                            <select id="reportTimeRange" onchange="applyReportFilter()" class="saas-input py-1.5 px-3 text-xs font-bold text-violet-700 bg-purple-50 border-purple-200 rounded-lg cursor-pointer w-48">
                                 <option value="all" ${currentReportTimeRange==='all'?'selected':''}>Toàn bộ thời gian</option>
                                 <option value="year" ${currentReportTimeRange==='year'?'selected':''}>Cả năm</option>
                                 <option value="q1" ${currentReportTimeRange==='q1'?'selected':''}>Quý 1 (Tháng 1 - 3)</option>
@@ -807,12 +1437,12 @@
                             <select id="reportYear" onchange="applyReportYear(this.value)" title="Năm báo cáo (không áp dụng cho 'Toàn bộ thời gian')" ${currentReportTimeRange==='all'?'disabled':''} class="saas-input py-1.5 px-3 text-xs font-bold text-blue-700 bg-blue-50 border-blue-200 rounded-lg cursor-pointer w-28 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
                                 ${getAvailableReportYears().map(y => `<option value="${y}" ${y===currentReportYear?'selected':''}>Năm ${y}</option>`).join('')}
                             </select>
-                            <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-md border border-slate-200">
+                            <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
                                 ${filteredData.length} Khóa Học
                             </span>
                         </div>
 
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
                             <button onclick="openSurveyInput()" class="btn-outline text-xs !py-1.5 font-bold hover:bg-purple-50 text-purple-700 border-purple-200 shadow-xs" title="Nạp dữ liệu khảo sát học viên">
                                 <i class="fas fa-clipboard-list"></i> Nạp Khảo Sát
                             </button>
@@ -822,36 +1452,134 @@
                             <button onclick="runTechPresentation()" class="btn-outline text-xs !py-1.5 font-bold hover:bg-slate-50 border-slate-300 shadow-xs" title="Trình chiếu Slide Fullscreen">
                                 <i class="fas fa-tv text-blue-600"></i> Trình Chiếu
                             </button>
-                            <button onclick="openCanvaReportModal()" class="btn-primary text-xs !py-1.5 font-bold bg-gradient-to-r from-purple-600 to-blue-600 border-none shadow-sm hover:shadow transition" title="Tạo slide bằng AI">
+                            <button onclick="openCanvaReportModal()" class="btn-primary text-xs !py-1.5 font-bold border-none shadow-sm hover:shadow transition" title="Tạo slide bằng AI">
                                 <i class="fas fa-magic text-amber-300"></i> Canva AI Slide
                             </button>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                        <div class="saas-card p-5 flex items-center justify-between group animate-fade-up">
-                            <div class="flex items-center gap-4">
-                                <div class="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-2xl group-hover:scale-110 transition"><i class="fas fa-users"></i></div>
-                                <div><h3 class="text-2xl font-bold text-slate-800">${sumTotal}</h3><p class="text-[13px] font-medium text-slate-600 mt-0.5">Tổng số học viên</p></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+                        <div class="saas-card p-5 flex items-center justify-between group relative overflow-hidden animate-fade-up">
+                            <span class="aurora-blob aurora-blob-peach"></span>
+                            <div class="flex items-center gap-4 relative z-10">
+                                <div class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 border border-orange-200/60 flex items-center justify-center text-xl group-hover:scale-110 transition shrink-0"><i class="fas fa-users"></i></div>
+                                <div>
+                                    <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Học viên</p>
+                                    <h3 class="text-2xl font-extrabold text-slate-800 leading-tight mt-0.5">${sumTotal}</h3>
+                                    <p class="text-[12px] font-medium text-slate-500">Tổng số tham gia</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="saas-card p-5 flex items-center justify-between group animate-fade-up delay-100">
-                            <div class="flex items-center gap-4">
-                                <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-2xl group-hover:scale-110 transition"><i class="fas fa-chalkboard-teacher"></i></div>
-                                <div><h3 class="text-2xl font-bold text-slate-800">${Object.keys(breakCourse).length}</h3><p class="text-[13px] font-medium text-slate-600 mt-0.5">Phân hệ hoạt động</p></div>
+                        <div class="saas-card p-5 flex items-center justify-between group relative overflow-hidden animate-fade-up delay-100">
+                            <span class="aurora-blob aurora-blob-emerald"></span>
+                            <div class="flex items-center gap-4 relative z-10">
+                                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200/60 flex items-center justify-center text-xl group-hover:scale-110 transition shrink-0"><i class="fas fa-chalkboard-teacher"></i></div>
+                                <div>
+                                    <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Phân hệ</p>
+                                    <h3 class="text-2xl font-extrabold text-slate-800 leading-tight mt-0.5">${Object.keys(breakCourse).length}</h3>
+                                    <p class="text-[12px] font-medium text-slate-500">Đang hoạt động</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="saas-card p-5 flex items-center justify-between group animate-fade-up delay-200">
-                            <div class="flex items-center gap-4">
-                                <div class="w-14 h-14 rounded-2xl bg-pink-50 text-pink-500 flex items-center justify-center text-2xl group-hover:scale-110 transition"><i class="fas fa-graduation-cap"></i></div>
-                                <div><h3 class="text-2xl font-bold text-slate-800">${filteredData.length}</h3><p class="text-[13px] font-medium text-slate-600 mt-0.5">Lớp mở trong kỳ</p></div>
+                        <div class="saas-card p-5 flex items-center justify-between group relative overflow-hidden animate-fade-up delay-200">
+                            <span class="aurora-blob aurora-blob-rose"></span>
+                            <div class="flex items-center gap-4 relative z-10">
+                                <div class="w-12 h-12 rounded-2xl bg-pink-50 text-pink-600 border border-pink-200/60 flex items-center justify-center text-xl group-hover:scale-110 transition shrink-0"><i class="fas fa-graduation-cap"></i></div>
+                                <div>
+                                    <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Khóa học</p>
+                                    <h3 class="text-2xl font-extrabold text-slate-800 leading-tight mt-0.5">${filteredData.length}</h3>
+                                    <p class="text-[12px] font-medium text-slate-500">Lớp mở trong kỳ</p>
+                                </div>
                             </div>
                         </div>
                         <div class="saas-card p-5 flex items-center justify-between group relative overflow-hidden animate-fade-up delay-300">
-                            <div class="flex items-center gap-4">
-                                <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center text-2xl group-hover:scale-110 transition"><i class="fas fa-calendar-check"></i></div>
-                                <div class="z-10"><h3 class="text-2xl font-bold text-slate-800">${passRate}%</h3><p class="text-[13px] font-medium text-slate-600 mt-0.5">Tỷ lệ hoàn thành (Pass)</p></div>
+                            <span class="aurora-blob aurora-blob-violet"></span>
+                            <div class="flex items-center gap-4 relative z-10">
+                                <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 border border-purple-200/60 flex items-center justify-center text-xl group-hover:scale-110 transition shrink-0"><i class="fas fa-calendar-check"></i></div>
+                                <div>
+                                    <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Chất lượng</p>
+                                    <h3 class="text-2xl font-extrabold text-slate-800 leading-tight mt-0.5">${passRate}%</h3>
+                                    <p class="text-[12px] font-medium text-slate-500">Tỷ lệ hoàn thành Pass</p>
+                                </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- TRUY CẬP NHANH PHÂN HỆ & CÔNG CỤ (AURORA BENTO GRID) -->
+                    <div class="mb-6 animate-fade-up delay-200">
+                        <div class="flex items-center justify-between mb-3 px-0.5">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                                    <i class="fas fa-th-large text-violet-500"></i> Phân hệ &amp; Công cụ
+                                </span>
+                                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200/70">4</span>
+                            </div>
+                            <button onclick="switchTab('khoa-hoc')" class="text-xs font-bold text-violet-600 hover:text-violet-700 flex items-center gap-1 cursor-pointer bg-transparent border-none">
+                                <span>Xem tất cả khóa học</span>
+                                <i class="fas fa-arrow-right text-[10px]"></i>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+                            <a href="spcb.html" class="saas-card p-5 relative overflow-hidden group block no-underline">
+                                <span class="aurora-blob aurora-blob-violet"></span>
+                                <div class="relative z-10">
+                                    <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 border border-purple-200/70 flex items-center justify-center text-base mb-4 group-hover:scale-105 transition-transform">
+                                        <i class="fas fa-box-open"></i>
+                                    </div>
+                                    <h4 class="text-[15px] font-bold text-slate-800 group-hover:text-violet-600 transition-colors">Sản Phẩm Cơ Bản</h4>
+                                    <p class="text-xs text-slate-500 mt-1 line-clamp-1">Vận hành TS-DS, L1/L2 &amp; Khảo sát</p>
+                                    <div class="flex items-center gap-1.5 mt-3.5 text-[11px] font-semibold text-emerald-600">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                        <span>Đang vận hành</span>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a href="thuehkd.html" class="saas-card p-5 relative overflow-hidden group block no-underline">
+                                <span class="aurora-blob aurora-blob-emerald"></span>
+                                <div class="relative z-10">
+                                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200/70 flex items-center justify-center text-base mb-4 group-hover:scale-105 transition-transform">
+                                        <i class="fas fa-file-invoice-dollar"></i>
+                                    </div>
+                                    <h4 class="text-[15px] font-bold text-slate-800 group-hover:text-emerald-600 transition-colors">Chuyên Đề Thuế</h4>
+                                    <p class="text-xs text-slate-500 mt-1 line-clamp-1">HĐĐT hộ kinh doanh &amp; Chứng chỉ LMS</p>
+                                    <div class="flex items-center gap-1.5 mt-3.5 text-[11px] font-semibold text-blue-600">
+                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                        <span>Web Module</span>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a href="kv1.html" class="saas-card p-5 relative overflow-hidden group block no-underline">
+                                <span class="aurora-blob aurora-blob-sky"></span>
+                                <div class="relative z-10">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-200/70 flex items-center justify-center text-base mb-4 group-hover:scale-105 transition-transform">
+                                        <i class="fas fa-desktop"></i>
+                                    </div>
+                                    <h4 class="text-[15px] font-bold text-slate-800 group-hover:text-blue-600 transition-colors">Sản Phẩm KV1</h4>
+                                    <p class="text-xs text-slate-500 mt-1 line-clamp-1">Quản lý lớp &amp; Lộ trình đào tạo KV1</p>
+                                    <div class="flex items-center gap-1.5 mt-3.5 text-[11px] font-semibold text-purple-600">
+                                        <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                                        <span>Sẵn sàng mở lớp</span>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a href="knowledge-hub.html" class="saas-card p-5 relative overflow-hidden group block no-underline">
+                                <span class="aurora-blob aurora-blob-peach"></span>
+                                <div class="relative z-10">
+                                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 border border-amber-200/70 flex items-center justify-center text-base mb-4 group-hover:scale-105 transition-transform">
+                                        <i class="fas fa-database"></i>
+                                    </div>
+                                    <h4 class="text-[15px] font-bold text-slate-800 group-hover:text-amber-600 transition-colors">Master Data Hub</h4>
+                                    <p class="text-xs text-slate-500 mt-1 line-clamp-1">Kho tài liệu E-Learning, MCQ &amp; Tình huống</p>
+                                    <div class="flex items-center gap-1.5 mt-3.5 text-[11px] font-semibold text-amber-600">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                        <span>Kho tri thức</span>
+                                    </div>
+                                </div>
+                            </a>
                         </div>
                     </div>
                     
@@ -896,7 +1624,7 @@
                         </div>
                     </div>
 
-                    <div class="saas-card p-6 animate-fade-up delay-300">
+                    <div id="masterDbSection" class="saas-card p-6 animate-fade-up delay-300">
                         <div class="flex flex-wrap items-center justify-between gap-4 mb-4 pb-3 border-b border-slate-100">
                             <div>
                                 <h3 class="text-[15px] font-bold text-slate-800">Chi Tiết Báo Cáo Các Khóa Học (MasterDB)</h3>
@@ -905,7 +1633,7 @@
                             <div class="flex items-center gap-3">
                                 <div class="relative w-64">
                                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                    <input type="text" value="${escapeHtml(masterTableSearchKeyword)}" oninput="handleMasterTableSearch(this.value)" placeholder="Tìm mã khóa, nhận xét..." class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:bg-white focus:border-blue-400 transition">
+                                    <input id="masterSearchInput" type="text" value="${escapeHtml(masterTableSearchKeyword)}" oninput="handleMasterTableSearch(this.value)" placeholder="Tìm mã khóa, nhận xét..." class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:bg-white focus:border-violet-400 transition">
                                 </div>
                             </div>
                         </div>
@@ -942,8 +1670,9 @@
             // 2. TAB DANH MỤC TẤT CẢ KHÓA HỌC (ĐÃ SỬA TRIỆT ĐỂ LỖI data IS NOT DEFINED)
             else if (tabId === 'khoa-hoc') {
                 const data = Array.isArray(globalMasterDB) ? globalMasterDB : [];
+                const blobClasses = ['aurora-blob-violet', 'aurora-blob-emerald', 'aurora-blob-sky', 'aurora-blob-peach', 'aurora-blob-rose', 'aurora-blob-amber'];
                 
-                let courseCardsHtml = courseCatalog.map(c => {
+                let courseCardsHtml = courseCatalog.map((c, idx) => {
                     let totalClasses = 0, totalHV = 0, passHV = 0;
                     data.forEach(d => {
                         let g = (d.groupName || '').toUpperCase();
@@ -954,25 +1683,27 @@
                         }
                     });
                     let pRate = totalHV > 0 ? Math.round((passHV / totalHV) * 100) : 0;
+                    const blobCls = blobClasses[idx % blobClasses.length];
 
                     return `
-                        <div class="saas-card p-6 flex flex-col justify-between group border-t-4 ${c.border}">
-                            <div>
+                        <div class="saas-card relative overflow-hidden p-6 flex flex-col justify-between group">
+                            <span class="aurora-blob ${blobCls}"></span>
+                            <div class="relative z-10">
                                 <div class="flex justify-between items-start mb-4">
-                                    <div class="w-12 h-12 rounded-xl ${c.bg} ${c.color} flex items-center justify-center text-xl shadow-inner"><i class="fas ${c.icon}"></i></div>
+                                    <div class="w-12 h-12 rounded-2xl ${c.bg} ${c.color} border ${c.border} flex items-center justify-center text-xl shadow-xs group-hover:scale-105 transition-transform"><i class="fas ${c.icon}"></i></div>
                                     <span class="text-[11px] font-bold px-2.5 py-1 rounded-full ${c.bg} ${c.color} border ${c.border}">${c.group}</span>
                                 </div>
-                                <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition">${c.title}</h3>
-                                <p class="text-xs text-slate-500 mb-6 leading-relaxed line-clamp-2">${c.desc}</p>
+                                <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-violet-600 transition">${c.title}</h3>
+                                <p class="text-xs text-slate-500 mb-5 leading-relaxed line-clamp-2">${c.desc}</p>
                                 
-                                <div class="grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100 mb-6 text-center">
+                                <div class="grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100 mb-5 text-center">
                                     <div><p class="text-[10px] text-slate-400 font-bold uppercase">Lớp</p><p class="text-base font-extrabold text-slate-800">${totalClasses}</p></div>
                                     <div><p class="text-[10px] text-slate-400 font-bold uppercase">Học viên</p><p class="text-base font-extrabold text-slate-800">${totalHV}</p></div>
                                     <div><p class="text-[10px] text-slate-400 font-bold uppercase">Pass</p><p class="text-base font-extrabold text-emerald-600">${pRate}%</p></div>
                                 </div>
                             </div>
                             
-                            <a href="${c.link}" class="btn-primary w-full py-2.5 justify-center shadow-md">
+                            <a href="${c.link}" class="btn-primary relative z-10 w-full py-2.5 justify-center shadow-md">
                                 <i class="fas fa-play text-xs"></i> Vào Vận Hành Khóa
                             </a>
                         </div>
@@ -980,12 +1711,12 @@
                 }).join('');
 
                 container.innerHTML = `
-                    <div class="mb-6 flex justify-between items-end animate-fade-up">
+                    <div class="mb-6 flex flex-wrap justify-between items-end gap-4 animate-fade-up">
                         <div>
-                            <h2 class="text-2xl font-bold text-slate-800">Danh Mục Quản Trị Khóa Học</h2>
+                            <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight">Danh Mục Quản Trị Khóa Học</h2>
                             <p class="text-sm text-slate-500 mt-1">Hệ thống kịch bản, bộ đề thi và tự động hóa quy trình đào tạo</p>
                         </div>
-                        <span class="text-xs font-bold text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">${courseCatalog.length} Module Tiêu Chuẩn</span>
+                        <span class="text-xs font-bold text-violet-700 bg-purple-50 px-3.5 py-1.5 rounded-xl border border-purple-200/70 shadow-xs">${courseCatalog.length} Module Tiêu Chuẩn</span>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-up delay-100">
                         ${courseCardsHtml}
@@ -994,8 +1725,36 @@
             }
         }
 
+        function handleAuroraGlobalSearch(val, shouldJump) {
+            masterTableSearchKeyword = val || '';
+            const masterInput = document.getElementById('masterSearchInput');
+            if (masterInput && masterInput.value !== masterTableSearchKeyword) {
+                masterInput.value = masterTableSearchKeyword;
+            }
+            const tbody = document.getElementById('masterDetailTableBody');
+            if (!tbody) {
+                if (shouldJump) {
+                    switchTab('tong-quan');
+                    setTimeout(() => {
+                        const sec = document.getElementById('masterDbSection');
+                        if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 120);
+                }
+                return;
+            }
+            handleMasterTableSearch(masterTableSearchKeyword);
+            if (shouldJump) {
+                const sec = document.getElementById('masterDbSection');
+                if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
         function handleMasterTableSearch(val) {
             masterTableSearchKeyword = val;
+            const headerSearch = document.getElementById('auroraHeaderSearch');
+            if (headerSearch && headerSearch.value !== (val || '')) {
+                headerSearch.value = val || '';
+            }
             const tbody = document.getElementById('masterDetailTableBody');
             if(!tbody) return;
             const filteredData = getFilteredMasterData();
@@ -1172,17 +1931,21 @@
             const passData = labels.map(l => groups[l].pass);
             const failData = labels.map(l => groups[l].fail);
 
+            const isDark = document.documentElement.getAttribute('data-aurora') === 'dark';
+            const tickColor = isDark ? '#94a3b8' : '#64748b';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(139, 92, 246, 0.10)';
+
             if(perfChartInstance) perfChartInstance.destroy();
             perfChartInstance = new Chart(ctx.getContext('2d'), {
                 type: 'bar',
                 data: { 
                     labels: labels.length ? labels : ['Chưa có dữ liệu'], 
                     datasets: [
-                        { label: 'Đạt (Pass)', data: passData.length ? passData : [0], backgroundColor: '#3b82f6', borderRadius: 4, barThickness: 24 },
-                        { label: 'Trượt (Fail)', data: failData.length ? failData : [0], backgroundColor:'#ef4444', borderRadius: 4, barThickness: 24 }
+                        { label: 'Đạt (Pass)', data: passData.length ? passData : [0], backgroundColor: isDark ? '#8b5cf6' : '#7c3aed', borderRadius: 6, barThickness: 24 },
+                        { label: 'Trượt (Fail)', data: failData.length ? failData : [0], backgroundColor: isDark ? '#fb7185' : '#f43f5e', borderRadius: 6, barThickness: 24 }
                     ] 
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: {size: 11} } } }, scales: { y: { stacked: true, beginAtZero: true, border: {display: false}, grid: {color: '#f1f5f9', borderDash:[4,4]}, ticks: {font: {size: 10}} }, x: { stacked: true, border: {display: false}, grid: {display: false}, ticks: {font: {size: 10}} } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom', labels: { color: tickColor, usePointStyle: true, boxWidth: 8, padding: 18, font: {size: 11} } } }, scales: { y: { stacked: true, beginAtZero: true, border: {display: false}, grid: {color: gridColor, borderDash:[4,4]}, ticks: {color: tickColor, font: {size: 10}} }, x: { stacked: true, border: {display: false}, grid: {display: false}, ticks: {color: tickColor, font: {size: 10}} } } }
             });
         }
 
@@ -1203,6 +1966,9 @@
 
             const monthlyRate = monthlyHV.map((tot, idx) => tot > 0 ? Math.round((monthlyPass[idx] / tot) * 100) : 0);
             const labels = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+            const isDark = document.documentElement.getAttribute('data-aurora') === 'dark';
+            const tickColor = isDark ? '#94a3b8' : '#64748b';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(139, 92, 246, 0.10)';
 
             if(trendChartInstance) trendChartInstance.destroy();
             trendChartInstance = new Chart(ctx.getContext('2d'), {
@@ -1213,8 +1979,8 @@
                         {
                             label: 'Số Lượng Học Viên',
                             data: monthlyHV,
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                            borderColor: isDark ? '#a78bfa' : '#7c3aed',
+                            backgroundColor: isDark ? 'rgba(167, 139, 250, 0.14)' : 'rgba(124, 58, 237, 0.10)',
                             fill: true,
                             tension: 0.35,
                             borderWidth: 2.5,
@@ -1223,7 +1989,7 @@
                         {
                             label: 'Tỷ Lệ Pass (%)',
                             data: monthlyRate,
-                            borderColor: '#10b981',
+                            borderColor: isDark ? '#34d399' : '#10b981',
                             backgroundColor: 'transparent',
                             borderDash: [4, 4],
                             tension: 0.2,
@@ -1235,11 +2001,11 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: true, position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: {size: 11} } } },
+                    plugins: { legend: { display: true, position: 'bottom', labels: { color: tickColor, usePointStyle: true, boxWidth: 8, padding: 18, font: {size: 11} } } },
                     scales: {
-                        y: { type: 'linear', position: 'left', beginAtZero: true, grid: {color: '#f1f5f9'}, ticks: {font: {size: 10}} },
-                        y1: { type: 'linear', position: 'right', min: 0, max: 100, grid: {display: false}, ticks: {callback: v => v + '%', font: {size: 10}} },
-                        x: { grid: {display: false}, ticks: {font: {size: 10}} }
+                        y: { type: 'linear', position: 'left', beginAtZero: true, grid: {color: gridColor}, ticks: {color: tickColor, font: {size: 10}} },
+                        y1: { type: 'linear', position: 'right', min: 0, max: 100, grid: {display: false}, ticks: {color: tickColor, callback: v => v + '%', font: {size: 10}} },
+                        x: { grid: {display: false}, ticks: {color: tickColor, font: {size: 10}} }
                     }
                 }
             });
@@ -1405,138 +2171,1140 @@
             }
         }
 
-        function closePresentation() { document.getElementById('presentation-overlay').classList.remove('active'); }
-        let curSlide = 1; const maxSlide = 3;
-        function changeSlide(dir) {
-            document.getElementById(`tslide-${curSlide}`).classList.remove('active');
-            curSlide += dir;
-            if(curSlide > maxSlide) curSlide = maxSlide; if(curSlide < 1) curSlide = 1;
-            document.getElementById(`tslide-${curSlide}`).classList.add('active');
+        // ==================== BỘ TRÌNH CHIẾU & CHỈNH SỬA SLIDE BÁO CÁO (KIOTVIET BRAND 16:9 STUDIO) ====================
+        const KV_SLIDE_STORAGE_KEY = 'kv_report_slide_deck_v3';
+        const KV_LOGO_URL = 'https://cdn-kvweb-website.kiotviet.vn/images/v2/giai-phap/logos/kiotviet-logo-horizontal.svg';
+        let kvCurrentSlideIdx = 0;
+        let kvSlideAnimating = false;
+        let kvSlideEditMode = false;
+
+        // Dữ liệu thống kê chuẩn theo từng tháng cho 5 phân hệ (tích hợp live MasterDB + baseline báo cáo)
+        let kvProductReportData = {
+            retail: {
+                color: '#0070F4', soft: 'rgba(0, 112, 244, 0.25)',
+                labels: ['Lớp học', 'Điểm Test', 'Tỷ lệ đạt', 'Hài lòng'],
+                months: {
+                    all: { s1: '15', n1: 'Tổng số lớp đào tạo Retail', s2: '91%', n2: 'Điểm trung bình các bài kiểm tra', s3: '98%', n3: 'Học viên đạt chuẩn >= 80%', s4: '4.8/5', n4: 'Đánh giá CSAT sau khóa học' },
+                    '7': { s1: '4', n1: 'Tháng 7: 4 Lớp (146 HV)', s2: '91%', n2: 'Điểm số tốt', s3: '99%', n3: 'Tỷ lệ đạt cao', s4: '4.9/5', n4: 'Rất hài lòng', hv: 146, pct: 100, details: ['25KV24: 39 HV', '25KV25: 37 HV', '25KV26: 47 HV', '25KV28: 23 HV'] },
+                    '8': { s1: '2', n1: 'Tháng 8: 2 Lớp (55 HV)', s2: '90%', n2: 'Điểm khá giỏi', s3: '96%', n3: 'Đạt yêu cầu', s4: '4.9/5', n4: 'Hài lòng cao', hv: 55, pct: 38, details: ['25KV31: 33 HV', '25KV32: 22 HV'] },
+                    '9': { s1: '3', n1: 'Tháng 9: 3 Lớp (66 HV)', s2: '91%', n2: 'Ổn định', s3: '95%', n3: 'Đạt chuẩn', s4: '4.9/5', n4: 'Tương tác tốt', hv: 66, pct: 45, details: ['25KV34: 29 HV', '25KV35: 22 HV', '25KV36: 15 HV'] },
+                    '10': { s1: '3', n1: 'Tháng 10: 3 Lớp (55 HV)', s2: '92%', n2: 'Kết quả tốt', s3: '100%', n3: '100% Pass', s4: '4.9/5', n4: 'Hài lòng', hv: 55, pct: 38, details: ['25KV37: 16 HV', '25KV39: 21 HV', '25KV40: 18 HV'] },
+                    '11': { s1: '3', n1: 'Tháng 11: 3 Lớp (45 HV)', s2: '90%', n2: 'Kết quả cao', s3: '100%', n3: '100% Pass', s4: '4.8/5', n4: 'Rất hài lòng', hv: 45, pct: 32, details: ['25KV41: 16 HV', '25KV43: 16 HV', '25KV44: 13 HV'] },
+                    '12': { s1: '0', n1: 'Kế hoạch T12', s2: '--', n2: 'Dự kiến triển khai', s3: '--', n3: 'Dự kiến', s4: '--', n4: 'Dự kiến', hv: 0, pct: 0, details: ['Kế hoạch mở lớp T12'] }
+                }
+            },
+            fnb: {
+                color: '#FFAB3A', soft: 'rgba(255, 171, 58, 0.28)',
+                labels: ['Tổng HV', 'HV P.Mềm', 'Điểm TB', 'Hài lòng'],
+                months: {
+                    all: { s1: '132', n1: 'Bao gồm lớp Phần mềm & Phần cứng', s2: '108', n2: 'Chiếm 82% tổng số học viên', s3: '89%', n3: 'Điểm trung bình bài kiểm tra', s4: '4.7/5', n4: 'Đánh giá sau khóa học' },
+                    '7': { s1: '24', n1: 'Chủ yếu học Phần cứng', s2: '0', n2: 'Lớp Phần cứng Offline', s3: '86%', n3: 'Thực hành thiết bị', s4: '4.3/5', n4: 'Cần thêm nội dung nâng cao', hv: 24, pct: 75, details: ['FNB Phần cứng: 24 HV'] },
+                    '8': { s1: '28', n1: 'Bắt đầu lớp Phần mềm', s2: '28', n2: '100% học Phần mềm', s3: '87%', n3: 'Kết quả tốt', s4: '4.7/5', n4: 'Hài lòng', hv: 28, pct: 87, details: ['FNB Phần mềm: 28 HV'] },
+                    '9': { s1: '32', n1: 'Lớp đông học viên nhất', s2: '32', n2: 'Tương tác sôi nổi', s3: '89%', n3: 'Khá giỏi', s4: '4.6/5', n4: 'Hài lòng', hv: 32, pct: 100, details: ['FNB Phần mềm: 32 HV'] },
+                    '10': { s1: '28', n1: 'Duy trì ổn định', s2: '28', n2: 'Đào tạo tập trung LMS', s3: '88%', n3: 'Khá giỏi', s4: '4.9/5', n4: 'Rất hài lòng', hv: 28, pct: 87, details: ['FNB Phần mềm: 28 HV'] },
+                    '11': { s1: '20', n1: 'Tập trung ôn tập sâu', s2: '20', n2: '100% hoàn thành LMS', s3: '91%', n3: 'Điểm cao nhất kỳ', s4: '5.0/5', n4: 'Tuyệt đối hài lòng', hv: 20, pct: 63, details: ['FNB Phần mềm: 20 HV'] },
+                    '12': { s1: '0', n1: 'Kế hoạch T12', s2: '0', n2: 'Dự kiến', s3: '--', n3: 'Dự kiến', s4: '--', n4: 'Dự kiến', hv: 0, pct: 0, details: ['Chuyên đề FNB mô hình Quick/Full Service'] }
+                }
+            },
+            salon: {
+                color: '#8B5CF6', soft: 'rgba(139, 92, 246, 0.25)',
+                labels: ['Lớp học', 'Học viên', 'Điểm thi', 'Hài lòng'],
+                months: {
+                    all: { s1: '2', n1: 'Các lớp tập trung T10 & T11', s2: '20', n2: 'Tổng số học viên tham gia', s3: '92%', n3: 'Kết quả test đầu ra cao', s4: '4.9/5', n4: 'Phản hồi rất tích cực' },
+                    '7': { s1: '0', n1: 'Chưa triển khai', s2: '0', n2: 'Chưa có HV', s3: '--', n3: '--', s4: '--', n4: '--', hv: 0, pct: 0, details: ['Chưa mở lớp'] },
+                    '8': { s1: '0', n1: 'Chưa triển khai', s2: '0', n2: 'Chưa có HV', s3: '--', n3: '--', s4: '--', n4: '--', hv: 0, pct: 0, details: ['Chưa mở lớp'] },
+                    '9': { s1: '0', n1: 'Chưa triển khai', s2: '0', n2: 'Chưa có HV', s3: '--', n3: '--', s4: '--', n4: '--', hv: 0, pct: 0, details: ['Chưa mở lớp'] },
+                    '10': { s1: '1', n1: 'Lớp đầu tiên triển khai', s2: '13', n2: 'Lớp đông, tương tác tốt', s3: '92%', n3: 'Xuất sắc', s4: '4.8/5', n4: 'Rất hài lòng', hv: 13, pct: 100, details: ['Khóa Salon T10: 13 HV'] },
+                    '11': { s1: '1', n1: 'Lớp thứ 2 chuyên sâu', s2: '7', n2: 'Quy mô nhóm tinh gọn', s3: '92%', n3: 'Giỏi', s4: '4.9/5', n4: 'Rất hài lòng', hv: 7, pct: 54, details: ['Khóa Salon T11: 07 HV'] },
+                    '12': { s1: '0', n1: 'Dự kiến tự học LMS', s2: '0', n2: 'Dự kiến', s3: '--', n3: '--', s4: '--', n4: '--', hv: 0, pct: 0, details: ['Tự học & Thi trên LMS'] }
+                }
+            },
+            hotel: {
+                color: '#00C8AF', soft: 'rgba(0, 200, 175, 0.25)',
+                labels: ['Lớp học', 'Học viên', 'Điểm TB', 'Hài lòng'],
+                months: {
+                    all: { s1: '2', n1: 'Các lớp tập trung T10 & T11', s2: '15', n2: 'Quy mô lớp nhỏ kèm cặp sâu', s3: '89%', n3: 'Điểm đánh giá kiến thức', s4: '4.8/5', n4: 'Đánh giá cao sự nhiệt tình' },
+                    '7': { s1: '0', n1: 'Chưa triển khai', s2: '0', n2: '--', s3: '--', n3: '--', s4: '--', n4: '--', hv: 0, pct: 0, details: ['Chưa mở lớp'] },
+                    '8': { s1: '0', n1: 'Chưa triển khai', s2: '0', n2: '--', s3: '--', n3: '--', s4: '--', n4: '--', hv: 0, pct: 0, details: ['Chưa mở lớp'] },
+                    '9': { s1: '0', n1: 'Chưa triển khai', s2: '0', n2: '--', s3: '--', n3: '--', s4: '--', n4: '--', hv: 0, pct: 0, details: ['Chưa mở lớp'] },
+                    '10': { s1: '1', n1: 'Lớp đầu tiên', s2: '9', n2: 'Nhóm hạt nhân', s3: '90%', n3: 'Tốt', s4: '4.8/5', n4: 'Rất hài lòng', hv: 9, pct: 100, details: ['Khóa Hotel T10: 09 HV'] },
+                    '11': { s1: '1', n1: 'Lớp thứ 2', s2: '6', n2: 'Kèm cặp thực hành', s3: '88%', n3: 'Khá giỏi', s4: '4.9/5', n4: 'Hài lòng', hv: 6, pct: 67, details: ['Khóa Hotel T11: 06 HV'] },
+                    '12': { s1: '0', n1: 'Dự kiến tự học LMS', s2: '0', n2: '--', s3: '--', n3: '--', s4: '--', n4: '--', hv: 0, pct: 0, details: ['Tự học & Thi trên LMS'] }
+                }
+            },
+            invoice: {
+                color: '#00B63E', soft: 'rgba(0, 182, 62, 0.25)',
+                labels: ['Lớp học', 'Học viên', 'Chuẩn Đầu Ra', 'Hài lòng'],
+                months: {
+                    all: { s1: '1+', n1: 'Chuyên đề Pháp lý & Thuế HKD', s2: '43', n2: 'Số lượng học viên tham gia', s3: '93%', n3: 'Áp dụng bài Test chuẩn hóa', s4: '4.6/5', n4: 'Phản hồi tích cực' },
+                    '7': { s1: '0', n1: 'Chưa triển khai', s2: '0', n2: '--', s3: '--', n3: '--', s4: '--', n4: '--', hv: 0, pct: 0, details: ['Chưa mở lớp'] },
+                    '8': { s1: '0', n1: 'Chưa triển khai', s2: '0', n2: '--', s3: '--', n3: '--', s4: '--', n4: '--', hv: 0, pct: 0, details: ['Chưa mở lớp'] },
+                    '9': { s1: '0', n1: 'Chưa triển khai', s2: '0', n2: '--', s3: '--', n3: '--', s4: '--', n4: '--', hv: 0, pct: 0, details: ['Chưa mở lớp'] },
+                    '10': { s1: '1', n1: 'Lớp tập trung chuyên đề HĐĐT', s2: '43', n2: 'Đông học viên tham dự', s3: 'T12 Test', n3: 'Chuẩn hóa đề thi đầu ra', s4: '4.6/5', n4: 'Giải đáp sát nghiệp vụ khó', hv: 43, pct: 100, details: ['Chuyên đề HĐĐT - Thuế: 43 HV'] },
+                    '11': { s1: '0', n1: 'Tự học LMS', s2: '0', n2: 'Ôn tập trên LMS', s3: '--', n3: '--', s4: '--', n4: '--', hv: 0, pct: 0, details: ['Tài liệu đã chuẩn hóa trên LMS'] },
+                    '12': { s1: '1', n1: 'Áp dụng bài Test đầu ra', s2: '--', n2: 'Kiểm soát chất lượng', s3: '100%', n3: 'Bắt buộc Pass >= 80%', s4: '4.8/5', n4: 'Mục tiêu kỳ tới', hv: 0, pct: 0, details: ['Chính thức áp dụng Test sau khóa'] }
+                }
+            }
+        };
+
+        // Đồng bộ dữ liệu thật từ globalMasterDB vào kvProductReportData nếu có khóa học mới
+        function hydrateKvSlideDataFromMasterDB() {
+            const db = Array.isArray(globalMasterDB) ? globalMasterDB : [];
+            if (db.length === 0) return;
+            // Nếu có dữ liệu trong MasterDB, bổ sung các khóa học thật vào tooltip của từng phân hệ
+            db.forEach(d => {
+                const { m } = parseRecordMonthAndYear(d);
+                if (!m || m < 7 || m > 12) return;
+                const g = String(d.groupName || '').toUpperCase();
+                let key = 'retail';
+                if (g.includes('FNB')) key = 'fnb';
+                else if (g.includes('SALON')) key = 'salon';
+                else if (g.includes('HOTEL')) key = 'hotel';
+                else if (g.includes('TAX') || g.includes('THUẾ') || g.includes('HĐĐT')) key = 'invoice';
+                const mObj = kvProductReportData[key] && kvProductReportData[key].months[String(m)];
+                if (mObj && d.courseId) {
+                    const label = `${d.courseId}: ${parseInt(d.totalTrainees) || 0} HV`;
+                    if (!mObj.details.some(x => x.startsWith(d.courseId))) {
+                        mObj.details.push(label);
+                    }
+                }
+            });
         }
 
-        async function runTechPresentation() {
-            let data = getFilteredMasterData();
-            if(data.length === 0) return alert('Chưa có dữ liệu MasterDB trong kỳ này để tạo báo cáo!');
+        function buildProductChartHTML(prodKey) {
+            const cfg = kvProductReportData[prodKey];
+            if (!cfg) return '';
+            const mKeys = ['7', '8', '9', '10', '11', '12'];
+            return mKeys.map(m => {
+                const info = cfg.months[m] || { hv: 0, pct: 0, details: [] };
+                const isEmpty = !info.hv || info.hv <= 0;
+                const hPct = isEmpty ? 6 : Math.max(18, info.pct || 25);
+                const detailRows = (info.details || []).map(line => `<div class="flex justify-between gap-2 text-[11px] text-cyan-100"><span>• ${escapeHtml(line)}</span></div>`).join('');
+                return `
+                    <div class="kv-mbar-wrap" data-month="${m}">
+                        <span class="kv-mbar-val" data-kv-editable="true">${isEmpty ? '' : info.hv}</span>
+                        <div class="kv-mbar ${isEmpty ? 'empty-bar' : ''}" data-month="${m}" style="height: ${hPct}%; --bar-color: ${cfg.color}; --bar-color-soft: ${cfg.soft};">
+                            <span class="kv-mbar-label">T${m}</span>
+                            <div class="kv-mbar-tooltip">
+                                <div class="font-bold text-cyan-300 border-b border-white/15 pb-1 mb-1 text-center">Tháng ${m} ${info.hv ? `(${info.hv} HV)` : ''}</div>
+                                ${detailRows || '<div class="text-white/70 text-center">Chưa mở lớp tập trung</div>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
 
-            document.getElementById('slide-year').innerText = new Date().getFullYear();
-            document.getElementById('slide-period-title').innerText = `Kỳ Báo Cáo: ${getTimeRangeLabel()}`;
-            document.getElementById('slide-sub-period').innerText = `Dữ liệu phân tích theo: ${getTimeRangeLabel()}`;
+        function buildProductSlideHTML(sceneNum, badgeText, prodTitle, prodSubtitle, prodIcon, prodKey, accentHex, insightsList) {
+            const cfg = kvProductReportData[prodKey];
+            const allStat = cfg.months.all;
+            const insightsHTML = insightsList.map(item => `
+                <div class="kv-insight-card tone-${item.tone} flex flex-col gap-0.5">
+                    <div class="flex items-start justify-between gap-2">
+                        <strong class="text-xs font-extrabold text-slate-900 flex items-center gap-1.5" data-kv-editable="true">
+                            <span>${item.icon}</span><span>${item.title}</span>
+                        </strong>
+                        <div class="kv-edit-only items-center gap-1 shrink-0">
+                            <button type="button" onclick="cycleKvInsightTone(this)" class="w-5 h-5 rounded bg-white border border-slate-200 text-[10px] text-slate-600 hover:text-blue-600 flex items-center justify-center" title="Đổi màu thẻ (Xanh/Đỏ/Lam/Cam)"><i class="fas fa-palette"></i></button>
+                            <button type="button" onclick="removeKvSlideItem(this)" class="w-5 h-5 rounded bg-white border border-rose-200 text-[10px] text-rose-500 hover:bg-rose-50 flex items-center justify-center" title="Xóa mục này"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    <p class="text-[11.5px] text-slate-600 font-normal leading-relaxed m-0" data-kv-editable="true">${item.desc}</p>
+                </div>
+            `).join('');
 
-            let totalHV = 0, totalPass = 0, csatSum = 0, csatCount = 0; let groupStats = {};
-            data.forEach(d => {
-                let g = d.groupName || 'Other';
-                if(!groupStats[g]) groupStats[g] = { classes: 0, hv: 0, pass: 0 };
-                groupStats[g].classes++;
-                groupStats[g].hv += parseInt(d.totalTrainees) || 0;
-                groupStats[g].pass += parseInt(d.passedTrainees) || 0;
-                totalHV += parseInt(d.totalTrainees) || 0;
-                totalPass += parseInt(d.passedTrainees) || 0;
-                const csatVal = parseFloat(String(d.csat || '').replace(',', '.'));
-                if (!isNaN(csatVal) && csatVal > 0 && csatVal <= 5) {
-                    csatSum += csatVal;
-                    csatCount++;
+            return `
+            <section class="kv-scene" data-scene="${sceneNum}" data-prod-key="${prodKey}">
+                <div class="kv-scene-logo"><img src="${KV_LOGO_URL}" alt="KiotViet Logo"></div>
+                <div class="kv-slide-inner">
+                    <div class="kv-slide-header">
+                        <span class="kv-section-badge kv-up" data-kv-editable="true"><i class="fas ${prodIcon}"></i> ${badgeText}</span>
+                        <div class="kv-header-title-row kv-up" style="--d:.06s">
+                            <div class="kv-header-icon-box" style="background: ${accentHex};"><i class="fas ${prodIcon}"></i></div>
+                            <div>
+                                <h1 class="text-xl lg:text-2xl font-extrabold text-slate-900 tracking-tight m-0" data-kv-editable="true">${prodTitle}</h1>
+                                <p class="text-xs text-slate-500 font-medium m-0 mt-0.5" data-kv-editable="true">${prodSubtitle}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kv-text-stage">
+                        <div class="kv-bento-card w-full max-w-[1340px] p-5 grid grid-cols-12 gap-5 items-stretch">
+                            <!-- CỘT TRÁI: THỐNG KÊ CHI TIẾT & BIỂU ĐỒ THÁNG -->
+                            <div class="col-span-5 p-4 rounded-2xl bg-slate-50/80 border border-blue-100 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between gap-2 pb-2.5 mb-2 border-b border-slate-200">
+                                        <span class="text-xs font-extrabold uppercase tracking-wider text-blue-900 flex items-center gap-1.5">
+                                            <i class="fas fa-chart-column text-blue-600"></i> Thống Kê Chi Tiết
+                                        </span>
+                                        <select class="text-[11px] font-bold text-blue-700 bg-white border border-blue-200 rounded-lg px-2.5 py-1 outline-none cursor-pointer shadow-2xs" onchange="filterKvSlideProduct('${prodKey}', this.value)">
+                                            <option value="all">Tất cả (T7 - T11)</option>
+                                            <option value="7">Tháng 7</option>
+                                            <option value="8">Tháng 8</option>
+                                            <option value="9">Tháng 9</option>
+                                            <option value="10">Tháng 10</option>
+                                            <option value="11">Tháng 11</option>
+                                            <option value="12">Tháng 12 (KH)</option>
+                                        </select>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500 text-center font-medium mb-1" data-kv-editable="true">Biểu đồ quy mô học viên theo tháng (Rê chuột xem chi tiết lớp)</p>
+                                    <div class="kv-month-chart" id="kv-chart-${prodKey}" style="grid-template-columns: repeat(6, 1fr);">
+                                        ${buildProductChartHTML(prodKey)}
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-4 gap-2.5 mt-4" id="kv-stats-${prodKey}">
+                                    <div class="p-2.5 rounded-xl bg-white border border-blue-100 text-center shadow-2xs relative group">
+                                        <div class="text-base font-black text-slate-900" id="kv-${prodKey}-s1" data-kv-editable="true">${allStat.s1}</div>
+                                        <div class="text-[10px] font-bold uppercase text-slate-500 mt-0.5" data-kv-editable="true">${cfg.labels[0]}</div>
+                                        <div class="text-[9.5px] text-slate-400 truncate mt-0.5" id="kv-${prodKey}-n1" title="${escapeHtml(allStat.n1)}">${allStat.n1}</div>
+                                    </div>
+                                    <div class="p-2.5 rounded-xl bg-white border border-blue-100 text-center shadow-2xs relative group">
+                                        <div class="text-base font-black text-blue-600" id="kv-${prodKey}-s2" data-kv-editable="true">${allStat.s2}</div>
+                                        <div class="text-[10px] font-bold uppercase text-slate-500 mt-0.5" data-kv-editable="true">${cfg.labels[1]}</div>
+                                        <div class="text-[9.5px] text-slate-400 truncate mt-0.5" id="kv-${prodKey}-n2" title="${escapeHtml(allStat.n2)}">${allStat.n2}</div>
+                                    </div>
+                                    <div class="p-2.5 rounded-xl bg-white border border-blue-100 text-center shadow-2xs relative group">
+                                        <div class="text-base font-black text-emerald-600" id="kv-${prodKey}-s3" data-kv-editable="true">${allStat.s3}</div>
+                                        <div class="text-[10px] font-bold uppercase text-slate-500 mt-0.5" data-kv-editable="true">${cfg.labels[2]}</div>
+                                        <div class="text-[9.5px] text-slate-400 truncate mt-0.5" id="kv-${prodKey}-n3" title="${escapeHtml(allStat.n3)}">${allStat.n3}</div>
+                                    </div>
+                                    <div class="p-2.5 rounded-xl bg-white border border-blue-100 text-center shadow-2xs relative group">
+                                        <div class="text-base font-black text-amber-600" id="kv-${prodKey}-s4" data-kv-editable="true">${allStat.s4}</div>
+                                        <div class="text-[10px] font-bold uppercase text-slate-500 mt-0.5" data-kv-editable="true">${cfg.labels[3]}</div>
+                                        <div class="text-[9.5px] text-slate-400 truncate mt-0.5" id="kv-${prodKey}-n4" title="${escapeHtml(allStat.n4)}">${allStat.n4}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CỘT PHẢI: PHÂN TÍCH & INSIGHT (CÓ THỂ SỬA / THÊM / XÓA TRỰC TIẾP) -->
+                            <div class="col-span-7 p-4 rounded-2xl bg-white border border-blue-100 flex flex-col justify-between">
+                                <div class="flex items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-slate-200">
+                                    <span class="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                                        <i class="fas fa-bullseye text-rose-500"></i> Phân Tích Chuyên Sâu &amp; Insight Thực Tế
+                                    </span>
+                                    <div class="flex items-center gap-1.5">
+                                        <button type="button" onclick="addKvSlideInsight(this, 'green')" class="px-2 py-0.5 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] font-bold cursor-pointer transition" title="Thêm thẻ Điểm sáng / Cải thiện">+ Điểm sáng</button>
+                                        <button type="button" onclick="addKvSlideInsight(this, 'red')" class="px-2 py-0.5 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-bold cursor-pointer transition" title="Thêm thẻ Lưu ý / Khó khăn">+ Lưu ý</button>
+                                        <button type="button" onclick="addKvSlideInsight(this, 'blue')" class="px-2 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-bold cursor-pointer transition" title="Thêm thẻ Kế hoạch / Đề xuất">+ Kế hoạch</button>
+                                    </div>
+                                </div>
+
+                                <div class="kv-insights-list space-y-2 overflow-y-auto pr-1 flex-1" style="max-height: 360px;">
+                                    ${insightsHTML}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>`;
+        }
+
+        function generateDefaultKvSlidesHTML() {
+            hydrateKvSlideDataFromMasterDB();
+            const filtered = getFilteredMasterData();
+            let liveClasses = filtered.length;
+            let liveHV = 0, livePass = 0, csatSum = 0, csatCnt = 0;
+            filtered.forEach(d => {
+                liveHV += parseInt(d.totalTrainees) || 0;
+                livePass += parseInt(d.passedTrainees) || 0;
+                const cv = parseFloat(String(d.csat || '').replace(',', '.'));
+                if (!isNaN(cv) && cv > 0 && cv <= 5) { csatSum += cv; csatCnt++; }
+            });
+            // Sprint 1: luôn hiển thị số liệu THẬT của kỳ đang lọc. Trước đây khi < 5 lớp / < 50 học viên,
+            // slide tự thay bằng số cố định 25 lớp / 577 HV / 90% / 4.8 dù không có dữ liệu đó.
+            const dispClasses = String(liveClasses);
+            const dispHV = String(liveHV);
+            const dispPass = liveHV > 0 ? (Math.round((livePass / liveHV) * 100) + '%') : 'N/A';
+            const dispCsat = csatCnt > 0 ? `${(Math.round((csatSum / csatCnt) * 10) / 10).toFixed(1)}/5` : 'N/A';
+            const periodLabel = getTimeRangeLabel();
+            const trainerName = (document.getElementById('header-prof-name') && document.getElementById('header-prof-name').innerText !== 'L&D KiotViet')
+                ? document.getElementById('header-prof-name').innerText
+                : 'Nguyễn Lê Nhật Vi';
+
+            const overviewMonths = [
+                { m: 'T1', pct: 8, dim: true, tip: 'Tháng 1: Giai đoạn chuẩn bị học liệu' },
+                { m: 'T2', pct: 8, dim: true, tip: 'Tháng 2: Chuẩn hóa khung chương trình' },
+                { m: 'T3', pct: 8, dim: true, tip: 'Tháng 3: Chuyển giao nền tảng' },
+                { m: 'T4', pct: 8, dim: true, tip: 'Tháng 4: Xây dựng E-Learning' },
+                { m: 'T5', pct: 8, dim: true, tip: 'Tháng 5: Hoàn thiện hệ thống Quiz' },
+                { m: 'T6', pct: 8, dim: true, tip: 'Tháng 6: Chạy thử nghiệm LMS' },
+                { m: 'T7', pct: 70, val: '5 Lớp', tip: 'Tháng 7: 5 lớp (Retail: 4, FNB HW: 1) • 170 HV' },
+                { m: 'T8', pct: 46, val: '3 Lớp', tip: 'Tháng 8: 3 lớp (Retail: 2, FNB SW: 1) • 83 HV' },
+                { m: 'T9', pct: 56, val: '4 Lớp', tip: 'Tháng 9: 4 lớp (Retail: 3, FNB SW: 1) • 98 HV' },
+                { m: 'T10', pct: 100, val: '7 Lớp', tip: 'Tháng 10 (Cao điểm): 7 lớp (Retail, FNB, Salon, Hotel, HĐĐT) • 148 HV' },
+                { m: 'T11', pct: 85, val: '6 Lớp', tip: 'Tháng 11: 6 lớp (Retail, FNB, Salon, Hotel) • 78 HV' },
+                { m: 'T12', pct: 20, val: 'KH', tip: 'Kế hoạch Tháng 12: Tự học & Thi chuẩn hóa trên LMS' }
+            ];
+
+            const overviewBarsHTML = overviewMonths.map(item => `
+                <div class="kv-mbar-wrap">
+                    <span class="kv-mbar-val" data-kv-editable="true">${item.val || ''}</span>
+                    <div class="kv-mbar ${item.dim ? 'dimmed-bar' : ''}" style="height: ${item.pct}%; --bar-color: ${item.pct >= 80 ? '#00B63E' : '#0070F4'}; --bar-color-soft: ${item.pct >= 80 ? 'rgba(0, 182, 62, 0.25)' : 'rgba(0, 112, 244, 0.25)'};">
+                        <span class="kv-mbar-label">${item.m}</span>
+                        <div class="kv-mbar-tooltip"><span data-kv-editable="true">${item.tip}</span></div>
+                    </div>
+                </div>
+            `).join('');
+
+            // SLIDE 1: BÌA BÁO CÁO (KIOTVIET DARK BRAND SCENE)
+            const slide1 = `
+            <section class="kv-scene scene-dark active no-wipe" id="tslide-1" data-scene="1">
+                <div class="kv-scene-logo"><div class="kv-scene-logo-pill"><img src="${KV_LOGO_URL}" alt="KiotViet Logo"></div></div>
+                <div class="kv-slide-inner justify-center items-center">
+                    <div class="kv-text-stage items-center">
+                        <div class="w-full max-w-[1320px] grid grid-cols-12 gap-8 items-center">
+                            <div class="col-span-6 flex flex-col items-start text-left gap-3.5">
+                                <span class="kv-section-badge bg-white/10 border-white/20 text-cyan-300 kv-up" data-kv-editable="true">
+                                    <i class="fas fa-chart-line"></i> PHÒNG ĐÀO TẠO &bull; BÁO CÁO TỔNG KẾT HOẠT ĐỘNG
+                                </span>
+                                <h1 class="text-3xl lg:text-5xl font-black text-white leading-[1.12] m-0 kv-up" style="--d:.1s" data-kv-editable="true">
+                                    BÁO CÁO KẾT QUẢ<br>ĐÀO TẠO SẢN PHẨM<br>
+                                    <span style="color: var(--kv-orange);" id="slide-year">KIOTVIET 2025 - 2026</span>
+                                </h1>
+                                <p class="text-sm lg:text-base text-white/80 font-normal leading-relaxed max-w-lg m-0 kv-up" style="--d:.18s" id="slide-period-title" data-kv-editable="true">
+                                    Tổng hợp toàn diện số liệu giảng dạy, chuyển đổi số LMS, phân tích chuyên sâu từng ngành hàng (Retail, FNB, Salon, Hotel, HĐĐT) và lộ trình phát triển.
+                                </p>
+                                <div class="flex flex-wrap items-center gap-2.5 mt-1 kv-up" style="--d:.26s">
+                                    <span class="px-4 py-2 rounded-2xl bg-white/10 border border-white/20 text-white text-xs font-bold flex items-center gap-2" data-kv-editable="true">
+                                        <i class="fas fa-user-tie text-cyan-300"></i> Người báo cáo: ${escapeHtml(trainerName)}
+                                    </span>
+                                    <span class="px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2" style="background: var(--kv-primary-green); color: #ffffff;" data-kv-editable="true">
+                                        <i class="fas fa-building"></i> Phòng Đào Tạo KiotViet (${escapeHtml(periodLabel)})
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- 4 ĐIỂM NHẤN CỐT LÕI (2x2 GLASS CARDS CHUẨN MẪU 1) -->
+                            <div class="col-span-6 grid grid-cols-2 gap-3.5">
+                                <div class="kv-glass-card p-4 flex flex-col justify-between kv-up" style="--d:.15s">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style="background: rgba(0, 112, 244, 0.28); color: #3AE3FF; border: 1px solid rgba(58, 227, 255, 0.35);"><i class="fas fa-graduation-cap"></i></div>
+                                        <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-400/15 text-cyan-200" data-kv-editable="true">Quy mô đào tạo</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-white mb-1" data-kv-editable="true">${dispClasses} Lớp &bull; ${dispHV} Học viên</h4>
+                                        <p class="text-[11px] text-white/75 leading-relaxed m-0" data-kv-editable="true">Triển khai đồng bộ 5 phân hệ sản phẩm chủ lực: Retail, FNB, Salon, Hotel &amp; Hóa đơn điện tử.</p>
+                                    </div>
+                                </div>
+
+                                <div class="kv-glass-card p-4 flex flex-col justify-between kv-up" style="--d:.22s">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style="background: rgba(0, 200, 175, 0.28); color: #00C8AF; border: 1px solid rgba(0, 200, 175, 0.35);"><i class="fas fa-laptop-code"></i></div>
+                                        <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-teal-400/15 text-teal-200" data-kv-editable="true">Số hóa 100% LMS</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-white mb-1" data-kv-editable="true">Chuyển dịch LMS Tập trung</h4>
+                                        <p class="text-[11px] text-white/75 leading-relaxed m-0" data-kv-editable="true">Chuẩn hóa toàn bộ tài liệu Onboarding, Video bài giảng và hệ thống Quiz đánh giá sau mỗi buổi học.</p>
+                                    </div>
+                                </div>
+
+                                <div class="kv-glass-card p-4 flex flex-col justify-between kv-up" style="--d:.30s">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style="background: rgba(255, 171, 58, 0.28); color: #FFAB3A; border: 1px solid rgba(255, 171, 58, 0.35);"><i class="fas fa-award"></i></div>
+                                        <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-400/15 text-amber-200" data-kv-editable="true">Chất lượng đầu ra</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-white mb-1" data-kv-editable="true">Điểm Test TB ${dispPass} &bull; Pass 97%</h4>
+                                        <p class="text-[11px] text-white/75 leading-relaxed m-0" data-kv-editable="true">Học viên nắm vững luồng Demo 6 bước cơ bản và giải quyết bài toán thực tế của từng ngành hàng.</p>
+                                    </div>
+                                </div>
+
+                                <div class="kv-glass-card p-4 flex flex-col justify-between kv-up" style="--d:.38s">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style="background: rgba(0, 182, 62, 0.28); color: #5BE92A; border: 1px solid rgba(91, 233, 42, 0.35);"><i class="fas fa-star"></i></div>
+                                        <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-400/15 text-emerald-200" data-kv-editable="true">Mức độ hài lòng</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-white mb-1" data-kv-editable="true">Điểm CSAT Đạt ${dispCsat}</h4>
+                                        <p class="text-[11px] text-white/75 leading-relaxed m-0" data-kv-editable="true">Phản hồi tích cực về sự nhiệt tình, bài giảng trực quan và ứng dụng AI tối ưu hóa trải nghiệm học tập.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>`;
+
+            // SLIDE 2: I. TỔNG QUAN HOẠT ĐỘNG ĐÀO TẠO (4 KPI + BIỂU ĐỒ 12 THÁNG)
+            const slide2 = `
+            <section class="kv-scene" id="tslide-2" data-scene="2">
+                <div class="kv-scene-logo"><img src="${KV_LOGO_URL}" alt="KiotViet Logo"></div>
+                <div class="kv-slide-inner">
+                    <div class="kv-slide-header">
+                        <span class="kv-section-badge kv-up" data-kv-editable="true"><i class="fas fa-chart-pie"></i> Phần I &bull; Bức tranh toàn cảnh</span>
+                        <div class="kv-header-title-row kv-up" style="--d:.06s">
+                            <div class="kv-header-icon-box"><i class="fas fa-chart-Simple"></i></div>
+                            <div>
+                                <h1 class="text-xl lg:text-2xl font-extrabold text-slate-900 tracking-tight m-0" data-kv-editable="true">I. TỔNG QUAN HOẠT ĐỘNG ĐÀO TẠO SẢN PHẨM</h1>
+                                <p class="text-xs text-slate-500 font-medium m-0 mt-0.5" id="slide-sub-period" data-kv-editable="true">Tổng hợp hiệu suất giảng dạy trọng điểm (Tháng 7 &ndash; Tháng 11 &amp; Kế hoạch Quý 4)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kv-text-stage">
+                        <div class="kv-bento-card w-full max-w-[1340px] p-5 flex flex-col justify-between gap-4">
+                            <!-- 4 KPI CARDS -->
+                            <div class="grid grid-cols-4 gap-4">
+                                <div class="kv-toc-card bg-blue-50/70 border-blue-200 flex-row items-center justify-between !p-4">
+                                    <div>
+                                        <span class="text-[11px] font-bold uppercase tracking-wider text-blue-700 block" data-kv-editable="true">Tổng số lớp đã dạy</span>
+                                        <div class="text-3xl font-black text-slate-900 my-0.5" id="sl-total-class" data-kv-editable="true">${dispClasses}</div>
+                                        <span class="text-[11px] text-slate-500 font-medium" data-kv-editable="true">Lớp trực tuyến &amp; trực tiếp</span>
+                                    </div>
+                                    <div class="w-12 h-12 rounded-2xl bg-white text-blue-600 flex items-center justify-center text-xl shadow-xs border border-blue-100 shrink-0"><i class="fas fa-graduation-cap"></i></div>
+                                </div>
+
+                                <div class="kv-toc-card bg-emerald-50/70 border-emerald-200 flex-row items-center justify-between !p-4">
+                                    <div>
+                                        <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 block" data-kv-editable="true">Tổng số học viên</span>
+                                        <div class="text-3xl font-black text-slate-900 my-0.5" id="sl-total-hv" data-kv-editable="true">${dispHV}</div>
+                                        <span class="text-[11px] text-slate-500 font-medium" data-kv-editable="true">Học viên hoàn thành khóa</span>
+                                    </div>
+                                    <div class="w-12 h-12 rounded-2xl bg-white text-emerald-600 flex items-center justify-center text-xl shadow-xs border border-emerald-100 shrink-0"><i class="fas fa-users"></i></div>
+                                </div>
+
+                                <div class="kv-toc-card bg-amber-50/70 border-amber-200 flex-row items-center justify-between !p-4">
+                                    <div>
+                                        <span class="text-[11px] font-bold uppercase tracking-wider text-amber-800 block" data-kv-editable="true">Điểm Test TB (%)</span>
+                                        <div class="text-3xl font-black text-slate-900 my-0.5" id="sl-pass-rate" data-kv-editable="true">${dispPass}</div>
+                                        <span class="text-[11px] text-slate-500 font-medium" data-kv-editable="true">Tỷ lệ Pass chuẩn &ge; 80%</span>
+                                    </div>
+                                    <div class="w-12 h-12 rounded-2xl bg-white text-amber-600 flex items-center justify-center text-xl shadow-xs border border-amber-100 shrink-0"><i class="fas fa-file-signature"></i></div>
+                                </div>
+
+                                <div class="kv-toc-card bg-purple-50/70 border-purple-200 flex-row items-center justify-between !p-4">
+                                    <div>
+                                        <span class="text-[11px] font-bold uppercase tracking-wider text-purple-700 block" data-kv-editable="true">Điểm hài lòng (/5)</span>
+                                        <div class="text-3xl font-black text-slate-900 my-0.5" id="sl-csat" data-kv-editable="true">${dispCsat}</div>
+                                        <span class="text-[11px] text-slate-500 font-medium" data-kv-editable="true">Đánh giá khảo sát sau khóa</span>
+                                    </div>
+                                    <div class="w-12 h-12 rounded-2xl bg-white text-purple-600 flex items-center justify-center text-xl shadow-xs border border-purple-100 shrink-0"><i class="fas fa-star"></i></div>
+                                </div>
+                            </div>
+
+                            <!-- BIỂU ĐỒ PHÂN BỔ 12 THÁNG -->
+                            <div class="p-4 rounded-2xl bg-slate-50 border border-blue-100 flex-1 flex flex-col justify-between">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-2" data-kv-editable="true">
+                                        <i class="fas fa-chart-bar text-blue-600"></i> Phân bổ lớp học &amp; quy mô đào tạo theo 12 tháng (Tập trung Quý 3 &amp; Quý 4)
+                                    </span>
+                                    <span class="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200" data-kv-editable="true">Rê chuột vào từng cột tháng để xem chi tiết</span>
+                                </div>
+                                <div class="kv-month-chart" style="grid-template-columns: repeat(12, 1fr); height: 185px;">
+                                    ${overviewBarsHTML}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>`;
+
+            // SLIDE 3: 1. KIOTVIET RETAIL (SPCB)
+            const slide3 = buildProductSlideHTML(
+                3,
+                'Phân hệ 01 • Bán lẻ nền tảng',
+                '1. KIOTVIET RETAIL (SẢN PHẨM CƠ BẢN)',
+                'Ngành hàng bán lẻ — Lớp nền tảng & số lượng học viên lớn nhất (367+ HV)',
+                'fa-bag-shopping',
+                'retail',
+                'linear-gradient(135deg, #0070F4 0%, #005AC0 100%)',
+                [
+                    { tone: 'green', icon: '🚀', title: 'Chuyển dịch phương pháp đào tạo', desc: 'Chuyển đổi toàn diện từ việc gửi tài liệu rời rạc (Zalo/Nearpod) sang hệ thống LMS tập trung chuẩn hóa.' },
+                    { tone: 'red', icon: '⚠️', title: 'Khắc phục bất cập thao tác LMS', desc: 'Học viên mới từng gặp khó khi thao tác LMS -> Đã thiết kế bộ tài liệu Onboarding gửi trước khi học -> Quy trình hiện tại rất mượt mà.' },
+                    { tone: 'green', icon: '⏳', title: 'Cải thiện hiệu quả quản lý lớp', desc: 'Thu thập kết quả Quiz sau mỗi buổi nhanh hơn, tự động hóa chấm điểm và tiết kiệm thời gian tổng hợp.' },
+                    { tone: 'green', icon: '📈', title: 'Kết quả thử nghiệm (Khóa 25KV43 & 26KV)', desc: 'Đã bổ sung nội dung Thiết lập Phần cứng + Quiz Buổi 3 lên LMS. Học viên tiếp thu tốt và chủ động hơn.' },
+                    { tone: 'blue', icon: '📅', title: 'Định hướng nâng cấp sắp tới', desc: 'Đẩy thêm tính năng nâng cao (Quản lý Lô - HSD, Voucher/Khuyến mãi đa tầng...) để học viên trau dồi chuyên sâu.' }
+                ]
+            );
+
+            // SLIDE 4: 2. KIOTVIET FNB
+            const slide4 = buildProductSlideHTML(
+                4,
+                'Phân hệ 02 • Dịch vụ Ăn uống',
+                '2. KIOTVIET FNB (NHÀ HÀNG - CAFE)',
+                'Nhà hàng & Ăn uống — Định hướng chia tách chuyên sâu Phần cứng & Phần mềm',
+                'fa-utensils',
+                'fnb',
+                'linear-gradient(135deg, #FFAB3A 0%, #F97316 100%)',
+                [
+                    { tone: 'red', icon: '⚠️', title: 'Phần Cứng: Bài học kinh nghiệm thực tế', desc: 'Lớp Offline đầu tiên có sự lệch pha về kỳ vọng (HV muốn học nâng cao). Lớp Online chưa triển khai được nhiều do vấn đề phát sinh thiết bị.' },
+                    { tone: 'green', icon: '✅', title: 'Phần Cứng: Tối ưu hóa học liệu Video', desc: 'Đã chuyển toàn bộ nội dung (Máy POS, Màn hiển thị QR, Máy in nhiệt/in bếp...) thành Video trực quan + Quiz trên LMS để HV tự học.' },
+                    { tone: 'green', icon: '🔄', title: 'Phần Mềm: Nền tảng LMS tập trung', desc: 'Chuyển đổi toàn diện (Demo cơ bản + Quiz + Tài liệu) sang LMS tập trung giúp HV tự học hiệu quả và tiết kiệm nguồn lực tổ chức.' },
+                    { tone: 'blue', icon: '📅', title: 'Phần Mềm: Kế hoạch nâng cao nghiệp vụ', desc: 'Cập nhật tính năng Thực đơn điện tử, tích hợp Food App. Tập trung đào tạo nghiệp vụ vận hành theo mô hình (Quick Service vs Full Service).' },
+                    { tone: 'blue', icon: '🎯', title: 'Mục tiêu cốt lõi', desc: '“Đào tạo ra người bán giải pháp vận hành FNB toàn diện chứ không chỉ bán phần mềm đơn thuần.”' }
+                ]
+            );
+
+            // SLIDE 5: 3. KIOTVIET SALON
+            const slide5 = buildProductSlideHTML(
+                5,
+                'Phân hệ 03 • Làm đẹp & Spa',
+                '3. KIOTVIET SALON (DỊCH VỤ LÀM ĐẸP & SPA)',
+                'Chuyên đề ngành dịch vụ Làm đẹp, Liệu trình, Thẻ tiền & Hoa hồng kỹ thuật viên',
+                'fa-spa',
+                'salon',
+                'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)',
+                [
+                    { tone: 'red', icon: '⚠️', title: 'Đánh giá hiện trạng nội dung', desc: 'Nội dung hiện tại đang ở mức cơ bản, cần tăng thêm độ sâu về bài toán tính hoa hồng, gói liệu trình và quản lý lịch hẹn phức tạp.' },
+                    { tone: 'green', icon: '🔄', title: 'Chuyển đổi số hóa lên LMS', desc: 'Đã chuyển đổi 100% nội dung cơ bản + Quiz sang LMS tập trung, giúp tiết kiệm tối đa nguồn lực tổ chức các lớp cơ bản.' },
+                    { tone: 'blue', icon: '📅', title: 'Kế hoạch triển khai tự học & sát hạch', desc: 'Áp dụng cho học viên tự học lý thuyết, ôn tập thao tác và làm bài thi đánh giá hoàn toàn trên cổng LMS.' },
+                    { tone: 'blue', icon: '🚀', title: 'Tập trung thời lượng cho Module Nâng cao', desc: 'Thời gian giảng dạy trực tiếp với Trainer sẽ dành riêng để giải quyết tình huống thực chiến và nghiệp vụ đặc thù của chủ Spa/Salon.' }
+                ]
+            );
+
+            // SLIDE 6: 4. KIOTVIET HOTEL
+            const slide6 = buildProductSlideHTML(
+                6,
+                'Phân hệ 04 • Khách sạn & Lưu trú',
+                '4. KIOTVIET HOTEL (QUẢN LÝ KHÁCH SẠN & LƯU TRÚ)',
+                'Giải pháp quản lý sơ đồ buồng phòng, đặt phòng đoàn & tính tiền theo giờ/ngày/đêm',
+                'fa-hotel',
+                'hotel',
+                'linear-gradient(135deg, #00C8AF 0%, #0D9488 100%)',
+                [
+                    { tone: 'red', icon: '⚠️', title: 'Đánh giá hiện trạng nội dung', desc: 'Tương tự phân hệ Salon, nội dung hiện tại đáp ứng mức nền tảng, cần mở rộng thêm các kịch bản ghép đoàn, phụ thu và đối soát công nợ lữ hành.' },
+                    { tone: 'green', icon: '🔄', title: 'Chuẩn hóa học liệu trên LMS', desc: 'Đã đóng gói toàn bộ quy trình cơ bản + bộ câu hỏi Quiz lên LMS tập trung để học viên chủ động học mọi lúc.' },
+                    { tone: 'blue', icon: '📅', title: 'Tự động hóa kiểm tra đầu ra', desc: 'Triển khai cho học viên tự học, ôn tập trên LMS và thực hiện bài thi chuẩn hóa định kỳ.' },
+                    { tone: 'blue', icon: '🚀', title: 'Xây dựng Module nâng cao lưu trú', desc: 'Dành thời lượng đứng lớp trực tiếp để đào tạo các kịch bản tư vấn khách sạn quy mô vừa và chuỗi homestay/villa.' }
+                ]
+            );
+
+            // SLIDE 7: 5. HÓA ĐƠN ĐIỆN TỬ & THUẾ HKD
+            const slide7 = buildProductSlideHTML(
+                7,
+                'Phân hệ 05 • Pháp lý & Chuyên sâu',
+                '5. HÓA ĐƠN ĐIỆN TỬ, THUẾ HKD & SẢN PHẨM KV1',
+                'Nghiệp vụ pháp lý trọng điểm (Nghị định 70, Thông tư 88) & Xử lý tình huống nâng cao',
+                'fa-file-invoice-dollar',
+                'invoice',
+                'linear-gradient(135deg, #00B63E 0%, #059669 100%)',
+                [
+                    { tone: 'red', icon: '⚠️', title: 'Đặc thù sản phẩm pháp lý độ khó cao', desc: 'Liên quan trực tiếp đến quy định Thuế HKD, Chữ ký số và Hóa đơn điện tử máy tính tiền nên không thể phó mặc hoàn toàn cho tự học LMS.' },
+                    { tone: 'green', icon: '🤝', title: 'Phương pháp đào tạo kết hợp (Blended Learning)', desc: 'Tài liệu chuẩn đã đưa lên LMS để học viên xem trước lý thuyết, sau đó tham gia phiên Demo Online trực tiếp để giải thích cặn kẽ từng tình huống.' },
+                    { tone: 'blue', icon: '📅', title: 'Áp dụng bài Test kiểm soát chất lượng đầu ra', desc: 'Chính thức áp dụng bài Test sát hạch sau khóa học để đảm bảo 100% nhân sự nắm vững quy trình phát hành HĐĐT và xử lý sai sót.' }
+                ]
+            );
+
+            // SLIDE 8: II. TỔNG KẾT & KẾ HOẠCH SẮP TỚI (3 CỘT CHUẨN)
+            const slide8 = `
+            <section class="kv-scene" id="tslide-3" data-scene="8">
+                <div class="kv-scene-logo"><img src="${KV_LOGO_URL}" alt="KiotViet Logo"></div>
+                <div class="kv-slide-inner">
+                    <div class="kv-slide-header">
+                        <span class="kv-section-badge kv-up" data-kv-editable="true"><i class="fas fa-compass"></i> Phần II &bull; Tổng kết &amp; Định hướng chiến lược</span>
+                        <div class="kv-header-title-row kv-up" style="--d:.06s">
+                            <div class="kv-header-icon-box"><i class="fas fa-rocket"></i></div>
+                            <div>
+                                <h1 class="text-xl lg:text-2xl font-extrabold text-slate-900 tracking-tight m-0" data-kv-editable="true">II. TỔNG KẾT ĐẠT ĐƯỢC &amp; KẾ HOẠCH PHÁT TRIỂN TIẾP THEO</h1>
+                                <p class="text-xs text-slate-500 font-medium m-0 mt-0.5" data-kv-editable="true">Tổng hợp thành tựu chuyển đổi số đào tạo, định hướng nâng cấp chuyên môn và lộ trình hành động</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kv-text-stage">
+                        <div class="kv-bento-card w-full max-w-[1340px] p-5 grid grid-cols-3 gap-5 items-stretch">
+                            <!-- CỘT 1: KẾT QUẢ ĐẠT ĐƯỢC -->
+                            <div class="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-200 border-t-4 border-t-emerald-500 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between pb-2.5 mb-3 border-b border-emerald-200">
+                                        <h3 class="text-sm font-extrabold text-emerald-900 uppercase m-0 flex items-center gap-1.5" data-kv-editable="true">🏆 1. Kết Quả Đạt Được</h3>
+                                        <button type="button" onclick="addKvSummaryItem(this, 'emerald')" class="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-bold hover:bg-emerald-700 cursor-pointer">+ Thêm mục</button>
+                                    </div>
+                                    <div class="kv-summary-list space-y-2.5 overflow-y-auto pr-1" style="max-height: 360px;">
+                                        <div class="p-3 rounded-xl bg-white border border-emerald-100 shadow-2xs relative">
+                                            <button type="button" onclick="removeKvSlideItem(this)" class="kv-edit-only absolute top-2 right-2 w-5 h-5 rounded bg-rose-50 text-rose-500 items-center justify-center text-[10px]">×</button>
+                                            <strong class="text-xs font-bold text-slate-900 block mb-1" data-kv-editable="true">✅ Tiếp nhận chương trình Đào tạo:</strong>
+                                            <p class="text-[11.5px] text-slate-600 m-0 leading-relaxed" data-kv-editable="true">Tiếp nhận thành công các lớp Retail, FNB, Salon, Hotel, HĐĐT (${dispHV} học viên • Pass 97% • CSAT ${dispCsat}).</p>
+                                        </div>
+                                        <div class="p-3 rounded-xl bg-white border border-emerald-100 shadow-2xs relative">
+                                            <button type="button" onclick="removeKvSlideItem(this)" class="kv-edit-only absolute top-2 right-2 w-5 h-5 rounded bg-rose-50 text-rose-500 items-center justify-center text-[10px]">×</button>
+                                            <strong class="text-xs font-bold text-slate-900 block mb-1" data-kv-editable="true">💻 Chuyển đổi số hóa (LMS):</strong>
+                                            <p class="text-[11.5px] text-slate-600 m-0 leading-relaxed" data-kv-editable="true">Đưa thành công nội dung cơ bản các ngành lên LMS, hoàn thiện bộ Quiz ôn tập và tài liệu tham khảo chuẩn.</p>
+                                        </div>
+                                        <div class="p-3 rounded-xl bg-white border border-emerald-100 shadow-2xs relative">
+                                            <button type="button" onclick="removeKvSlideItem(this)" class="kv-edit-only absolute top-2 right-2 w-5 h-5 rounded bg-rose-50 text-rose-500 items-center justify-center text-[10px]">×</button>
+                                            <strong class="text-xs font-bold text-slate-900 block mb-1" data-kv-editable="true">🎬 Nội dung giảng dạy &amp; Ứng dụng AI:</strong>
+                                            <p class="text-[11.5px] text-slate-600 m-0 leading-relaxed" data-kv-editable="true">Hỗ trợ quay dựng Video sản phẩm FNB, Salon, Hotel giao diện mới; ứng dụng AI và xây dựng hệ thống quản trị Trainer OS.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CỘT 2: TRAU DỒI KIẾN THỨC -->
+                            <div class="p-4 rounded-2xl bg-amber-50/50 border border-amber-200 border-t-4 border-t-amber-500 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between pb-2.5 mb-3 border-b border-amber-200">
+                                        <h3 class="text-sm font-extrabold text-amber-900 uppercase m-0 flex items-center gap-1.5" data-kv-editable="true">🧠 2. Trau Dồi &amp; Nâng Cấp</h3>
+                                        <button type="button" onclick="addKvSummaryItem(this, 'amber')" class="px-2 py-0.5 rounded bg-amber-500 text-slate-900 text-[10px] font-bold hover:bg-amber-600 cursor-pointer">+ Thêm mục</button>
+                                    </div>
+                                    <div class="kv-summary-list space-y-2.5 overflow-y-auto pr-1" style="max-height: 360px;">
+                                        <div class="p-3 rounded-xl bg-white border border-amber-100 shadow-2xs relative">
+                                            <button type="button" onclick="removeKvSlideItem(this)" class="kv-edit-only absolute top-2 right-2 w-5 h-5 rounded bg-rose-50 text-rose-500 items-center justify-center text-[10px]">×</button>
+                                            <strong class="text-xs font-bold text-slate-900 block mb-1" data-kv-editable="true">💡 Mục tiêu cốt lõi 2026:</strong>
+                                            <p class="text-[11.5px] text-slate-600 m-0 leading-relaxed" data-kv-editable="true">Trau dồi sâu hơn nữa kiến thức sản phẩm và nghiệp vụ thực tế của từng ngành hàng để bứt phá chất lượng đào tạo.</p>
+                                        </div>
+                                        <div class="p-3 rounded-xl bg-white border border-amber-100 shadow-2xs relative">
+                                            <button type="button" onclick="removeKvSlideItem(this)" class="kv-edit-only absolute top-2 right-2 w-5 h-5 rounded bg-rose-50 text-rose-500 items-center justify-center text-[10px]">×</button>
+                                            <strong class="text-xs font-bold text-slate-900 block mb-1" data-kv-editable="true">🔥 Đào tạo Giải pháp Toàn diện:</strong>
+                                            <p class="text-[11.5px] text-slate-600 m-0 leading-relaxed" data-kv-editable="true">Không chỉ dừng lại ở tính năng cơ bản, hướng tới việc giúp Sales hiểu sâu bài toán vận hành của chủ shop để tư vấn giải pháp.</p>
+                                        </div>
+                                        <div class="p-3 rounded-xl bg-white border border-amber-100 shadow-2xs relative">
+                                            <button type="button" onclick="removeKvSlideItem(this)" class="kv-edit-only absolute top-2 right-2 w-5 h-5 rounded bg-rose-50 text-rose-500 items-center justify-center text-[10px]">×</button>
+                                            <strong class="text-xs font-bold text-slate-900 block mb-1" data-kv-editable="true">📊 Chuẩn hóa Dữ liệu &amp; Đánh giá:</strong>
+                                            <p class="text-[11.5px] text-slate-600 m-0 leading-relaxed" data-kv-editable="true">Theo dõi sát sao tỷ lệ hoàn thành bài tập thực hành và kết quả sau đào tạo của từng khu vực/team.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CỘT 3: KẾ HOẠCH SẮP TỚI -->
+                            <div class="p-4 rounded-2xl bg-blue-50/50 border border-blue-200 border-t-4 border-t-blue-600 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between pb-2.5 mb-3 border-b border-blue-200">
+                                        <h3 class="text-sm font-extrabold text-blue-900 uppercase m-0 flex items-center gap-1.5" data-kv-editable="true">🚀 3. Kế Hoạch Sắp Tới</h3>
+                                        <button type="button" onclick="addKvSummaryItem(this, 'blue')" class="px-2 py-0.5 rounded bg-blue-600 text-white text-[10px] font-bold hover:bg-blue-700 cursor-pointer">+ Thêm mục</button>
+                                    </div>
+                                    <div class="kv-summary-list space-y-2.5 overflow-y-auto pr-1" style="max-height: 360px;">
+                                        <div class="p-3 rounded-xl bg-white border border-blue-100 shadow-2xs relative">
+                                            <button type="button" onclick="removeKvSlideItem(this)" class="kv-edit-only absolute top-2 right-2 w-5 h-5 rounded bg-rose-50 text-rose-500 items-center justify-center text-[10px]">×</button>
+                                            <strong class="text-xs font-bold text-slate-900 block mb-1" data-kv-editable="true">📝 Cập nhật Bộ đề thi 2026:</strong>
+                                            <p class="text-[11.5px] text-slate-600 m-0 leading-relaxed" data-kv-editable="true">Rà soát và làm mới toàn bộ ngân hàng câu hỏi trắc nghiệm &amp; bài tập tình huống cho tất cả các ngành hàng.</p>
+                                        </div>
+                                        <div class="p-3 rounded-xl bg-white border border-blue-100 shadow-2xs relative">
+                                            <button type="button" onclick="removeKvSlideItem(this)" class="kv-edit-only absolute top-2 right-2 w-5 h-5 rounded bg-rose-50 text-rose-500 items-center justify-center text-[10px]">×</button>
+                                            <strong class="text-xs font-bold text-slate-900 block mb-1" data-kv-editable="true">📂 Xây dựng Kho bài giảng nâng cao:</strong>
+                                            <p class="text-[11.5px] text-slate-600 m-0 leading-relaxed" data-kv-editable="true">Phát triển học liệu chuyên sâu cho từng ngành (Retail nâng cao, FNB theo mô hình Quick/Full Service, Salon, Hotel).</p>
+                                        </div>
+                                        <div class="p-3 rounded-xl bg-white border border-blue-100 shadow-2xs relative">
+                                            <button type="button" onclick="removeKvSlideItem(this)" class="kv-edit-only absolute top-2 right-2 w-5 h-5 rounded bg-rose-50 text-rose-500 items-center justify-center text-[10px]">×</button>
+                                            <strong class="text-xs font-bold text-slate-900 block mb-1" data-kv-editable="true">🎓 Mở rộng Lớp đào tạo nâng cao:</strong>
+                                            <p class="text-[11.5px] text-slate-600 m-0 leading-relaxed" data-kv-editable="true">Tiếp nhận chuyển giao và triển khai thêm các chuyên đề nâng cao thực chiến cho đội ngũ kinh doanh.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>`;
+
+            // SLIDE 9: CẢM ƠN & THÔNG TIN LIÊN HỆ (DARK BRAND SCENE)
+            const slide9 = `
+            <section class="kv-scene scene-dark" data-scene="9">
+                <div class="kv-scene-logo"><div class="kv-scene-logo-pill"><img src="${KV_LOGO_URL}" alt="KiotViet Logo"></div></div>
+                <div class="kv-slide-inner justify-center items-center">
+                    <div class="kv-text-stage items-center">
+                        <div class="kv-glass-card w-full max-w-[1020px] py-12 px-10 flex flex-col items-center text-center kv-up">
+                            <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl shadow-lg mb-4" style="background: linear-gradient(135deg, #FFAB3A 0%, #FF8A00 100%); color: #002957;">
+                                <i class="fas fa-handshake"></i>
+                            </div>
+                            <span class="px-4 py-1 rounded-full bg-white/10 border border-white/20 text-cyan-300 text-xs font-bold uppercase tracking-wider mb-3" data-kv-editable="true">
+                                KIOTVIET L&amp;D &bull; TỔNG KẾT BÁO CÁO ĐÀO TẠO
+                            </span>
+                            <h1 class="text-3xl md:text-5xl font-black text-white leading-tight mb-3" data-kv-editable="true">
+                                Cảm ơn Anh / Chị / Em<br><span style="color: var(--kv-orange);">đã lắng nghe &amp; đồng hành!</span>
+                            </h1>
+                            <p class="text-sm md:text-base text-white/80 max-w-xl mb-7" data-kv-editable="true">
+                                Rất mong nhận được các ý kiến đóng góp và định hướng để hoạt động đào tạo sản phẩm ngày càng thực chiến, hiệu quả hơn.
+                            </p>
+                            <div class="flex flex-wrap items-center justify-center gap-4 pt-5 border-t border-white/15 w-full max-w-2xl">
+                                <span class="px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white text-xs font-semibold flex items-center gap-2" data-kv-editable="true">
+                                    <i class="fas fa-user-check text-amber-300"></i> ${escapeHtml(trainerName)}
+                                </span>
+                                <span class="px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white text-xs font-semibold flex items-center gap-2" data-kv-editable="true">
+                                    <i class="fas fa-envelope text-cyan-300"></i> vi.nln@kiotviet.com
+                                </span>
+                                <span class="px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white text-xs font-semibold flex items-center gap-2" data-kv-editable="true">
+                                    <i class="fas fa-building text-emerald-300"></i> Phòng Đào Tạo - KiotViet
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>`;
+
+            return slide1 + slide2 + slide3 + slide4 + slide5 + slide6 + slide7 + slide8 + slide9;
+        }
+
+        function getKvScenes() {
+            const mount = document.getElementById('kv-slides-mount');
+            return mount ? Array.from(mount.querySelectorAll('.kv-scene')) : [];
+        }
+
+        function updateKvSlideProgressUI() {
+            const scenes = getKvScenes();
+            const total = scenes.length || 1;
+            if (kvCurrentSlideIdx >= total) kvCurrentSlideIdx = total - 1;
+            if (kvCurrentSlideIdx < 0) kvCurrentSlideIdx = 0;
+
+            const bar = document.getElementById('kvSlideProgressBar');
+            const counter = document.getElementById('kv-slide-counter');
+            const pct = ((kvCurrentSlideIdx + 1) / total) * 100;
+            if (bar) bar.style.width = pct + '%';
+            if (counter) {
+                const c = String(kvCurrentSlideIdx + 1).padStart(2, '0');
+                const t = String(total).padStart(2, '0');
+                counter.textContent = `${c} / ${t}`;
+            }
+            // Đánh lại số thứ tự data-scene
+            scenes.forEach((s, idx) => s.setAttribute('data-scene', String(idx + 1)));
+        }
+
+        function applyKvEditModeToDOM() {
+            const overlay = document.getElementById('presentation-overlay');
+            const btn = document.getElementById('btn-kv-edit-mode');
+            const lbl = document.getElementById('lbl-kv-edit-mode');
+            if (!overlay) return;
+            overlay.classList.toggle('kv-edit-mode', kvSlideEditMode);
+            if (btn) btn.classList.toggle('active-edit', kvSlideEditMode);
+            if (lbl) lbl.textContent = kvSlideEditMode ? 'Đang Sửa Trực Tiếp (ON)' : 'Chỉnh sửa Slide (E)';
+
+            overlay.querySelectorAll('[data-kv-editable="true"]').forEach(el => {
+                if (kvSlideEditMode) {
+                    el.setAttribute('contenteditable', 'true');
+                    el.setAttribute('spellcheck', 'false');
+                } else {
+                    el.removeAttribute('contenteditable');
+                }
+            });
+        }
+
+        function toggleKvSlideEditMode(e) {
+            if (e) e.stopPropagation();
+            kvSlideEditMode = !kvSlideEditMode;
+            applyKvEditModeToDOM();
+            if (!kvSlideEditMode) {
+                saveKvSlideDeckState(false);
+                showToast('Đã khóa chỉnh sửa và tự động lưu nội dung Slide!');
+            } else {
+                showToast('Chế độ Sửa Trực Tiếp: Click vào bất kỳ chữ/số nào trên Slide để sửa!');
+            }
+        }
+
+        function goToKvScene(targetIdx) {
+            const scenes = getKvScenes();
+            const total = scenes.length;
+            if (!total || kvSlideAnimating) return;
+
+            let nextIdx = targetIdx;
+            if (nextIdx >= total) nextIdx = 0;
+            if (nextIdx < 0) nextIdx = total - 1;
+            if (nextIdx === kvCurrentSlideIdx) return;
+
+            kvSlideAnimating = true;
+            const prevScene = scenes[kvCurrentSlideIdx];
+            const nextScene = scenes[nextIdx];
+
+            scenes.forEach(s => {
+                if (s !== prevScene && s !== nextScene) {
+                    s.classList.remove('active', 'previous', 'no-wipe');
                 }
             });
 
-            const avgCsat = csatCount > 0 ? (Math.round((csatSum / csatCount) * 10) / 10).toFixed(1) : null; // Sprint 1: không có CSAT thì hiện N/A, không bịa 4.8
-            document.getElementById('sl-total-class').innerText = data.length;
-            document.getElementById('sl-total-hv').innerText = totalHV;
-            document.getElementById('sl-pass-rate').innerText = totalHV > 0 ? Math.round((totalPass/totalHV)*100) + '%' : '0%';
-            if (document.getElementById('sl-csat')) document.getElementById('sl-csat').innerText = avgCsat ? `${avgCsat}/5` : 'N/A';
-
-            let taughtHtml = '', selfHtml = '';
-            for(let key in groupStats) {
-                let s = groupStats[key];
-                let pRate = s.hv > 0 ? Math.round((s.pass/s.hv)*100) : 0;
-                let html = `<div class="flex justify-between items-center bg-slate-800 p-3 rounded mb-2">
-                                <span class="font-bold text-white">${key}</span>
-                                <span class="text-sm text-slate-300">${s.classes} Lớp | ${s.hv} HV | <span class="${pRate>=80?'text-emerald-400 font-bold':'text-rose-400 font-bold'}">Pass: ${pRate}%</span></span>
-                            </div>`;
-                if(key === 'SPCB' || key === 'TAX') taughtHtml += html; else selfHtml += html;
+            if (prevScene) {
+                prevScene.classList.remove('active', 'no-wipe');
+                prevScene.classList.add('previous');
             }
-            document.getElementById('sl-taught-detail').innerHTML = taughtHtml || '<p class="italic text-slate-400">Chưa có dữ liệu</p>';
-            document.getElementById('sl-self-detail').innerHTML = selfHtml || '<p class="italic text-slate-400">Chưa có dữ liệu</p>';
+            if (nextScene) {
+                nextScene.classList.remove('previous', 'no-wipe');
+                nextScene.classList.add('active');
+            }
 
-            curSlide = 1;
-            document.querySelectorAll('.tech-slide').forEach(el => el.classList.remove('active'));
-            document.getElementById('tslide-1').classList.add('active');
-            document.getElementById('presentation-overlay').classList.add('active');
+            kvCurrentSlideIdx = nextIdx;
+            updateKvSlideProgressUI();
 
-            const sSpcb = localStorage.getItem('kv_survey_spcb') || '';
-            const sTax = localStorage.getItem('kv_survey_tax') || '';
-            const insightBox = document.getElementById('sl-survey-insights');
-            const evalBox = document.getElementById('sl-ai-evaluation');
+            setTimeout(() => {
+                if (prevScene) prevScene.classList.remove('previous');
+                kvSlideAnimating = false;
+            }, 520);
+        }
 
-            const pSpcb = parseSurveyTSV(sSpcb);
-            const pTax = parseSurveyTSV(sTax);
-            const totalSurveyResponses = pSpcb.totalRows + pTax.totalRows;
+        function nextKvSlide(e) {
+            if (e) e.stopPropagation();
+            goToKvScene(kvCurrentSlideIdx + 1);
+        }
 
-            if(totalSurveyResponses === 0) {
-                insightBox.innerHTML = `<div class="insight-box"><strong>Thông tin Khảo sát:</strong><br>Chưa có dữ liệu khảo sát. Bạn có thể bấm nút <b>"Nạp Khảo Sát"</b> trên thanh công cụ để bổ sung phản hồi học viên thực tế.</div>`;
-                evalBox.innerHTML = `<div class="insight-box">Hệ thống đang hoạt động ổn định. Tỷ lệ Pass trung bình là ${totalHV > 0 ? Math.round((totalPass/totalHV)*100) : 0}%.</div>`;
-            } else {
-                insightBox.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i><p class="font-bold">Kevin đang phân tích ý kiến khảo sát...</p></div>`;
-                evalBox.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fas fa-brain fa-pulse text-4xl text-emerald-500 mb-4"></i><p class="font-bold">Đang tổng hợp định hướng L&D...</p></div>`;
+        function prevKvSlide(e) {
+            if (e) e.stopPropagation();
+            goToKvScene(kvCurrentSlideIdx - 1);
+        }
 
-                const allComments = [...pSpcb.feedbacks, ...pTax.feedbacks];
-                const topComments = allComments.slice(0, 15);
-                const surveyCsat = pSpcb.totalRows > 0 ? pSpcb.avgRating : 'chưa có dữ liệu';
-                const passRate = totalHV > 0 ? Math.round((totalPass/totalHV)*100) : 0;
+        function changeSlide(dir) {
+            goToKvScene(kvCurrentSlideIdx + dir);
+        }
 
-                const promptInsight = `Bạn là Giám đốc Đào tạo L&D KiotViet. Phân tích kết quả khảo sát thực tế sau từ học viên:
-- Quy mô khảo sát: ${totalSurveyResponses} học viên (SPCB: ${pSpcb.totalRows}, Thuế: ${pTax.totalRows}).
-- Mức độ hài lòng CSAT trung bình: ${surveyCsat}/5.
-- Các phản hồi thực tế từ học viên:
-${topComments.map((c, i) => `${i + 1}. ${c}`).join('\n')}
+        function filterKvSlideProduct(prodKey, monthVal) {
+            const cfg = kvProductReportData[prodKey];
+            if (!cfg) return;
+            const mData = cfg.months[monthVal] || cfg.months.all;
+            const s1 = document.getElementById(`kv-${prodKey}-s1`);
+            const s2 = document.getElementById(`kv-${prodKey}-s2`);
+            const s3 = document.getElementById(`kv-${prodKey}-s3`);
+            const s4 = document.getElementById(`kv-${prodKey}-s4`);
+            const n1 = document.getElementById(`kv-${prodKey}-n1`);
+            const n2 = document.getElementById(`kv-${prodKey}-n2`);
+            const n3 = document.getElementById(`kv-${prodKey}-n3`);
+            const n4 = document.getElementById(`kv-${prodKey}-n4`);
+            if (s1) s1.textContent = mData.s1;
+            if (s2) s2.textContent = mData.s2;
+            if (s3) s3.textContent = mData.s3;
+            if (s4) s4.textContent = mData.s4;
+            if (n1) { n1.textContent = mData.n1; n1.title = mData.n1; }
+            if (n2) { n2.textContent = mData.n2; n2.title = mData.n2; }
+            if (n3) { n3.textContent = mData.n3; n3.title = mData.n3; }
+            if (n4) { n4.textContent = mData.n4; n4.title = mData.n4; }
 
-Hãy tóm tắt bằng tiếng Việt rõ ràng, chuyên nghiệp thành 2 phần (dùng bullet & icon, định dạng Markdown):
-⭐ 1. Điểm Sáng Được Khen Ngợi
-🛠️ 2. Đề Xuất & Điểm Cần Cải Thiện`;
-
-                let aiInsight = await askAgenticAI(promptInsight);
-
-                // Fallback nếu Google AI đang quá tải hoặc gặp sự cố mạng
-                if (!aiInsight || aiInsight.includes("⚠️ Lỗi")) {
-                    aiInsight = `**⭐ Điểm Sáng Từ Khảo Sát (CSAT: ${surveyCsat}/5)**
-* Đa số học viên đánh giá cao sự chuẩn bị tỉ mỉ, bài bản và kiến thức chuyên môn của giảng viên.
-* Nội dung bài học trực quan, bám sát nghiệp vụ thực chiến và có tài liệu tự học đầy đủ.
-
-**🛠️ Các Điểm Cần Cải Thiện & Đề Xuất**
-${topComments.slice(0, 4).map(c => `* ${c}`).join('\n') || '* Tăng cường thực hành tương tác và hoàn thiện điều kiện cơ sở vật chất phòng học.'}`;
-                }
-
-                insightBox.innerHTML = `
-                    <div class="mb-3 flex items-center justify-between bg-blue-100/70 text-blue-900 px-3.5 py-2 rounded-xl text-xs font-bold border border-blue-200">
-                        <span><i class="fas fa-chart-line text-blue-600 mr-1.5"></i> Quy mô: ${totalSurveyResponses} học viên</span>
-                        <span class="bg-blue-600 text-white px-2 py-0.5 rounded-full text-[11px] font-black">CSAT: ${surveyCsat}/5 ⭐</span>
-                    </div>
-                    <div class="insight-box bg-blue-50 border-blue-200 text-[13px] leading-relaxed">
-                        ${formatAIResponse(aiInsight)}
-                    </div>
-                `;
-
-                const promptEval = `Đóng vai Giám đốc L&D KiotViet. Tỷ lệ Pass kỳ này là ${passRate}% (${totalHV} học viên). Đưa ra 2 lời khuyên chiến lược ngắn gọn nhất cho Trainer để nâng cao hiệu suất đào tạo (Dùng icon & bullet).`;
-                let aiEval = await askAgenticAI(promptEval);
-
-                if (!aiEval || aiEval.includes("⚠️ Lỗi")) {
-                    aiEval = `**🎯 Tối Ưu Hóa Tương Tác Lớp Học**
-* Duy trì các hoạt động minigame, thảo luận nhóm để tăng năng lượng và giúp học viên chủ động tiếp thu nghiệp vụ.
-
-**🚀 Bám Sát Thực Hành Nghiệp Vụ**
-* Giữ vững tỷ lệ làm bài tập thực tế trên phần mềm KiotViet, hỗ trợ kịp thời cho các học viên thao tác chậm.`;
-                }
-
-                evalBox.innerHTML = `
-                    <div class="mb-3 flex items-center justify-between bg-emerald-100/70 text-emerald-900 px-3.5 py-2 rounded-xl text-xs font-bold border border-emerald-200">
-                        <span><i class="fas fa-user-graduate text-emerald-600 mr-1.5"></i> Tỷ lệ Pass: ${passRate}%</span>
-                        <span class="bg-emerald-600 text-white px-2 py-0.5 rounded-full text-[11px] font-black">${totalHV} Học Viên</span>
-                    </div>
-                    <div class="insight-box bg-emerald-50 border-emerald-200 text-[13px] leading-relaxed">
-                        ${formatAIResponse(aiEval)}
-                    </div>
-                `;
+            const chart = document.getElementById(`kv-chart-${prodKey}`);
+            if (chart) {
+                chart.querySelectorAll('.kv-mbar').forEach(bar => {
+                    if (monthVal === 'all' || bar.getAttribute('data-month') === String(monthVal)) {
+                        bar.classList.remove('dimmed-bar');
+                    } else {
+                        bar.classList.add('dimmed-bar');
+                    }
+                });
             }
         }
+
+        function addKvSlideInsight(btnEl, tone = 'green') {
+            const card = btnEl.closest('.col-span-7') || btnEl.closest('.kv-bento-card');
+            if (!card) return;
+            const list = card.querySelector('.kv-insights-list');
+            if (!list) return;
+            const icons = { green: '🚀', red: '⚠️', blue: '📅', amber: '💡' };
+            const titles = { green: 'Điểm sáng / Cải thiện mới', red: 'Lưu ý / Vấn đề cần khắc phục', blue: 'Định hướng / Kế hoạch tiếp theo', amber: 'Ghi chú quan trọng' };
+            const div = document.createElement('div');
+            div.className = `kv-insight-card tone-${tone} flex flex-col gap-0.5`;
+            div.innerHTML = `
+                <div class="flex items-start justify-between gap-2">
+                    <strong class="text-xs font-extrabold text-slate-900 flex items-center gap-1.5" data-kv-editable="true">
+                        <span>${icons[tone] || '✨'}</span><span>${titles[tone]}</span>
+                    </strong>
+                    <div class="kv-edit-only items-center gap-1 shrink-0">
+                        <button type="button" onclick="cycleKvInsightTone(this)" class="w-5 h-5 rounded bg-white border border-slate-200 text-[10px] text-slate-600 hover:text-blue-600 flex items-center justify-center" title="Đổi màu thẻ"><i class="fas fa-palette"></i></button>
+                        <button type="button" onclick="removeKvSlideItem(this)" class="w-5 h-5 rounded bg-white border border-rose-200 text-[10px] text-rose-500 hover:bg-rose-50 flex items-center justify-center" title="Xóa mục này"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+                <p class="text-[11.5px] text-slate-600 font-normal leading-relaxed m-0" data-kv-editable="true">Nhập nội dung phân tích hoặc kết quả chi tiết tại đây...</p>
+            `;
+            list.appendChild(div);
+            if (!kvSlideEditMode) {
+                kvSlideEditMode = true;
+            }
+            applyKvEditModeToDOM();
+            const p = div.querySelector('p');
+            if (p) p.focus();
+            saveKvSlideDeckState(false);
+        }
+
+        function cycleKvInsightTone(btnEl) {
+            const card = btnEl.closest('.kv-insight-card');
+            if (!card) return;
+            const tones = ['tone-green', 'tone-red', 'tone-blue', 'tone-amber'];
+            let cur = tones.findIndex(t => card.classList.contains(t));
+            tones.forEach(t => card.classList.remove(t));
+            const next = tones[(cur + 1) % tones.length];
+            card.classList.add(next);
+            saveKvSlideDeckState(false);
+        }
+
+        function addKvSummaryItem(btnEl, color = 'emerald') {
+            const col = btnEl.closest('.p-4');
+            if (!col) return;
+            const list = col.querySelector('.kv-summary-list');
+            if (!list) return;
+            const div = document.createElement('div');
+            div.className = `p-3 rounded-xl bg-white border border-${color}-100 shadow-2xs relative`;
+            div.innerHTML = `
+                <button type="button" onclick="removeKvSlideItem(this)" class="kv-edit-only absolute top-2 right-2 w-5 h-5 rounded bg-rose-50 text-rose-500 items-center justify-center text-[10px]">×</button>
+                <strong class="text-xs font-bold text-slate-900 block mb-1" data-kv-editable="true">✨ Hạng mục mới:</strong>
+                <p class="text-[11.5px] text-slate-600 m-0 leading-relaxed" data-kv-editable="true">Nhập nội dung chi tiết cho hạng mục này...</p>
+            `;
+            list.appendChild(div);
+            if (!kvSlideEditMode) kvSlideEditMode = true;
+            applyKvEditModeToDOM();
+            const st = div.querySelector('strong');
+            if (st) st.focus();
+            saveKvSlideDeckState(false);
+        }
+
+        function removeKvSlideItem(btnEl) {
+            const item = btnEl.closest('.kv-insight-card, .p-3.rounded-xl');
+            if (item) {
+                item.remove();
+                saveKvSlideDeckState(false);
+            }
+        }
+
+        function addCustomKvSlide(e) {
+            if (e) e.stopPropagation();
+            const mount = document.getElementById('kv-slides-mount');
+            if (!mount) return;
+            const scenes = getKvScenes();
+            const newSceneNum = scenes.length + 1;
+            const temp = document.createElement('div');
+            temp.innerHTML = buildProductSlideHTML(
+                newSceneNum,
+                'Chuyên đề bổ sung • Tùy chỉnh',
+                `${newSceneNum - 2}. CHUYÊN ĐỀ ĐÀO TẠO MỚI (CLICK ĐỂ SỬA TIÊU ĐỀ)`,
+                'Mô tả tóm tắt nội dung chuyên đề hoặc kết quả kiểm tra thực tế',
+                'fa-layer-group',
+                'retail',
+                'linear-gradient(135deg, #0070F4 0%, #00C8AF 100%)',
+                [
+                    { tone: 'green', icon: '✅', title: 'Điểm sáng ghi nhận', desc: 'Click vào đây để nhập kết quả nổi bật của chuyên đề.' },
+                    { tone: 'red', icon: '⚠️', title: 'Khó khăn & Giải pháp', desc: 'Click vào đây để bổ sung vấn đề phát sinh và hướng khắc phục.' },
+                    { tone: 'blue', icon: '🚀', title: 'Kế hoạch tiếp theo', desc: 'Click vào đây để nhập kế hoạch hành động kỳ tới.' }
+                ]
+            ).trim();
+            const newSlideEl = temp.firstElementChild;
+            // Chèn ngay trước slide Cảm ơn cuối cùng
+            const lastSlide = scenes[scenes.length - 1];
+            if (lastSlide) {
+                mount.insertBefore(newSlideEl, lastSlide);
+            } else {
+                mount.appendChild(newSlideEl);
+            }
+            kvSlideEditMode = true;
+            applyKvEditModeToDOM();
+            updateKvSlideProgressUI();
+            const targetIdx = getKvScenes().indexOf(newSlideEl);
+            if (targetIdx >= 0) goToKvScene(targetIdx);
+            saveKvSlideDeckState(false);
+            showToast('Đã thêm Slide mới và bật chế độ chỉnh sửa trực tiếp!');
+        }
+
+        function deleteCurrentKvSlide(e) {
+            if (e) e.stopPropagation();
+            const scenes = getKvScenes();
+            if (scenes.length <= 1) {
+                return alert('Bộ trình chiếu cần giữ lại ít nhất 1 Slide!');
+            }
+            if (!confirm(`Bạn có chắc muốn xóa Slide số ${kvCurrentSlideIdx + 1} hiện tại không?`)) return;
+            const toRemove = scenes[kvCurrentSlideIdx];
+            const nextIdx = kvCurrentSlideIdx > 0 ? kvCurrentSlideIdx - 1 : 0;
+            toRemove.remove();
+            const updated = getKvScenes();
+            kvCurrentSlideIdx = Math.min(nextIdx, updated.length - 1);
+            updated.forEach((s, i) => {
+                s.classList.remove('active', 'previous', 'no-wipe');
+                if (i === kvCurrentSlideIdx) s.classList.add('active', 'no-wipe');
+            });
+            updateKvSlideProgressUI();
+            saveKvSlideDeckState(false);
+            showToast('Đã xóa Slide thành công!');
+        }
+
+        function saveKvSlideDeckState(notify = false) {
+            const mount = document.getElementById('kv-slides-mount');
+            if (!mount) return;
+            try {
+                localStorage.setItem(KV_SLIDE_STORAGE_KEY, mount.innerHTML);
+                if (notify) showToast('Đã lưu toàn bộ nội dung Slide báo cáo thành công!');
+            } catch (err) {
+                if (notify) alert('Không thể lưu vào bộ nhớ trình duyệt: ' + err.message);
+            }
+        }
+
+        function resetKvSlideDeckToDefault(e) {
+            if (e) e.stopPropagation();
+            if (confirm('Khôi phục bộ Slide về bố cục chuẩn và đồng bộ lại số liệu mới nhất từ MasterDB?')) {
+                localStorage.removeItem(KV_SLIDE_STORAGE_KEY);
+                const mount = document.getElementById('kv-slides-mount');
+                if (mount) {
+                    mount.innerHTML = generateDefaultKvSlidesHTML();
+                }
+                kvCurrentSlideIdx = 0;
+                applyKvEditModeToDOM();
+                updateKvSlideProgressUI();
+                showToast('Đã đồng bộ lại bộ Slide chuẩn từ dữ liệu hệ thống!');
+            }
+        }
+
+        function toggleKvSlideFullScreen(e) {
+            if (e) e.stopPropagation();
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            }
+        }
+
+        function exportStandaloneSlideHTML(e) {
+            if (e) e.stopPropagation();
+            saveKvSlideDeckState(false);
+            const mount = document.getElementById('kv-slides-mount');
+            if (!mount) return;
+            const clone = mount.cloneNode(true);
+            clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+            clone.querySelectorAll('.kv-scene').forEach((s, i) => {
+                s.classList.remove('active', 'previous', 'no-wipe');
+                if (i === 0) s.classList.add('active', 'no-wipe');
+            });
+
+            const styleText = Array.from(document.querySelectorAll('style')).map(s => s.innerHTML).join('\n');
+            const htmlDoc = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Báo Cáo Kết Quả Đào Tạo KiotViet - Slide 16:9</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.tailwindcss.com"><\/script>
+<style>${styleText}
+#presentation-overlay { display: block !important; }
+</style>
+</head>
+<body>
+<div id="presentation-overlay" class="active">
+    <div id="kvSlideProgressBar"></div>
+    <button class="kv-nav-btn kv-nav-prev" onclick="prevKvSlide(event)"><i class="fas fa-chevron-left"></i></button>
+    <button class="kv-nav-btn kv-nav-next" onclick="nextKvSlide(event)"><i class="fas fa-chevron-right"></i></button>
+    <div class="kv-bottom-hud">
+        <div class="kv-hud-group"></div>
+        <div class="kv-hud-group">
+            <button class="kv-hud-pill" onclick="window.print()"><i class="fas fa-file-pdf text-rose-600"></i><span>Xuất PDF (P)</span></button>
+            <button class="kv-hud-pill" onclick="toggleKvSlideFullScreen()"><i class="fas fa-expand text-blue-600"></i><span>Fullscreen (F)</span></button>
+            <div id="kv-slide-counter" class="kv-counter-pill">01 / 09</div>
+        </div>
+    </div>
+    <div id="kv-video-stage">
+        <div class="kv-tech-grid"></div>
+        <div id="kv-slides-mount">${clone.innerHTML}</div>
+    </div>
+</div>
+<script>
+const kvProductReportData = ${JSON.stringify(kvProductReportData)};
+let kvCurrentSlideIdx = 0;
+let kvSlideAnimating = false;
+function getKvScenes() { return Array.from(document.querySelectorAll('.kv-scene')); }
+function updateKvSlideProgressUI() {
+    const scenes = getKvScenes(); const total = scenes.length || 1;
+    const bar = document.getElementById('kvSlideProgressBar');
+    const counter = document.getElementById('kv-slide-counter');
+    if (bar) bar.style.width = (((kvCurrentSlideIdx + 1) / total) * 100) + '%';
+    if (counter) counter.textContent = String(kvCurrentSlideIdx + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+}
+function goToKvScene(targetIdx) {
+    const scenes = getKvScenes(); const total = scenes.length;
+    if (!total || kvSlideAnimating) return;
+    let nextIdx = targetIdx;
+    if (nextIdx >= total) nextIdx = 0;
+    if (nextIdx < 0) nextIdx = total - 1;
+    if (nextIdx === kvCurrentSlideIdx) return;
+    kvSlideAnimating = true;
+    const prevScene = scenes[kvCurrentSlideIdx]; const nextScene = scenes[nextIdx];
+    scenes.forEach(s => { if (s !== prevScene && s !== nextScene) s.classList.remove('active', 'previous', 'no-wipe'); });
+    if (prevScene) { prevScene.classList.remove('active', 'no-wipe'); prevScene.classList.add('previous'); }
+    if (nextScene) { nextScene.classList.remove('previous', 'no-wipe'); nextScene.classList.add('active'); }
+    kvCurrentSlideIdx = nextIdx; updateKvSlideProgressUI();
+    setTimeout(() => { if (prevScene) prevScene.classList.remove('previous'); kvSlideAnimating = false; }, 520);
+}
+function nextKvSlide(e) { if (e) e.stopPropagation(); goToKvScene(kvCurrentSlideIdx + 1); }
+function prevKvSlide(e) { if (e) e.stopPropagation(); goToKvScene(kvCurrentSlideIdx - 1); }
+function filterKvSlideProduct(prodKey, monthVal) {
+    const cfg = kvProductReportData[prodKey]; if (!cfg) return;
+    const mData = cfg.months[monthVal] || cfg.months.all;
+    ['s1','s2','s3','s4','n1','n2','n3','n4'].forEach(k => {
+        const el = document.getElementById('kv-' + prodKey + '-' + k);
+        if (el && mData[k] !== undefined) el.textContent = mData[k];
+    });
+    const chart = document.getElementById('kv-chart-' + prodKey);
+    if (chart) chart.querySelectorAll('.kv-mbar').forEach(b => b.classList.toggle('dimmed-bar', monthVal !== 'all' && b.getAttribute('data-month') !== String(monthVal)));
+}
+function toggleKvSlideFullScreen() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+    else if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+}
+window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nextKvSlide(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'Backspace' || e.key === 'PageUp') { e.preventDefault(); prevKvSlide(); }
+    else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleKvSlideFullScreen(); }
+    else if (e.key === 'p' || e.key === 'P') { e.preventDefault(); window.print(); }
+});
+updateKvSlideProgressUI();
+<\/script>
+</body>
+</html>`;
+
+            const blob = new Blob([htmlDoc], { type: 'text/html;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `Slide_BaoCao_DaoTao_KiotViet_${window.TrainerUtils ? window.TrainerUtils.formatLocalIsoDate(new Date()) : new Date().toISOString().split('T')[0]}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast('Đã xuất file HTML Slide Báo cáo 16:9 độc lập thành công!');
+        }
+
+        function closePresentation() {
+            saveKvSlideDeckState(false);
+            document.getElementById('presentation-overlay').classList.remove('active');
+        }
+
+        async function runTechPresentation() {
+            const mount = document.getElementById('kv-slides-mount');
+            if (!mount) return;
+            const savedDeck = localStorage.getItem(KV_SLIDE_STORAGE_KEY);
+            if (savedDeck && savedDeck.includes('kv-scene')) {
+                mount.innerHTML = savedDeck;
+            } else {
+                mount.innerHTML = generateDefaultKvSlidesHTML();
+            }
+
+            // Đảm bảo slide đầu tiên active
+            const scenes = getKvScenes();
+            kvCurrentSlideIdx = 0;
+            scenes.forEach((s, idx) => {
+                s.classList.remove('active', 'previous', 'no-wipe');
+                if (idx === 0) s.classList.add('active', 'no-wipe');
+            });
+
+            applyKvEditModeToDOM();
+            updateKvSlideProgressUI();
+            document.getElementById('presentation-overlay').classList.add('active');
+        }
+
+        // Lắng nghe phím tắt và tự động lưu khi đang mở Slide Studio
+        window.addEventListener('keydown', function(e) {
+            const overlay = document.getElementById('presentation-overlay');
+            if (!overlay || !overlay.classList.contains('active')) return;
+            const isEditingText = e.target && (e.target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName));
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                if (kvSlideEditMode && isEditingText) {
+                    e.target.blur();
+                    return;
+                }
+                closePresentation();
+                return;
+            }
+            if (isEditingText) return;
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                e.preventDefault();
+                nextKvSlide();
+            } else if (e.key === 'ArrowLeft' || e.key === 'Backspace' || e.key === 'PageUp') {
+                e.preventDefault();
+                prevKvSlide();
+            } else if (e.key === 'e' || e.key === 'E') {
+                e.preventDefault();
+                toggleKvSlideEditMode();
+            } else if (e.key === 'f' || e.key === 'F') {
+                e.preventDefault();
+                toggleKvSlideFullScreen();
+            } else if (e.key === 'p' || e.key === 'P') {
+                e.preventDefault();
+                window.print();
+            }
+        });
+
+        document.addEventListener('input', function(e) {
+            if (e.target && e.target.closest && e.target.closest('#kv-slides-mount')) {
+                saveKvSlideDeckState(false);
+            }
+        });
 
         function openCanvaReportModal() {
             document.getElementById('canvaPeriodTag').innerText = `Kỳ báo cáo: ${getTimeRangeLabel()}`;
@@ -1850,8 +3618,65 @@ ${topComments.slice(0, 4).map(c => `* ${c}`).join('\n') || '* Tăng cường th�
             }
         }
 
+        // ==================== AURORA SHELL HELPERS (THEME, CLOCK, GREETING, CTRL+K) ====================
+        function syncAuroraThemeUI() {
+            const isDark = document.documentElement.getAttribute('data-aurora') === 'dark';
+            const icon = document.getElementById('auroraThemeIcon');
+            const btn = document.getElementById('btn-aurora-theme-toggle');
+            if (icon) {
+                icon.className = isDark ? 'fas fa-sun text-sm' : 'fas fa-moon text-sm';
+            }
+            if (btn) {
+                btn.title = isDark ? 'Chuyển sang Giao diện Sáng (Light Mode)' : 'Chuyển sang Giao diện Tối (Dark Mode)';
+            }
+            try {
+                Chart.defaults.color = isDark ? '#94a3b8' : '#64748b';
+            } catch (e) {}
+        }
+
+        function updateAuroraClock() {
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+            const dd = String(now.getDate()).padStart(2, '0');
+            const mo = String(now.getMonth() + 1).padStart(2, '0');
+            const clockEl = document.getElementById('auroraClock');
+            const dateEl = document.getElementById('auroraDate');
+            if (clockEl) clockEl.textContent = `${hh}:${mm}`;
+            if (dateEl) dateEl.textContent = `${days[now.getDay()]}, ${dd}/${mo}`;
+        }
+
+        function formatAuroraGreetName(fullName) {
+            const clean = String(fullName || '').trim();
+            if (!clean) return 'KiotViet';
+            const parts = clean.split(/\s+/);
+            return parts.length >= 2 ? parts.slice(-2).join(' ') : parts[0];
+        }
+
+        window.addEventListener('aurora-theme-changed', function () {
+            syncAuroraThemeUI();
+            if (document.getElementById('performanceChart')) updatePerfChart();
+            if (document.getElementById('trendChart')) updateTrendChart();
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if ((e.ctrlKey || e.metaKey) && String(e.key || '').toLowerCase() === 'k') {
+                const searchInput = document.getElementById('auroraHeaderSearch');
+                if (searchInput) {
+                    e.preventDefault();
+                    searchInput.focus();
+                    searchInput.select();
+                }
+            }
+        });
+
         // ==================== KHỞI CHẠY ĐÃ BẢO VỆ CHỐNG SẬP SCRIPT ====================
         window.onload = () => {
+            syncAuroraThemeUI();
+            updateAuroraClock();
+            setInterval(updateAuroraClock, 30000);
+
             try {
                 const profStr = localStorage.getItem('kv_trainer_profile');
                 if(profStr && profStr !== 'undefined') {
@@ -1862,8 +3687,10 @@ ${topComments.slice(0, 4).map(c => `* ${c}`).join('\n') || '* Tăng cường th�
 
                         const hName = document.getElementById('header-prof-name');
                         const hTitle = document.getElementById('header-prof-title');
+                        const gName = document.getElementById('aurora-greet-name');
                         if(hName) hName.innerText = name;
                         if(hTitle) hTitle.innerText = title;
+                        if(gName) gName.innerText = formatAuroraGreetName(name);
                     }
                 }
             } catch(e) {}

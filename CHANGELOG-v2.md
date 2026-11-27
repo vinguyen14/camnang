@@ -286,3 +286,10 @@ Ngày giờ theo giờ địa phương, ngày lễ Việt Nam theo từng năm (
   - Nhãn Mới / Cập nhật + ngày + tóm tắt thay đổi lấy từ `updates-meta.json`.
   - Khung "Đồng bộ với Cổng học tập": thời điểm đồng bộ, thời điểm Cổng cập nhật nội dung, đồng bộ những phần nào (số bài theo từng loại), danh sách bài đã cập nhật kèm "phát hiện từ", danh sách tính năng ngoài khóa, nhật ký 12 lần đồng bộ gần nhất (đánh dấu thay đổi mới so với lần trước).
 - Chỉ số sức khỏe (trang Tổng quan Hub, thẻ báo cáo trên Dashboard) chỉ tính bài **trong khóa học**, dùng link mới nhất từ Cổng → hai nơi luôn khớp số. Không ghi gì vào Google Sheet.
+
+## 12. Phát hành giao diện Aurora (27/11/2026)
+- **Dashboard (`index.html`):** giao diện Aurora kính mờ, chế độ Sáng / Tối, đồng hồ & lời chào, tìm nhanh Ctrl+K, thẻ "Phân hệ & Công cụ".
+- **`sidebar-nav.js`:** sidebar Aurora (kính mờ, bộ icon riêng), nút đổi Sáng / Tối ở chân sidebar (`setAuroraTheme` / `toggleAuroraTheme`), huy hiệu trang trên header, nâng cấp icon tự động, căn thanh bước (stepper) theo kích thước thật. Áp dụng cho các trang dùng sidebar chung.
+- **Thanh bước (stepper) ở `kv1.html`, `spcb.html`:** nhãn bước không còn tràn / chồng lên nhau.
+- **Điện thoại:** trang dùng sidebar độc lập (Cài đặt, Công cụ…) bỏ lề trái 240px khi sidebar đã là ngăn kéo; `settings.html`, `system-workflow.html` không còn tràn ngang ở khổ 375px.
+- Kiểm tra: 15 trang ở khổ 1280px và 375px không lỗi JavaScript; 14/15 không tràn ngang (`gamification.html` là trang chiếu màn lớn, giữ nguyên).
