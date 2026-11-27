@@ -272,10 +272,15 @@
                         <div class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 pt-1 border-t border-slate-100">
                             <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">L&D:</span>
                             <button onclick="filterByReadiness('all')" id="btn-rd-all" class="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-800 text-white shrink-0">Tất Cả</button>
-                            <button onclick="filterByReadiness('urgent')" id="btn-rd-urgent" class="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 shrink-0">🔴 Khẩn Cấp</button>
+                            <button onclick="filterByReadiness('urgent')" id="btn-rd-urgent" class="px-2.5 py-0.5 rounded-md text-[11px] font-bold text-rose-700 hover:bg-rose-50 shrink-0">🔴 Khẩn Cấp</button>
                             <button onclick="filterByReadiness('need_video')" id="btn-rd-video" class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 hover:bg-slate-100 shrink-0"><i class="fas fa-video text-rose-500 mr-1"></i>Cần Quay Video</button>
                             <button onclick="filterByReadiness('no_hdsd')" id="btn-rd-hdsd" class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 hover:bg-slate-100 shrink-0"><i class="fas fa-book text-blue-500 mr-1"></i>Chưa Có HDSD</button>
                             <button onclick="filterByReadiness('not_cleared')" id="btn-rd-notclear" class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 hover:bg-slate-100 shrink-0">⚠️ Chưa Clear</button>
+                            <!-- Nhãn "Đang lọc" cho các bộ lọc mở từ huy hiệu nhưng không có nút riêng (Sắp Demo / Đã Clear) -->
+                            <span id="rdFilterTag" class="hidden px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-800 text-white shrink-0 items-center gap-1.5">
+                                <span id="rdFilterTagText">Đang lọc</span>
+                                <button type="button" onclick="filterByReadiness('all')" class="text-slate-300 hover:text-white" title="Xóa lọc"><i class="fas fa-times text-[10px]"></i></button>
+                            </span>
                         </div>
 
                         <!-- TẦNG 3: THANH TÌM KIẾM TỨC THỜI -->
@@ -304,7 +309,7 @@
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
                             <button onclick="reloadLiveIframe()" class="p-1.5 hover:text-white transition rounded hover:bg-slate-800" title="Tải lại trang demo"><i class="fas fa-sync-alt text-xs"></i></button>
-                            <a id="iframeExtLink" href="#" target="_blank" class="p-1.5 hover:text-cyan-400 transition rounded hover:bg-slate-800 flex items-center gap-1 font-sans text-xs font-bold" title="Mở trong tab trình duyệt mới">
+                            <a id="iframeExtLink" href="#" target="_blank" rel="noopener noreferrer" class="p-1.5 hover:text-cyan-400 transition rounded hover:bg-slate-800 flex items-center gap-1 font-sans text-xs font-bold" title="Mở trong tab trình duyệt mới">
                                 <i class="fas fa-arrow-up-right-from-square text-[10px]"></i> Mở Tab Mới ↗
                             </a>
                         </div>
@@ -312,15 +317,24 @@
 
                     <!-- Vùng nhúng Iframe Live -->
                     <div class="flex-1 w-full h-full relative bg-white">
-                        <iframe id="liveDemoIframe" src="" class="w-full h-full border-none" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
-                        
+                        <!-- Bỏ allow-same-origin: iframe chỉ hiển thị trang ngoài, không cần quyền cùng nguồn -->
+                        <iframe id="liveDemoIframe" class="w-full h-full border-none" sandbox="allow-scripts allow-forms allow-popups"></iframe>
+
+                        <!-- Thông báo nhỏ: trang có thể chặn nhúng (không đọc được nội dung iframe khác nguồn nên chỉ nhắc) -->
+                        <div id="iframeBlockNotice" class="hidden absolute left-3 right-3 bottom-3 bg-slate-900/95 text-slate-200 text-[11px] rounded-xl border border-slate-700 shadow-2xl px-3.5 py-2.5 items-center gap-3">
+                            <i class="fas fa-info-circle text-amber-400"></i>
+                            <span class="flex-1 leading-relaxed">Một số trang KiotViet không cho nhúng. Nếu khung trống hoặc báo lỗi, bấm Mở tab mới.</span>
+                            <a id="iframeBlockNoticeLink" href="#" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-white text-slate-900 font-bold hover:bg-slate-100 transition shrink-0">Mở tab mới ↗</a>
+                            <button type="button" onclick="hideIframeBlockNotice()" class="p-1 text-slate-400 hover:text-white transition shrink-0" title="Ẩn thông báo"><i class="fas fa-times text-xs"></i></button>
+                        </div>
+
                         <!-- Empty State nếu tính năng chưa có link -->
                         <div id="iframeEmptyState" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-8 text-center text-slate-500">
                             <div class="w-16 h-16 rounded-2xl bg-slate-800 text-slate-400 flex items-center justify-center text-2xl mb-4 border border-slate-700 shadow-inner">
                                 <i class="fas fa-laptop-code"></i>
                             </div>
-                            <h4 class="font-bold text-sm text-slate-300 mb-1">Chưa Chọn Màn Hình Test</h4>
-                            <p class="text-xs text-slate-500 max-w-xs leading-relaxed">Nhấp chuột vào bất kỳ tính năng nào ở danh sách bên trái có gắn link để trải nghiệm trực tiếp trên màn hình này.</p>
+                            <h4 id="iframeEmptyTitle" class="font-bold text-sm text-slate-300 mb-1">Chưa Chọn Màn Hình Test</h4>
+                            <p id="iframeEmptyDesc" class="text-xs text-slate-500 max-w-xs leading-relaxed">Nhấp chuột vào bất kỳ tính năng nào ở danh sách bên trái có gắn link để trải nghiệm trực tiếp trên màn hình này.</p>
                         </div>
                     </div>
                 </div>
@@ -451,54 +465,6 @@
 
     <!-- JAVASCRIPT ENGINE CỦA TRẠM RADAR NÂNG CẤP -->
     <script>
-        const DEFAULT_RADAR_DATA = [
-            {
-                id: 'rad-1',
-                name: 'DEMO SỔ SÁCH NHÀ THUỐC & QUẢN LÝ NHÓM KHÁCH HÀNG',
-                group: 'Retail',
-                iframeUrl: 'https://cdn-kvweb-website.kiotviet.vn',
-                updateDate: '2026-10-10',
-                demoDate: '2026-10-20',
-                launchDate: '2026-10-20',
-                status: 'Đã Launching',
-                hdsdStatus: 'Chưa có bài',
-                videoName: 'Video Buổi 2 Retail - Quản lý Nhóm khách hàng & Tích điểm thành viên',
-                videoStatus: 'Cần quay lại gấp',
-                cleared: false,
-                note: 'Khối Product đã bổ sung chuẩn GPP ngành Dược và kiến trúc phân khúc khách hàng tự động.'
-            },
-            {
-                id: 'rad-2',
-                name: 'Tách bàn & Chuyển bàn thông minh bằng mã QR tại bàn',
-                group: 'FNB',
-                iframeUrl: 'https://fnb.kiotviet.vn',
-                updateDate: '2026-10-12',
-                demoDate: '2026-10-25',
-                launchDate: '2026-10-30',
-                status: 'Mới Demo',
-                hdsdStatus: 'Đang viết',
-                videoName: 'Video B1 FNB - Order & Bếp Bar',
-                videoStatus: 'Không ảnh hưởng',
-                cleared: true,
-                note: 'Khách ngồi chung bàn có thể tự quét mã thanh toán phần của mình độc lập.'
-            },
-            {
-                id: 'rad-3',
-                name: 'Khai báo hồ sơ thuế hộ kinh doanh cá thể theo mẫu 01/CNKD mới',
-                group: 'TAX',
-                iframeUrl: '',
-                updateDate: '2026-10-08',
-                demoDate: '2026-10-18',
-                launchDate: '2026-10-24',
-                status: 'Sắp Launching',
-                hdsdStatus: 'Đã cập nhật HDSD',
-                videoName: 'Video Khóa Thuế - Kê Khai Thuế Quý & Xuất Hóa Đơn',
-                videoStatus: 'Cần quay lại gấp',
-                cleared: false,
-                note: 'Cập nhật lại hệ số giảm trừ gia cảnh và tự động sinh tờ khai thuế điện tử.'
-            }
-        ];
-
         let radarFeatures = [];
         let currentFilterIndustry = 'all';
         let currentFilterReadiness = 'all';
@@ -569,25 +535,88 @@
         // ==========================================
         // 2. DỮ LIỆU & TÍNH TOÁN BỘ 3 CẢNH BÁO
         // ==========================================
+        const RADAR_STORAGE_KEY = 'kv_product_radar';
+        // Khóa ghi khi dữ liệu cũ bị hỏng mà KHÔNG sao lưu được → tránh ghi đè mất dữ liệu gốc
+        let radarSaveBlocked = false;
+
+        // Tách 'yyyy-mm-dd' thành Date theo giờ địa phương (tránh lệch múi giờ của new Date(string))
+        function parseYmd(str) {
+            const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(str || ''));
+            if (!m) return null;
+            const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        // Số ngày từ hôm nay tới ngày demo (null nếu ngày không hợp lệ)
+        function daysFromToday(str) {
+            const d = parseYmd(str);
+            if (!d) return null;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return Math.round((d - today) / (1000 * 60 * 60 * 24));
+        }
+
+        function nowStamp() {
+            const d = new Date();
+            const p = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
+        }
+
         function loadRadarData() {
-            const saved = localStorage.getItem('kv_product_radar');
+            let saved = null;
+            try { saved = localStorage.getItem(RADAR_STORAGE_KEY); } catch (e) { saved = null; }
+
+            radarFeatures = [];
             if (saved) {
-                try { radarFeatures = JSON.parse(saved); } catch (e) { radarFeatures = DEFAULT_RADAR_DATA; }
-            } else {
-                radarFeatures = DEFAULT_RADAR_DATA;
-                saveRadarData();
+                let parsed = null;
+                let ok = false;
+                try { parsed = JSON.parse(saved); ok = Array.isArray(parsed); } catch (e) { ok = false; }
+
+                if (ok) {
+                    // Chỉ giữ các mục là object có id (giữ nguyên dữ liệu người dùng, kể cả mục mẫu cũ)
+                    radarFeatures = parsed.filter(f => f && typeof f === 'object' && f.id);
+                } else {
+                    // Dữ liệu hỏng → sao lưu chuỗi gốc TRƯỚC, rồi mới dùng mảng rỗng
+                    const backupKey = RADAR_STORAGE_KEY + '_corrupt_' + nowStamp();
+                    try {
+                        localStorage.setItem(backupKey, saved);
+                        showToast(`⚠️ Dữ liệu Radar bị lỗi, đã sao lưu sang "${escapeHtml(backupKey)}".`);
+                    } catch (e) {
+                        radarSaveBlocked = true;
+                        showToast('⚠️ Dữ liệu Radar bị lỗi và không sao lưu được. Tạm khóa lưu để không ghi đè dữ liệu gốc.');
+                    }
+                }
             }
+            // Không còn tự ghi dữ liệu mẫu: chưa có dữ liệu thì hiển thị trạng thái trống
+
             updateAlertBadgesAndBanner();
             renderFeatureList();
 
             if (radarFeatures.length > 0 && !activeSelectedFeatureId) {
                 selectFeatureToTest(radarFeatures[0].id);
+            } else if (radarFeatures.length === 0) {
+                selectFeatureToTest(null);
             }
         }
 
         function saveRadarData() {
-            localStorage.setItem('kv_product_radar', JSON.stringify(radarFeatures));
+            if (radarSaveBlocked) {
+                showToast('⚠️ Không thể lưu: dữ liệu gốc bị lỗi và chưa được sao lưu.');
+                updateAlertBadgesAndBanner();
+                return false;
+            }
+            try {
+                localStorage.setItem(RADAR_STORAGE_KEY, JSON.stringify(radarFeatures));
+            } catch (e) {
+                const isQuota = e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014);
+                showToast(isQuota
+                    ? '⚠️ Bộ nhớ trình duyệt đã đầy, chưa lưu được thay đổi. Hãy xóa bớt dữ liệu cũ.'
+                    : '⚠️ Không lưu được dữ liệu vào trình duyệt.');
+                updateAlertBadgesAndBanner();
+                return false;
+            }
             updateAlertBadgesAndBanner();
+            return true;
         }
 
         function updateAlertBadgesAndBanner() {
@@ -605,10 +634,8 @@
 
                 // 2. Sắp Demo trong 7 ngày tới
                 if (f.demoDate) {
-                    const demoDt = new Date(f.demoDate);
-                    demoDt.setHours(0, 0, 0, 0);
-                    const diffDays = Math.round((demoDt - today) / (1000 * 60 * 60 * 24));
-                    if (diffDays >= 0 && diffDays <= 7 && f.status !== 'Đã Launching') upcomingCount++;
+                    const diffDays = daysFromToday(f.demoDate);
+                    if (diffDays !== null && diffDays >= 0 && diffDays <= 7 && f.status !== 'Đã Launching') upcomingCount++;
                 }
 
                 // 3. Đã Clear
@@ -643,11 +670,26 @@
             const container = document.getElementById('radarFeatureList');
             if (!container) return;
 
+            // Chưa có dữ liệu → trạng thái trống với nút thêm mới
+            if (radarFeatures.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 px-4 bg-white rounded-2xl border border-dashed border-slate-300">
+                        <i class="fas fa-satellite-dish text-3xl text-slate-300 mb-2 block"></i>
+                        <h4 class="text-xs font-bold text-slate-700">Chưa có tính năng nào trong trạm Radar</h4>
+                        <p class="text-[11px] text-slate-400 mt-1 mb-4">Bấm nút bên dưới để thêm cập nhật tính năng đầu tiên.</p>
+                        <button type="button" data-action="add" class="mx-auto px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5">
+                            <i class="fas fa-plus"></i> Thêm cập nhật mới
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
             let filtered = radarFeatures.slice();
 
             // 1. Lọc theo Phân hệ
             if (currentFilterIndustry !== 'all') {
-                filtered = filtered.filter(f => f.group.toLowerCase() === currentFilterIndustry.toLowerCase());
+                filtered = filtered.filter(f => String(f.group || '').toLowerCase() === currentFilterIndustry.toLowerCase());
             }
 
             // 2. Lọc theo Trạng thái Nghiệp vụ L&D
@@ -662,21 +704,18 @@
             } else if (currentFilterReadiness === 'cleared') {
                 filtered = filtered.filter(f => f.cleared);
             } else if (currentFilterReadiness === 'upcoming') {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
                 filtered = filtered.filter(f => {
                     if (!f.demoDate || f.status === 'Đã Launching') return false;
-                    const demoDt = new Date(f.demoDate);
-                    demoDt.setHours(0, 0, 0, 0);
-                    const diffDays = Math.round((demoDt - today) / (1000 * 60 * 60 * 24));
-                    return diffDays >= 0 && diffDays <= 7;
+                    const diffDays = daysFromToday(f.demoDate);
+                    return diffDays !== null && diffDays >= 0 && diffDays <= 7;
                 });
             }
 
             // 3. Tìm kiếm từ khóa
             if (currentSearchQuery) {
                 const q = currentSearchQuery.toLowerCase();
-                filtered = filtered.filter(f => f.name.toLowerCase().includes(q) || (f.note && f.note.toLowerCase().includes(q)) || (f.videoName && f.videoName.toLowerCase().includes(q)));
+                const has = v => String(v || '').toLowerCase().includes(q);
+                filtered = filtered.filter(f => has(f.name) || has(f.note) || has(f.videoName));
             }
 
             if (filtered.length === 0) {
@@ -696,7 +735,8 @@
                 const bUrgent = (b.status === 'Đã Launching') && (!b.cleared || b.videoStatus === 'Cần quay lại gấp');
                 if (aUrgent && !bUrgent) return -1;
                 if (!aUrgent && bUrgent) return 1;
-                return new Date(b.updateDate || 0) - new Date(a.updateDate || 0);
+                const aDt = parseYmd(a.updateDate), bDt = parseYmd(b.updateDate);
+                return (bDt ? bDt.getTime() : 0) - (aDt ? aDt.getTime() : 0);
             });
 
             container.innerHTML = filtered.map(f => {
@@ -797,11 +837,11 @@
                 }
 
                 return `
-                    <div class="feature-card ${isSelected} ${isUrgent ? '!border-l-[6px] !border-l-rose-500' : ''}" onclick="selectFeatureToTest('${f.id}')">
+                    <div class="feature-card ${isSelected} ${isUrgent ? '!border-l-[6px] !border-l-rose-500' : ''}" data-action="select" data-id="${escapeHtml(f.id)}">
                         <!-- HEADER THẺ -->
                         <div class="flex items-start justify-between gap-3 mb-2.5">
                             <div class="flex items-center gap-2 flex-wrap">
-                                <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase bg-purple-100 text-purple-700 border border-purple-200 font-mono-code">${f.group}</span>
+                                <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase bg-purple-100 text-purple-700 border border-purple-200 font-mono-code">${escapeHtml(f.group)}</span>
                                 ${launchBadge}
                                 ${isUrgent ? `
                                     <div class="ui-tip">
@@ -812,9 +852,9 @@
                                     </div>
                                 ` : ''}
                             </div>
-                            <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
-                                <button onclick="editFeature('${f.id}')" class="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-slate-100 transition" title="Chỉnh sửa"><i class="fas fa-edit text-xs"></i></button>
-                                <button onclick="deleteFeature('${f.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-slate-100 transition" title="Xóa"><i class="fas fa-trash-alt text-xs"></i></button>
+                            <div class="flex items-center gap-1.5" data-action="none">
+                                <button type="button" data-action="edit" data-id="${escapeHtml(f.id)}" class="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-slate-100 transition" title="Chỉnh sửa"><i class="fas fa-edit text-xs"></i></button>
+                                <button type="button" data-action="delete" data-id="${escapeHtml(f.id)}" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-slate-100 transition" title="Xóa"><i class="fas fa-trash-alt text-xs"></i></button>
                             </div>
                         </div>
 
@@ -847,15 +887,15 @@
                         </div>
 
                         <!-- FOOTER THẺ: THỜI GIAN & TOGGLE TRAINER ĐÃ CLEAR -->
-                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between" onclick="event.stopPropagation()">
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between" data-action="none">
                             <div class="text-[10px] font-mono-code text-slate-400 space-x-3">
-                                <span>Demo: <b class="text-slate-700">${f.demoDate || '--'}</b></span>
-                                <span>Launch: <b class="text-slate-700">${f.launchDate || '--'}</b></span>
+                                <span>Demo: <b class="text-slate-700">${escapeHtml(f.demoDate) || '--'}</b></span>
+                                <span>Launch: <b class="text-slate-700">${escapeHtml(f.launchDate) || '--'}</b></span>
                             </div>
 
                             <div class="ui-tip">
                                 <label class="flex items-center gap-2 cursor-pointer font-bold text-xs select-none p-1.5 rounded-lg border transition ${f.cleared ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200'}">
-                                    <input type="checkbox" onchange="toggleFeatureCleared('${f.id}', this.checked)" ${f.cleared ? 'checked' : ''} class="w-4 h-4 accent-purple-600 cursor-pointer">
+                                    <input type="checkbox" data-action="toggle-clear" data-id="${escapeHtml(f.id)}" ${f.cleared ? 'checked' : ''} class="w-4 h-4 accent-purple-600 cursor-pointer">
                                     <span>${f.cleared ? 'ĐÃ CLEAR 100%' : 'Chưa Clear'}</span>
                                 </label>
                                 <div class="ui-tip-box">
@@ -875,29 +915,77 @@
             activeSelectedFeatureId = featId;
             renderFeatureList();
 
-            const feat = radarFeatures.find(f => f.id === featId);
+            const feat = featId ? radarFeatures.find(f => f.id === featId) : null;
             const iframe = document.getElementById('liveDemoIframe');
             const emptyState = document.getElementById('iframeEmptyState');
+            const emptyTitle = document.getElementById('iframeEmptyTitle');
+            const emptyDesc = document.getElementById('iframeEmptyDesc');
             const titleEl = document.getElementById('iframeLiveTitle');
             const extLink = document.getElementById('iframeExtLink');
 
-            if (!feat || !feat.iframeUrl || !feat.iframeUrl.startsWith('http')) {
-                iframe.src = '';
+            hideIframeBlockNotice();
+            iframeLoadToken++; // Hủy mọi hẹn giờ/onload của lần nạp trước
+
+            const url = feat ? String(feat.iframeUrl || '').trim() : '';
+            if (!feat || !/^https?:\/\//i.test(url)) {
+                iframe.removeAttribute('src');
                 emptyState.classList.remove('hidden');
-                titleEl.innerText = feat ? `${feat.group}: ${feat.name}` : 'Chưa có link Demo';
+                if (feat) {
+                    emptyTitle.innerText = 'Chưa có link xem trực tiếp';
+                    emptyDesc.innerText = 'Tính năng này chưa gắn link Demo / Staging. Bấm nút sửa trên thẻ để bổ sung đường dẫn.';
+                    titleEl.innerText = `${feat.group || ''}: ${feat.name || ''}`;
+                } else {
+                    emptyTitle.innerText = 'Chưa Chọn Màn Hình Test';
+                    emptyDesc.innerText = 'Nhấp chuột vào bất kỳ tính năng nào ở danh sách bên trái có gắn link để trải nghiệm trực tiếp trên màn hình này.';
+                    titleEl.innerText = 'Màn Hình Test Trực Tiếp';
+                }
                 extLink.href = '#';
                 return;
             }
 
-            titleEl.innerText = `${feat.group}: ${feat.name}`;
-            extLink.href = feat.iframeUrl;
-            iframe.src = feat.iframeUrl;
+            titleEl.innerText = `${feat.group || ''}: ${feat.name || ''}`;
+            extLink.href = url;
             emptyState.classList.add('hidden');
+            loadIframeWithNotice(url);
+        }
+
+        // ==========================================
+        // 4b. NHẮC "TRANG CÓ THỂ CHẶN NHÚNG"
+        // Không đọc được nội dung iframe khác nguồn nên không biết chắc trang có bị chặn hay không;
+        // hiện lớp thông báo nhỏ sau khi load hoặc sau 4 giây (cái nào tới trước).
+        // ==========================================
+        let iframeLoadToken = 0;
+        let iframeNoticeDismissed = false; // Người dùng đã bấm ẩn → không hiện lại cho tới khi chọn mục khác
+
+        function loadIframeWithNotice(url, keepDismissed) {
+            const iframe = document.getElementById('liveDemoIframe');
+            const token = ++iframeLoadToken;
+            if (!keepDismissed) iframeNoticeDismissed = false;
+            document.getElementById('iframeBlockNoticeLink').href = url;
+
+            const reveal = () => {
+                if (token !== iframeLoadToken || iframeNoticeDismissed) return;
+                const n = document.getElementById('iframeBlockNotice');
+                n.classList.remove('hidden');
+                n.classList.add('flex');
+            };
+            iframe.onload = reveal;
+            setTimeout(reveal, 4000);
+            iframe.src = url;
+        }
+
+        function hideIframeBlockNotice() {
+            const n = document.getElementById('iframeBlockNotice');
+            if (!n) return;
+            n.classList.add('hidden');
+            n.classList.remove('flex');
+            iframeNoticeDismissed = true;
         }
 
         function reloadLiveIframe() {
             const iframe = document.getElementById('liveDemoIframe');
-            if (iframe.src) iframe.src = iframe.src;
+            const url = iframe.getAttribute('src');
+            if (url) loadIframeWithNotice(url, true); // Tải lại: giữ lựa chọn ẩn thông báo
         }
 
         // ==========================================
@@ -918,14 +1006,32 @@
 
         function filterByReadiness(rd) {
             currentFilterReadiness = rd;
-            ['all', 'urgent', 'video', 'hdsd', 'notclear'].forEach(r => {
+            // Bộ lọc → nút tương ứng (giá trị lọc : id nút). 'upcoming' / 'cleared' không có nút riêng.
+            const RD_BUTTONS = { all: 'all', urgent: 'urgent', need_video: 'video', no_hdsd: 'hdsd', not_cleared: 'notclear' };
+            const BASE = 'px-2.5 py-0.5 rounded-md text-[11px] shrink-0 ';
+            const ACTIVE = BASE + 'font-bold bg-slate-800 text-white';
+            const INACTIVE = {
+                all: BASE + 'font-semibold text-slate-600 hover:bg-slate-100',
+                urgent: BASE + 'font-bold text-rose-700 hover:bg-rose-50', // Không giữ nền hồng khi không chọn
+                video: BASE + 'font-semibold text-slate-600 hover:bg-slate-100',
+                hdsd: BASE + 'font-semibold text-slate-600 hover:bg-slate-100',
+                notclear: BASE + 'font-semibold text-slate-600 hover:bg-slate-100'
+            };
+            const activeBtn = RD_BUTTONS[rd] || null;
+            Object.keys(INACTIVE).forEach(r => {
                 const btn = document.getElementById(`btn-rd-${r}`);
-                if (btn) {
-                    const match = (r === 'video' && rd === 'need_video') || (r === 'hdsd' && rd === 'no_hdsd') || (r === 'notclear' && rd === 'not_cleared') || (r === rd);
-                    btn.classList.toggle('bg-slate-800', match);
-                    btn.classList.toggle('text-white', match);
-                }
+                if (btn) btn.className = (r === activeBtn) ? ACTIVE : INACTIVE[r];
             });
+
+            // Nhãn "Đang lọc: …" khi bộ lọc không có nút tương ứng
+            const RD_LABELS = { upcoming: 'Sắp Demo (7 ngày tới)', cleared: 'Đã Clear' };
+            const tag = document.getElementById('rdFilterTag');
+            if (tag) {
+                const showTag = !activeBtn;
+                tag.classList.toggle('hidden', !showTag);
+                tag.classList.toggle('inline-flex', showTag);
+                if (showTag) document.getElementById('rdFilterTagText').innerText = 'Đang lọc: ' + (RD_LABELS[rd] || rd);
+            }
             renderFeatureList();
         }
 
@@ -938,9 +1044,9 @@
             const feat = radarFeatures.find(f => f.id === featId);
             if (feat) {
                 feat.cleared = isChecked;
-                saveRadarData();
+                const saved = saveRadarData();
                 renderFeatureList();
-                showToast(isChecked ? '🎉 Đã xác nhận: Trainer đã Clear tính năng này!' : 'Đã đổi trạng thái: Chưa Clear');
+                if (saved) showToast(isChecked ? '🎉 Đã xác nhận: Trainer đã Clear tính năng này!' : 'Đã đổi trạng thái: Chưa Clear');
             }
         }
 
@@ -949,15 +1055,20 @@
         // ==========================================
         function openFeatureModal(id = null) {
             const modal = document.getElementById('featureModal');
-            document.getElementById('modalFeatureTitle').innerHTML = id 
+            if (id && !radarFeatures.some(x => x.id === id)) {
+                showToast('Mục này đã bị xóa');
+                renderFeatureList();
+                return;
+            }
+            document.getElementById('modalFeatureTitle').innerHTML = id
                 ? '<i class="fas fa-edit text-amber-300"></i> Chỉnh Sửa Tính Năng Sản Phẩm' 
                 : '<i class="fas fa-satellite-dish text-amber-300"></i> Thêm Cập Nhật Tính Năng Mới';
 
             if (id) {
                 const f = radarFeatures.find(x => x.id === id);
                 document.getElementById('featId').value = f.id;
-                document.getElementById('featName').value = f.name;
-                document.getElementById('featGroup').value = f.group;
+                document.getElementById('featName').value = f.name || '';
+                document.getElementById('featGroup').value = f.group || 'Retail';
                 document.getElementById('featIframeUrl').value = f.iframeUrl || '';
                 document.getElementById('featUpdateDate').value = f.updateDate || '';
                 document.getElementById('featDemoDate').value = f.demoDate || '';
@@ -1008,6 +1119,13 @@
 
             if (id) {
                 const f = radarFeatures.find(x => x.id === id);
+                if (!f) {
+                    // Mục đã bị xóa (vd. ở tab khác) trong lúc đang sửa
+                    showToast('Mục này đã bị xóa');
+                    closeFeatureModal();
+                    renderFeatureList();
+                    return;
+                }
                 Object.assign(f, { name, group, iframeUrl, updateDate, demoDate, launchDate, status, hdsdStatus, videoName, videoStatus, note, cleared });
             } else {
                 const newId = 'rad-' + Date.now();
@@ -1017,11 +1135,11 @@
                 activeSelectedFeatureId = newId;
             }
 
-            saveRadarData();
+            const saved = saveRadarData();
             closeFeatureModal();
             renderFeatureList();
             selectFeatureToTest(id || radarFeatures[0].id);
-            showToast("Đã lưu thông tin tính năng thành công!");
+            if (saved) showToast("Đã lưu thông tin tính năng thành công!");
         }
 
         function editFeature(id) { openFeatureModal(id); }
@@ -1033,21 +1151,46 @@
                     activeSelectedFeatureId = radarFeatures.length > 0 ? radarFeatures[0].id : null;
                     selectFeatureToTest(activeSelectedFeatureId);
                 }
-                saveRadarData();
+                const saved = saveRadarData();
                 renderFeatureList();
-                showToast("Đã xóa tính năng!");
+                if (saved) showToast("Đã xóa tính năng!");
             }
         }
 
         function escapeHtml(str) {
             if (!str) return '';
-            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // Ủy quyền sự kiện cho danh sách thẻ: dùng data-action + data-id thay vì onclick="...('${id}')"
+        function initFeatureListEvents() {
+            const container = document.getElementById('radarFeatureList');
+            if (!container) return;
+            container.addEventListener('click', (e) => {
+                const el = e.target.closest('[data-action]');
+                if (!el || !container.contains(el)) return;
+                const id = el.getAttribute('data-id');
+                switch (el.getAttribute('data-action')) {
+                    case 'select': selectFeatureToTest(id); break;
+                    case 'edit': editFeature(id); break;
+                    case 'delete': deleteFeature(id); break;
+                    case 'add': openFeatureModal(); break;
+                    default: break; // 'none' / 'toggle-clear': không chọn thẻ
+                }
+            });
+            container.addEventListener('change', (e) => {
+                const el = e.target;
+                if (el && el.matches && el.matches('input[data-action="toggle-clear"]')) {
+                    toggleFeatureCleared(el.getAttribute('data-id'), el.checked);
+                }
+            });
         }
 
         window.onload = () => {
             // Profile is automatically hydrated by sidebar-nav.js
-            
+
             initSplitResizer();
+            initFeatureListEvents();
             loadRadarData();
         };
     </script>

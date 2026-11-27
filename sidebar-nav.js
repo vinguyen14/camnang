@@ -1066,7 +1066,7 @@
       if (radarRaw) {
         const radarList = JSON.parse(radarRaw);
         if (Array.isArray(radarList)) {
-          const hasUrgent = radarList.some(f => f.status !== 'Đã Launching' && (!f.isTrainerCleared || f.hdsdStatus === 'Chưa có bài' || (f.videoAction === 'Cần quay lại' && !f.isVideoDone)));
+          const hasUrgent = radarList.some(f => f && f.status === 'Đã Launching' && (!f.cleared || f.videoStatus === 'Cần quay lại gấp')); // cùng công thức isUrgent của radar.html
           const dotEl = document.getElementById('sidebar-alert-dot');
           if (dotEl) dotEl.classList.toggle('hidden', !hasUrgent);
         }

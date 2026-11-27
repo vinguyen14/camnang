@@ -369,6 +369,27 @@
             .mode-tab-btn { flex: 1 1 auto; }
             main, section, .grid { min-width: 0; }
         }
+
+        /* Tạm dừng hiệu ứng dây/đèn nhấp nháy khi tab bị ẩn (tiết kiệm CPU) */
+        body.wires-paused .topo-wire,
+        body.wires-paused .animate-pulse,
+        body.wires-paused .animate-ping {
+            animation-play-state: paused !important;
+        }
+
+        /* Người dùng bật "giảm chuyển động" trong hệ điều hành: tắt hiệu ứng chạy liên tục */
+        @media (prefers-reduced-motion: reduce) {
+            .topo-wire,
+            .topo-wire.focused-wire,
+            .animate-pulse,
+            .animate-ping {
+                animation: none !important;
+            }
+            .topo-wire { transition: none !important; }
+        }
+
+        /* Nút Quét đang khóa */
+        #btnScanNow[disabled] { opacity: 0.6; cursor: not-allowed; }
     </style>
     <script src="system-config.js"></script>
 </head>
@@ -424,7 +445,7 @@
             <!-- NÚT QUÉT LẠI HỆ THỐNG TỰ ĐỘNG -->
             <button onclick="autoScanLiveSystem(true)" id="btnScanNow" class="px-4 py-2 rounded-xl bg-cyan-600/90 hover:bg-cyan-500 text-white text-xs font-bold font-mono-code transition shadow-lg flex items-center gap-2">
                 <i id="scan-icon" class="fas fa-sync-alt"></i>
-                <span>Quét Lại Hệ Thống</span>
+                <span id="scan-label">Quét Lại Hệ Thống</span>
             </button>
 
             <a href="https://vinguyen14.github.io/camnang/" target="_blank" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition flex items-center gap-1.5" title="Mở Website Sản Phẩm">
@@ -871,7 +892,35 @@
         };
 
         // =========================================================================
-        // 2. HỒ SƠ 100% RIÊNG BIỆT CHO TOÀN BỘ 18 FILE (CỤM 4 CHỈ CÒN 4 KHÓA HỌC)
+        // 2a. BẢN ĐỒ THẺ <script src> THỰC TẾ CỦA TỪNG TRANG (đã đối chiếu mã nguồn)
+        //     Khi một trang thêm/bớt script dùng chung, chỉ cần sửa ở đây:
+        //     dây nối tím và các con số "N trang" sẽ tự cập nhật theo.
+        // =========================================================================
+        const PAGE_SCRIPT_INCLUDES = {
+            'index.html':           ['system-config.js', 'trainer-utils.js', 'chat-history.js', 'elearning-report.js', 'sop-drawer.js', 'report-memo.js', 'sidebar-nav.js'],
+            'admin.html':           [],
+            'knowledge-hub.html':   ['system-config.js', 'knowledge-hub-academic.js', 'elearning-sync.js', 'sop-drawer.js', 'sidebar-nav.js'],
+            'settings.html':        ['system-config.js', 'trainer-utils.js', 'sop-drawer.js', 'sidebar-nav.js'],
+            'spcb.html':            ['system-config.js', 'trainer-utils.js', 'sop-drawer.js', 'report-memo.js', 'sidebar-nav.js'],
+            'kv1.html':             ['system-config.js', 'trainer-utils.js', 'sop-drawer.js', 'report-memo.js', 'sidebar-nav.js'],
+            'thuehkd.html':         ['system-config.js', 'trainer-utils.js', 'sop-drawer.js', 'report-memo.js', 'sidebar-nav.js'],
+            'industry.html':        ['system-config.js', 'trainer-utils.js', 'sop-drawer.js', 'report-memo.js', 'sidebar-nav.js'],
+            'system-workflow.html': ['system-config.js', 'sidebar-nav.js'],
+            'tools.html':           ['system-config.js', 'trainer-utils.js', 'chat-history.js', 'sop-drawer.js', 'sidebar-nav.js'],
+            'vault.html':           ['system-config.js', 'sop-drawer.js', 'sidebar-nav.js'],
+            'knowledge.html':       ['system-config.js', 'sop-drawer.js', 'sidebar-nav.js'],
+            'radar.html':           ['system-config.js', 'sidebar-nav.js'],
+            'coderunner.html':      ['system-config.js', 'sidebar-nav.js'],
+            'gamification.html':    []
+        };
+
+        // Đếm số trang đang nạp một script dùng chung
+        function countPagesUsing(scriptName) {
+            return Object.keys(PAGE_SCRIPT_INCLUDES).filter(p => PAGE_SCRIPT_INCLUDES[p].includes(scriptName)).length;
+        }
+
+        // =========================================================================
+        // 2. HỒ SƠ RIÊNG BIỆT CHO TỪNG FILE (CỤM 4 CHỈ CHỨA 4 KHÓA HỌC)
         // =========================================================================
         const COMPREHENSIVE_SYSTEM_REGISTRY = [
             // CỤM 1: BACKEND
@@ -899,9 +948,9 @@
                 cluster: 2, 
                 color: '#a855f7', 
                 icon: 'fa-book-open', 
-                statusText: 'Auto-inject 10 trang',
-                subtitle: 'Cẩm nang SOP Universal', 
-                desc: 'Micro-component tự động tiêm cẩm nang SOP vào cả 10 trang, tự hiểu ngữ cảnh, có bộ đệm Offline cứu sinh.', 
+                statusText: `Auto-inject ${countPagesUsing('sop-drawer.js')} trang`,
+                subtitle: 'Cẩm nang SOP Universal',
+                desc: `Micro-component tự động tiêm cẩm nang SOP vào ${countPagesUsing('sop-drawer.js')} trang, tự hiểu ngữ cảnh, có bộ đệm Offline cứu sinh.`,
                 inputs: 'window.location.pathname, radio industryType', 
                 outputs: 'DOM Drawer, Action Checklist, 31 bước chuẩn', 
                 tech: 'SessionStorage, Regex parser, Self-Healing',
@@ -931,7 +980,7 @@
                 icon: 'fa-sliders', 
                 statusText: 'Trung tâm Cấu hình Toàn cục',
                 subtitle: 'Single Source of Truth Config', 
-                desc: 'Trung tâm điều phối cấu hình duy nhất của hệ thống: Quản lý DEFAULT_API_URL, hàm getGlobalApiUrl(), tự động phát sóng (Broadcast) link API cho cả 13 trang mà không cần sửa code thủ công.', 
+                desc: `Trung tâm điều phối cấu hình duy nhất của hệ thống: Quản lý DEFAULT_API_URL, hàm getGlobalApiUrl(), tự động phát sóng (Broadcast) link API cho cả ${countPagesUsing('system-config.js')} trang mà không cần sửa code thủ công.`,
                 inputs: 'DEFAULT_API_URL, localStorage (kv_api_url), Settings UI', 
                 outputs: 'window.getGlobalApiUrl(), window.setGlobalApiUrl(), Event kv_api_url_changed', 
                 tech: 'Vanilla JS, IIFE, CustomEvent, Unified State',
@@ -944,13 +993,88 @@
                 cluster: 2, 
                 color: '#ec4899', 
                 icon: 'fa-bars', 
-                statusText: 'Auto-inject 13 trang',
-                subtitle: 'Thanh điều hướng Đa phân hệ', 
-                desc: 'Menu điều hướng đồng bộ trên toàn bộ 13 file HTML: Menu Accordion Chuyên ngành (FNB, Salon, Hotel), Badge cảnh báo Radar thời gian thực, quản lý Profile Trainer.', 
-                inputs: 'URL pathname, LocalStorage Profile & Radar', 
-                outputs: 'DOM Aside Navigation, Responsive Layout Offset', 
+                statusText: `Auto-inject ${countPagesUsing('sidebar-nav.js')} trang`,
+                subtitle: 'Thanh điều hướng Đa phân hệ',
+                desc: `Menu điều hướng đồng bộ trên ${countPagesUsing('sidebar-nav.js')} file HTML: Menu Accordion Chuyên ngành (FNB, Salon, Hotel), Badge cảnh báo Radar thời gian thực, quản lý Profile Trainer.`,
+                inputs: 'URL pathname, LocalStorage Profile & Radar',
+                outputs: 'DOM Aside Navigation, Responsive Layout Offset',
                 tech: 'DOM Injection, CSS Variables, Auto-active',
                 skills: ['/inject-sidebar', '/accordion-menu', '/radar-badge', '/profile-sync']
+            },
+            {
+                id: 'trainer-utils.js',
+                name: 'trainer-utils.js',
+                folder: 'shared',
+                cluster: 2,
+                color: '#a855f7',
+                icon: 'fa-toolbox',
+                statusText: `Dùng chung ${countPagesUsing('trainer-utils.js')} trang`,
+                subtitle: 'Hàm tiện ích dùng chung',
+                desc: 'Bộ hàm tiện ích dùng chung: xử lý số liệu, định dạng ngày tháng, chuẩn hóa dữ liệu để các trang không phải viết lại cùng một đoạn code.',
+                inputs: 'Chuỗi ngày tháng, số liệu thô từ bảng tính',
+                outputs: 'Giá trị đã chuẩn hóa cho các trang khóa học & Dashboard',
+                tech: 'Vanilla JS, hàm thuần (pure functions)',
+                skills: ['/date-format', '/number-utils', '/data-normalize']
+            },
+            {
+                id: 'chat-history.js',
+                name: 'chat-history.js',
+                folder: 'shared',
+                cluster: 2,
+                color: '#a855f7',
+                icon: 'fa-comments',
+                statusText: `Lịch sử chat AI · ${countPagesUsing('chat-history.js')} trang`,
+                subtitle: 'Lưu lịch sử chat Trợ lý AI',
+                desc: 'Lưu lịch sử hội thoại với Trợ lý AI để khi chuyển giữa các trang vẫn xem lại được các câu hỏi và câu trả lời trước đó.',
+                inputs: 'Tin nhắn người dùng & phản hồi AI',
+                outputs: 'Lịch sử chat lưu trên trình duyệt',
+                tech: 'LocalStorage, Vanilla JS',
+                skills: ['/chat-history', '/ai-assistant']
+            },
+            {
+                id: 'knowledge-hub-academic.js',
+                name: 'knowledge-hub-academic.js',
+                folder: 'shared',
+                cluster: 2,
+                color: '#a855f7',
+                icon: 'fa-graduation-cap',
+                statusText: 'Giao diện học thuật Hub',
+                subtitle: 'Giao diện học thuật cho Master Data Hub',
+                desc: 'Bổ sung giao diện học thuật cho trang Master Data Hub (knowledge-hub.html): trình bày học liệu, giáo trình theo bố cục dễ đọc.',
+                inputs: 'Dữ liệu học liệu của Master Data Hub',
+                outputs: 'Giao diện học thuật trên knowledge-hub.html',
+                tech: 'DOM Injection, Vanilla JS',
+                skills: ['/academic-ui', '/master-data-hub']
+            },
+            {
+                id: 'elearning-report.js',
+                name: 'elearning-report.js',
+                folder: 'shared',
+                cluster: 2,
+                color: '#a855f7',
+                icon: 'fa-heart-pulse',
+                statusText: 'Thẻ Sức khỏe kho học liệu',
+                subtitle: 'Sức khỏe kho học liệu trên Dashboard',
+                desc: 'Vẽ thẻ "Sức khỏe kho học liệu" trên Dashboard (index.html): tóm tắt tình trạng kho giáo trình E-Learning, có bộ nhớ đệm để không gọi lại liên tục.',
+                inputs: 'API Master Data Hub (getHubApiUrl)',
+                outputs: 'Thẻ tổng hợp trên Dashboard',
+                tech: 'Fetch + cache có thời hạn, Vanilla JS',
+                skills: ['/elearning-health', '/dashboard-card']
+            },
+            {
+                id: 'elearning-sync.js',
+                name: 'elearning-sync.js',
+                folder: 'shared',
+                cluster: 2,
+                color: '#a855f7',
+                icon: 'fa-arrows-rotate',
+                statusText: 'Đồng bộ Thư viện ↔ Cổng học',
+                subtitle: 'Đồng bộ Thư viện giáo trình',
+                desc: 'Đồng bộ Thư viện giáo trình với Cổng học tập để danh sách bài học trên hai nơi luôn khớp nhau.',
+                inputs: 'Danh sách giáo trình, dữ liệu Cổng học tập',
+                outputs: 'Thư viện giáo trình đã đồng bộ trên knowledge-hub.html',
+                tech: 'Fetch (no-store), so khớp URL',
+                skills: ['/elearning-sync', '/library-portal-match']
             },
 
             // CỤM 3: COMMAND HUB
@@ -999,7 +1123,22 @@
                 tech: '2-way Cloud Sync, Tooltips (i), Safe Wipe',
                 skills: ['/cloud-sync-up', '/cloud-sync-down', '/safe-wipe-auth', '/kv-storage-keys']
             },
-            
+            {
+                id: 'admin.html',
+                name: 'admin.html',
+                folder: 'core',
+                cluster: 3,
+                color: '#3b82f6',
+                icon: 'fa-user-shield',
+                statusText: 'Trang quản trị',
+                subtitle: 'Quản trị tài liệu & tri thức L&D',
+                desc: 'Trang quản trị dành cho người phụ trách: quản lý tài liệu và tri thức L&D. Trang độc lập, không nạp sidebar hay script dùng chung.',
+                inputs: 'Thao tác của quản trị viên',
+                outputs: 'Dữ liệu tài liệu & tri thức đã chỉnh sửa',
+                tech: 'HTML, Tailwind CDN, JS thuần',
+                skills: ['/admin-panel', '/document-manager']
+            },
+
 
             // CỤM 4: 4 KHÓA HỌC CHUẨN MỰC
             { 
@@ -1071,13 +1210,13 @@
                 cluster: 5, 
                 color: '#10b981', 
                 icon: 'fa-project-diagram', 
-                statusText: 'Bản đồ luồng 3 tháng',
-                subtitle: 'Master Workflow Pipeline', 
-                desc: 'Sơ đồ lộ trình đào tạo tổng thể: Mô phỏng dòng chảy học viên từ lúc nhận việc Onboarding (SPCB), chuyển tiếp tháng M-2 (KV1 & Thuế) đến chuyên ngành M-3 (FNB/Salon/Hotel).', 
-                inputs: 'Dữ liệu tiến độ nhân sự HRM, KPI Milestone', 
-                outputs: 'Bản đồ tương tác trực quan, Cảnh báo chậm tiến độ', 
-                tech: 'Mermaid.js, SVG Pipeline, Milestone Tracker',
-                skills: ['/workflow-pipeline', '/milestone-tracker', '/lifecycle-audit', '/onboarding-flow']
+                statusText: 'Sơ đồ kiến trúc hệ thống',
+                subtitle: 'Sơ đồ vận hành & luồng dữ liệu',
+                desc: 'Sơ đồ kiến trúc và luồng dữ liệu giữa các trang, module dùng chung và backend Apps Script: trang nào nạp script nào, trang nào gọi API, điều hướng ra sao; kèm lịch sử commit từ GitHub.',
+                inputs: 'Danh sách file khai báo sẵn, GitHub API repo vinguyen14/camnang',
+                outputs: 'Sơ đồ khối có dây nối, cây thư mục, bảng commit gần nhất',
+                tech: 'SVG wires, ResizeObserver, GitHub REST API + cache',
+                skills: ['/workflow-pipeline', '/lifecycle-audit']
             },
             { 
                 id: 'tools.html', 
@@ -1154,6 +1293,21 @@
                 outputs: 'Live Device Preview, Console Logs, Xuất file .html / .txt', 
                 tech: 'postMessage Console Interceptor, DOMParser Linter, Viewport Scaler',
                 skills: ['/code-sandbox', '/regex-tester', '/api-payload-mock', '/console-runner']
+            },
+            {
+                id: 'gamification.html',
+                name: 'gamification.html',
+                folder: 'tools',
+                cluster: 5,
+                color: '#10b981',
+                icon: 'fa-dice',
+                statusText: 'Trò chơi Quay số lớp học',
+                subtitle: 'Quay số chiếu màn lớn',
+                desc: 'Trò chơi Quay số chọn người may mắn, thiết kế để chiếu lên màn hình lớn trong lớp học. Trang độc lập, không nạp sidebar hay script dùng chung.',
+                inputs: 'Danh sách người tham gia',
+                outputs: 'Kết quả quay số, hiệu ứng pháo giấy',
+                tech: 'canvas-confetti, JS thuần',
+                skills: ['/lucky-draw', '/classroom-game']
             }
         ];
 
@@ -1163,9 +1317,9 @@
         const TECH_NON_DEV_DICTIONARY = {
                         'system-config.js': {
                 title: 'system-config.js - Trung Tâm Điều Phối Cấu Hình Toàn Cục',
-                what: 'Tệp điều phối duy nhất chịu trách nhiệm kết nối toàn bộ 13 trang web với Google Apps Script Backend.',
+                what: `Tệp điều phối duy nhất chịu trách nhiệm kết nối ${countPagesUsing('system-config.js')} trang web với Google Apps Script Backend.`,
                 how: 'Cung cấp hàm getGlobalApiUrl() cho toàn bộ dự án. Khi thay đổi URL trên Settings hoặc trong file, 100% trang web tự động đồng bộ tức thời mà không cần sửa code thủ công.',
-                benefit: 'Xóa bỏ hoàn toàn thao tác sửa tay 13 file HTML mỗi lần triển khai Apps Script mới, đảm bảo tính nhất quán dữ liệu.',
+                benefit: `Xóa bỏ hoàn toàn thao tác sửa tay ${countPagesUsing('system-config.js')} file HTML mỗi lần triển khai Apps Script mới, đảm bảo tính nhất quán dữ liệu.`,
                 skills: ['/global-config', '/broadcast-api', '/single-source-truth']
             },
             'sidebar-nav.js': {
@@ -1226,14 +1380,9 @@
                 benefit: '1 trang web nhưng quản trị riêng biệt từng phân hệ ngành, nộp báo cáo tách biệt không sợ lẫn lộn số liệu.'
             },
             'system-workflow.html': {
-                title: 'system-workflow.html - Sơ Đồ Quy Trình Tổng Thể 3 Tháng',
-                what: 'Bản đồ chỉ đường trực quan mô phỏng hành trình học tập của một nhân sự từ Ngày đầu nhận việc đến hết 3 tháng thử việc.',
-                benefit: 'Trainer nhìn vào là biết học viên đang ở chặng nào, lớp nào sắp mở và cần can thiệp hỗ trợ ai kịp thời.'
-            },
-            'tools.html': {
-                title: 'tools.html - Túi Thần Kỳ 7 Công Cụ Tác Nghiệp',
-                what: 'Bộ lọc tự động hóa tách nhân sự M-2/M-3 từ file HRM khổng lồ, điểm danh qua ảnh chụp Meet, quản lý kho quà và thùng rác.',
-                benefit: 'Tiết kiệm hàng giờ lọc Excel thủ công, lỡ tay xóa nhầm học viên thì vào thùng rác bấm khôi phục lại ngay.'
+                title: 'system-workflow.html - Sơ Đồ Vận Hành Hệ Thống',
+                what: 'Sơ đồ kiến trúc và luồng dữ liệu giữa các trang, module dùng chung và backend Apps Script: trang nào nạp script nào, trang nào gọi API, trang nào dẫn sang trang nào.',
+                benefit: 'Nhìn một lần là biết sửa một file sẽ ảnh hưởng tới những trang nào, giúp bảo trì và tìm lỗi nhanh, ít sót.'
             },
             'vault.html': {
                 title: 'vault.html - Kho Tri Thức Second Brain',
@@ -1252,8 +1401,43 @@
             },
             'tools.html': {
                 title: 'tools.html - Runner Tools & Quản Trị Vận Hành',
-                what: 'Bộ công cụ tác chiến: kiểm soát kho quà L&D, hệ thống chuông cảnh báo lớp W3 và trợ lý AI phân tích số liệu.',
-                benefit: 'Hỗ trợ Trainer điều phối lớp học trơn tru, nắm bắt chính xác tồn kho quà và nhận phân tích thông minh từ AI.'
+                what: 'Bộ công cụ tác nghiệp: lọc tự động tách nhân sự M-2/M-3 từ file HRM, điểm danh qua ảnh chụp Meet, quản lý kho quà L&D, chuông cảnh báo lớp W3, thùng rác khôi phục và trợ lý AI phân tích số liệu.',
+                benefit: 'Tiết kiệm hàng giờ lọc Excel thủ công, nắm chính xác tồn kho quà; lỡ tay xóa nhầm học viên thì vào thùng rác khôi phục lại ngay.'
+            },
+            'admin.html': {
+                title: 'admin.html - Trang Quản Trị',
+                what: 'Trang quản trị dành cho người phụ trách hệ thống: quản lý tài liệu và tri thức L&D.',
+                benefit: 'Gom các thao tác quản trị vào một chỗ, tách biệt với các trang Trainer dùng hằng ngày.'
+            },
+            'gamification.html': {
+                title: 'gamification.html - Trò Chơi Quay Số',
+                what: 'Trò chơi Quay số chọn người may mắn, thiết kế để chiếu lên màn hình lớn trong lớp.',
+                benefit: 'Khuấy động không khí lớp học, chọn người trả lời hoặc trao quà một cách công bằng, vui nhộn.'
+            },
+            'trainer-utils.js': {
+                title: 'trainer-utils.js - Hộp Hàm Tiện Ích Dùng Chung',
+                what: 'Tập hợp các hàm dùng chung để xử lý số liệu và ngày tháng cho nhiều trang.',
+                benefit: 'Các trang tính toán và hiển thị ngày tháng giống nhau, sửa một chỗ là đúng ở mọi nơi.'
+            },
+            'chat-history.js': {
+                title: 'chat-history.js - Lịch Sử Chat Trợ Lý AI',
+                what: 'Lưu lại lịch sử trò chuyện với Trợ lý AI trên trình duyệt, dùng được giữa các trang.',
+                benefit: 'Chuyển trang không bị mất cuộc trò chuyện, xem lại câu trả lời cũ bất cứ lúc nào.'
+            },
+            'knowledge-hub-academic.js': {
+                title: 'knowledge-hub-academic.js - Giao Diện Học Thuật',
+                what: 'Phần giao diện học thuật gắn thêm vào trang Master Data Hub.',
+                benefit: 'Học liệu và giáo trình được trình bày gọn gàng, dễ đọc, dễ tra cứu hơn.'
+            },
+            'elearning-report.js': {
+                title: 'elearning-report.js - Sức Khỏe Kho Học Liệu',
+                what: 'Thẻ "Sức khỏe kho học liệu" hiển thị trên Dashboard.',
+                benefit: 'Mở Dashboard là thấy ngay kho giáo trình E-Learning đang ổn hay có chỗ cần bổ sung.'
+            },
+            'elearning-sync.js': {
+                title: 'elearning-sync.js - Đồng Bộ Thư Viện Giáo Trình',
+                what: 'Đồng bộ Thư viện giáo trình với Cổng học tập.',
+                benefit: 'Danh sách bài học ở hai nơi luôn khớp nhau, không phải đối chiếu thủ công.'
             },
             'coderunner.html': {
                 title: 'coderunner.html - Hộp Thử Nghiệm Công Thức & Mã Code',
@@ -1265,45 +1449,36 @@
         // =========================================================================
         // 4. DANH SÁCH DÂY KẾT NỐI TOÀN HỆ THỐNG
         // =========================================================================
+        // Script nạp gần như mọi trang (cấu hình & menu) không vẽ dây để sơ đồ đỡ rối;
+        // số trang dùng chúng vẫn hiện trên thẻ của từng file.
+        const WIRE_SKIP_SCRIPTS = ['system-config.js', 'sidebar-nav.js'];
+
+        // Trang/module thật sự gọi API Apps Script (getGlobalApiUrl / kv_api_url) — đã đối chiếu mã nguồn
+        const API_CONSUMERS = [
+            'index.html', 'knowledge-hub.html', 'settings.html',
+            'spcb.html', 'industry.html', 'kv1.html', 'thuehkd.html',
+            'tools.html', 'knowledge.html', 'sop-drawer.js'
+        ];
+
+        // Liên kết điều hướng có thật trong index.html (thẻ <a>, location.href, window.open, danh sách khóa học)
+        const DASHBOARD_NAV_TARGETS = [
+            'spcb.html', 'kv1.html', 'thuehkd.html', 'industry.html',
+            'knowledge-hub.html', 'settings.html', 'system-workflow.html'
+        ];
+
         const SYSTEM_WIRES_REGISTRY = [
-            // API 2 Chiều từ code.js tới tất cả các trang
-            { from: 'code.js', to: 'index.html', type: 'api' },
-            { from: 'code.js', to: 'knowledge-hub.html', type: 'api' },
-            { from: 'code.js', to: 'settings.html', type: 'api' },
-            
-            { from: 'code.js', to: 'spcb.html', type: 'api' },
-            { from: 'code.js', to: 'industry.html', type: 'api' },
-            { from: 'code.js', to: 'kv1.html', type: 'api' },
-            { from: 'code.js', to: 'thuehkd.html', type: 'api' },
-            { from: 'code.js', to: 'system-workflow.html', type: 'api' },
-            { from: 'code.js', to: 'vault.html', type: 'api' },
-            { from: 'code.js', to: 'tools.html', type: 'api' },
-            { from: 'code.js', to: 'knowledge.html', type: 'api' },
-            { from: 'code.js', to: 'radar.html', type: 'api' },
-            
-            { from: 'code.js', to: 'coderunner.html', type: 'api' },
+            // API 2 chiều từ code.js tới các trang/module có gọi API
+            ...API_CONSUMERS.map(to => ({ from: 'code.js', to, type: 'api' })),
 
-            // Tiêm SOP Universal
-            { from: 'sop-drawer.js', to: 'spcb.html', type: 'shared' },
-            { from: 'sop-drawer.js', to: 'industry.html', type: 'shared' },
-            { from: 'sop-drawer.js', to: 'kv1.html', type: 'shared' },
-            { from: 'sop-drawer.js', to: 'thuehkd.html', type: 'shared' },
-
-            // Tiêm Report Memo
-            { from: 'report-memo.js', to: 'spcb.html', type: 'shared' },
-            { from: 'report-memo.js', to: 'industry.html', type: 'shared' },
-            { from: 'report-memo.js', to: 'kv1.html', type: 'shared' },
-            { from: 'report-memo.js', to: 'thuehkd.html', type: 'shared' },
+            // Tiêm script 1 chiều: sinh tự động từ PAGE_SCRIPT_INCLUDES
+            ...Object.keys(PAGE_SCRIPT_INCLUDES).flatMap(page =>
+                PAGE_SCRIPT_INCLUDES[page]
+                    .filter(s => !WIRE_SKIP_SCRIPTS.includes(s))
+                    .map(s => ({ from: s, to: page, type: 'shared' }))
+            ),
 
             // Điều hướng UI từ Dashboard
-            { from: 'index.html', to: 'spcb.html', type: 'nav' },
-            { from: 'index.html', to: 'kv1.html', type: 'nav' },
-            { from: 'index.html', to: 'thuehkd.html', type: 'nav' },
-            { from: 'index.html', to: 'industry.html', type: 'nav' },
-            { from: 'index.html', to: 'system-workflow.html', type: 'nav' },
-            { from: 'index.html', to: 'tools.html', type: 'nav' },
-            { from: 'index.html', to: 'vault.html', type: 'nav' },
-            { from: 'index.html', to: 'radar.html', type: 'nav' }
+            ...DASHBOARD_NAV_TARGETS.map(to => ({ from: 'index.html', to, type: 'nav' }))
         ];
 
         let liveSystemData = {
@@ -1336,6 +1511,8 @@
             currentThemeMode = theme;
             localStorage.setItem('kv_telemetry_theme', theme);
             document.body.className = (theme === 'light') ? 'theme-light min-h-screen flex flex-col p-6 sm:p-10 select-none' : 'theme-dark min-h-screen flex flex-col p-6 sm:p-10 select-none';
+            // Giữ lại trạng thái tạm dừng hiệu ứng nếu tab đang ẩn (className vừa bị ghi đè)
+            document.body.classList.toggle('wires-paused', document.hidden);
 
             const icon = document.getElementById('theme-icon');
             const label = document.getElementById('theme-label');
@@ -1378,76 +1555,239 @@
         // ==========================================
         // 6. TỰ ĐỘNG QUÉT GITHUB
         // ==========================================
+        const GITHUB_API_BASE = 'https://api.github.com/repos/vinguyen14/camnang';
+        const GITHUB_CACHE_KEY = 'kv_workflow_github_cache_v1';
+        const GITHUB_CACHE_TTL_MS = 15 * 60 * 1000;   // 15 phút: trong khoảng này dùng cache, không gọi lại GitHub
+        const SCAN_LOCK_MS = 10 * 1000;               // Khóa nút Quét 10 giây để tránh bấm liên tục
+        let scanInFlight = false;
+        let scanLockUntil = 0;
+        let scanUnlockTimer = null;
+
+        // Đọc cache GitHub (an toàn khi localStorage bị chặn hoặc dữ liệu hỏng)
+        function readGithubCache() {
+            try {
+                const raw = localStorage.getItem(GITHUB_CACHE_KEY);
+                if (!raw) return null;
+                const c = JSON.parse(raw);
+                return (c && typeof c === 'object') ? c : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Ghi đè từng phần cache (files / commits có mốc thời gian riêng)
+        function writeGithubCache(patch) {
+            try {
+                const next = Object.assign({}, readGithubCache() || {}, patch);
+                localStorage.setItem(GITHUB_CACHE_KEY, JSON.stringify(next));
+            } catch (e) {
+                console.warn('Không lưu được cache GitHub vào localStorage.', e);
+            }
+        }
+
+        function isCacheFresh(at) {
+            return typeof at === 'number' && (Date.now() - at) < GITHUB_CACHE_TTL_MS;
+        }
+
+        function formatCacheTime(at) {
+            if (typeof at !== 'number') return '--:--';
+            return new Date(at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+        }
+
+        // Nhãn lỗi dễ hiểu theo mã HTTP
+        function githubErrorLabel(status) {
+            if (status === 403 || status === 429) return 'GitHub tạm giới hạn lượt gọi, đang hiển thị dữ liệu đã lưu';
+            return `Không tải được từ GitHub${typeof status === 'number' ? ` (lỗi ${status})` : ''}`;
+        }
+
+        // Gắn link GitHub của từng file vào danh sách module
+        function applyScannedFiles(files) {
+            if (!Array.isArray(files)) return;
+            files.forEach(df => {
+                const found = liveSystemData.modules.find(m => m.id === df.name);
+                if (found) {
+                    found.htmlUrl = df.html_url;
+                    found.downloadUrl = df.download_url;
+                }
+            });
+        }
+
+        // Cập nhật trạng thái nút Quét: đang quét / đang khóa / sẵn sàng
+        function setScanButtonState(state) {
+            const btn = document.getElementById('btnScanNow');
+            const icon = document.getElementById('scan-icon');
+            const label = document.getElementById('scan-label');
+            if (!btn) return;
+            if (state === 'scanning') {
+                btn.disabled = true;
+                if (icon) icon.classList.add('fa-spin');
+                if (label) label.innerText = 'Đang quét...';
+            } else if (state === 'locked') {
+                btn.disabled = true;
+                if (icon) icon.classList.remove('fa-spin');
+                if (label) label.innerText = 'Quét Lại Hệ Thống';
+                btn.title = 'Vừa quét xong, vui lòng đợi vài giây trước khi quét lại';
+            } else {
+                btn.disabled = false;
+                if (icon) icon.classList.remove('fa-spin');
+                if (label) label.innerText = 'Quét Lại Hệ Thống';
+                btn.title = '';
+            }
+        }
+
         async function autoScanLiveSystem(isManualClick = false) {
-            const scanIcon = document.getElementById('scan-icon');
             const repoLabel = document.getElementById('telemetry-repo-label');
             const timeLabel = document.getElementById('telemetry-time');
             const indicator = document.getElementById('telemetry-indicator');
 
-            if(scanIcon) scanIcon.classList.add('fa-spin');
-            if(isManualClick) showToast('<i class="fas fa-spinner fa-spin text-cyan-400"></i> Đang đồng bộ trực tiếp với GitHub Repo vinguyen14/camnang...');
+            // Chặn bấm liên tục: đang quét hoặc còn trong thời gian khóa
+            if (scanInFlight) return;
+            if (isManualClick && Date.now() < scanLockUntil) {
+                const remain = Math.ceil((scanLockUntil - Date.now()) / 1000);
+                showToast(`⏳ Vừa quét xong, vui lòng đợi ${remain} giây rồi quét lại.`);
+                return;
+            }
 
-            let scannedFilesSuccess = false;
+            const cache = readGithubCache();
+            const totalFiles = liveSystemData.modules.length;
+
+            // Lần mở trang: cache còn hạn 15 phút thì dùng luôn, không gọi GitHub
+            if (!isManualClick && cache && cache.files && cache.commits && isCacheFresh(cache.filesAt) && isCacheFresh(cache.commitsAt)) {
+                applyScannedFiles(cache.files);
+                renderLiveCommitsBacklog(cache.commits, { source: 'cache', at: cache.commitsAt });
+                if (indicator) indicator.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block shadow-[0_0_10px_#10b981] animate-pulse';
+                if (repoLabel) repoLabel.innerHTML = `LIVE TELEMETRY: <b class="text-white">vinguyen14/camnang</b> (${totalFiles} files · dữ liệu đã lưu)`;
+                if (timeLabel) timeLabel.innerText = `Cập nhật: ${formatCacheTime(cache.filesAt)}`;
+                renderGranularTree();
+                renderTopologyNodes();
+                setTimeout(drawHardwareWires, 100);
+                return;
+            }
+
+            scanInFlight = true;
+            if (isManualClick) {
+                scanLockUntil = Date.now() + SCAN_LOCK_MS;
+                showToast('<i class="fas fa-spinner fa-spin text-cyan-400"></i> Đang đồng bộ trực tiếp với GitHub Repo vinguyen14/camnang...');
+            }
+            setScanButtonState('scanning');
+
+            let filesStatus = 'ok';      // 'ok' | 'cache' | 'none'
+            let filesError = null;       // mã HTTP hoặc 'network'
+            let commitsError = null;
 
             try {
-                const res = await fetch('https://api.github.com/repos/vinguyen14/camnang/contents');
-                if (res.ok) {
-                    const contents = await res.json();
-                    const discoveredFiles = contents.filter(item => item.type === 'file' && (item.name.endsWith('.html') || item.name.endsWith('.js')));
-
-                    if (discoveredFiles.length > 0) {
-                        discoveredFiles.forEach(df => {
-                            const found = liveSystemData.modules.find(m => m.id === df.name);
-                            if (found) {
-                                found.htmlUrl = df.html_url;
-                                found.downloadUrl = df.download_url;
-                            }
-                        });
-                        scannedFilesSuccess = true;
+                // --- 1. Cây file của repo ---
+                try {
+                    const res = await fetch(`${GITHUB_API_BASE}/contents`);
+                    if (!res.ok) {
+                        filesError = res.status;
+                    } else {
+                        const contents = await res.json();
+                        const files = (Array.isArray(contents) ? contents : [])
+                            .filter(item => item.type === 'file' && (item.name.endsWith('.html') || item.name.endsWith('.js')))
+                            .map(item => ({ name: item.name, html_url: item.html_url, download_url: item.download_url }));
+                        applyScannedFiles(files);
+                        writeGithubCache({ files, filesAt: Date.now() });
+                    }
+                } catch (err) {
+                    filesError = 'network';
+                    console.warn('GitHub Contents API không phản hồi.', err);
+                }
+                if (filesError !== null) {
+                    if (cache && cache.files) {
+                        applyScannedFiles(cache.files);
+                        filesStatus = 'cache';
+                    } else {
+                        filesStatus = 'none';
                     }
                 }
-            } catch (err) {
-                console.warn("GitHub Contents API unreachable, using cached comprehensive registry.", err);
-            }
 
-            try {
-                const resCommits = await fetch('https://api.github.com/repos/vinguyen14/camnang/commits?per_page=10');
-                if (resCommits.ok) {
-                    const commits = await resCommits.json();
-                    renderLiveCommitsBacklog(commits);
+                // --- 2. Lịch sử commit ---
+                try {
+                    const resCommits = await fetch(`${GITHUB_API_BASE}/commits?per_page=10`);
+                    if (!resCommits.ok) {
+                        commitsError = resCommits.status;
+                    } else {
+                        const raw = await resCommits.json();
+                        const commits = (Array.isArray(raw) ? raw : []).map(c => ({
+                            sha: c.sha,
+                            html_url: c.html_url,
+                            commit: {
+                                message: c.commit?.message || '',
+                                author: { name: c.commit?.author?.name || '', date: c.commit?.author?.date || '' }
+                            }
+                        }));
+                        writeGithubCache({ commits, commitsAt: Date.now() });
+                        renderLiveCommitsBacklog(commits, { source: 'live' });
+                    }
+                } catch (err) {
+                    commitsError = 'network';
+                    console.warn('GitHub Commits API không phản hồi.', err);
                 }
-            } catch (err) {
-                renderFallbackBacklog();
+                if (commitsError !== null) {
+                    const label = githubErrorLabel(commitsError);
+                    if (cache && Array.isArray(cache.commits) && cache.commits.length) {
+                        renderLiveCommitsBacklog(cache.commits, { source: 'stale', at: cache.commitsAt, label });
+                    } else {
+                        renderFallbackBacklog(label);
+                    }
+                }
+
+                const nowTimeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                if (timeLabel) timeLabel.innerText = (filesStatus === 'cache')
+                    ? `Dữ liệu lưu lúc: ${formatCacheTime(cache.filesAt)}`
+                    : `Cập nhật: ${nowTimeStr}`;
+
+                if (filesStatus === 'ok') {
+                    if (indicator) indicator.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block shadow-[0_0_10px_#10b981] animate-pulse';
+                    if (repoLabel) repoLabel.innerHTML = `LIVE TELEMETRY: <b class="text-white">vinguyen14/camnang</b> (${totalFiles} files)`;
+                    if (isManualClick) showToast(commitsError === null
+                        ? `✅ Đã đồng bộ ${totalFiles} tệp và lịch sử commit từ GitHub.`
+                        : `⚠️ Đã đồng bộ tệp. Lịch sử commit: ${escapeHtml(githubErrorLabel(commitsError))}.`);
+                } else {
+                    const label = githubErrorLabel(filesError);
+                    if (indicator) indicator.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 inline-block shadow-[0_0_10px_#f59e0b]';
+                    if (repoLabel) repoLabel.innerHTML = `CACHED TELEMETRY: <b class="text-slate-300">vinguyen14/camnang</b> (${totalFiles} files) · <span class="text-amber-400">${escapeHtml(label)}</span>`;
+                    if (isManualClick) showToast(`⚠️ ${escapeHtml(label)}`);
+                }
+
+                renderGranularTree();
+                renderTopologyNodes();
+                setTimeout(drawHardwareWires, 100);
+            } finally {
+                scanInFlight = false;
+                // Giữ nút bị khóa đến hết 10 giây kể từ lần bấm tay
+                const remainMs = scanLockUntil - Date.now();
+                if (remainMs > 0) {
+                    setScanButtonState('locked');
+                    clearTimeout(scanUnlockTimer);
+                    scanUnlockTimer = setTimeout(() => setScanButtonState('ready'), remainMs);
+                } else {
+                    setScanButtonState('ready');
+                }
             }
-
-            const nowTimeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-            if (timeLabel) timeLabel.innerText = `Cập nhật: ${nowTimeStr}`;
-
-            if (scannedFilesSuccess) {
-                indicator.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block shadow-[0_0_10px_#10b981] animate-pulse';
-                repoLabel.innerHTML = `LIVE TELEMETRY: <b class="text-white">vinguyen14/camnang</b> (${liveSystemData.modules.length} Files Chuyên Sâu)`;
-                if(isManualClick) showToast(`✅ Đã đồng bộ hoàn chỉnh ${liveSystemData.modules.length} tệp nghiệp vụ chuyên sâu!`);
-            } else {
-                indicator.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 inline-block shadow-[0_0_10px_#f59e0b]';
-                repoLabel.innerHTML = `CACHED TELEMETRY: <b class="text-slate-300">vinguyen14/camnang</b> (${liveSystemData.modules.length} Files Ready)`;
-            }
-
-            renderGranularTree();
-            renderTopologyNodes();
-            setTimeout(drawHardwareWires, 100);
-
-            if(scanIcon) scanIcon.classList.remove('fa-spin');
         }
 
         // ==========================================
         // 7. RENDER BẢNG SYSTEM BACKLOG
         // ==========================================
-        function renderLiveCommitsBacklog(commits) {
+        // meta.source: 'live' (vừa tải) | 'cache' (cache còn hạn) | 'stale' (GitHub lỗi, dùng cache cũ)
+        function renderLiveCommitsBacklog(commits, meta = { source: 'live' }) {
             const tbody = document.getElementById('backlog-table-body');
             const info = document.getElementById('backlog-sync-info');
             if (!tbody) return;
+            if (!Array.isArray(commits)) commits = [];
+            const isLive = meta.source === 'live';
 
-            if (info) info.innerHTML = `Đang đồng bộ trực tiếp từ GitHub Commits API của repo <b class="text-cyan-400">vinguyen14/camnang</b> (${commits.length} commits gần nhất).`;
+            if (info) {
+                if (meta.source === 'stale') {
+                    info.innerHTML = `<span class="text-amber-400 font-bold"><i class="fas fa-triangle-exclamation mr-1"></i>${escapeHtml(meta.label || 'Không tải được từ GitHub')}</span> — ${commits.length} commits lưu lúc ${formatCacheTime(meta.at)}.`;
+                } else if (meta.source === 'cache') {
+                    info.innerHTML = `Dữ liệu đã lưu lúc ${formatCacheTime(meta.at)} từ repo <b class="text-cyan-400">vinguyen14/camnang</b> (${commits.length} commits gần nhất, tự làm mới sau 15 phút hoặc bấm "Quét Lại Hệ Thống").`;
+                } else {
+                    info.innerHTML = `Đang đồng bộ trực tiếp từ GitHub Commits API của repo <b class="text-cyan-400">vinguyen14/camnang</b> (${commits.length} commits gần nhất).`;
+                }
+            }
 
             tbody.innerHTML = commits.map(c => {
                 const sha = c.sha ? c.sha.slice(0, 7) : 'head';
@@ -1472,7 +1812,7 @@
                 return `
                     <tr class="hover:bg-slate-800/40 transition">
                         <td class="p-3.5 text-center font-bold font-mono-code text-cyan-400">
-                            <a href="${c.html_url}" target="_blank" class="hover:underline" title="Xem commit trên GitHub">${sha}</a>
+                            <a href="${escapeHtml(c.html_url || '#')}" target="_blank" rel="noopener" class="hover:underline" title="Xem commit trên GitHub">${escapeHtml(sha)}</a>
                         </td>
                         <td class="p-3.5 text-slate-300">
                             <span class="font-bold block">${escapeHtml(author)}</span>
@@ -1485,24 +1825,29 @@
                             <span class="text-white font-medium block whitespace-pre-line leading-relaxed">${escapeHtml(msg)}</span>
                         </td>
                         <td class="p-3.5 text-center">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-800">
-                                <i class="fas fa-check text-[8px] mr-1"></i> Live
-                            </span>
+                            ${isLive
+                                ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-800"><i class="fas fa-check text-[8px] mr-1"></i> Live</span>`
+                                : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700"><i class="fas fa-database text-[8px] mr-1"></i> Đã lưu</span>`}
                         </td>
                     </tr>
                 `;
             }).join('');
         }
 
-        function renderFallbackBacklog() {
+        function renderFallbackBacklog(label) {
             const tbody = document.getElementById('backlog-table-body');
+            const info = document.getElementById('backlog-sync-info');
             if (!tbody) return;
+            if (info) {
+                info.innerHTML = `<span class="text-amber-400 font-bold"><i class="fas fa-triangle-exclamation mr-1"></i>${escapeHtml(label || 'Không tải được từ GitHub')}</span> — chưa có lịch sử commit đã lưu, đang hiển thị mốc phiên bản mặc định.`;
+            }
+            const moduleCount = liveSystemData.modules.length;
             tbody.innerHTML = `
                 <tr class="hover:bg-slate-800/40 transition">
                     <td class="p-3.5 text-center font-bold text-cyan-400">v6.5</td>
                     <td class="p-3.5 text-slate-400">10/2026</td>
                     <td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-950 text-purple-400 border border-purple-800">Telemetry</span></td>
-                    <td class="p-3.5"><b class="text-white block">Auto-Discovery GitHub Repo vinguyen14/camnang</b><span class="text-slate-400 text-[11px]">Tự động đồng bộ 18 module nghiệp vụ chuyên sâu và lịch sử thay đổi hệ thống.</span></td>
+                    <td class="p-3.5"><b class="text-white block">Auto-Discovery GitHub Repo vinguyen14/camnang</b><span class="text-slate-400 text-[11px]">Tự động đồng bộ ${moduleCount} module nghiệp vụ chuyên sâu và lịch sử thay đổi hệ thống.</span></td>
                     <td class="p-3.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">Active</span></td>
                 </tr>
             `;
@@ -1926,11 +2271,28 @@
                 </div>
             `;
 
+            // Trang .html mở bản chạy trên GitHub Pages; file .js mở trang mã nguồn (blob) trên GitHub.
+            // code.js là backend Apps Script, không chạy được trên trình duyệt nên chỉ xem mã nguồn.
+            const GITHUB_BLOB_BASE = 'https://github.com/vinguyen14/camnang/blob/main/';
+            const safeName = encodeURIComponent(data.name);
+            let openHref = `https://vinguyen14.github.io/camnang/${safeName}`;
+            let openLabel = 'Mở Trực Tiếp';
+            let openIcon = 'fa-external-link-alt';
+            if (data.id === 'code.js') {
+                openHref = GITHUB_BLOB_BASE + safeName;
+                openLabel = 'Backend Apps Script, xem mã nguồn trên GitHub';
+                openIcon = 'fa-code';
+            } else if (data.name.endsWith('.js')) {
+                openHref = GITHUB_BLOB_BASE + safeName;
+                openLabel = 'Xem mã nguồn trên GitHub';
+                openIcon = 'fa-code';
+            }
+
             const footerActions = document.getElementById('insp-footer-actions');
             footerActions.innerHTML = `
                 <button onclick="closeInspector()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold transition">Đóng</button>
-                <a href="https://vinguyen14.github.io/camnang/${data.name}" target="_blank" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition flex items-center gap-2 shadow-lg shadow-blue-600/30">
-                    <i class="fas fa-external-link-alt text-xs"></i> Mở Trực Tiếp
+                <a href="${openHref}" target="_blank" rel="noopener" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition flex items-center gap-2 shadow-lg shadow-blue-600/30">
+                    <i class="fas ${openIcon} text-xs"></i> ${openLabel}
                 </a>
             `;
 
@@ -1996,12 +2358,30 @@
             return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         }
 
-        let resizeTimer;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
+        // Gộp nhiều yêu cầu vẽ lại dây trong cùng một khung hình (debounce bằng requestAnimationFrame)
+        let wireRedrawRaf = 0;
+        function scheduleWireRedraw() {
+            if (wireRedrawRaf) return;
+            wireRedrawRaf = requestAnimationFrame(() => {
+                wireRedrawRaf = 0;
                 if (currentActiveMode === 'topology') drawHardwareWires();
-            }, 60);
+            });
+        }
+
+        // Theo dõi kích thước khung topology: bắt cả resize cửa sổ, thu/mở sidebar, thẻ đổi chiều cao.
+        // SVG nằm absolute nên việc vẽ lại dây không làm khung đổi kích thước (không lặp vô hạn).
+        (function setupTopologyResizeWatch() {
+            const container = document.getElementById('topology-container');
+            if (container && typeof ResizeObserver === 'function') {
+                new ResizeObserver(scheduleWireRedraw).observe(container);
+            } else {
+                window.addEventListener('resize', scheduleWireRedraw);
+            }
+        })();
+
+        // Tab ẩn: tạm dừng hiệu ứng dây/đèn nhấp nháy để đỡ tốn CPU
+        document.addEventListener('visibilitychange', () => {
+            document.body.classList.toggle('wires-paused', document.hidden);
         });
 
         // ==========================================
@@ -2012,8 +2392,11 @@
             autoScanLiveSystem(false);
             const sb = document.getElementById('sidebar');
             if (sb) {
-                sb.addEventListener('transitionend', () => {
-                    if (currentActiveMode === 'topology') drawHardwareWires();
+                sb.addEventListener('transitionend', (e) => {
+                    // Chỉ vẽ lại khi chính sidebar đổi độ rộng/vị trí, bỏ qua hiệu ứng của phần tử con
+                    if (e.target !== sb) return;
+                    if (!/width|transform/.test(e.propertyName)) return;
+                    scheduleWireRedraw();
                 });
             }
         });
