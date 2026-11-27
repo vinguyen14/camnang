@@ -209,71 +209,151 @@
             outline: none;
             border: none;
         }
+
+        /* NGĂN CONSOLE: chiều cao theo class (trước đây là inline style 140px / 32px) */
+        #consoleContainer { height: 140px; }
+        #consoleContainer.cr-closed { height: 32px; }
+
+        /* Thanh tab Code | Xem trước: mặc định ẩn, chỉ hiện dưới 768px */
+        .cr-tabbar { display: none; }
+        .cr-nowrap { white-space: nowrap; }
+
+        /* CHẾ ĐỘ "VỪA KHUNG": khung thiết bị không bị co, căn giữa an toàn (không mất phần tràn) */
+        .viewport-wrapper.cr-fit { justify-content: safe center; align-items: safe center; }
+        .viewport-wrapper.cr-fit .device-frame:not(.device-desktop) { flex-shrink: 0; }
+        .device-frame.fullscreen-active { margin: 0 !important; }
+        #btnFit.active { background-color: #2563eb; color: #ffffff; }
+
+        /* ============ MÀN VỪA + ĐIỆN THOẠI (< 1024px) ============ */
+        @media (max-width: 1023px) {
+            .cr-subtitle, .cr-hide-md { display: none !important; }
+            .cr-header { gap: 12px; padding-left: 16px !important; padding-right: 16px !important; }
+            .cr-head-left { min-width: 0; flex-shrink: 1; }
+            .cr-title-wrap { min-width: 0; }
+            .cr-title-wrap h1 { white-space: nowrap; }
+            /* Nhóm nút mẫu: cuộn ngang khi thiếu chỗ */
+            .cr-templates { min-width: 0; flex-shrink: 1; overflow-x: auto; scrollbar-width: none; }
+            .cr-templates::-webkit-scrollbar { display: none; }
+            .cr-templates > * { flex-shrink: 0; }
+            .studio-container { height: auto; flex: 1 1 auto; min-height: 0; }
+            .editor-pane { min-width: 240px; flex-shrink: 1; } /* nhường chỗ khi vùng xem trước chạm min-width */
+            .preview-pane { min-width: 240px; }
+            /* Thanh công cụ: cho xuống dòng thay vì ép chữ */
+            .cr-toolbar { flex-wrap: wrap; row-gap: 6px; column-gap: 8px; }
+            .cr-preview-bar { padding-left: 12px !important; padding-right: 12px !important; }
+            .cr-devices { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+            .cr-devices::-webkit-scrollbar { display: none; }
+            .cr-dev-btn { flex-shrink: 0; white-space: nowrap; }
+            .cr-view-tools { flex-wrap: wrap; gap: 6px; }
+            .viewport-wrapper { padding: 16px; }
+            /* Thanh kéo rộng hơn, kéo được bằng cảm ứng */
+            .resizer-divider { width: 12px; touch-action: none; }
+        }
+
+        /* ============ ĐIỆN THOẠI (< 768px) ============ */
+        @media (max-width: 767px) {
+            #crRoot { height: 100vh; height: 100dvh; }
+            .cr-hide-sm { display: none !important; }
+            /* Header tự xuống dòng: tiêu đề 1 dòng, dải nút mẫu cuộn ngang ở dòng dưới */
+            .cr-header { height: auto !important; flex-wrap: wrap; row-gap: 8px; padding: 8px 12px !important; }
+            .cr-head-left { gap: 10px; width: 100%; }
+            .cr-templates { width: 100%; padding-bottom: 2px; }
+            /* Vùng làm việc: chế độ tab, mỗi lần 1 phần chiếm toàn chiều rộng */
+            .studio-container { flex-direction: column; }
+            .cr-tabbar { display: flex; position: sticky; top: 0; z-index: 35; flex-shrink: 0; background: #0f172a; border-bottom: 1px solid #1e293b; }
+            .cr-tab { flex: 1; min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 700; color: #94a3b8; border-bottom: 2px solid transparent; }
+            .cr-tab.active { color: #ffffff; border-bottom-color: #3b82f6; background: #111c33; }
+            .resizer-divider { display: none !important; }
+            .editor-pane, .preview-pane { width: 100% !important; min-width: 0 !important; max-width: none !important; flex: 1 1 auto; min-height: 0; border-right: none; }
+            .studio-container[data-tab="code"] .preview-pane { display: none; }
+            .studio-container[data-tab="preview"] .editor-pane { display: none; }
+            .cr-toolbar { padding-left: 12px !important; padding-right: 12px !important; }
+            .cr-toolbar-info { flex-wrap: wrap; }
+            .cr-footer { justify-content: flex-end; }
+            /* Console: ngăn thu gọn dưới editor (mở ra cao ~40% màn hình) */
+            #consoleContainer { height: 40vh; max-height: 320px; }
+            #consoleContainer.cr-closed { height: auto; }
+            #consoleContainer.cr-closed #consoleBody { display: none; }
+            .cr-console-head { padding-left: 12px !important; padding-right: 12px !important; }
+            .viewport-wrapper { padding: 10px; }
+            .code-textarea { font-size: 13px; padding: 12px !important; }
+        }
+
+        /* ============ MÀN CẢM ỨNG: nút đủ lớn để bấm (>= 36px) ============ */
+        @media (max-width: 767px), (pointer: coarse) {
+            .cr-touch { min-height: 36px; min-width: 36px; display: inline-flex; align-items: center; justify-content: center; }
+            #btnExitFullscreenFloat { min-height: 40px; }
+        }
     </style>
     <script src="system-config.js"></script>
 </head>
 <body>
 
-    <div class="flex h-screen">
+    <div class="flex h-screen" id="crRoot">
         <!-- SIDEBAR CHUẨN KIOTVIET L&D (COLLAPSIBLE) -->
         <aside id="sidebar"></aside>
 
         <!-- MAIN LAYOUT -->
-        <div class="flex-1 flex flex-col overflow-hidden relative">
+        <div class="flex-1 flex flex-col overflow-hidden relative min-w-0">
             <!-- TOP BAR -->
-            <header class="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6 z-40 shrink-0 shadow-sm">
-                <div class="flex items-center gap-4">
-                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded bg-slate-800 text-slate-400 flex items-center justify-center hover:bg-slate-700 hover:text-white transition border border-slate-700">
+            <header id="crHeader" class="cr-header h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6 z-40 shrink-0 shadow-sm">
+                <div class="cr-head-left flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="cr-touch w-8 h-8 rounded bg-slate-800 text-slate-400 flex items-center justify-center hover:bg-slate-700 hover:text-white transition border border-slate-700">
                         <i class="fas fa-bars"></i>
                     </button>
                     <div class="h-6 w-px bg-slate-800"></div>
-                    <div>
+                    <div class="cr-title-wrap">
                         <h1 class="text-sm font-bold text-white flex items-center gap-2 font-mono-code">
-                            <i class="fas fa-terminal text-cyan-400"></i> HTML CODE STUDIO IDE & DEVICE SANDBOX
+                            <i class="fas fa-terminal text-cyan-400"></i> <span>HTML CODE STUDIO<span class="cr-hide-sm"> IDE &amp; DEVICE SANDBOX</span></span>
                         </h1>
-                        <p class="text-[11px] text-slate-400 font-medium">Soạn thảo, kiểm thử giao diện đa thiết bị có console logs và phím tắt chuyên nghiệp</p>
+                        <p class="cr-subtitle text-[11px] text-slate-400 font-medium">Soạn thảo, kiểm thử giao diện đa thiết bị có console logs và phím tắt chuyên nghiệp</p>
                     </div>
                 </div>
 
-                <!-- Template Nạp Sẵn -->
-                <div class="flex items-center gap-2">
+                <!-- Template Nạp Sẵn (màn hẹp: thành dải cuộn ngang) -->
+                <div class="cr-templates flex items-center gap-2">
                     <span class="text-[11px] text-slate-400 font-mono-code hidden lg:inline mr-1">Templates:</span>
-                    <button onclick="insertSampleTemplate('email')" class="px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition">
+                    <button onclick="insertSampleTemplate('email')" class="cr-touch cr-nowrap px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition">
                         <i class="fas fa-envelope text-blue-400 mr-1"></i> Email Mời Học
                     </button>
-                    <button onclick="insertSampleTemplate('table')" class="px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition">
+                    <button onclick="insertSampleTemplate('table')" class="cr-touch cr-nowrap px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition">
                         <i class="fas fa-table text-emerald-400 mr-1"></i> Bảng Điểm SPCB
                     </button>
-                    <button onclick="insertSampleTemplate('quiz')" class="px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition">
+                    <button onclick="insertSampleTemplate('quiz')" class="cr-touch cr-nowrap px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition">
                         <i class="fas fa-gamepad text-purple-400 mr-1"></i> Widget Đố Vui JS
                     </button>
                 </div>
             </header>
 
             <!-- WORKSPACE RESIZABLE SPLIT -->
-            <div class="studio-container" id="studioContainer">
+            <div class="studio-container" id="studioContainer" data-tab="code">
+                <!-- THANH TAB (chỉ hiện dưới 768px): Code | Xem trước -->
+                <div class="cr-tabbar" id="crTabBar" role="tablist">
+                    <button type="button" id="crTabCode" role="tab" aria-selected="true" onclick="switchMobileTab('code')" class="cr-tab active"><i class="fas fa-code"></i> Code</button>
+                    <button type="button" id="crTabPreview" role="tab" aria-selected="false" onclick="switchMobileTab('preview')" class="cr-tab"><i class="fas fa-eye"></i> Xem trước</button>
+                </div>
                 
                 <!-- CỘT TRÁI: CODE EDITOR VỚI CONSOLE LOGS -->
                 <div class="editor-pane" id="editorPane">
                     <!-- Toolbar Editor -->
-                    <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
-                        <div class="flex items-center gap-2 text-xs font-mono-code">
+                    <div class="cr-toolbar px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
+                        <div class="cr-toolbar-info flex items-center gap-2 text-xs font-mono-code">
                             <span class="text-slate-400 font-bold uppercase flex items-center gap-1.5">
                                 <i class="fas fa-code text-cyan-400"></i> INDEX.HTML
                             </span>
                             <span id="charCount" class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700">0 chars</span>
                             <!-- Ghi chú khi code quá dài: tắt tự render khi gõ, bấm để chạy thủ công -->
                             <span id="longCodeNote" onclick="runCodeNow()" class="hidden text-[10px] text-amber-400 cursor-pointer hover:underline" title="Bấm để chạy ngay">Code dài: bấm Chạy hoặc Ctrl+Enter</span>
-                            <span class="text-[10px] text-slate-500 hidden sm:inline">• Tab: 4 spaces • Ctrl+S: Lưu • Ctrl+Enter: Chạy</span>
+                            <span class="cr-hide-md text-[10px] text-slate-500 hidden sm:inline">• Tab: 4 spaces • Ctrl+S: Lưu • Ctrl+Enter: Chạy</span>
                         </div>
                         <div class="flex items-center gap-1.5">
-                            <button onclick="pasteCodeFromClipboard()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition" title="Dán mã từ Clipboard">
+                            <button onclick="pasteCodeFromClipboard()" class="cr-touch cr-nowrap px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition" title="Dán mã từ Clipboard">
                                 <i class="fas fa-paste text-slate-400 mr-1"></i> Dán
                             </button>
-                            <button onclick="copyCodeToClipboard()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition" title="Sao chép toàn bộ code">
+                            <button onclick="copyCodeToClipboard()" class="cr-touch cr-nowrap px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition" title="Sao chép toàn bộ code">
                                 <i class="fas fa-copy text-slate-400 mr-1"></i> Copy
                             </button>
-                            <button onclick="clearCodeEditor()" class="p-1.5 rounded hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 transition" title="Xóa trắng">
+                            <button onclick="clearCodeEditor()" class="cr-touch p-1.5 rounded hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 transition" title="Xóa trắng">
                                 <i class="fas fa-trash-alt text-xs"></i>
                             </button>
                         </div>
@@ -285,7 +365,7 @@
                             <i class="fas fa-exclamation-triangle text-amber-400 text-sm"></i>
                             <span id="errorMsg" class="font-medium font-mono-code">Phát hiện cú pháp không hợp lệ.</span>
                         </div>
-                        <button onclick="document.getElementById('errorBanner').classList.add('hidden')" class="text-amber-400 hover:text-white"><i class="fas fa-times"></i></button>
+                        <button onclick="document.getElementById('errorBanner').classList.add('hidden')" class="cr-touch text-amber-400 hover:text-white"><i class="fas fa-times"></i></button>
                     </div>
 
                     <!-- Textarea Code Input -->
@@ -294,16 +374,16 @@
                     </div>
 
                     <!-- CONSOLE LOGS DRAWER BÊN DƯỚI EDITOR -->
-                    <div class="border-t border-slate-800 bg-slate-950 flex flex-col shrink-0" id="consoleContainer" style="height: 140px;">
-                        <div class="px-4 py-1.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between text-xs font-mono-code select-none">
+                    <div class="border-t border-slate-800 bg-slate-950 flex flex-col shrink-0" id="consoleContainer">
+                        <div class="cr-console-head px-4 py-1.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between text-xs font-mono-code select-none">
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-terminal text-emerald-400 text-[11px]"></i>
                                 <span class="font-bold text-slate-300">LIVE CONSOLE LOGS</span>
                                 <span id="consoleCounter" class="text-[9px] bg-slate-800 text-emerald-400 px-1.5 py-0.2 rounded border border-slate-700">0</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <button onclick="clearConsoleLogs()" class="text-slate-500 hover:text-slate-300 text-[10px]"><i class="fas fa-ban mr-1"></i>Xóa log</button>
-                                <button onclick="toggleConsoleDrawer()" id="btnToggleConsole" class="text-slate-400 hover:text-white text-xs"><i class="fas fa-chevron-down"></i></button>
+                                <button onclick="clearConsoleLogs()" class="cr-touch cr-nowrap text-slate-500 hover:text-slate-300 text-[10px]"><i class="fas fa-ban mr-1"></i>Xóa log</button>
+                                <button onclick="toggleConsoleDrawer()" id="btnToggleConsole" class="cr-touch text-slate-400 hover:text-white text-xs"><i class="fas fa-chevron-down"></i></button>
                             </div>
                         </div>
                         <div id="consoleBody" class="flex-1 overflow-y-auto custom-scrollbar p-3 font-mono-code text-[11px] space-y-1 text-slate-300 bg-slate-950/70">
@@ -312,13 +392,13 @@
                     </div>
 
                     <!-- Footer Editor: Tải Về Dạng File / Notepad -->
-                    <div class="px-4 py-2.5 border-t border-slate-800 bg-slate-900 flex items-center justify-between shrink-0">
-                        <span class="text-[11px] text-slate-500 font-mono-code">UTF-8 Encoded</span>
+                    <div class="cr-toolbar cr-footer px-4 py-2.5 border-t border-slate-800 bg-slate-900 flex items-center justify-between shrink-0">
+                        <span class="cr-hide-sm text-[11px] text-slate-500 font-mono-code">UTF-8 Encoded</span>
                         <div class="flex items-center gap-2">
-                            <button onclick="downloadAsFile('txt')" class="px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-bold transition flex items-center gap-1.5" title="Tải về file text Notepad">
+                            <button onclick="downloadAsFile('txt')" class="cr-touch cr-nowrap px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-bold transition flex items-center gap-1.5" title="Tải về file text Notepad">
                                 <i class="fas fa-file-alt text-slate-400"></i> Tải Notepad (.txt)
                             </button>
-                            <button onclick="downloadAsFile('html')" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md" title="Tải về file HTML chuẩn">
+                            <button onclick="downloadAsFile('html')" class="cr-touch cr-nowrap px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md" title="Tải về file HTML chuẩn">
                                 <i class="fas fa-download"></i> Tải File (.html)
                             </button>
                         </div>
@@ -331,42 +411,44 @@
                 <!-- CỘT PHẢI: LIVE PREVIEW & REALISTIC DEVICE SHELLS -->
                 <div class="preview-pane" id="previewPane">
                     <!-- Toolbar Viewport: Chuyển Thiết Bị, Xoay Màn Hình & Zoom -->
-                    <div class="px-5 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0 select-none">
+                    <div class="cr-toolbar cr-preview-bar px-5 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0 select-none">
                         
                         <!-- Bộ chọn thiết bị -->
-                        <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-mono-code">
-                            <button onclick="switchDevice('desktop')" id="dev-desktop" class="px-3 py-1 rounded-lg font-bold bg-blue-600 text-white shadow-xs transition flex items-center gap-1.5">
+                        <div class="cr-devices flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-mono-code">
+                            <button onclick="switchDevice('desktop')" id="dev-desktop" class="cr-dev-btn cr-touch px-3 py-1 rounded-lg font-bold bg-blue-600 text-white shadow-xs transition flex items-center gap-1.5">
                                 <i class="fas fa-desktop"></i> Desktop
                             </button>
-                            <button onclick="switchDevice('laptop')" id="dev-laptop" class="px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5">
+                            <button onclick="switchDevice('laptop')" id="dev-laptop" class="cr-dev-btn cr-touch px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5">
                                 <i class="fas fa-laptop"></i> Laptop
                             </button>
-                            <button onclick="switchDevice('tablet')" id="dev-tablet" class="px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5">
+                            <button onclick="switchDevice('tablet')" id="dev-tablet" class="cr-dev-btn cr-touch px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5">
                                 <i class="fas fa-tablet-alt"></i> Tablet
                             </button>
-                            <button onclick="switchDevice('mobile')" id="dev-mobile" class="px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5">
+                            <button onclick="switchDevice('mobile')" id="dev-mobile" class="cr-dev-btn cr-touch px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5">
                                 <i class="fas fa-mobile-alt"></i> Mobile
                             </button>
                         </div>
 
                         <!-- Kích Thước & Nút Xoay Ngang / Dọc -->
-                        <div class="flex items-center gap-3">
+                        <div class="cr-view-tools flex items-center gap-3">
                             <div class="flex items-center gap-1.5 text-xs font-mono-code text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
-                                <span id="resLabel">100% x 100%</span>
-                                <button onclick="toggleOrientation()" id="btnRotate" class="ml-1 p-1 hover:text-cyan-400 transition" title="Xoay ngang / dọc màn hình">
+                                <span id="resLabel" class="cr-nowrap cr-hide-sm">100% x 100%</span>
+                                <button onclick="toggleOrientation()" id="btnRotate" class="cr-touch ml-1 p-1 hover:text-cyan-400 transition" title="Xoay ngang / dọc màn hình">
                                     <i class="fas fa-rotate"></i>
                                 </button>
                             </div>
 
                             <!-- Điều Khiển Zoom -->
                             <div class="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-lg p-1 text-xs">
-                                <button onclick="changeZoom(-0.25)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400 font-bold">-</button>
+                                <button onclick="changeZoom(-0.25)" class="cr-touch w-6 h-6 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400 font-bold">-</button>
                                 <span id="zoomLabel" class="w-12 text-center font-mono font-bold text-slate-300">100%</span>
-                                <button onclick="changeZoom(0.25)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400 font-bold">+</button>
-                                <button onclick="resetZoom()" class="px-1.5 py-0.5 text-[10px] text-cyan-400 hover:underline">1:1</button>
+                                <button onclick="changeZoom(0.25)" class="cr-touch w-6 h-6 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400 font-bold">+</button>
+                                <button onclick="resetZoom()" class="cr-touch px-1.5 py-0.5 text-[10px] text-cyan-400 hover:underline">1:1</button>
+                                <!-- Vừa khung: tự tính tỉ lệ zoom để khung thiết bị vừa chiều rộng vùng xem trước -->
+                                <button onclick="toggleFitMode()" id="btnFit" class="cr-touch cr-nowrap px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-400 hover:text-white transition" title="Tự thu phóng cho khung thiết bị vừa chiều rộng vùng xem trước"><i class="fas fa-compress-arrows-alt mr-0.5"></i>Vừa</button>
                             </div>
 
-                            <button onclick="toggleFullscreenPreview()" id="btnFullscreen" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Toàn màn hình">
+                            <button onclick="toggleFullscreenPreview()" id="btnFullscreen" class="cr-touch px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Toàn màn hình">
                                 <i class="fas fa-expand"></i>
                             </button>
                         </div>
@@ -458,17 +540,30 @@
             const editorPane = document.getElementById('editorPane');
             const container = document.getElementById('studioContainer');
             const iframe = document.getElementById('previewIframe');
+            const SPLIT_KEY = 'kv_coderunner_split';
             let isDragging = false;
+            let lastPercent = null;
 
-            resizer.addEventListener('mousedown', (e) => {
+            // Khôi phục tỉ lệ đã kéo lần trước (dưới 768px CSS tự ép 100% nên không ảnh hưởng)
+            try {
+                const saved = parseFloat(localStorage.getItem(SPLIT_KEY));
+                if (saved >= 25 && saved <= 75) editorPane.style.width = `${saved}%`;
+            } catch (e) {}
+
+            // Dùng Pointer Events: chạy được cả chuột, bút và cảm ứng
+            resizer.addEventListener('pointerdown', (e) => {
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                e.preventDefault();
                 isDragging = true;
+                lastPercent = null;
+                try { resizer.setPointerCapture(e.pointerId); } catch (err) {}
                 resizer.classList.add('resizing');
                 document.body.style.cursor = 'col-resize';
                 document.body.style.userSelect = 'none';
                 if(iframe) iframe.style.pointerEvents = 'none';
             });
 
-            window.addEventListener('mousemove', (e) => {
+            resizer.addEventListener('pointermove', (e) => {
                 if (!isDragging) return;
                 const rect = container.getBoundingClientRect();
                 const offsetX = e.clientX - rect.left;
@@ -477,18 +572,43 @@
                 if (percent < 25) percent = 25;
                 if (percent > 75) percent = 75;
 
+                lastPercent = percent;
                 editorPane.style.width = `${percent}%`;
             });
 
-            window.addEventListener('mouseup', () => {
-                if (isDragging) {
-                    isDragging = false;
-                    resizer.classList.remove('resizing');
-                    document.body.style.cursor = '';
-                    document.body.style.userSelect = '';
-                    if(iframe) iframe.style.pointerEvents = 'auto';
+            const endDrag = () => {
+                if (!isDragging) return;
+                isDragging = false;
+                resizer.classList.remove('resizing');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+                if(iframe) iframe.style.pointerEvents = 'auto';
+                // Nhớ tỉ lệ đã kéo
+                if (lastPercent !== null) {
+                    try { localStorage.setItem(SPLIT_KEY, lastPercent.toFixed(2)); } catch (err) {}
                 }
-            });
+            };
+            resizer.addEventListener('pointerup', endDrag);
+            resizer.addEventListener('pointercancel', endDrag);
+            resizer.addEventListener('lostpointercapture', endDrag);
+        }
+
+        // ==========================================
+        // 1b. CHẾ ĐỘ TAB TRÊN ĐIỆN THOẠI (< 768px): Code | Xem trước
+        // ==========================================
+        const MQ_PHONE = window.matchMedia('(max-width: 767px)');
+        function switchMobileTab(tab) {
+            const container = document.getElementById('studioContainer');
+            container.dataset.tab = tab;
+            const isCode = tab === 'code';
+            const btnCode = document.getElementById('crTabCode');
+            const btnPrev = document.getElementById('crTabPreview');
+            btnCode.classList.toggle('active', isCode);
+            btnPrev.classList.toggle('active', !isCode);
+            btnCode.setAttribute('aria-selected', String(isCode));
+            btnPrev.setAttribute('aria-selected', String(!isCode));
+            // Khi mở tab Xem trước: tính lại tỉ lệ "Vừa khung" vì vùng xem trước vừa hiện ra
+            if (!isCode) requestAnimationFrame(applyZoom);
         }
 
         // ==========================================
@@ -749,13 +869,9 @@
             const icon = document.querySelector('#btnToggleConsole i');
             isConsoleOpen = !isConsoleOpen;
 
-            if (isConsoleOpen) {
-                container.style.height = '140px';
-                icon.className = 'fas fa-chevron-down';
-            } else {
-                container.style.height = '32px';
-                icon.className = 'fas fa-chevron-up';
-            }
+            // Chiều cao do CSS quyết định (desktop: 140px / 32px; điện thoại: ngăn thu gọn)
+            container.classList.toggle('cr-closed', !isConsoleOpen);
+            icon.className = isConsoleOpen ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
         }
 
         // ==========================================
@@ -779,8 +895,8 @@
                 const btn = document.getElementById(`dev-${d}`);
                 if (btn) {
                     btn.className = (d === dev)
-                        ? "px-3 py-1 rounded-lg font-bold bg-blue-600 text-white shadow-xs transition flex items-center gap-1.5"
-                        : "px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5";
+                        ? "cr-dev-btn cr-touch px-3 py-1 rounded-lg font-bold bg-blue-600 text-white shadow-xs transition flex items-center gap-1.5"
+                        : "cr-dev-btn cr-touch px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5";
                 }
             });
 
@@ -796,6 +912,7 @@
             }
 
             updateResolutionLabel();
+            if (isFitMode) applyZoom();
             showToast(`Khung nhìn: ${dev.toUpperCase()}`);
         }
 
@@ -807,6 +924,7 @@
             frame.classList.toggle('landscape', isLandscape);
 
             updateResolutionLabel();
+            if (isFitMode) applyZoom();
             showToast(`Đã xoay màn hình: ${isLandscape ? 'NGANG (Landscape)' : 'DỌC (Portrait)'}`);
         }
 
@@ -816,18 +934,73 @@
             document.getElementById('resLabel').innerText = text;
         }
 
+        // Kích thước thật (border-box) của từng khung thiết bị, dùng cho chế độ "Vừa khung".
+        // Đọc từ cấu hình thay vì offsetWidth vì width đang chạy transition 0.3s khi đổi thiết bị.
+        const DEVICE_SIZES = {
+            laptop: { w: 1024, h: 640 },
+            tablet: { w: 768, h: 920 },
+            mobile: { w: 375, h: 740 }
+        };
+        let isFitMode = false;
+
         function changeZoom(delta) {
-            currentZoom = Math.min(Math.max(currentZoom + delta, 0.5), 1.5);
+            // Bấm +/- thủ công thì thoát chế độ Vừa khung, zoom tính tiếp từ tỉ lệ đang hiển thị
+            if (isFitMode) setFitMode(false);
+            currentZoom = Math.min(Math.max(currentZoom + delta, 0.25), 1.5);
             applyZoom();
         }
 
         function resetZoom() {
+            if (isFitMode) setFitMode(false);
             currentZoom = 1.0;
             applyZoom();
         }
 
+        function setFitMode(on) {
+            isFitMode = on;
+            document.getElementById('viewportWrapper').classList.toggle('cr-fit', on);
+            document.getElementById('btnFit').classList.toggle('active', on);
+            if (!on) document.getElementById('deviceFrame').style.margin = '';
+        }
+
+        function toggleFitMode() {
+            setFitMode(!isFitMode);
+            if (!isFitMode) currentZoom = 1.0;
+            applyZoom();
+            showToast(isFitMode ? 'Đã bật chế độ Vừa khung' : 'Đã tắt chế độ Vừa khung (100%)');
+        }
+
+        // Tính tỉ lệ để khung thiết bị vừa chiều rộng vùng xem trước (tối đa 100%)
+        function computeFitScale() {
+            const size = DEVICE_SIZES[currentDevice];
+            if (!size) return null; // Desktop: khung lỏng 100% -> không cần thu phóng
+            const wrapper = document.getElementById('viewportWrapper');
+            const cs = getComputedStyle(wrapper);
+            const avail = wrapper.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+            if (avail <= 0) return undefined; // vùng xem trước đang ẩn (tab Code) -> bỏ qua
+            const w = isLandscape ? size.h : size.w;
+            const h = isLandscape ? size.w : size.h;
+            return { scale: Math.min(1, avail / w), w, h };
+        }
+
         function applyZoom() {
             const frame = document.getElementById('deviceFrame');
+            if (isFullscreen) return; // fullscreen tự đặt transform: none
+            if (isFitMode) {
+                const fit = computeFitScale();
+                if (fit === undefined) return;
+                if (fit === null) {
+                    currentZoom = 1.0;
+                    frame.style.margin = '';
+                } else {
+                    currentZoom = fit.scale;
+                    // Margin âm bù phần co lại để hộp layout bằng đúng kích thước sau khi scale
+                    // (transform không làm đổi layout, nếu không bù sẽ sinh thanh cuộn thừa)
+                    const mx = (fit.w * (fit.scale - 1)) / 2;
+                    const my = (fit.h * (fit.scale - 1)) / 2;
+                    frame.style.margin = `${my}px ${mx}px`;
+                }
+            }
             frame.style.transform = `scale(${currentZoom})`;
             document.getElementById('zoomLabel').innerText = `${Math.round(currentZoom * 100)}%`;
         }
@@ -1056,10 +1229,24 @@
             return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
+        // Thiết lập giao diện theo khổ màn hình: màn hẹp bật "Vừa khung", điện thoại thu gọn console
+        function initResponsiveLayout() {
+            if (window.matchMedia('(max-width: 1023px)').matches) setFitMode(true);
+            if (MQ_PHONE.matches && isConsoleOpen) toggleConsoleDrawer();
+            // Vùng xem trước đổi kích thước (xoay máy, kéo thanh chia, đổi tab) -> tính lại tỉ lệ vừa khung
+            const wrapper = document.getElementById('viewportWrapper');
+            let raf = 0;
+            const refit = () => { if (!isFitMode) return; cancelAnimationFrame(raf); raf = requestAnimationFrame(applyZoom); };
+            if (window.ResizeObserver) new ResizeObserver(refit).observe(wrapper);
+            window.addEventListener('resize', refit);
+            applyZoom();
+        }
+
         window.onload = () => {
             // Profile is automatically hydrated by sidebar-nav.js
 
             initSplitResizer();
+            initResponsiveLayout();
             let savedDraft = null;
             try { savedDraft = localStorage.getItem('kv_coderunner_draft'); } catch(e) {}
             if (savedDraft && savedDraft.trim()) {

@@ -366,9 +366,114 @@
             header .flex.items-center.gap-3 { flex-wrap: wrap; }
             #telemetry-repo-label, #topology-stats-label { white-space: normal; word-break: break-word; }
             header .bg-slate-900\/90 { flex-wrap: wrap; gap: 4px; }
-            .mode-tab-btn { flex: 1 1 auto; }
             main, section, .grid { min-width: 0; }
+
+            /* Thanh chuyển 3 chế độ: một hàng cuộn ngang, nút cao ≥ 40px */
+            header > div:last-child { width: 100%; }
+            #mode-switcher {
+                width: 100%;
+                flex-wrap: nowrap !important;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                scroll-snap-type: x proximity;
+            }
+            #mode-switcher::-webkit-scrollbar { display: none; }
+            .mode-tab-btn { flex: 0 0 auto; min-height: 40px; white-space: nowrap; scroll-snap-align: start; }
+            header button, header a { min-height: 38px; }
+            #btn-fl-all, #btn-fl-api, #btn-fl-shared, #btn-fl-nav { min-height: 36px; }
+
+            /* Sơ đồ khối: danh sách dọc theo nhóm, thẻ full width, không vẽ dây */
+            #topology-container { min-height: 0 !important; padding: 12px !important; border-radius: 18px !important; }
+            #topology-svg, .dock-pin { display: none !important; }
+            #topology-container > div { margin-bottom: 16px !important; gap: 16px !important; }
+            #topology-container > div:last-child { margin-bottom: 0 !important; }
+            #topology-container .topology-cluster { padding: 14px; border-radius: 16px; }
+            #topology-container .topology-cluster > .flex:first-child { flex-wrap: wrap; gap: 6px; }
+            [id^="topo-cluster-"] { display: grid !important; grid-template-columns: minmax(0, 1fr) !important; gap: 10px !important; }
+            [id^="topo-cluster-"] > * + * { margin-top: 0 !important; }
+            .topo-node:hover, .topo-node.active-glow { transform: none; }
+            .node-links { display: block !important; }
+
+            /* Bảng backlog: mỗi commit là một thẻ (tiêu đề, sha ngắn, ngày) */
+            #backlog-table thead { display: none; }
+            #backlog-table, #backlog-table tbody { display: block; width: 100%; }
+            #backlog-table tr {
+                display: grid;
+                grid-template-columns: auto minmax(0, 1fr) auto;
+                grid-template-areas: "msg msg msg" "sha date type" "sha date status";
+                align-items: center;
+                gap: 6px 10px;
+                padding: 12px;
+            }
+            #backlog-table td { padding: 0 !important; text-align: left !important; min-width: 0; }
+            #backlog-table td:nth-child(1) { grid-area: sha; }
+            #backlog-table td:nth-child(2) { grid-area: date; }
+            #backlog-table td:nth-child(3) { grid-area: type; justify-self: end; }
+            #backlog-table td:nth-child(4) { grid-area: msg; overflow-wrap: anywhere; }
+            #backlog-table td:nth-child(5) { grid-area: status; justify-self: end; }
+            #view-backlog > div { padding: 14px; }
+
+            /* Cây thư mục: khung gọn, cuộn bên trong */
+            #view-terminal > div > div:first-child { padding: 14px; }
+            #view-terminal .tree-file-item { margin-left: 4px; }
         }
+
+        /* Thẻ "Nạp / Được dùng ở" chỉ hiện trên điện thoại (màn rộng giữ nguyên như cũ) */
+        .node-links { display: none; }
+
+        /* Màn vừa và nhỏ (< 1280px): cây thư mục và modal vừa màn hình, cuộn bên trong */
+        @media (max-width: 1279px) {
+            #granular-tree-container { max-height: 65vh; overflow: auto; overscroll-behavior: contain; }
+            #granular-tree-container .tree-file-item > div { min-width: 0; }
+            #inspector-modal > div {
+                display: flex;
+                flex-direction: column;
+                max-height: calc(100vh - 24px);
+                max-height: calc(100dvh - 24px);
+            }
+            #insp-body { flex: 1 1 auto; min-height: 0; max-height: none !important; overscroll-behavior: contain; }
+            #inspector-modal > div > div:last-child { flex-wrap: wrap; gap: 8px; }
+            #insp-footer-actions { flex-wrap: wrap; justify-content: flex-end; }
+            #insp-footer-actions > * { min-height: 36px; }
+            #topology-container { overflow-x: hidden; }
+            .topo-node { min-width: 0; }
+            /* Cụm 3 (3 cột) quá chật khi còn sidebar: hạ xuống 2 cột */
+            #topo-cluster-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            /* Thanh chuyển chế độ: không xuống dòng chữ, thiếu chỗ thì cuộn ngang trong khung */
+            #mode-switcher { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+            #mode-switcher::-webkit-scrollbar { display: none; }
+            .mode-tab-btn { white-space: nowrap; flex-shrink: 0; min-height: 36px; }
+            header > div:last-child { max-width: 100%; min-width: 0; }
+        }
+        /* 1024–1279px: cột trái (5/12) quá hẹp cho 2 thẻ cạnh nhau, tên file bị bẻ từng chữ: xếp 1 cột */
+        @media (min-width: 1024px) and (max-width: 1279px) {
+            #topo-cluster-2, #topo-cluster-4 { grid-template-columns: minmax(0, 1fr); }
+        }
+        /* Màn vừa (768–1023px): bớt lề, chú giải dây xếp dọc, khung sơ đồ gọn hơn */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            body { padding: 24px !important; }
+            #view-topology .md\:grid-cols-3 { grid-template-columns: minmax(0, 1fr); }
+            #topology-container { padding: 20px !important; min-height: 0 !important; }
+            #topology-container .topology-cluster { padding: 18px; }
+        }
+        @media (max-width: 767px) {
+            #inspector-modal { padding: 8px !important; }
+            #inspector-modal > div { border-radius: 18px !important; }
+            #inspector-modal .modal-header-bg { padding: 14px 16px; }
+            #insp-body { padding: 14px; }
+            #inspector-modal .modal-close-btn { width: 40px; height: 40px; flex-shrink: 0; }
+        }
+
+        /* Thiết bị cảm ứng (không có hover): popover mở bằng chạm, có nút đóng */
+        .pop-touch-only { display: none; }
+        @media (hover: none) {
+            .pop-touch-only { display: flex; }
+            #tech-hover-popover.active { pointer-events: auto; }
+            .topo-node:hover { transform: none; }
+        }
+        #tech-hover-popover, #modal-tech-popover { max-width: min(350px, calc(100vw - 24px)); }
+        #tech-hover-popover { max-height: calc(100vh - 24px); overflow-y: auto; }
 
         /* Tạm dừng hiệu ứng dây/đèn nhấp nháy khi tab bị ẩn (tiết kiệm CPU) */
         body.wires-paused .topo-wire,
@@ -415,7 +520,7 @@
 
         <div class="flex items-center gap-3 flex-wrap">
             <!-- 3-IN-1 MODE SWITCHER -->
-            <div class="flex items-center bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800 shadow-xl">
+            <div id="mode-switcher" class="flex items-center bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800 shadow-xl">
                 <button onclick="switchViewMode('topology')" id="btn-mode-topology" class="mode-tab-btn active">
                     <i class="fas fa-network-wired text-cyan-400"></i>
                     <span>1. Sơ Đồ Khối Topology</span>
@@ -640,7 +745,7 @@
             </div>
 
             <div class="overflow-x-auto rounded-xl border border-slate-800">
-                <table class="w-full text-left text-xs font-mono-code">
+                <table id="backlog-table" class="w-full text-left text-xs font-mono-code">
                     <thead class="bg-slate-950 text-slate-400 uppercase text-[11px] border-b border-slate-800">
                         <tr>
                             <th class="p-3.5 text-center w-24">Commit SHA</th>
@@ -660,7 +765,11 @@
     <div id="tech-hover-popover" class="bg-slate-900/95 text-slate-200 border border-cyan-500/40 rounded-2xl p-4 shadow-2xl backdrop-blur-md">
         <div class="flex items-center gap-2 pb-2 mb-2 border-b border-slate-800">
             <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-            <span class="font-bold text-xs text-cyan-300 font-mono-code uppercase tracking-wider" id="hover-tech-title">Giải Mã Công Nghệ</span>
+            <span class="font-bold text-xs text-cyan-300 font-mono-code uppercase tracking-wider flex-1 min-w-0" id="hover-tech-title">Giải Mã Công Nghệ</span>
+            <!-- Nút đóng: chỉ hiện trên thiết bị cảm ứng -->
+            <button type="button" class="pop-touch-only w-9 h-9 shrink-0 items-center justify-center rounded-full bg-slate-800 text-slate-300 border border-slate-700" onclick="closeTouchPopover(event)" aria-label="Đóng">
+                <i class="fas fa-times text-xs"></i>
+            </button>
         </div>
         <div class="space-y-2 text-[11px] font-sans leading-relaxed">
             <div>
@@ -672,6 +781,10 @@
                 <p id="hover-tech-benefit" class="text-slate-300 mt-0.5">Đang cập nhật...</p>
             </div>
         </div>
+        <!-- Cảm ứng: mở bảng tra cứu chi tiết của thẻ đang chọn -->
+        <button type="button" class="pop-touch-only w-full mt-3 min-h-[38px] items-center justify-center gap-2 rounded-xl bg-blue-600 text-white text-xs font-bold font-mono-code" onclick="openInspectorFromPopover(event)">
+            <i class="fas fa-search-plus text-[11px]"></i> Xem chi tiết
+        </button>
     </div>
 
     <!-- ==================== MODAL TECH TOOLTIP (CHO CÁC THUẬT NGỮ TRONG POPUP) ==================== -->
@@ -1959,7 +2072,7 @@
                     html += `
                         <div class="topo-node group" id="node-${file.id}" 
                              style="--node-color: ${file.color}; --node-glow: ${file.color}80;" 
-                             onclick="inspectElement('${file.id}')"
+                             onclick="handleNodeClick(event, '${file.id}')"
                              onmouseenter="handleNodeMouseEnter(event, '${file.id}')"
                              onmouseleave="handleNodeMouseLeave()">
                             
@@ -1985,6 +2098,9 @@
 
                             <!-- DÒNG 3: MÔ TẢ NGHIỆP VỤ -->
                             <p class="text-[10px] text-slate-400 leading-snug line-clamp-1">${file.subtitle || file.desc}</p>
+
+                            <!-- DÒNG 4 (CHỈ ĐIỆN THOẠI): QUAN HỆ NẠP / ĐƯỢC DÙNG, THAY CHO DÂY SVG -->
+                            ${buildNodeLinksHtml(file.id)}
                         </div>
                     `;
                 });
@@ -1996,7 +2112,86 @@
         // ==========================================
         // 10. XỬ LÝ HOVER WORKSTATION: SOI LUỒNG DÂY
         // ==========================================
+        // Thiết bị cảm ứng (không có hover thật) và màn hình điện thoại (< 768px)
+        const touchMQ = window.matchMedia('(hover: none)');
+        const mobileMQ = window.matchMedia('(max-width: 767px)');
+        let touchPopoverNodeId = null;
+
+        // Dòng "Nạp: … / Được dùng ở: …" lấy từ dữ liệu dây hiện có (chỉ hiện dưới 768px qua CSS)
+        function buildNodeLinksHtml(fileId) {
+            const wires = liveSystemData.wires || [];
+            const uniq = arr => [...new Set(arr)];
+            const loads = uniq(wires.filter(w => w.to === fileId && w.type === 'shared').map(w => w.from));
+            const usedIn = uniq(wires.filter(w => w.from === fileId && w.type === 'shared').map(w => w.to));
+            const callsApi = wires.some(w => w.to === fileId && w.type === 'api');
+            const apiFor = uniq(wires.filter(w => w.from === fileId && w.type === 'api').map(w => w.to));
+            const openedFrom = uniq(wires.filter(w => w.to === fileId && w.type === 'nav').map(w => w.from));
+            const navTo = uniq(wires.filter(w => w.from === fileId && w.type === 'nav').map(w => w.to));
+
+            const rows = [];
+            const row = (label, color, list) => rows.push(
+                `<div><b style="color:${color}">${label}:</b> <span class="text-slate-300">${list.map(escapeHtml).join(', ')}</span></div>`
+            );
+            if (loads.length) row('Nạp', '#c084fc', loads);
+            if (usedIn.length) row('Được dùng ở', '#c084fc', usedIn);
+            if (callsApi) row('Gọi API', '#22d3ee', ['code.js']);
+            if (apiFor.length) row('Phục vụ API cho', '#22d3ee', apiFor);
+            if (openedFrom.length) row('Mở từ', '#60a5fa', openedFrom);
+            if (navTo.length) row('Dẫn tới', '#60a5fa', navTo);
+            if (!rows.length) return '';
+            return `<div class="node-links mt-2 pt-2 border-t border-slate-700/50 space-y-0.5 text-[10px] font-mono-code leading-snug break-words">${rows.join('')}</div>`;
+        }
+
+        // Bấm vào thẻ: máy có chuột mở bảng tra cứu; máy cảm ứng mở/đóng popover giải mã
+        function handleNodeClick(e, fileId) {
+            if (!touchMQ.matches) { inspectElement(fileId); return; }
+            if (touchPopoverNodeId === fileId) { closeTouchPopover(); return; }
+            touchPopoverNodeId = fileId;
+            currentHoveredNodeId = fileId;
+            showTechPopover(e, fileId);
+            if (currentWireDisplayMode === 'smart' && !mobileMQ.matches) highlightFocusedWires(fileId);
+        }
+
+        function closeTouchPopover(e) {
+            if (e) e.stopPropagation();
+            touchPopoverNodeId = null;
+            currentHoveredNodeId = null;
+            hideTechPopover();
+            if (currentWireDisplayMode === 'smart') resetWiresToNormal();
+        }
+
+        function openInspectorFromPopover(e) {
+            if (e) e.stopPropagation();
+            const id = touchPopoverNodeId;
+            closeTouchPopover();
+            if (id) inspectElement(id);
+        }
+
+        // Chạm ra ngoài thẻ/popover thì đóng popover cảm ứng
+        document.addEventListener('click', (e) => {
+            if (!touchPopoverNodeId) return;
+            if (e.target.closest('#tech-hover-popover') || e.target.closest('.topo-node')) return;
+            closeTouchPopover();
+        });
+
+        // Giới hạn vị trí popover nằm trọn trong khung nhìn
+        function placePopoverInViewport(pop, rect, gap) {
+            const margin = 12;
+            const vw = document.documentElement.clientWidth || window.innerWidth;
+            const vh = window.innerHeight;
+            const w = pop.offsetWidth;
+            const h = pop.offsetHeight;
+            let posX = rect.left + (rect.width / 2) - (w / 2);
+            let posY = rect.top - h - gap;
+            if (posY < margin) posY = rect.bottom + gap;
+            posX = Math.max(margin, Math.min(posX, vw - w - margin));
+            posY = Math.max(margin, Math.min(posY, vh - h - margin));
+            pop.style.left = `${posX}px`;
+            pop.style.top = `${posY}px`;
+        }
+
         function handleNodeMouseEnter(e, fileId) {
+            if (touchMQ.matches) return; // cảm ứng: đã xử lý bằng chạm
             currentHoveredNodeId = fileId;
             showTechPopover(e, fileId);
             if (currentWireDisplayMode === 'smart') {
@@ -2005,6 +2200,7 @@
         }
 
         function handleNodeMouseLeave() {
+            if (touchMQ.matches) return;
             currentHoveredNodeId = null;
             hideTechPopover();
             if (currentWireDisplayMode === 'smart') {
@@ -2027,15 +2223,7 @@
             document.getElementById('hover-tech-benefit').innerText = dict.benefit;
 
             const rect = e.currentTarget.getBoundingClientRect();
-            let posX = rect.left + (rect.width / 2) - 175;
-            let posY = rect.top - pop.offsetHeight - 14;
-
-            if (posX < 20) posX = 20;
-            if (posX + 350 > window.innerWidth) posX = window.innerWidth - 360;
-            if (posY < 20) posY = rect.bottom + 14;
-
-            pop.style.left = `${posX}px`;
-            pop.style.top = `${posY}px`;
+            placePopoverInViewport(pop, rect, 14);
             pop.classList.add('active');
         }
 
@@ -2052,7 +2240,8 @@
             const container = document.getElementById('topology-container');
             if (!svg || !container) return;
 
-            if (currentWireDisplayMode === 'hidden') {
+            // Điện thoại (< 768px): không vẽ dây (đã thay bằng dòng "Nạp / Được dùng ở" trong thẻ)
+            if (currentWireDisplayMode === 'hidden' || mobileMQ.matches) {
                 svg.innerHTML = svg.querySelector('defs')?.outerHTML || '';
                 document.querySelectorAll('.topo-node').forEach(b => b.classList.remove('active-glow'));
                 return;
@@ -2336,15 +2525,7 @@
             document.getElementById('modal-tip-where').innerText = dict.where;
 
             const rect = e.currentTarget.getBoundingClientRect();
-            let posX = rect.left + (rect.width / 2) - 175;
-            let posY = rect.top - tip.offsetHeight - 12;
-
-            if (posX < 20) posX = 20;
-            if (posX + 350 > window.innerWidth) posX = window.innerWidth - 360;
-            if (posY < 20) posY = rect.bottom + 12;
-
-            tip.style.left = `${posX}px`;
-            tip.style.top = `${posY}px`;
+            placePopoverInViewport(tip, rect, 12);
             tip.classList.add('active');
         }
 
@@ -2378,6 +2559,11 @@
                 window.addEventListener('resize', scheduleWireRedraw);
             }
         })();
+
+        // Đổi qua lại ngưỡng điện thoại: vẽ lại / xóa dây; đổi kiểu nhập liệu: đóng popover cảm ứng
+        const onMQChange = (mq, fn) => mq.addEventListener ? mq.addEventListener('change', fn) : mq.addListener(fn);
+        onMQChange(mobileMQ, scheduleWireRedraw);
+        onMQChange(touchMQ, () => { if (touchPopoverNodeId) closeTouchPopover(); });
 
         // Tab ẩn: tạm dừng hiệu ứng dây/đèn nhấp nháy để đỡ tốn CPU
         document.addEventListener('visibilitychange', () => {

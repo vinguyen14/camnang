@@ -300,3 +300,10 @@ Ngày giờ theo giờ địa phương, ngày lễ Việt Nam theo từng năm (
 - **Radar:** bỏ dữ liệu mẫu tự ghi vào danh sách thật (màn hình trống khi chưa có dữ liệu); dữ liệu hỏng được sao lưu `_corrupt_` trước khi làm mới; ngày tính theo giờ máy; bộ lọc từ huy hiệu tô đúng nút; sửa mục đã bị xóa không còn lỗi; khung xem trực tiếp có thông báo khi trang KiotViet chặn nhúng. Chấm đỏ Radar trên menu (`sidebar-nav.js`) dùng đúng công thức của trang Radar.
 - **Kho lưu trữ:** dữ liệu hỏng được sao lưu trước, không còn bị ghi đè bằng dữ liệu mẫu; báo khi bộ nhớ đầy; sửa thư mục có icon ngoài danh sách không còn lỗi; số đếm tài nguyên luôn đúng; giữ từ khóa tìm khi ghim / xóa, tìm có debounce; Esc đóng modal.
 - **Sơ đồ vận hành:** GitHub lỗi / giới hạn lượt gọi có nhãn rõ và dùng dữ liệu đã lưu (cache 15 phút, nút Quét khóa 10 giây); thêm 7 file còn thiếu; dây nối vẽ theo `<script src>` thật của từng trang, bỏ dây không có thật; số trang / module tính tự động; vẽ lại dây bằng ResizeObserver; dừng hiệu ứng khi tab ẩn.
+
+## 14. Hiển thị điện thoại và màn hình vừa cho 4 công cụ (27/11/2026)
+- **HTML Code Studio:** dưới 768px chuyển thành 2 tab "Code | Xem trước", console thu gọn dưới editor; nút "Vừa" tự thu khung thiết bị cho vừa vùng xem; thanh kéo chia đôi dùng được bằng cảm ứng và nhớ tỉ lệ.
+- **Radar:** header gọn ở mọi khổ (tiêu đề 1 dòng, huy hiệu thu thành icon + số, nút "+ Thêm"); dưới 1024px 2 cột thành 1, xem trực tiếp mở khung toàn màn hình; bộ lọc cuộn ngang; modal 1 cột, nút Lưu luôn thấy.
+- **Kho lưu trữ:** header gọn, ô tìm xuống dòng riêng trên điện thoại; cây thư mục thành thanh "Thư mục: … ▾"; danh sách tài nguyên dạng thẻ khi khung hẹp; nút sửa/xóa luôn hiện trên màn cảm ứng; thanh kéo nhớ độ rộng.
+- **Sơ đồ vận hành:** dưới 768px các khối xếp dọc theo nhóm, mỗi khối ghi "Nạp / Được dùng ở" thay cho dây nối; chạm để xem chi tiết; lịch sử thay đổi dạng thẻ; màn vừa không chồng lấn.
+- Không tràn ngang ở 375 / 768 / 1024 / 1440px; khổ ≥ 1280px giữ nguyên như cũ.

@@ -174,6 +174,82 @@
         .modal.active { display: flex; opacity: 1; }
         .modal-content { transform: scale(0.98) translateY(10px); opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); border-radius: 18px; background: white; }
         .modal.active .modal-content { transform: scale(1) translateY(0); opacity: 1; }
+
+        /* ================= RESPONSIVE (ĐIỆN THOẠI / MÀN VỪA) =================
+           Mọi luật dưới đây chỉ áp dụng khi màn < 1280px → màn rộng giữ y như cũ. */
+
+        /* Hàng chip lọc: cuộn ngang mượt trên cảm ứng, không kéo theo trang */
+        .radar-chip-row { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scroll-behavior: smooth; }
+
+        /* Nút "Xem trực tiếp" trên thẻ + nút đóng khung xem: chỉ dùng ở màn < 1024px */
+        .radar-live-only { display: none; }
+
+        @media (max-width: 1279.98px) {
+            /* Header: cho phép xuống dòng gọn, tiêu đề 1 dòng cắt bằng dấu … */
+            /* (dùng !important vì style của Tailwind CDN chèn sau, cùng độ ưu tiên sẽ thắng) */
+            .radar-header { height: auto !important; min-height: 64px; flex-wrap: wrap; row-gap: 8px; column-gap: 12px; padding-top: 8px !important; padding-bottom: 8px !important; }
+            .radar-header-left { flex: 1 1 260px; min-width: 0; }
+            .radar-header-title-wrap { min-width: 0; flex: 1 1 auto; }
+            .radar-header-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block !important; }
+            .radar-header-title > i { margin-right: 4px; }
+            .radar-header-desc { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .radar-header-right { flex-shrink: 0; margin-left: auto; }
+            #urgentAlertBanner { gap: 12px; }
+            #urgentAlertBanner > button { flex-shrink: 0; white-space: nowrap; }
+            /* Header có thể cao hơn 64px → để cột chứa tự lấp phần còn lại thay vì 100vh-64px */
+            .radar-container { height: auto; flex: 1 1 0; min-height: 0; }
+        }
+
+        @media (max-width: 1023.98px) {
+            .radar-header-desc { display: none !important; }
+            /* Huy hiệu thu gọn: chỉ còn icon + số */
+            .badge-label { display: none; }
+            .radar-badges > .ui-tip > span { padding-left: 8px !important; padding-right: 8px !important; }
+
+            /* Cả cột chính cuộn tự nhiên, header dính trên cùng */
+            .radar-main { overflow-y: auto; overflow-x: hidden; }
+            .radar-header { position: sticky; top: 0; }
+
+            /* 2 cột → 1 cột, bỏ chiều cao cố định */
+            .radar-container { display: block; height: auto; flex: none; overflow: visible; }
+            .radar-list-pane { width: 100% !important; min-width: 0; max-width: none; border-right: none; overflow: visible; }
+            #radarFeatureList { overflow: visible; flex: none; }
+            .resizer-divider { display: none; }
+
+            /* Khung xem trực tiếp: ẩn, mở thành lớp phủ toàn màn hình khi bấm "Xem trực tiếp" */
+            .radar-iframe-pane { display: none; position: fixed; inset: 0; min-width: 0; z-index: 99990; }
+            body.radar-live-open .radar-iframe-pane { display: flex; }
+            body.radar-live-open { overflow: hidden; }
+            .radar-live-only { display: inline-flex; }
+
+            /* Chân thẻ: cho xuống dòng thay vì chen chúc */
+            .feature-card .radar-card-footer { flex-wrap: wrap; gap: 8px; }
+        }
+
+        @media (max-width: 767.98px) {
+            .radar-header { padding-left: 12px !important; padding-right: 12px !important; }
+            .radar-header-left { flex-basis: 100%; gap: 10px !important; }
+            .radar-header-right { width: 100%; justify-content: space-between; margin-left: 0; }
+            .radar-filter-box { padding: 12px !important; }
+            #radarFeatureList { padding: 12px; }
+            .feature-card { padding: 14px; }
+            .ui-tip-box { max-width: min(280px, 80vw); }
+
+            /* Modal: full màn hình, 1 cột, thân cuộn bên trong, chân (nút Lưu) luôn thấy */
+            #featureModal { padding: 0; align-items: stretch; }
+            #featureModal .modal-content { max-width: none; width: 100%; height: 100%; max-height: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; border: none; }
+            #featureModal .grid { grid-template-columns: minmax(0, 1fr); }
+            #featureModal .col-span-2 { grid-column: auto; }
+            #featureModal .modal-body { padding: 16px; }
+            #featureModal .modal-cert { flex-wrap: wrap; gap: 10px; }
+            #featureModal .modal-head, #featureModal .modal-foot { padding-left: 16px; padding-right: 16px; }
+            #featureModal .modal-foot > button { flex: 1 1 0; justify-content: center; }
+        }
+
+        /* Màn cảm ứng: nút sửa/xóa luôn rõ và đủ to để chạm */
+        @media (pointer: coarse) {
+            .card-act-btn { padding: 8px !important; color: #64748b; background: #f8fafc; border: 1px solid #e2e8f0; }
+        }
     </style>
     <script src="system-config.js"></script>
 </head>
@@ -184,28 +260,28 @@
         <aside id="sidebar"></aside>
 
         <!-- MAIN LAYOUT -->
-        <div class="flex-1 flex flex-col overflow-hidden relative">
+        <div class="radar-main flex-1 flex flex-col overflow-hidden relative">
             <!-- TOP BAR -->
-            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 shrink-0 shadow-sm">
-                <div class="flex items-center gap-4">
-                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-purple-50 hover:text-purple-600 transition border border-slate-200">
+            <header class="radar-header h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 shrink-0 shadow-sm">
+                <div class="radar-header-left flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-purple-50 hover:text-purple-600 transition border border-slate-200 shrink-0">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <div class="h-6 w-px bg-slate-200"></div>
-                    <div>
-                        <h1 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <div class="h-6 w-px bg-slate-200 shrink-0"></div>
+                    <div class="radar-header-title-wrap">
+                        <h1 class="radar-header-title text-base font-bold text-slate-800 flex items-center gap-2" title="Trạm Radar Cập Nhật Sản Phẩm & L&D Readiness">
                             <i class="fas fa-satellite-dish text-purple-600"></i> Trạm Radar Cập Nhật Sản Phẩm & L&D Readiness
                         </h1>
-                        <p class="text-[11px] text-slate-400 font-medium">Giám sát tính năng mới, kiểm tra video bài giảng, live test và chứng nhận Trainer đã Clear</p>
+                        <p class="radar-header-desc text-[11px] text-slate-400 font-medium">Giám sát tính năng mới, kiểm tra video bài giảng, live test và chứng nhận Trainer đã Clear</p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3">
+                <div class="radar-header-right flex items-center gap-3">
                     <!-- BỘ 3 HUY HIỆU CẢNH BÁO CÓ TOOLTIP VÀ CLICK ĐỂ LỌC -->
-                    <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200 text-xs font-mono-code font-bold">
+                    <div class="radar-badges flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200 text-xs font-mono-code font-bold">
                         <div class="ui-tip cursor-pointer" onclick="filterByReadiness('urgent')">
                             <span id="badge-urgent" class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1.5 shadow-xs">
-                                <i class="fas fa-exclamation-triangle text-rose-500 animate-pulse"></i> 0 Khẩn cấp
+                                <i class="fas fa-exclamation-triangle text-rose-500 animate-pulse"></i> <span>0<span class="badge-label"> Khẩn cấp</span></span>
                             </span>
                             <div class="ui-tip-box">
                                 <b>🔴 Cảnh báo Khẩn cấp:</b> Tính năng đã phát hành cho khách hàng dùng thật nhưng Trainer chưa Clear hoặc Video bài giảng chưa quay lại!
@@ -214,7 +290,7 @@
 
                         <div class="ui-tip cursor-pointer" onclick="filterByReadiness('upcoming')">
                             <span id="badge-upcoming" class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1.5 shadow-xs">
-                                <i class="fas fa-clock text-amber-500"></i> 0 Sắp Demo
+                                <i class="fas fa-clock text-amber-500"></i> <span>0<span class="badge-label"> Sắp Demo</span></span>
                             </span>
                             <div class="ui-tip-box">
                                 <b>🟡 Sắp Demo:</b> Tính năng có lịch Demo nội bộ trong vòng 7 ngày tới. Hãy tham gia để nắm bắt trước!
@@ -223,7 +299,7 @@
 
                         <div class="ui-tip cursor-pointer" onclick="filterByReadiness('cleared')">
                             <span id="badge-cleared" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5 shadow-xs">
-                                <i class="fas fa-check-circle text-emerald-500"></i> 0 Đã Clear
+                                <i class="fas fa-check-circle text-emerald-500"></i> <span>0<span class="badge-label"> Đã Clear</span></span>
                             </span>
                             <div class="ui-tip-box">
                                 <b>🟢 Đã Hoàn Tất:</b> Trainer đã thực hành thông thấu và sẵn sàng giảng dạy 100%.
@@ -231,8 +307,8 @@
                         </div>
                     </div>
 
-                    <button onclick="openFeatureModal()" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5">
-                        <i class="fas fa-plus"></i> Thêm Cập Nhật Mới
+                    <button onclick="openFeatureModal()" class="shrink-0 whitespace-nowrap px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5">
+                        <i class="fas fa-plus"></i> <span class="hidden md:inline">Thêm Cập Nhật Mới</span><span class="md:hidden">Thêm</span>
                     </button>
                 </div>
             </header>
@@ -255,9 +331,9 @@
                     </div>
 
                     <!-- BỘ LỌC ĐA TẦNG NÂNG CAO -->
-                    <div class="p-4 border-b border-slate-200 bg-white space-y-3 shrink-0">
+                    <div class="radar-filter-box p-4 border-b border-slate-200 bg-white space-y-3 shrink-0">
                         <!-- TẦNG 1: LỌC PHÂN HỆ SẢN PHẨM -->
-                        <div class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1">
+                        <div class="radar-chip-row flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1">
                             <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">Ngành:</span>
                             <button onclick="filterByIndustry('all')" id="btn-ind-all" class="px-3 py-1 rounded-lg text-xs font-bold bg-purple-100 text-purple-700 border border-purple-200 shadow-xs shrink-0">Tất Cả</button>
                             <button onclick="filterByIndustry('Retail')" id="btn-ind-retail" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 transition shrink-0">Retail</button>
@@ -269,7 +345,7 @@
                         </div>
 
                         <!-- TẦNG 2: LỌC THEO TRẠNG THÁI NGHIỆP VỤ L&D -->
-                        <div class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 pt-1 border-t border-slate-100">
+                        <div class="radar-chip-row flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 pt-1 border-t border-slate-100">
                             <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">L&D:</span>
                             <button onclick="filterByReadiness('all')" id="btn-rd-all" class="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-800 text-white shrink-0">Tất Cả</button>
                             <button onclick="filterByReadiness('urgent')" id="btn-rd-urgent" class="px-2.5 py-0.5 rounded-md text-[11px] font-bold text-rose-700 hover:bg-rose-50 shrink-0">🔴 Khẩn Cấp</button>
@@ -312,6 +388,10 @@
                             <a id="iframeExtLink" href="#" target="_blank" rel="noopener noreferrer" class="p-1.5 hover:text-cyan-400 transition rounded hover:bg-slate-800 flex items-center gap-1 font-sans text-xs font-bold" title="Mở trong tab trình duyệt mới">
                                 <i class="fas fa-arrow-up-right-from-square text-[10px]"></i> Mở Tab Mới ↗
                             </a>
+                            <!-- Nút đóng: chỉ hiện ở màn < 1024px khi khung xem trực tiếp mở dạng toàn màn hình -->
+                            <button type="button" onclick="closeLivePane()" class="radar-live-only items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-sans text-xs font-bold transition" title="Đóng khung xem trực tiếp">
+                                <i class="fas fa-times"></i> Đóng
+                            </button>
                         </div>
                     </div>
 
@@ -346,14 +426,14 @@
     <!-- ==================== MODAL: THÊM & SỬA TÍNH NĂNG ==================== -->
     <div id="featureModal" class="modal fixed inset-0 items-center justify-center p-4">
         <div class="modal-content w-full max-w-2xl max-h-[90vh] flex flex-col border border-purple-200 shadow-2xl overflow-hidden">
-            <div class="px-6 py-4 bg-gradient-to-r from-purple-700 to-indigo-700 text-white flex justify-between items-center shrink-0">
+            <div class="modal-head px-6 py-4 bg-gradient-to-r from-purple-700 to-indigo-700 text-white flex justify-between items-center shrink-0">
                 <h3 id="modalFeatureTitle" class="font-bold text-sm flex items-center gap-2">
                     <i class="fas fa-satellite-dish text-amber-300"></i> Thêm Cập Nhật Tính Năng Mới
                 </h3>
                 <button onclick="closeFeatureModal()" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition"><i class="fas fa-times text-xs"></i></button>
             </div>
 
-            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4 bg-white text-xs text-slate-700">
+            <div class="modal-body p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4 bg-white text-xs text-slate-700">
                 <input type="hidden" id="featId">
 
                 <div class="grid grid-cols-3 gap-4">
@@ -437,7 +517,7 @@
                     <textarea id="featNote" placeholder="Điểm học viên hay thắc mắc, mẹo demo, kịch bản giải thích..." class="saas-input h-20 resize-none custom-scrollbar text-xs"></textarea>
                 </div>
 
-                <div class="p-3.5 bg-purple-50 rounded-xl border border-purple-200 flex items-center justify-between">
+                <div class="modal-cert p-3.5 bg-purple-50 rounded-xl border border-purple-200 flex items-center justify-between">
                     <div>
                         <span class="font-bold text-purple-900 block text-xs">Trainer Readiness Certification:</span>
                         <p class="text-[11px] text-purple-700 mt-0.5">Xác nhận Trainer đã tự thực hành thông thấu và tự tin giảng dạy</p>
@@ -449,7 +529,7 @@
                 </div>
             </div>
 
-            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-end gap-3 shrink-0">
+            <div class="modal-foot px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-end gap-3 shrink-0">
                 <button onclick="closeFeatureModal()" class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold rounded-xl border border-slate-300 text-xs transition">Hủy Bỏ</button>
                 <button onclick="saveFeatureFromModal()" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs transition shadow-md flex items-center gap-1.5">
                     <i class="fas fa-save"></i> Lưu Thông Tin
@@ -642,9 +722,9 @@
                 if (f.cleared) clearedCount++;
             });
 
-            document.getElementById('badge-urgent').innerHTML = `<i class="fas fa-exclamation-triangle ${urgentCount > 0 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}"></i> ${urgentCount} Khẩn cấp`;
-            document.getElementById('badge-upcoming').innerHTML = `<i class="fas fa-clock text-amber-500"></i> ${upcomingCount} Sắp Demo`;
-            document.getElementById('badge-cleared').innerHTML = `<i class="fas fa-check-circle text-emerald-500"></i> ${clearedCount} Đã Clear`;
+            document.getElementById('badge-urgent').innerHTML = `<i class="fas fa-exclamation-triangle ${urgentCount > 0 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}"></i> <span>${urgentCount}<span class="badge-label"> Khẩn cấp</span></span>`;
+            document.getElementById('badge-upcoming').innerHTML = `<i class="fas fa-clock text-amber-500"></i> <span>${upcomingCount}<span class="badge-label"> Sắp Demo</span></span>`;
+            document.getElementById('badge-cleared').innerHTML = `<i class="fas fa-check-circle text-emerald-500"></i> <span>${clearedCount}<span class="badge-label"> Đã Clear</span></span>`;
 
             // Bật tắt Banner Khẩn Cấp Đỏ
             const banner = document.getElementById('urgentAlertBanner');
@@ -853,8 +933,8 @@
                                 ` : ''}
                             </div>
                             <div class="flex items-center gap-1.5" data-action="none">
-                                <button type="button" data-action="edit" data-id="${escapeHtml(f.id)}" class="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-slate-100 transition" title="Chỉnh sửa"><i class="fas fa-edit text-xs"></i></button>
-                                <button type="button" data-action="delete" data-id="${escapeHtml(f.id)}" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-slate-100 transition" title="Xóa"><i class="fas fa-trash-alt text-xs"></i></button>
+                                <button type="button" data-action="edit" data-id="${escapeHtml(f.id)}" class="card-act-btn p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-slate-100 transition" title="Chỉnh sửa"><i class="fas fa-edit text-xs"></i></button>
+                                <button type="button" data-action="delete" data-id="${escapeHtml(f.id)}" class="card-act-btn p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-slate-100 transition" title="Xóa"><i class="fas fa-trash-alt text-xs"></i></button>
                             </div>
                         </div>
 
@@ -886,8 +966,15 @@
                             </div>
                         </div>
 
+                        <!-- NÚT "XEM TRỰC TIẾP": chỉ hiện ở màn < 1024px (khung xem nằm ẩn, bấm để mở toàn màn hình) -->
+                        ${/^https?:\/\//i.test(String(f.iframeUrl || '').trim()) ? `
+                            <button type="button" data-action="live" data-id="${escapeHtml(f.id)}" class="radar-live-only w-full mb-3 items-center justify-center gap-2 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition">
+                                <i class="fas fa-play-circle text-emerald-400"></i> Xem trực tiếp
+                            </button>
+                        ` : ''}
+
                         <!-- FOOTER THẺ: THỜI GIAN & TOGGLE TRAINER ĐÃ CLEAR -->
-                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between" data-action="none">
+                        <div class="radar-card-footer pt-3 border-t border-slate-100 flex items-center justify-between" data-action="none">
                             <div class="text-[10px] font-mono-code text-slate-400 space-x-3">
                                 <span>Demo: <b class="text-slate-700">${escapeHtml(f.demoDate) || '--'}</b></span>
                                 <span>Launch: <b class="text-slate-700">${escapeHtml(f.launchDate) || '--'}</b></span>
@@ -1175,6 +1262,7 @@
                     case 'edit': editFeature(id); break;
                     case 'delete': deleteFeature(id); break;
                     case 'add': openFeatureModal(); break;
+                    case 'live': openLivePane(id); break;
                     default: break; // 'none' / 'toggle-clear': không chọn thẻ
                 }
             });
@@ -1185,6 +1273,24 @@
                 }
             });
         }
+
+        // ==========================================
+        // KHUNG XEM TRỰC TIẾP DẠNG TOÀN MÀN HÌNH (CHỈ DÙNG Ở MÀN < 1024px)
+        // Trên màn hẹp cột iframe bị ẩn; bấm "Xem trực tiếp" trên thẻ → chọn thẻ + mở lớp phủ có nút Đóng.
+        // ==========================================
+        function openLivePane(featId) {
+            if (featId && featId !== activeSelectedFeatureId) selectFeatureToTest(featId);
+            document.body.classList.add('radar-live-open');
+        }
+        function closeLivePane() {
+            document.body.classList.remove('radar-live-open');
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.body.classList.contains('radar-live-open')
+                && !document.getElementById('featureModal').classList.contains('active')) closeLivePane();
+        });
+        // Quay lại màn rộng thì bỏ trạng thái lớp phủ (tránh khóa cuộn khi thu nhỏ lại lần sau)
+        window.matchMedia('(min-width: 1024px)').addEventListener('change', (e) => { if (e.matches) closeLivePane(); });
 
         window.onload = () => {
             // Profile is automatically hydrated by sidebar-nav.js

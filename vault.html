@@ -11,7 +11,9 @@
 
     <style>
         html { scroll-behavior: smooth; }
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow: hidden; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        /* Chỉ khóa cuộn trang ở màn ≥768px (bố cục chia khung); điện thoại cuộn cả trang */
+        @media (min-width: 768px) { body { overflow: hidden; } }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
@@ -81,37 +83,151 @@
         .icon-box { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; border: 1px solid #e2e8f0; color: #64748b; transition: all 0.2s;}
         .icon-box:hover { background: #f8fafc; color: #9333ea; }
         .icon-box.active { background: #f3e8ff; border-color: #a855f7; color: #9333ea; font-weight: bold;}
+
+        /* ================= RESPONSIVE (≥1280px giữ nguyên giao diện gốc) ================= */
+        .resizer { touch-action: none; }
+        .vault-folder-bar { display: none; }
+        .vault-header-btn { white-space: nowrap; flex-shrink: 0; }
+
+        /* 1024–1279px: thu gọn header để không vỡ dòng */
+        @media (max-width: 1279px) {
+            header.vault-header { padding-left: 16px; padding-right: 16px; gap: 12px; }
+            .vault-header .vault-header-actions { gap: 10px; min-width: 0; }
+            .vault-header .vault-search { width: 12rem; }
+        }
+
+        /* <1024px: ẩn mô tả phụ, ô tìm co giãn, nút Ghim/Thùng rác chỉ còn icon + số */
+        @media (max-width: 1023px) {
+            .vault-subtitle { display: none; }
+            .vault-header .vault-header-actions { flex: 1 1 auto; justify-content: flex-end; }
+            .vault-header .vault-search { width: auto; flex: 1 1 auto; min-width: 0; max-width: 16rem; }
+            .vault-header-btn .btn-label { display: none; }
+            .vault-sidebar { min-width: 180px; max-width: 45%; }
+            .vault-main { min-width: 260px; }
+            .vault-main .vault-main-toolbar { gap: 8px; flex-wrap: wrap; }
+            .vault-main-toolbar h2 { font-size: 1rem; }
+        }
+
+        /* Danh sách tài nguyên dạng thẻ khi khung danh sách hẹp (<640px) — chỉ áp dụng dưới 1280px */
+        @media (max-width: 1279px) {
+            .vault-list-wrap { container-type: inline-size; container-name: vlist; }
+            @container vlist (max-width: 639px) {
+                #resourceTable, #resourceTable tbody { display: block; width: 100%; }
+                #resourceTable thead { display: none; }
+                #resourceTable tbody { padding: 10px 12px; }
+                #resourceTable tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "info pin" "date act"; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
+                #resourceTable td { border: 0; padding: 10px 12px; min-width: 0; }
+                #resourceTable td:nth-child(1) { display: none; }
+                #resourceTable td:nth-child(2) { grid-area: pin; padding-top: 14px; }
+                #resourceTable td:nth-child(3) { grid-area: info; }
+                #resourceTable td:nth-child(3) .flex > div:last-child { min-width: 0; }
+                #resourceTable td:nth-child(3) h4 { overflow-wrap: anywhere; }
+                #resourceTable td:nth-child(3) p.truncate { max-width: 100%; }
+                #resourceTable td:nth-child(4) { grid-area: date; text-align: left; display: flex; align-items: center; border-top: 1px dashed #e2e8f0; }
+                #resourceTable td:nth-child(5) { grid-area: act; border-top: 1px dashed #e2e8f0; }
+                #resourceTable td:nth-child(5) > div { justify-content: flex-end; opacity: 1; }
+            }
+        }
+
+        /* <768px: điện thoại */
+        @media (max-width: 767px) {
+            body .vault-shell { height: auto; min-height: 100vh; min-height: 100dvh; }
+            body .vault-page { overflow: visible; min-width: 0; }
+
+            /* Header: ô tìm xuống dòng riêng, full width */
+            header.vault-header { height: auto; flex-wrap: wrap; padding: 10px 12px; row-gap: 8px; }
+            .vault-header .vault-header-left { flex: 1 1 0; min-width: 0; gap: 10px; }
+            .vault-header .vault-header-actions { display: contents; }
+            .vault-header-divider { display: none; }
+            .vault-header .vault-search { order: 10; flex: 1 1 100%; max-width: none; }
+            .vault-search input { font-size: 16px; } /* tránh iOS tự phóng to khi gõ */
+
+            /* Cây thư mục -> thanh chọn thư mục ở trên + danh sách xổ xuống */
+            .vault-container { height: auto; overflow: visible; flex-direction: column; }
+            .vault-folder-bar { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 14px; background: #faf5ff; border-bottom: 1px solid #e9d5ff; color: #6b21a8; font-size: 13px; font-weight: 600; text-align: left; }
+            .vault-folder-bar .fa-chevron-down { transition: transform 0.2s; }
+            .vault-folder-bar[aria-expanded="true"] .fa-chevron-down { transform: rotate(180deg); }
+            .vault-sidebar { display: none; width: 100% !important; min-width: 0; max-width: none; max-height: 60vh; border-right: 0; border-bottom: 1px solid #e2e8f0; box-shadow: 0 6px 12px -8px rgba(15, 23, 42, 0.25); }
+            .vault-sidebar.tree-open { display: flex; }
+            #folder-tree-container { padding-bottom: 12px; }
+            .vault-container .resizer { display: none; }
+            .vault-main { min-width: 0; overflow: visible; }
+            .vault-main .vault-main-toolbar { position: static; padding: 12px; }
+            .vault-main-toolbar > div:first-child { min-width: 0; flex: 1 1 auto; }
+            .vault-main-toolbar h2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .vault-main .vault-list-wrap { overflow: visible; }
+            #resourceTable tbody { padding: 10px; }
+            #resourceTable td:nth-child(5) button { min-width: 32px; min-height: 32px; }
+
+            /* Modal: 1 cột, full width, cuộn bên trong, nút lưu luôn thấy */
+            .modal { padding: 8px !important; }
+            .modal-content { max-width: 100% !important; height: auto !important; max-height: calc(100vh - 16px); max-height: calc(100dvh - 16px); }
+            .modal-content > * { min-height: 0; }
+            .modal-content .p-6 { padding: 16px; }
+            .modal-content .px-6 { padding-left: 16px; padding-right: 16px; }
+            .modal .grid-cols-3, .modal .grid-cols-2 { grid-template-columns: minmax(0, 1fr) !important; gap: 16px !important; }
+            .modal .col-span-1, .modal .col-span-2 { grid-column: auto; }
+            .modal .saas-input { font-size: 16px; }
+            .modal .h-48 { height: 9rem; }
+            .trash-toolbar { flex-wrap: wrap; gap: 8px; }
+            .trash-toolbar > div:last-child { flex-wrap: wrap; }
+
+            /* Bảng thùng rác dạng thẻ */
+            #trashVaultModal .v-table, #trashVaultBody { display: block; }
+            #trashVaultModal .v-table thead { display: none; }
+            #trashVaultBody tr { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; column-gap: 10px; padding: 10px 12px; }
+            #trashVaultBody td { border: 0; padding: 2px 0; min-width: 0; text-align: left; overflow-wrap: anywhere; }
+            #trashVaultBody td:nth-child(1) { grid-column: 1; grid-row: 1 / span 3; align-self: start; padding-top: 4px; }
+            #trashVaultBody td:nth-child(2) { display: none; }
+            #trashVaultBody td:nth-child(3) { grid-column: 2; grid-row: 1; }
+            #trashVaultBody td:nth-child(4) { grid-column: 2; grid-row: 2; }
+            #trashVaultBody td:nth-child(5) { grid-column: 2; grid-row: 3; text-align: left; }
+            #trashVaultBody td:nth-child(6) { grid-column: 3; grid-row: 1 / span 3; align-self: center; }
+            #trashVaultBody td[colspan] { grid-column: 1 / -1; grid-row: auto; text-align: center; padding: 24px 0; }
+        }
+
+        /* Thiết bị cảm ứng (không có hover): luôn hiện nút thao tác */
+        @media (hover: none) {
+            .tree-node .opacity-0, .v-table .opacity-0 { opacity: 1 !important; }
+            .tree-node .fa-edit, .tree-node .fa-trash-alt { padding: 6px; font-size: 13px !important; }
+        }
     </style>
     <script src="system-config.js"></script>
 </head>
 <body>
 
-    <div class="flex h-screen">
+    <div class="flex h-screen vault-shell">
         <!-- SIDEBAR CHUẨN KIOTVIET L&D (COLLAPSIBLE) -->
         <aside id="sidebar"></aside>
 
         <!-- KHO LƯU TRỮ CHÍNH -->
-        <div class="flex-1 flex flex-col overflow-hidden relative">
-            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 shrink-0 shadow-sm">
-                <div class="flex items-center gap-4">
-                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-purple-50 hover:text-purple-600 transition border border-slate-200"><i class="fas fa-bars"></i></button>
-                    <div>
-                        <h1 class="text-lg font-bold text-slate-800 leading-tight">Knowledge Vault</h1>
-                        <p class="text-[11px] text-slate-500 font-medium">Lưu trữ, Quản lý & Chia sẻ Tài nguyên L&D</p>
+        <div class="flex-1 flex flex-col overflow-hidden relative vault-page">
+            <header class="vault-header h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 shrink-0 shadow-sm">
+                <div class="vault-header-left flex items-center gap-4 min-w-0">
+                    <button onclick="toggleSidebar()" class="shrink-0 w-8 h-8 rounded bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-purple-50 hover:text-purple-600 transition border border-slate-200"><i class="fas fa-bars"></i></button>
+                    <div class="min-w-0">
+                        <h1 class="text-lg font-bold text-slate-800 leading-tight whitespace-nowrap truncate">Knowledge Vault</h1>
+                        <p class="vault-subtitle text-[11px] text-slate-500 font-medium truncate">Lưu trữ, Quản lý & Chia sẻ Tài nguyên L&D</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-4">
-                    <div class="relative w-64 group">
+                <div class="vault-header-actions flex items-center gap-4">
+                    <div class="vault-search relative w-64 group">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-purple-500 transition"></i>
                         <input type="text" id="globalSearchInput" oninput="searchVault()" placeholder="Tìm tài nguyên (Ctrl+F)" class="saas-input pl-9 bg-slate-50 border-slate-200 focus:bg-white text-xs">
                     </div>
-                    <div class="w-px h-6 bg-slate-200"></div>
-                    <button onclick="togglePinnedView()" id="btnPinFilter" class="px-3 py-1.5 bg-white text-slate-500 rounded-lg text-xs font-bold border border-slate-200 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600 transition flex items-center gap-1.5"><i class="fas fa-star"></i> Ghim (<span id="pinCount">0</span>)</button>
-                    <button onclick="openTrashModal()" class="px-3 py-1.5 bg-rose-50 text-rose-600 rounded-lg text-xs font-bold border border-rose-100 hover:bg-rose-100 transition flex items-center gap-1.5"><i class="fas fa-trash-restore"></i> Thùng rác (<span id="trashCount">0</span>)</button>
+                    <div class="vault-header-divider w-px h-6 bg-slate-200 shrink-0"></div>
+                    <button onclick="togglePinnedView()" id="btnPinFilter" title="Tài nguyên đã ghim" class="vault-header-btn px-3 py-1.5 bg-white text-slate-500 rounded-lg text-xs font-bold border border-slate-200 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600 transition flex items-center gap-1.5"><i class="fas fa-star"></i> <span class="btn-label">Ghim (</span><span id="pinCount">0</span><span class="btn-label">)</span></button>
+                    <button onclick="openTrashModal()" title="Thùng rác" class="vault-header-btn px-3 py-1.5 bg-rose-50 text-rose-600 rounded-lg text-xs font-bold border border-rose-100 hover:bg-rose-100 transition flex items-center gap-1.5"><i class="fas fa-trash-restore"></i> <span class="btn-label">Thùng rác (</span><span id="trashCount">0</span><span class="btn-label">)</span></button>
                 </div>
             </header>
 
             <div class="vault-container">
+                <!-- ĐIỆN THOẠI (<768px): THANH CHỌN THƯ MỤC, BẤM ĐỂ XỔ CÂY THƯ MỤC -->
+                <button type="button" id="vaultFolderBar" class="vault-folder-bar" onclick="toggleMobileTree()" aria-expanded="false" aria-controls="vault-sidebar">
+                    <i class="fas fa-sitemap shrink-0"></i>
+                    <span class="truncate min-w-0">Thư mục: <b id="vaultFolderBarName">Tất cả Tài nguyên</b></span>
+                    <i class="fas fa-chevron-down ml-auto shrink-0"></i>
+                </button>
                 <!-- CỘT TRÁI: CÂY THƯ MỤC -->
                 <div id="vault-sidebar" class="vault-sidebar" style="width: 280px;">
                     <div class="px-4 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
@@ -128,18 +244,18 @@
 
                 <!-- CỘT PHẢI: DANH SÁCH TÀI NGUYÊN -->
                 <div id="vault-main" class="vault-main">
-                    <div class="p-4 border-b border-slate-200 bg-white sticky top-0 z-20 flex justify-between items-center shadow-sm">
-                        <div class="flex items-center gap-3">
+                    <div class="vault-main-toolbar p-4 border-b border-slate-200 bg-white sticky top-0 z-20 flex justify-between items-center shadow-sm">
+                        <div class="flex items-center gap-3 min-w-0">
                             <i id="currentFolderIcon" class="fas fa-folder-open text-2xl text-purple-500"></i>
-                            <div>
+                            <div class="min-w-0">
                                 <h2 id="currentFolderName" class="text-xl font-bold text-slate-800">Tất cả Tài nguyên</h2>
                                 <p id="currentFolderCount" class="text-[11px] text-slate-500 font-medium">0 items</p>
                             </div>
                         </div>
-                        <button onclick="openResourceModal()" id="btnAddResource" class="btn-primary shadow-md hidden"><i class="fas fa-plus mr-1"></i> Thêm Tài Nguyên</button>
+                        <button onclick="openResourceModal()" id="btnAddResource" class="btn-primary shadow-md hidden whitespace-nowrap shrink-0"><i class="fas fa-plus mr-1"></i> Thêm Tài Nguyên</button>
                     </div>
 
-                    <div class="flex-grow overflow-auto custom-scrollbar bg-slate-50/30">
+                    <div class="vault-list-wrap flex-grow overflow-auto custom-scrollbar bg-slate-50/30">
                         <table class="v-table" id="resourceTable">
                             <thead>
                                 <tr>
@@ -166,7 +282,7 @@
     <!-- MODAL 1: THƯ MỤC -->
     <div id="folderModal" class="modal fixed inset-0 items-center justify-center p-4">
         <div class="modal-content w-full max-w-md shadow-2xl">
-            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl shrink-0">
                 <h3 id="folderModalTitle" class="font-bold text-slate-800"><i class="fas fa-folder-plus text-purple-600 mr-2"></i>Tạo Thư Mục Mới</h3>
                 <button onclick="closeModal('folderModal')" class="text-slate-400 hover:text-rose-500 text-xl"><i class="fas fa-times"></i></button>
             </div>
@@ -191,7 +307,7 @@
                     <div class="grid grid-cols-6 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200" id="iconPickerGrid"></div>
                 </div>
             </div>
-            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 rounded-b-2xl">
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 rounded-b-2xl shrink-0">
                 <button onclick="closeModal('folderModal')" class="btn-outline">Hủy bỏ</button>
                 <button onclick="saveFolder()" class="btn-primary px-8">Lưu Thư Mục</button>
             </div>
@@ -260,7 +376,7 @@
     <div id="detailModal" class="modal fixed inset-0 items-center justify-center p-4">
         <div class="modal-content w-full max-w-2xl bg-white overflow-hidden shadow-2xl">
             <div class="px-6 py-4 bg-slate-800 flex justify-between items-center shrink-0">
-                <h3 class="font-bold text-white text-lg flex items-center gap-3">
+                <h3 class="font-bold text-white text-lg flex items-center gap-3 min-w-0">
                     <i id="detIcon" class="fas fa-link text-purple-400"></i>
                     <span id="detTitle" class="truncate">Tiêu đề tài nguyên</span>
                 </h3>
@@ -293,7 +409,7 @@
                 <button onclick="closeModal('trashVaultModal')" class="text-slate-400 hover:text-rose-700 w-8 h-8 bg-white rounded flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
             
-            <div class="px-6 py-3 bg-white border-b border-slate-100 flex justify-between items-center shrink-0">
+            <div class="trash-toolbar px-6 py-3 bg-white border-b border-slate-100 flex justify-between items-center shrink-0">
                 <div class="text-sm font-medium text-slate-600">Đã chọn: <span id="trashSelectedCount" class="font-bold text-rose-600 text-lg">0</span> tài nguyên</div>
                 <div class="flex gap-2">
                     <button onclick="restoreSelectedTrash()" class="btn-outline text-emerald-600 border-emerald-200 hover:bg-emerald-50 text-xs px-4 py-2"><i class="fas fa-undo mr-1"></i> Khôi phục đã chọn</button>
@@ -504,25 +620,78 @@
             if(pinCount) pinCount.innerText = vaultItems.filter(i => i.isPinned).length;
         }
 
+        // Thanh kéo giãn cây thư mục: hỗ trợ chuột + cảm ứng (pointer events), nhớ độ rộng trong localStorage
+        const TREE_WIDTH_KEY = 'kv_vault_tree_width';
+        const isMobileVault = () => window.matchMedia('(max-width: 767px)').matches;
+
+        // Giới hạn độ rộng cây: 200–600px và luôn chừa đủ chỗ cho vùng chính (min-width của .vault-main)
+        function clampTreeWidth(w) {
+            const container = document.querySelector('.vault-container');
+            const main = document.getElementById('vault-main');
+            let max = 600;
+            if (container && main) {
+                const mainMin = parseFloat(getComputedStyle(main).minWidth) || 0;
+                const room = container.clientWidth - 6 - mainMin;
+                if (room > 0) max = Math.min(max, room);
+            }
+            return Math.max(200, Math.min(w, max));
+        }
+
         function initResizer() {
             const resizer = document.getElementById('resizer');
             const sidebar = document.getElementById('vault-sidebar');
-            const resize = (e) => {
+            let preferredWidth = parseFloat(sidebar.style.width) || 280;
+            try {
+                const saved = parseFloat(localStorage.getItem(TREE_WIDTH_KEY));
+                if (saved >= 200 && saved <= 600) preferredWidth = saved;
+            } catch (e) { /* localStorage bị chặn -> dùng mặc định */ }
+
+            // Áp độ rộng mong muốn, tự co lại khi màn hình hẹp (không ghi đè giá trị đã lưu)
+            const applyWidth = () => {
+                if (isMobileVault()) return; // điện thoại: CSS đặt cây full width
+                sidebar.style.width = clampTreeWidth(preferredWidth) + 'px';
+            };
+            applyWidth();
+            window.addEventListener('resize', applyWidth);
+
+            let dragging = false;
+            const onMove = (e) => {
+                if (!dragging) return;
                 const rect = sidebar.getBoundingClientRect();
-                let newWidth = e.clientX - rect.left;
-                if(newWidth > 200 && newWidth < 600) sidebar.style.width = newWidth + 'px';
+                const newWidth = e.clientX - rect.left;
+                if (newWidth > 200 && newWidth < 600) {
+                    const w = clampTreeWidth(newWidth);
+                    sidebar.style.width = w + 'px';
+                    preferredWidth = w;
+                }
             };
-            const stopResize = () => {
+            const stopResize = (e) => {
+                if (!dragging) return;
+                dragging = false;
                 resizer.classList.remove('active');
-                document.removeEventListener('mousemove', resize);
-                document.removeEventListener('mouseup', stopResize);
+                try { resizer.releasePointerCapture(e.pointerId); } catch (err) {}
+                try { localStorage.setItem(TREE_WIDTH_KEY, String(Math.round(preferredWidth))); } catch (err) {}
             };
-            resizer.addEventListener('mousedown', (e) => {
+            resizer.addEventListener('pointerdown', (e) => {
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
                 e.preventDefault();
+                dragging = true;
                 resizer.classList.add('active');
-                document.addEventListener('mousemove', resize);
-                document.addEventListener('mouseup', stopResize);
+                try { resizer.setPointerCapture(e.pointerId); } catch (err) {}
             });
+            resizer.addEventListener('pointermove', onMove);
+            resizer.addEventListener('pointerup', stopResize);
+            resizer.addEventListener('pointercancel', stopResize);
+        }
+
+        // Điện thoại: mở/đóng danh sách cây thư mục dưới thanh "Thư mục: ..."
+        function toggleMobileTree(force) {
+            const sidebar = document.getElementById('vault-sidebar');
+            const bar = document.getElementById('vaultFolderBar');
+            if (!sidebar || !bar) return;
+            const open = typeof force === 'boolean' ? force : !sidebar.classList.contains('tree-open');
+            sidebar.classList.toggle('tree-open', open);
+            bar.setAttribute('aria-expanded', open ? 'true' : 'false');
         }
 
         function renderTree() {
@@ -610,7 +779,11 @@
                 document.getElementById('currentFolderName').innerText = folder.name;
                 document.getElementById('currentFolderIcon').className = `fas ${safeIcon(folder.icon)} text-2xl text-purple-500`;
                 document.getElementById('btnAddResource').classList.remove('hidden');
+                const barName = document.getElementById('vaultFolderBarName');
+                if (barName) barName.textContent = folder.name;
             }
+            // Điện thoại: người dùng chọn thư mục -> thu gọn danh sách cây
+            if (!preserveView && isMobileVault()) toggleMobileTree(false);
             renderResourceList(); // renderResourceList tự cập nhật số đếm
         }
 
