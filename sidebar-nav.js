@@ -522,3 +522,103 @@
     buildSidebarDOM();
   }
 })();
+
+/* =====================================================================================
+ * CHẾ ĐỘ ĐIỆN THOẠI (< 768px) - 27/11/2026
+ * Trước đây sidebar luôn chiếm 1 cột (64-240px) làm nội dung bị ép, không xem được trên điện thoại.
+ * Trên điện thoại: sidebar ẩn hẳn, trượt ra dạng ngăn kéo khi bấm nút menu (nút ☰ có sẵn trên trang
+ * hoặc nút tròn góc dưới trái), bấm ra ngoài / chọn mục thì tự đóng. Máy tính: giữ nguyên như cũ.
+ * ===================================================================================== */
+(function () {
+  'use strict';
+  if (window.__kvMobileShell) return;
+  window.__kvMobileShell = true;
+  const MQ = window.matchMedia('(max-width: 767px)');
+  const html = document.documentElement;
+
+  const css = `
+  @media (max-width: 767px) {
+    #sidebar { position: fixed !important; top: 0; bottom: 0; left: 0; z-index: 90 !important;
+      width: 264px !important; min-width: 264px !important; max-width: 86vw;
+      transition: transform .25s ease !important; }
+    html:not(.kv-nav-open) body #sidebar { transform: translateX(-105%) !important; }
+    html.kv-nav-open body #sidebar { transform: none !important; box-shadow: 0 0 40px rgba(0,0,0,.35) !important; }
+    html.kv-nav-open::after { content: ''; position: fixed; inset: 0; background: rgba(10,10,25,.42); z-index: 85; }
+    html body #kv-mobile-menu { display: flex; }
+    body { overflow-x: hidden; }
+    /* Thanh "Kỳ báo cáo" trên Dashboard: cho xuống dòng thay vì tràn ngang */
+    div:has(> * > #reportTimeRange) > * { flex-wrap: wrap; min-width: 0; max-width: 100%; }
+    div:has(> #reportTimeRange) > span:first-child { white-space: nowrap; }
+    #reportTimeRange { max-width: 100%; }
+  }
+  #kv-mobile-menu { display: none; position: fixed; left: 14px; bottom: 18px; z-index: 84; width: 46px; height: 46px;
+    border-radius: 999px; align-items: center; justify-content: center; border: 0; color: #fff; font-size: 17px;
+    background: linear-gradient(135deg, #6d5ae6, #2563eb); box-shadow: 0 8px 22px -6px rgba(60,50,200,.55); }`;
+
+  function addCss() {
+    if (document.getElementById('kv-mobile-css')) return;
+    const st = document.createElement('style');
+    st.id = 'kv-mobile-css';
+    st.textContent = css;
+    (document.head || document.documentElement).appendChild(st);
+  }
+
+  const isMobile = () => MQ.matches;
+  // Mở ngăn kéo: tạm bỏ chế độ thu gọn để hiện đủ chữ; đóng lại thì trả về như cũ (không đổi lựa chọn trên máy tính)
+  let restoreCollapsed = false;
+  function openNav(open) {
+    if (open && !html.classList.contains('kv-nav-open')) {
+      restoreCollapsed = html.classList.contains('sb-collapsed');
+      html.classList.remove('sb-collapsed');
+    } else if (!open && html.classList.contains('kv-nav-open') && restoreCollapsed) {
+      html.classList.add('sb-collapsed');
+    }
+    html.classList.toggle('kv-nav-open', !!open);
+  }
+
+  // Nút ☰ có sẵn trên trang (gọi toggleSidebar) -> trên điện thoại mở/đóng ngăn kéo thay vì thu gọn
+  function wrapToggle() {
+    const orig = window.toggleSidebar;
+    if (typeof orig !== 'function' || orig.__kvMobile) return;
+    const wrapped = function () {
+      if (isMobile()) { openNav(!html.classList.contains('kv-nav-open')); return; }
+      return orig.apply(this, arguments);
+    };
+    wrapped.__kvMobile = true;
+    window.toggleSidebar = wrapped;
+  }
+
+  function addFloatingButton() {
+    if (document.getElementById('kv-mobile-menu') || !document.body) return;
+    // Trang đã có nút ☰ ở header thì không cần nút nổi
+    const hasHeaderToggle = [...document.querySelectorAll('[onclick*="toggleSidebar"]')].some(el => !el.closest('#sidebar'));
+    if (hasHeaderToggle) return;
+    const btn = document.createElement('button');
+    btn.id = 'kv-mobile-menu';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Mở menu');
+    btn.innerHTML = '<i class="fas fa-bars"></i>';
+    btn.addEventListener('click', (e) => { e.stopPropagation(); openNav(!html.classList.contains('kv-nav-open')); });
+    document.body.appendChild(btn);
+  }
+
+  function init() {
+    addCss();
+    wrapToggle();
+    addFloatingButton();
+    document.addEventListener('click', (e) => {
+      if (!isMobile() || !html.classList.contains('kv-nav-open')) return;
+      const sb = document.getElementById('sidebar');
+      if (e.target.closest('#kv-mobile-menu') || e.target.closest('[onclick*="toggleSidebar"]')) return;
+      if (sb && sb.contains(e.target)) {
+        if (e.target.closest('a[href]')) openNav(false); // Chọn trang -> đóng
+        return;
+      }
+      openNav(false); // Bấm ra ngoài -> đóng
+    }, true);
+    MQ.addEventListener ? MQ.addEventListener('change', () => openNav(false)) : MQ.addListener(() => openNav(false));
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  window.addEventListener('load', wrapToggle);
+})();

@@ -8,7 +8,7 @@
  */
 (function () {
   'use strict';
-  const CACHE_KEY = 'kv_elearning_report_v1';
+  const CACHE_KEY = 'kv_elearning_report_v2'; // v2: có ghép dữ liệu Cổng học tập
   const TTL_MS = 60 * 60 * 1000;
   const MOUNT_ID = 'elearning-health-card';
 
@@ -63,6 +63,18 @@
   function readCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch (e) { return null; } }
   function writeCache(s) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(s)); } catch (e) {} }
 
+  // Nạp module đồng bộ Cổng học tập (elearning-sync.js) khi cần, để số liệu khớp với Master Data Hub
+  function ensureSync() {
+    if (window.KhPortalSync) return Promise.resolve(window.KhPortalSync);
+    return new Promise((resolve) => {
+      const sc = document.createElement('script');
+      sc.src = 'elearning-sync.js';
+      sc.onload = () => resolve(window.KhPortalSync || null);
+      sc.onerror = () => resolve(null);
+      document.head.appendChild(sc);
+    });
+  }
+
   let inflight = null; // Dùng chung 1 lần tải khi tab được vẽ lại liên tục
   async function load(force) {
     const url = typeof window.getHubApiUrl === 'function' ? window.getHubApiUrl() : '';
@@ -77,8 +89,12 @@
         const res = await fetch(url, ctrl ? { signal: ctrl.signal } : undefined);
         const data = await res.json();
         if (data.status !== 'success') throw new Error(data.message || 'Kho E-Learning không trả dữ liệu');
+        // Ghép link mới nhất từ Cổng học tập (chỉ bài TRONG khóa học); lỗi Cổng thì vẫn dùng Sheet khóa học
+        let portal = null;
+        try { const sync = await ensureSync(); if (sync) portal = await sync.applyToDataset(data); } catch (e) { portal = null; }
         const s = summarize(data);
         s.url = url;
+        if (portal) s.portal = { out: portal.outCourse, changed: portal.changed.length };
         writeCache(s);
         return s;
       } catch (e) {
@@ -140,7 +156,7 @@
     card.innerHTML = `
       <div class="er-head">
         <div><div class="er-eyebrow">Thư viện học liệu</div><div class="er-title">Sức khỏe kho học liệu E-Learning</div>
-          <div class="er-sub">${s.total} bài học • ${s.courses} khóa • cập nhật ${esc(time)}</div></div>
+          <div class="er-sub">${s.total} bài trong khóa học • ${s.courses} khóa • cập nhật ${esc(time)}${s.portal ? ` • đồng bộ Cổng học tập: ${s.portal.changed} bài cập nhật, ${s.portal.out} tính năng ngoài khóa` : ''}</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="er-btn" data-er-refresh title="Tải lại số liệu từ kho"><i class="fas fa-rotate"></i>Làm mới</button>
           <a class="er-btn er-primary" href="${hubLink()}"><i class="fas fa-book-open"></i>Mở thư viện</a>

@@ -99,7 +99,7 @@
   .kh-toc-count { margin-left: auto; font: 600 10.5px 'Fira Code', monospace; color: var(--kh-muted); background: var(--kh-paper); border: 1px solid var(--kh-line); border-radius: 999px; padding: 1px 7px; }
 
   /* ===== Thành phần chung ===== */
-  .kh-wrap { display: flex; flex-direction: column; gap: 22px; }
+  .kh-wrap { display: flex; flex-direction: column; gap: 22px; max-width: 1240px; margin: 0 auto; width: 100%; }
   .kh-intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-bottom: 14px; border-bottom: 1px solid var(--kh-line); }
   .kh-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--kh-accent-ink); }
   .kh-h1 { font-family: var(--kh-serif); font-size: 26px; font-weight: 600; color: var(--kh-ink); line-height: 1.15; margin-top: 4px; }
@@ -193,9 +193,11 @@
   /* ===== 3. Case study ===== */
   .kh-day-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
   .kh-day-head h3 { font-family: var(--kh-serif); font-size: 20px; font-weight: 600; color: var(--kh-ink); }
-  .kh-sessions { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .kh-sessions { display: flex; flex-direction: column; gap: 18px; }
+  .kh-case-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 14px; align-items: stretch; }
   .kh-session-label { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: var(--kh-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .06em; }
-  .kh-case { padding: 16px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .kh-case { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .kh-case > .flex:last-child { margin-top: auto; }
   .kh-case-top { display: flex; gap: 10px; align-items: flex-start; }
   .kh-case-no { font-family: var(--kh-serif); font-weight: 700; font-size: 13px; color: var(--kh-accent-ink); background: var(--kh-accent-soft); border-radius: 9px; min-width: 34px; height: 34px; display: grid; place-items: center; flex-shrink: 0; }
   .kh-case-title { font-size: 13px; font-weight: 650; color: var(--kh-ink); line-height: 1.35; }
@@ -236,7 +238,14 @@
     html.kh-toc-open body::after { content: ''; position: fixed; inset: 0; background: rgba(10,10,25,.35); z-index: 65; }
     .kh-toc-toggle { display: inline-flex; }
     html.kh-academic #local-search-wrapper, html.kh-academic #view-mode-split span { display: none !important; }
-    html.kh-academic main > header { padding-left: 10px !important; padding-right: 10px !important; }
+    html.kh-academic main > header { padding-left: 10px !important; padding-right: 10px !important; gap: 8px; }
+    html.kh-academic #section-icon, html.kh-academic main > header .text-\\[11px\\] { display: none !important; }
+    html.kh-academic #section-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 42vw; }
+    html.kh-academic #view-mode-table, html.kh-academic #view-mode-split { display: none !important; }
+    html.kh-academic #items-grid { padding: 14px 12px !important; }
+    .kh-case-grid, .kh-exam-grid { grid-template-columns: 1fr; }
+    .kh-intro { padding-bottom: 10px; } .kh-h1 { font-size: 21px; } .kh-stat { min-width: 0; flex: 1; }
+    .kh-course > summary { padding: 12px; gap: 10px; } .kh-lesson { padding: 12px; }
   }
   @media (max-width: 900px) {
     .kh-lesson { grid-template-columns: 26px 1fr; }
@@ -366,18 +375,23 @@
     const sheet = AppState.currentSheet;
     const courses = groupBy(data, it => val(it, ['Khóa học', 'Khóa']));
     const has = (it, k) => isUrl(it[k]);
-    const total = data.length;
-    const vid = data.filter(it => has(it, 'YouTube')).length;
-    const quiz = data.filter(it => has(it, 'Github')).length;
-    const full = data.filter(it => has(it, 'YouTube') && has(it, 'Github') && has(it, 'HDSD')).length;
+    // Chỉ số tính trên bài TRONG khóa học; tính năng ngoài khóa (chỉ có trên Cổng học tập) hiển thị riêng
+    const inData = data.filter(it => it.__scope !== 'out');
+    const outCount = data.length - inData.length;
+    const total = inData.length;
+    const vid = inData.filter(it => has(it, 'YouTube')).length;
+    const quiz = inData.filter(it => has(it, 'Github')).length;
 
     let html = intro('Thư viện giáo trình', 'Giáo trình sản phẩm KiotViet',
-      'Mỗi khóa là một chương; mỗi bài có đủ 4 loại học liệu: Hướng dẫn sử dụng, Infographic, Video và Quiz. Huy hiệu viền đứt là học liệu còn thiếu.',
-      [[courses.size, 'khóa học'], [total, 'bài học'], [Math.round(vid / Math.max(1, total) * 100) + '%', 'có video'], [Math.round(quiz / Math.max(1, total) * 100) + '%', 'có quiz']]);
+      'Mỗi khóa là một chương; mỗi bài có đủ 4 loại học liệu: Hướng dẫn sử dụng, Infographic, Video và Quiz. Huy hiệu viền đứt là học liệu còn thiếu. Tag <b>Trong khóa học</b> / <b>Ngoài khóa học</b> tách tính năng thuộc giáo trình với tính năng mới chỉ có trên Cổng học tập.',
+      [[courses.size, 'khóa học'], [total, 'bài trong khóa'], [outCount, 'ngoài khóa'], [Math.round(vid / Math.max(1, total) * 100) + '%', 'có video'], [Math.round(quiz / Math.max(1, total) * 100) + '%', 'có quiz']]);
+    if (window.KhPortalSync) html += window.KhPortalSync.bannerHtml();
 
     let courseNo = 0;
-    courses.forEach((lessons, course) => {
+    courses.forEach((allLessons, course) => {
       courseNo++;
+      const lessons = allLessons.filter(it => it.__scope !== 'out');
+      const outside = allLessons.filter(it => it.__scope === 'out');
       const d = domainOf(course);
       const done = lessons.filter(it => has(it, 'YouTube') && has(it, 'Github') && has(it, 'HDSD')).length;
       const pct = Math.round(done / Math.max(1, lessons.length) * 100);
@@ -386,12 +400,12 @@
         <summary>
           <span class="kh-course-no" style="background:${d.color}">${String(courseNo).padStart(2, '0')}</span>
           <span class="min-w-0"><span class="kh-course-title block">${esc(course)}</span>
-            <span class="kh-course-meta block">${lessons.length} bài học${missV ? ` • <span style="color:var(--kh-miss)">${missV} thiếu video</span>` : ''}${missQ ? ` • <span style="color:var(--kh-miss)">${missQ} thiếu quiz</span>` : ''}</span></span>
+            <span class="kh-course-meta block">${lessons.length} bài trong khóa${outside.length ? ` • <span style="color:var(--kh-gold)">${outside.length} ngoài khóa</span>` : ''}${missV ? ` • <span style="color:var(--kh-miss)">${missV} thiếu video</span>` : ''}${missQ ? ` • <span style="color:var(--kh-miss)">${missQ} thiếu quiz</span>` : ''}</span></span>
           <span class="kh-course-progress"><small><span>Học liệu đầy đủ</span><b>${pct}%</b></small><span class="kh-bar block"><i style="width:${pct}%"></i></span></span>
           <i class="fa-solid fa-chevron-right kh-caret text-xs"></i>
         </summary>
         <div class="kh-lessons">`;
-      lessons.forEach((it, idx) => {
+      const lessonHtml = (it, idx) => {
         const title = val(it, ['Nội dung', 'Tên bài', 'Title']) || 'Bài học chưa đặt tên';
         const desc = val(it, ['Mô tả', 'Description']);
         const yt = val(it, ['YouTube']), gh = val(it, ['Github']), hdsd = val(it, ['HDSD']), info = val(it, ['Infographic']);
@@ -399,11 +413,23 @@
         const thumbUrl = ytId ? `https://i.ytimg.com/vi/${encodeURIComponent(ytId)}/mqdefault.jpg` : (isUrl(info) ? info : '');
         const thumbClick = ytId ? `openInSplitMode(${arg(formatUniversalEmbedUrl(yt))}, ${arg(title)})` : (isUrl(info) ? `openLightboxModal(${arg(info)}, ${arg(title)})` : '');
         const chip = (ok, okLabel, missLabel, icon) => `<span class="kh-chip ${ok ? 'kh-ok' : 'kh-miss'}"><i class="fa-solid ${ok ? icon : 'fa-circle-exclamation'}"></i>${ok ? okLabel : missLabel}</span>`;
-        html += `<div class="kh-lesson">
-          <div class="kh-lesson-no">${idx + 1}</div>
+        const out = it.__scope === 'out';
+        const tags = [];
+        if (it.__scope) tags.push(out
+          ? '<span class="kh-chip kh-gold" title="Tính năng có trên Cổng học tập nhưng chưa nằm trong giáo trình khóa học"><i class="fa-solid fa-star"></i>Ngoài khóa học</span>'
+          : '<span class="kh-chip kh-ok" title="Tính năng thuộc giáo trình khóa học"><i class="fa-solid fa-graduation-cap"></i>Trong khóa học</span>');
+        if (it.__changes) tags.push(`<span class="kh-chip kh-accent" title="${esc('Đã cập nhật theo Cổng học tập:\n' + it.__changes.map(c => '• ' + c.label + ': ' + (c.from || '(trống)') + ' → ' + c.to).join('\n'))}"><i class="fa-solid fa-pen"></i>Cập nhật: ${esc(it.__changes.map(c => c.label).join(', '))}</span>`);
+        if (it.__changes && it.__changes.some(c => c.warn)) tags.push('<span class="kh-chip kh-miss" title="Quiz mới thuộc ngành khác — nên kiểm tra lại trên Sheet Cổng"><i class="fa-solid fa-triangle-exclamation"></i>Kiểm tra quiz</span>');
+        if (it.__meta) tags.push(`<span class="kh-chip ${it.__meta.type === 'NEW' ? 'kh-gold' : 'kh-accent'}" title="${esc(it.__meta.summary || '')}"><i class="fa-solid fa-bolt"></i>${esc(it.__meta.type === 'NEW' ? 'Mới' : (it.__meta.label || 'Cập nhật'))}${it.__meta.date ? ' ' + esc(it.__meta.date) : ''}</span>`);
+        else if (it.__date) tags.push(`<span class="kh-chip" title="Ngày cập nhật trên Cổng học tập"><i class="fa-regular fa-calendar"></i>${esc(it.__date)}</span>`);
+        if (it.__portalCourse) tags.push(`<span class="kh-chip" title="Cổng học tập xếp bài này ở khóa ${esc(it.__portalCourse)}">Cổng: ${esc(it.__portalCourse)}</span>`);
+        return `<div class="kh-lesson ${out ? 'kh-out' : ''}">
+          <div class="kh-lesson-no">${out ? '+' : idx + 1}</div>
           <div class="kh-thumb" ${thumbClick ? `onclick="${thumbClick}"` : ''} ${thumbUrl ? `style="background-image:url('${esc(thumbUrl)}')"` : ''}>${thumbUrl ? '' : '<i class="fa-solid fa-book-open"></i>'}</div>
           <div class="min-w-0">
+            ${tags.length ? `<div class="kh-tag-row">${tags.join('')}</div>` : ''}
             <div class="kh-lesson-title">${esc(title)}</div>
+            ${it.__meta && it.__meta.summary ? `<div class="kh-text kh-muted kh-clamp-2" title="${esc(it.__meta.summary)}"><i class="fa-solid fa-bolt" style="color:var(--kh-gold)"></i> ${esc(it.__meta.summary)}</div>` : ''}
             ${desc ? `<div class="kh-text kh-muted kh-clamp-2" title="${esc(desc)}">${esc(desc)}</div>` : ''}
             <div class="kh-lesson-res">
               ${chip(isUrl(hdsd), 'HDSD', 'Thiếu HDSD', 'fa-book')}
@@ -419,7 +445,12 @@
             ${isUrl(info) ? `<button class="kh-btn" onclick="openLightboxModal(${arg(info)}, ${arg(title)})"><i class="fa-solid fa-image"></i>Infographic</button>` : ''}
           </div>
         </div>`;
-      });
+      };
+      lessons.forEach((it, idx) => { html += lessonHtml(it, idx); });
+      if (outside.length) {
+        html += `<div class="kh-out-head"><i class="fa-solid fa-star"></i> Ngoài khóa học — tính năng mới trên Cổng học tập (${outside.length})</div>`;
+        outside.forEach((it, idx) => { html += lessonHtml(it, idx); });
+      }
       html += `</div></details>`;
     });
     container.innerHTML = html;
@@ -616,12 +647,12 @@
       ['morning', 'afternoon', ...[...sessions.keys()].filter(k => k !== 'morning' && k !== 'afternoon')].forEach(sk => {
         if (!sessions.has(sk)) return;
         const lab = SESSION_LABEL[sk] || [sk, 'fa-clock'];
-        html += `<div><div class="kh-session-label"><i class="fa-solid ${lab[1]}"></i>${esc(lab[0])}</div>`;
+        html += `<div><div class="kh-session-label"><i class="fa-solid ${lab[1]}"></i>${esc(lab[0])} • ${sessions.get(sk).length} tình huống</div><div class="kh-case-grid">`;
         sessions.get(sk).forEach(it => {
           globalNo++;
           const rawTitle = val(it, ['Title']) || 'Tình huống';
           const m = rawTitle.match(/^\s*Tình huống\s*(\d+)\s*[-–:]\s*(.*)$/i);
-          const no = m ? m[1] : String(globalNo).padStart(2, '0');
+          const no = (sk === 'morning' ? 'S' : sk === 'afternoon' ? 'C' : '') + (m ? m[1] : String(globalNo).padStart(2, '0')); // S = sáng, C = chiều (số trong tên lặp lại giữa 2 buổi)
           const title = m ? m[2] : rawTitle;
           const q = val(it, ['Question']), a = val(it, ['Answer']), rm = val(it, ['Roadmap']);
           html += `<article class="kh-card kh-case">
@@ -636,7 +667,7 @@
             </div>
           </article>`;
         });
-        html += `</div>`;
+        html += `</div></div>`; // đóng .kh-case-grid và khối buổi
       });
       html += `</div></section>`;
     });
@@ -681,6 +712,14 @@
     });
     container.innerHTML = html;
   };
+
+  // Điện thoại: dạng Bảng quá chật -> luôn dùng dạng thẻ
+  const mobileMQ = window.matchMedia('(max-width: 767px)');
+  function forceGridOnMobile() {
+    if (mobileMQ.matches && AppState.viewMode === 'table' && typeof switchViewMode === 'function') switchViewMode('grid');
+  }
+  forceGridOnMobile();
+  (mobileMQ.addEventListener ? mobileMQ.addEventListener('change', forceGridOnMobile) : mobileMQ.addListener(forceGridOnMobile));
 
   // Mở thẳng từ Dashboard: knowledge-hub.html?sheet=...&course=...&gap=video|quiz
   (function openFromLink() {
