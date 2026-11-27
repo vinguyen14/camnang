@@ -260,5 +260,5 @@ Ngày giờ theo giờ địa phương, ngày lễ Việt Nam theo từng năm (
 
 ## 8. Sửa nguồn dữ liệu Master Data Hub (27/11/2026)
 - **Lỗi:** Master Data Hub vốn là kho tri thức sản phẩm E-Learning (Apps Script "KNOWLEDGE HUB MULTI-SHEET ENGINE" gắn với Sheet masterdata e-learning), nhưng dùng chung ô lưu link `kv_api_url` với Trainer OS. Từ khi gom cấu hình (v2.1), Hub hiển thị nhầm các sheet MasterDB / KetQuaHocVien / NhanSu… của Trainer OS.
-- **Sửa:** Hub dùng link riêng `kv_hub_api_url` (`getHubApiUrl` / `setHubApiUrl` trong `system-config.js`, mặc định `DEFAULT_HUB_API_URL`); không cho dán nhầm link Trainer OS; bỏ dữ liệu đệm khi nguồn thay đổi.
+- **Sửa:** Hub dùng link riêng `kv_hub_api_url` (`getHubApiUrl` / `setHubApiUrl` trong `system-config.js`), **mặc định đặt sẵn** Web App kho "Masterdata E-Learning - V1" (chỉ đọc, nội dung đào tạo) → mọi máy tự kết nối, không cần dán link; không cho dán nhầm link Trainer OS; bỏ dữ liệu đệm khi nguồn thay đổi.
 - **Bảo mật:** API Token chỉ gắn vào request tới đúng backend Trainer OS, không gửi sang Apps Script khác (kho E-Learning, game).

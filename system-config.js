@@ -65,7 +65,8 @@
   // Hub đọc kho tri thức sản phẩm E-Learning (Apps Script "KNOWLEDGE HUB MULTI-SHEET ENGINE" gắn với Sheet
   // masterdata e-learning), KHÔNG phải backend Trainer OS. Trước đây Hub dùng chung kv_api_url với Trainer OS
   // nên hiện nhầm các sheet MasterDB / KetQuaHocVien... Link Hub lưu riêng ở kv_hub_api_url.
-  const DEFAULT_HUB_API_URL = ''; // Điền link Web App của kho E-Learning để mọi máy dùng sẵn
+  // Web App chỉ ĐỌC Sheet "Masterdata E-Learning - V1" (nội dung đào tạo công khai, không có lệnh ghi) -> đặt sẵn để mọi máy tự kết nối
+  const DEFAULT_HUB_API_URL = 'https://script.google.com/macros/s/AKfycbzWOdSvFRGrEcPIO0EDuDWAqRgOum7AAcU6-oeA5JMOizC7R6GfjfWtWXlSbjSShRWmEQ/exec';
   const HUB_KEY = 'kv_hub_api_url';
   window.getHubApiUrl = function () {
     try {
