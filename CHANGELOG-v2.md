@@ -277,3 +277,12 @@ Ngày giờ theo giờ địa phương, ngày lễ Việt Nam theo từng năm (
 - **Điện thoại (< 768px), `sidebar-nav.js`:** trước đây menu trái luôn chiếm một cột làm nội dung bị ép, gần như không xem được. Nay menu ẩn hẳn, trượt ra dạng ngăn kéo khi bấm nút ☰ ở header (hoặc nút tròn góc dưới trái ở trang không có nút ☰), luôn hiện đủ chữ kể cả khi trên máy tính đang thu gọn; bấm ra ngoài / chọn trang thì tự đóng. Máy tính giữ nguyên như cũ.
 - Thanh "Kỳ báo cáo" trên Dashboard xuống dòng thay vì tràn ngang trên điện thoại.
 - **Master Data Hub:** nội dung căn giữa, rộng tối đa 1240px; thẻ Case study xếp lưới đều theo từng buổi (mã S1/C1…), nút cuối thẻ thẳng hàng; trên điện thoại ẩn breadcrumb / nút đổi chế độ xem và luôn hiển thị dạng thẻ 1 cột.
+
+## 11. Thư viện giáo trình đồng bộ với Cổng học tập E-Learning (27/11/2026)
+- **`elearning-sync.js`** (mới): mỗi lần mở Hub tự đối chiếu Sheet khóa học (Masterdata E-Learning) với Sheet của [Cổng học tập](https://kiotvietlnd.github.io/elearning/) + `updates-meta.json` (CSV/JSON công khai, chỉ đọc, đệm 30 phút, nút "Đồng bộ lại").
+  - Ghép bài theo link quiz → link HDSD → tên bài (cùng khóa), cuối cùng theo link quiz ở khóa khác.
+  - Tag **Trong khóa học** (có trong Sheet khóa học) / **Ngoài khóa học** (tính năng chỉ có trên Cổng, xếp thành nhóm riêng cuối mỗi chương).
+  - Bài trong khóa có tên / video / quiz / infographic / HDSD / mô tả mới hơn trên Cổng → hiển thị bản mới, tag "Cập nhật: …" (rê chuột xem giá trị cũ → mới); quiz đổi sang ngành khác được gắn "Kiểm tra quiz".
+  - Nhãn Mới / Cập nhật + ngày + tóm tắt thay đổi lấy từ `updates-meta.json`.
+  - Khung "Đồng bộ với Cổng học tập": thời điểm đồng bộ, thời điểm Cổng cập nhật nội dung, đồng bộ những phần nào (số bài theo từng loại), danh sách bài đã cập nhật kèm "phát hiện từ", danh sách tính năng ngoài khóa, nhật ký 12 lần đồng bộ gần nhất (đánh dấu thay đổi mới so với lần trước).
+- Chỉ số sức khỏe (trang Tổng quan Hub, thẻ báo cáo trên Dashboard) chỉ tính bài **trong khóa học**, dùng link mới nhất từ Cổng → hai nơi luôn khớp số. Không ghi gì vào Google Sheet.

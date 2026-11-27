@@ -375,18 +375,23 @@
     const sheet = AppState.currentSheet;
     const courses = groupBy(data, it => val(it, ['Khóa học', 'Khóa']));
     const has = (it, k) => isUrl(it[k]);
-    const total = data.length;
-    const vid = data.filter(it => has(it, 'YouTube')).length;
-    const quiz = data.filter(it => has(it, 'Github')).length;
-    const full = data.filter(it => has(it, 'YouTube') && has(it, 'Github') && has(it, 'HDSD')).length;
+    // Chỉ số tính trên bài TRONG khóa học; tính năng ngoài khóa (chỉ có trên Cổng học tập) hiển thị riêng
+    const inData = data.filter(it => it.__scope !== 'out');
+    const outCount = data.length - inData.length;
+    const total = inData.length;
+    const vid = inData.filter(it => has(it, 'YouTube')).length;
+    const quiz = inData.filter(it => has(it, 'Github')).length;
 
     let html = intro('Thư viện giáo trình', 'Giáo trình sản phẩm KiotViet',
-      'Mỗi khóa là một chương; mỗi bài có đủ 4 loại học liệu: Hướng dẫn sử dụng, Infographic, Video và Quiz. Huy hiệu viền đứt là học liệu còn thiếu.',
-      [[courses.size, 'khóa học'], [total, 'bài học'], [Math.round(vid / Math.max(1, total) * 100) + '%', 'có video'], [Math.round(quiz / Math.max(1, total) * 100) + '%', 'có quiz']]);
+      'Mỗi khóa là một chương; mỗi bài có đủ 4 loại học liệu: Hướng dẫn sử dụng, Infographic, Video và Quiz. Huy hiệu viền đứt là học liệu còn thiếu. Tag <b>Trong khóa học</b> / <b>Ngoài khóa học</b> tách tính năng thuộc giáo trình với tính năng mới chỉ có trên Cổng học tập.',
+      [[courses.size, 'khóa học'], [total, 'bài trong khóa'], [outCount, 'ngoài khóa'], [Math.round(vid / Math.max(1, total) * 100) + '%', 'có video'], [Math.round(quiz / Math.max(1, total) * 100) + '%', 'có quiz']]);
+    if (window.KhPortalSync) html += window.KhPortalSync.bannerHtml();
 
     let courseNo = 0;
-    courses.forEach((lessons, course) => {
+    courses.forEach((allLessons, course) => {
       courseNo++;
+      const lessons = allLessons.filter(it => it.__scope !== 'out');
+      const outside = allLessons.filter(it => it.__scope === 'out');
       const d = domainOf(course);
       const done = lessons.filter(it => has(it, 'YouTube') && has(it, 'Github') && has(it, 'HDSD')).length;
       const pct = Math.round(done / Math.max(1, lessons.length) * 100);
@@ -395,12 +400,12 @@
         <summary>
           <span class="kh-course-no" style="background:${d.color}">${String(courseNo).padStart(2, '0')}</span>
           <span class="min-w-0"><span class="kh-course-title block">${esc(course)}</span>
-            <span class="kh-course-meta block">${lessons.length} bài học${missV ? ` • <span style="color:var(--kh-miss)">${missV} thiếu video</span>` : ''}${missQ ? ` • <span style="color:var(--kh-miss)">${missQ} thiếu quiz</span>` : ''}</span></span>
+            <span class="kh-course-meta block">${lessons.length} bài trong khóa${outside.length ? ` • <span style="color:var(--kh-gold)">${outside.length} ngoài khóa</span>` : ''}${missV ? ` • <span style="color:var(--kh-miss)">${missV} thiếu video</span>` : ''}${missQ ? ` • <span style="color:var(--kh-miss)">${missQ} thiếu quiz</span>` : ''}</span></span>
           <span class="kh-course-progress"><small><span>Học liệu đầy đủ</span><b>${pct}%</b></small><span class="kh-bar block"><i style="width:${pct}%"></i></span></span>
           <i class="fa-solid fa-chevron-right kh-caret text-xs"></i>
         </summary>
         <div class="kh-lessons">`;
-      lessons.forEach((it, idx) => {
+      const lessonHtml = (it, idx) => {
         const title = val(it, ['Nội dung', 'Tên bài', 'Title']) || 'Bài học chưa đặt tên';
         const desc = val(it, ['Mô tả', 'Description']);
         const yt = val(it, ['YouTube']), gh = val(it, ['Github']), hdsd = val(it, ['HDSD']), info = val(it, ['Infographic']);
@@ -408,11 +413,23 @@
         const thumbUrl = ytId ? `https://i.ytimg.com/vi/${encodeURIComponent(ytId)}/mqdefault.jpg` : (isUrl(info) ? info : '');
         const thumbClick = ytId ? `openInSplitMode(${arg(formatUniversalEmbedUrl(yt))}, ${arg(title)})` : (isUrl(info) ? `openLightboxModal(${arg(info)}, ${arg(title)})` : '');
         const chip = (ok, okLabel, missLabel, icon) => `<span class="kh-chip ${ok ? 'kh-ok' : 'kh-miss'}"><i class="fa-solid ${ok ? icon : 'fa-circle-exclamation'}"></i>${ok ? okLabel : missLabel}</span>`;
-        html += `<div class="kh-lesson">
-          <div class="kh-lesson-no">${idx + 1}</div>
+        const out = it.__scope === 'out';
+        const tags = [];
+        if (it.__scope) tags.push(out
+          ? '<span class="kh-chip kh-gold" title="Tính năng có trên Cổng học tập nhưng chưa nằm trong giáo trình khóa học"><i class="fa-solid fa-star"></i>Ngoài khóa học</span>'
+          : '<span class="kh-chip kh-ok" title="Tính năng thuộc giáo trình khóa học"><i class="fa-solid fa-graduation-cap"></i>Trong khóa học</span>');
+        if (it.__changes) tags.push(`<span class="kh-chip kh-accent" title="${esc('Đã cập nhật theo Cổng học tập:\n' + it.__changes.map(c => '• ' + c.label + ': ' + (c.from || '(trống)') + ' → ' + c.to).join('\n'))}"><i class="fa-solid fa-pen"></i>Cập nhật: ${esc(it.__changes.map(c => c.label).join(', '))}</span>`);
+        if (it.__changes && it.__changes.some(c => c.warn)) tags.push('<span class="kh-chip kh-miss" title="Quiz mới thuộc ngành khác — nên kiểm tra lại trên Sheet Cổng"><i class="fa-solid fa-triangle-exclamation"></i>Kiểm tra quiz</span>');
+        if (it.__meta) tags.push(`<span class="kh-chip ${it.__meta.type === 'NEW' ? 'kh-gold' : 'kh-accent'}" title="${esc(it.__meta.summary || '')}"><i class="fa-solid fa-bolt"></i>${esc(it.__meta.type === 'NEW' ? 'Mới' : (it.__meta.label || 'Cập nhật'))}${it.__meta.date ? ' ' + esc(it.__meta.date) : ''}</span>`);
+        else if (it.__date) tags.push(`<span class="kh-chip" title="Ngày cập nhật trên Cổng học tập"><i class="fa-regular fa-calendar"></i>${esc(it.__date)}</span>`);
+        if (it.__portalCourse) tags.push(`<span class="kh-chip" title="Cổng học tập xếp bài này ở khóa ${esc(it.__portalCourse)}">Cổng: ${esc(it.__portalCourse)}</span>`);
+        return `<div class="kh-lesson ${out ? 'kh-out' : ''}">
+          <div class="kh-lesson-no">${out ? '+' : idx + 1}</div>
           <div class="kh-thumb" ${thumbClick ? `onclick="${thumbClick}"` : ''} ${thumbUrl ? `style="background-image:url('${esc(thumbUrl)}')"` : ''}>${thumbUrl ? '' : '<i class="fa-solid fa-book-open"></i>'}</div>
           <div class="min-w-0">
+            ${tags.length ? `<div class="kh-tag-row">${tags.join('')}</div>` : ''}
             <div class="kh-lesson-title">${esc(title)}</div>
+            ${it.__meta && it.__meta.summary ? `<div class="kh-text kh-muted kh-clamp-2" title="${esc(it.__meta.summary)}"><i class="fa-solid fa-bolt" style="color:var(--kh-gold)"></i> ${esc(it.__meta.summary)}</div>` : ''}
             ${desc ? `<div class="kh-text kh-muted kh-clamp-2" title="${esc(desc)}">${esc(desc)}</div>` : ''}
             <div class="kh-lesson-res">
               ${chip(isUrl(hdsd), 'HDSD', 'Thiếu HDSD', 'fa-book')}
@@ -428,7 +445,12 @@
             ${isUrl(info) ? `<button class="kh-btn" onclick="openLightboxModal(${arg(info)}, ${arg(title)})"><i class="fa-solid fa-image"></i>Infographic</button>` : ''}
           </div>
         </div>`;
-      });
+      };
+      lessons.forEach((it, idx) => { html += lessonHtml(it, idx); });
+      if (outside.length) {
+        html += `<div class="kh-out-head"><i class="fa-solid fa-star"></i> Ngoài khóa học — tính năng mới trên Cổng học tập (${outside.length})</div>`;
+        outside.forEach((it, idx) => { html += lessonHtml(it, idx); });
+      }
       html += `</div></details>`;
     });
     container.innerHTML = html;
