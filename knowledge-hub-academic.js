@@ -146,13 +146,49 @@
   .kh-lesson-actions { display: grid; grid-template-columns: repeat(2, minmax(0, auto)); gap: 6px; align-content: start; }
   .kh-lesson-actions .kh-btn { justify-content: center; }
 
-  /* ===== 2. Ngân hàng đề thi ===== */
-  .kh-exam-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
-  .kh-exam { position: relative; padding: 18px 18px 14px; overflow: hidden; }
-  .kh-exam::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 4px; background: repeating-linear-gradient(90deg, var(--kh-accent) 0 14px, transparent 14px 20px); opacity: .55; }
-  .kh-exam-label { font-size: 10px; font-weight: 700; letter-spacing: .14em; color: var(--kh-faint); text-transform: uppercase; }
-  .kh-exam-title { font: 600 13px 'Fira Code', monospace; color: var(--kh-ink); margin: 6px 0 10px; word-break: break-word; }
-  .kh-exam-foot { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--kh-line); }
+  /* ===== 2. Ngân hàng đề thi: danh sách bộ đề + tờ đề ===== */
+  .kh-bank { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 18px; align-items: start; }
+  .kh-bank-list { padding: 10px; position: sticky; top: 0; max-height: calc(100vh - 210px); overflow-y: auto; }
+  .kh-bank-group { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--kh-faint); margin: 12px 6px 6px; display: flex; align-items: center; gap: 6px; }
+  .kh-bank-group:first-child { margin-top: 2px; }
+  .kh-bank-item { width: 100%; text-align: left; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 11px; color: var(--kh-ink); transition: background .15s; }
+  .kh-bank-item:hover { background: var(--kh-accent-soft); }
+  .kh-bank-item.kh-active { background: var(--kh-accent-soft); box-shadow: inset 3px 0 0 var(--kh-accent); }
+  .kh-bank-item b { font-size: 12.5px; font-weight: 650; display: block; }
+  .kh-bank-item small { font: 500 10px 'Fira Code', monospace; color: var(--kh-muted); }
+  .kh-paper { padding: 26px 30px 30px; min-height: 420px; }
+  .kh-paper-head { border-bottom: 2px solid var(--kh-ink); padding-bottom: 14px; margin-bottom: 6px; display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+  .kh-paper-title { font-family: var(--kh-serif); font-size: 22px; font-weight: 600; color: var(--kh-ink); line-height: 1.2; }
+  .kh-paper-meta { font-size: 11.5px; color: var(--kh-muted); margin-top: 4px; }
+  .kh-paper-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--kh-line); margin-bottom: 8px; }
+  .kh-paper-tools input { flex: 1; min-width: 160px; font-size: 12px; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--kh-line); background: var(--kh-paper); color: var(--kh-ink); outline: none; }
+  .kh-paper-tools select { font-size: 12px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--kh-line); background: var(--kh-paper); color: var(--kh-ink); max-width: 260px; }
+  .kh-topic { font-family: var(--kh-serif); font-size: 15px; font-weight: 600; color: var(--kh-accent-ink); margin: 22px 0 6px; }
+  .kh-q { padding: 14px 0; border-bottom: 1px solid var(--kh-line); }
+  .kh-q:last-child { border-bottom: 0; }
+  .kh-q-stem { display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; align-items: start; }
+  .kh-q-no { font-family: var(--kh-serif); font-weight: 700; font-size: 14px; color: var(--kh-ink); }
+  .kh-q-text { font-size: 13.5px; font-weight: 600; color: var(--kh-ink); line-height: 1.5; }
+  .kh-q-reveal { font-size: 11px; font-weight: 650; color: var(--kh-accent-ink); white-space: nowrap; padding: 2px 6px; border-radius: 8px; }
+  .kh-q-reveal:hover { background: var(--kh-accent-soft); }
+  .kh-opts { margin: 8px 0 0 44px; display: grid; gap: 6px; }
+  .kh-opt { display: grid; grid-template-columns: 26px 1fr; gap: 6px; align-items: start; font-size: 13px; line-height: 1.5; color: var(--kh-ink); padding: 6px 10px; border-radius: 10px; border: 1px solid transparent; }
+  .kh-opt-key { font-weight: 700; color: var(--kh-muted); }
+  .kh-q.kh-show .kh-opt.kh-correct, .kh-paper.kh-show-all .kh-opt.kh-correct { background: var(--kh-ok-soft); border-color: var(--kh-ok); }
+  .kh-q.kh-show .kh-opt.kh-correct .kh-opt-key, .kh-paper.kh-show-all .kh-opt.kh-correct .kh-opt-key { color: var(--kh-ok); }
+  .kh-explain { display: none; margin: 6px 0 0 44px; font-size: 12px; line-height: 1.55; color: var(--kh-muted); border-left: 3px solid var(--kh-ok); padding: 4px 10px; }
+  .kh-q.kh-show .kh-explain, .kh-paper.kh-show-all .kh-explain { display: block; }
+  .kh-paper.kh-show-all .kh-q-reveal { display: none; }
+  .kh-q-tags { margin: 6px 0 0 44px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .kh-paper-empty { text-align: center; padding: 60px 20px; color: var(--kh-muted); font-size: 13px; }
+  @media (max-width: 900px) {
+    .kh-bank { grid-template-columns: 1fr; }
+    .kh-bank-list { position: static; max-height: 240px; }
+    .kh-paper { padding: 18px 16px; }
+    .kh-opts, .kh-explain, .kh-q-tags { margin-left: 0; }
+    .kh-q-stem { grid-template-columns: 34px 1fr; }
+    .kh-q-reveal { grid-column: 2; justify-self: start; }
+  }
 
   /* ===== 3. Case study ===== */
   .kh-day-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
@@ -394,43 +430,171 @@
     }));
   };
 
-  // ---------- 2. NGÂN HÀNG ĐỀ THI ----------
+  // ---------- 2. NGÂN HÀNG ĐỀ THI: xem đề trực tiếp ----------
+  // Link trong MCQ Master là Google Sheet ngân hàng câu hỏi (công khai). Đọc dạng CSV và trình bày thành "tờ đề":
+  // cột Câu hỏi, Lựa chọn 1..n, Lựa chọn đúng (số thứ tự), Giải thích, Nhãn (chủ đề), Độ khó.
+  const MCQ = window.__khMcq = window.__khMcq || { selected: '', showAll: false, topic: '', q: '', cache: {} };
+
+  function parseCsv(text) {
+    const rows = []; let row = [], cell = '', i = 0, quoted = false;
+    text = String(text || '').replace(/^﻿/, '');
+    while (i < text.length) {
+      const c = text[i];
+      if (quoted) {
+        if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else quoted = false; }
+        else cell += c;
+      } else if (c === '"') quoted = true;
+      else if (c === ',') { row.push(cell); cell = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+      else cell += c;
+      i++;
+    }
+    if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+
+  function sheetCsvUrl(link) {
+    const id = (String(link).match(/\/spreadsheets\/d\/([A-Za-z0-9_-]+)/) || [])[1];
+    if (!id) return '';
+    const gid = (String(link).match(/[#&?]gid=(\d+)/) || [])[1] || '0';
+    return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
+  }
+
+  async function loadExam(link) {
+    if (MCQ.cache[link]) return MCQ.cache[link];
+    const url = sheetCsvUrl(link);
+    if (!url) throw new Error('Link không phải Google Sheet ngân hàng câu hỏi');
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Không đọc được Sheet đề (mã ' + res.status + '). Kiểm tra quyền chia sẻ "Bất kỳ ai có đường liên kết".');
+    const rows = parseCsv(await res.text());
+    const head = (rows[0] || []).map(h => h.trim().toLowerCase());
+    const col = (re) => head.findIndex(h => re.test(h));
+    const iQ = col(/^câu hỏi/), iRight = col(/lựa chọn đúng|đáp án đúng/), iExp = col(/giải thích/), iTag = col(/^nhãn/), iLvl = col(/độ khó/), iType = col(/loại câu hỏi/);
+    const optCols = head.map((h, idx) => (/^lựa chọn \d+$/.test(h) ? idx : -1)).filter(x => x !== -1);
+    if (iQ === -1 || optCols.length === 0) throw new Error('Sheet đề không có cột "Câu hỏi" / "Lựa chọn 1..n"');
+    const questions = rows.slice(1).filter(r => (r[iQ] || '').trim()).map(r => {
+      const opts = optCols.map(c => (r[c] || '').trim()).filter(Boolean);
+      const right = String(iRight !== -1 ? r[iRight] || '' : '').split(/[,;\s]+/).map(x => parseInt(x, 10)).filter(n => n > 0);
+      return { q: r[iQ].trim(), opts, right, exp: iExp !== -1 ? (r[iExp] || '').trim() : '', tag: iTag !== -1 ? (r[iTag] || '').trim() : '',
+        lvl: iLvl !== -1 ? (r[iLvl] || '').trim() : '', type: iType !== -1 ? (r[iType] || '').trim() : '' };
+    });
+    MCQ.cache[link] = questions;
+    return questions;
+  }
+
+  function paperHtml(exam, questions) {
+    const topics = [...new Set(questions.map(q => q.tag).filter(Boolean))];
+    const kw = MCQ.q.trim().toLowerCase();
+    const shown = questions.map((q, i) => Object.assign({ no: i + 1 }, q))
+      .filter(q => (!MCQ.topic || q.tag === MCQ.topic) && (!kw || (q.q + ' ' + q.opts.join(' ') + ' ' + q.exp).toLowerCase().includes(kw)));
+    const groups = groupBy(shown, q => q.tag || 'Câu hỏi chung');
+    let body = '';
+    groups.forEach((qs, topic) => {
+      if (topics.length > 1 || topic !== 'Câu hỏi chung') body += `<div class="kh-topic">${esc(topic)}</div>`;
+      qs.forEach(q => {
+        body += `<div class="kh-q">
+          <div class="kh-q-stem"><span class="kh-q-no">Câu ${q.no}.</span><span class="kh-q-text">${fmt(q.q)}</span>
+            <button type="button" class="kh-q-reveal" onclick="this.closest('.kh-q').classList.toggle('kh-show')"><i class="fa-regular fa-eye"></i> Đáp án</button></div>
+          <div class="kh-opts">${q.opts.map((o, k) => `<div class="kh-opt ${q.right.indexOf(k + 1) !== -1 ? 'kh-correct' : ''}"><span class="kh-opt-key">${String.fromCharCode(65 + k)}.</span><span>${fmt(o)}</span></div>`).join('')}</div>
+          ${q.exp ? `<div class="kh-explain"><b style="color:var(--kh-ok)">Giải thích:</b> ${fmt(q.exp)}</div>` : ''}
+          ${(q.lvl || (q.type && q.type !== 'Một đáp án')) ? `<div class="kh-q-tags">${q.lvl ? `<span class="kh-chip">Độ khó: ${esc(q.lvl)}</span>` : ''}${q.type && q.type !== 'Một đáp án' ? `<span class="kh-chip kh-accent">${esc(q.type)}</span>` : ''}</div>` : ''}
+        </div>`;
+      });
+    });
+    const course = val(exam, ['Khóa', 'Khóa học']);
+    const link = val(exam, ['Link làm bài']);
+    return `
+      <div class="kh-paper-head">
+        <div><div class="kh-eyebrow">Đề kiểm tra • ${esc(course)}</div><div class="kh-paper-title">${esc(val(exam, ['Tên bộ đề']) || course)}</div>
+          <div class="kh-paper-meta">${questions.length} câu hỏi • ${topics.length || 1} chủ đề • ${esc(val(exam, ['Loại câu hỏi']) || 'Trắc nghiệm')}</div></div>
+        <div class="flex gap-2 flex-wrap">
+          <button class="kh-btn" onclick="copyTextToClipboard(${arg(link)}, ${arg('Đã sao chép link Sheet đề!')})"><i class="fa-regular fa-copy"></i>Sao chép link</button>
+          <button class="kh-btn" onclick="openResource(${arg(link)}, ${arg('Sheet đề: ' + course)}, ${arg(AppState.currentSheet)})"><i class="fa-solid fa-table"></i>Mở Sheet gốc</button>
+        </div>
+      </div>
+      <div class="kh-paper-tools">
+        <input type="search" placeholder="Tìm câu hỏi, đáp án..." value="${esc(MCQ.q)}" oninput="khMcqFilter('q', this.value)">
+        ${topics.length > 1 ? `<select onchange="khMcqFilter('topic', this.value)"><option value="">Tất cả chủ đề (${topics.length})</option>${topics.map(t => `<option value="${esc(t)}" ${t === MCQ.topic ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>` : ''}
+        <button class="kh-btn ${MCQ.showAll ? 'kh-primary' : ''}" onclick="khMcqToggleAll()"><i class="fa-solid ${MCQ.showAll ? 'fa-eye-slash' : 'fa-key'}"></i>${MCQ.showAll ? 'Ẩn đáp án' : 'Hiện tất cả đáp án'}</button>
+        <span class="kh-text kh-muted" style="font-size:11px">${shown.length}/${questions.length} câu</span>
+      </div>
+      ${shown.length ? body : '<div class="kh-paper-empty">Không có câu hỏi phù hợp bộ lọc.</div>'}`;
+  }
+
+  async function showExam(exam) {
+    const paper = document.getElementById('kh-paper');
+    if (!paper) return;
+    const link = val(exam, ['Link làm bài']);
+    paper.classList.toggle('kh-show-all', MCQ.showAll);
+    if (!/docs\.google\.com\/spreadsheets/.test(link)) {
+      paper.innerHTML = `<div class="kh-paper-empty"><i class="fa-solid fa-building-columns" style="font-size:28px;opacity:.5"></i><br><br>
+        Bộ đề <b>${esc(val(exam, ['Tên bộ đề']))}</b> nằm trên <b>${esc(link || 'LMS')}</b>, chưa có Sheet câu hỏi để xem trực tiếp.</div>`;
+      return;
+    }
+    if (!MCQ.cache[link]) paper.innerHTML = '<div class="kh-paper-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang mở đề...</div>';
+    try {
+      const qs = await loadExam(link);
+      if (MCQ.selected !== link) return; // Người dùng đã chọn đề khác trong lúc tải
+      paper.innerHTML = paperHtml(exam, qs);
+      const item = document.querySelector(`.kh-bank-item[data-link="${CSS.escape(link)}"] small`);
+      if (item) item.textContent = qs.length + ' câu hỏi';
+    } catch (e) {
+      paper.innerHTML = `<div class="kh-paper-empty" style="color:var(--kh-miss)"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(e.message || 'Không mở được đề')}</div>`;
+    }
+  }
+
+  let mcqExams = [];
+  window.khMcqSelect = function (link) {
+    MCQ.selected = link; MCQ.topic = ''; MCQ.q = '';
+    document.querySelectorAll('.kh-bank-item').forEach(b => b.classList.toggle('kh-active', b.dataset.link === link));
+    const exam = mcqExams.find(e => val(e, ['Link làm bài']) === link);
+    if (exam) showExam(exam);
+  };
+  window.khMcqToggleAll = function () {
+    MCQ.showAll = !MCQ.showAll;
+    const exam = mcqExams.find(e => val(e, ['Link làm bài']) === MCQ.selected);
+    if (exam) showExam(exam);
+  };
+  let filterTimer = null;
+  window.khMcqFilter = function (key, value) {
+    MCQ[key] = value;
+    clearTimeout(filterTimer);
+    filterTimer = setTimeout(() => {
+      const exam = mcqExams.find(e => val(e, ['Link làm bài']) === MCQ.selected);
+      if (!exam) return;
+      const active = document.activeElement && document.activeElement.type === 'search';
+      showExam(exam).then(() => {
+        if (active) { const inp = document.querySelector('.kh-paper-tools input[type=search]'); if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); } }
+      });
+    }, key === 'q' ? 250 : 0);
+  };
+
   window.renderMcqCards = function (data, container) {
     prepContainer(container);
-    const sheet = AppState.currentSheet;
-    // Nhóm theo ngành nhận diện từ tên khóa ("CB1 Retail", "Retail TK1A" -> Retail); mỗi thẻ vẫn ghi tên khóa
+    mcqExams = data;
+    // Danh sách bộ đề bên trái đã thay cho dải lọc khóa phía trên -> ẩn cho gọn (khi không lọc gì)
+    const bar = document.getElementById('sub-filter-bar');
+    if (bar && AppState.currentSubFilter === 'all') bar.classList.add('hidden');
     const courseOf = it => val(it, ['Khóa', 'Khóa học']);
     const groups = groupBy(data, it => domainOf(courseOf(it)).label);
-    const courses = new Set(data.map(courseOf).filter(Boolean));
-    const types = new Set(data.map(it => val(it, ['Loại câu hỏi'])).filter(Boolean));
-    let html = intro('Ngân hàng đề thi', 'Đề kiểm tra trắc nghiệm', 'Các bộ đề MCQ theo ngành và khóa đào tạo. Mở đề để làm thử ngay bên cạnh, hoặc sao chép link gửi học viên.',
-      [[data.length, 'bộ đề'], [courses.size, 'khóa'], [types.size, 'loại câu hỏi']]);
+    const viewable = data.filter(it => /docs\.google\.com\/spreadsheets/.test(val(it, ['Link làm bài']))).length;
+    let html = intro('Ngân hàng đề thi', 'Đề kiểm tra trắc nghiệm', 'Chọn một bộ đề bên trái để đọc toàn bộ câu hỏi ngay tại đây. Đáp án được ẩn — bấm “Đáp án” ở từng câu hoặc “Hiện tất cả đáp án” khi cần đối chiếu.',
+      [[data.length, 'bộ đề'], [viewable, 'xem được ngay'], [groups.size, 'ngành']]);
+    html += `<div class="kh-bank"><nav class="kh-card kh-bank-list">`;
     groups.forEach((exams, branch) => {
       const d = domainOf(branch);
-      html += `<section><div class="kh-day-head"><span class="kh-toc-icon" style="background:${d.color}1a;color:${d.color}"><i class="fa-solid ${d.icon}"></i></span><h3>${esc(branch)}</h3><span class="kh-text kh-muted">${exams.length} bộ đề</span></div><div class="kh-exam-grid">`;
+      html += `<div class="kh-bank-group"><i class="fa-solid ${d.icon}" style="color:${d.color}"></i>${esc(branch)} • ${exams.length}</div>`;
       exams.forEach(it => {
-        const course = courseOf(it) || branch;
-        const name = val(it, ['Tên bộ đề', 'Title']) || 'Bộ đề';
-        const kind = val(it, ['Loại câu hỏi']);
         const link = val(it, ['Link làm bài']);
-        const edit = val(it, ['Link edit (Nếu có)', 'Link edit']);
-        html += `<article class="kh-card kh-exam">
-          <div class="kh-exam-label">Đề thi • ${esc(course)}</div>
-          <div class="kh-exam-title">${esc(name)}</div>
-          <div class="flex gap-2 flex-wrap">
-            ${kind ? `<span class="kh-chip kh-accent"><i class="fa-solid fa-list-check"></i>${esc(kind)}</span>` : ''}
-            ${link && !isUrl(link) ? `<span class="kh-chip"><i class="fa-solid fa-building-columns"></i>${esc(link)}</span>` : ''}
-          </div>
-          <div class="kh-exam-foot">
-            ${isUrl(link) ? `<button class="kh-btn kh-primary" onclick="openInSplitMode(${arg(formatUniversalEmbedUrl(link))}, ${arg('Đề thi: ' + name)})"><i class="fa-solid fa-pen-to-square"></i>Làm bài</button>
-              <button class="kh-btn" onclick="copyTextToClipboard(${arg(link)}, ${arg('Đã sao chép link làm bài thi!')})"><i class="fa-regular fa-copy"></i>Sao chép link</button>` : `<span class="kh-text kh-muted" style="font-size:11px">Làm bài trên ${esc(link || 'LMS')}</span>`}
-            ${isUrl(edit) ? `<button class="kh-btn" onclick="openResource(${arg(edit)}, ${arg('Chỉnh sửa: ' + name)}, ${arg(sheet)})"><i class="fa-solid fa-gear"></i>Sửa đề</button>` : ''}
-          </div>
-        </article>`;
+        const cached = MCQ.cache[link];
+        html += `<button type="button" class="kh-bank-item" data-link="${esc(link)}" onclick="khMcqSelect(${arg(link)})">
+          <span class="min-w-0"><b class="truncate">${esc(courseOf(it))}</b><small>${cached ? cached.length + ' câu hỏi' : esc(val(it, ['Tên bộ đề']))}</small></span></button>`;
       });
-      html += `</div></section>`;
     });
+    html += `</nav><article id="kh-paper" class="kh-card kh-paper"></article></div>`;
     container.innerHTML = html;
+    const first = data.find(it => val(it, ['Link làm bài']) === MCQ.selected) || data.find(it => /docs\.google\.com\/spreadsheets/.test(val(it, ['Link làm bài']))) || data[0];
+    if (first) khMcqSelect(val(first, ['Link làm bài']));
   };
 
   // ---------- 3. CASE STUDY ----------
