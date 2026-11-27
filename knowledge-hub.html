@@ -350,7 +350,7 @@
             </div>
             <div class="p-6 space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Google Apps Script Web App URL (kv_api_url):</label>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Link Web App kho E-Learning (Apps Script của Sheet masterdata e-learning):</label>
                     <input type="text" id="cfg-api-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full saas-input font-mono text-xs">
                     <p class="text-[11px] text-slate-400 mt-1">Dán đường dẫn Web App URL sau khi Deploy từ Google Sheet.</p>
                 </div>
@@ -475,8 +475,18 @@
             loadCachedDataOrDefaults();
         });
 
+        // 27/11/2026: Hub đọc kho tri thức E-Learning bằng link RIÊNG (kv_hub_api_url), không dùng link Trainer OS
+        function getHubSourceUrl() {
+            return (typeof getHubApiUrl === 'function' ? getHubApiUrl() : '') || '';
+        }
+
         function loadCachedDataOrDefaults() {
-            const cachedUrl = (typeof getGlobalApiUrl === 'function' ? getGlobalApiUrl() : localStorage.getItem('kv_api_url')) || '';
+            const cachedUrl = getHubSourceUrl();
+            // Dữ liệu đệm chỉ dùng được khi nó đến từ đúng nguồn hiện tại (trước đây đệm cả dữ liệu Trainer OS)
+            if (localStorage.getItem('kv_doc_hub_source') !== cachedUrl) {
+                localStorage.removeItem('kv_doc_hub_db');
+                localStorage.removeItem('kv_doc_hub_last_sync');
+            }
             const cachedDb = localStorage.getItem('kv_doc_hub_db');
             const lastSync = localStorage.getItem('kv_doc_hub_last_sync');
 
@@ -502,8 +512,8 @@
             sidebar.innerHTML = `
                 <div class="p-4 bg-slate-800/60 rounded-xl border border-slate-700/60 text-center">
                     <i class="fa-solid fa-cloud-arrow-down text-3xl text-kiot-blue mb-2 block"></i>
-                    <h4 class="text-xs font-bold text-white mb-1">Chưa có dữ liệu Google Sheets</h4>
-                    <p class="text-[11px] text-slate-400 mb-3">Vui lòng dán Web App URL để bắt đầu đồng bộ.</p>
+                    <h4 class="text-xs font-bold text-white mb-1">Chưa kết nối kho E-Learning</h4>
+                    <p class="text-[11px] text-slate-400 mb-3">Dán link Web App của Apps Script trong Sheet masterdata e-learning (không phải link Trainer OS).</p>
                     <button onclick="openConfigModal()" class="btn-primary text-xs w-full py-1.5">
                         <i class="fa-solid fa-gear"></i> Cấu hình kết nối
                     </button>
@@ -1935,7 +1945,7 @@
 
         // ==================== SYNC API ====================
         async function syncGoogleSheetsData() {
-            const apiUrl = (typeof getGlobalApiUrl === 'function' ? getGlobalApiUrl() : localStorage.getItem('kv_api_url')) || '';
+            const apiUrl = getHubSourceUrl();
             if (!apiUrl) {
                 openConfigModal();
                 return;
@@ -1962,6 +1972,7 @@
                         try { localStorage.setItem('kv_doc_hub_db', JSON.stringify(slimResult)); } catch (e2) {}
                     }
                     localStorage.setItem('kv_doc_hub_last_sync', nowStr);
+                    localStorage.setItem('kv_doc_hub_source', apiUrl);
 
                     applyDataset(result);
 
@@ -1985,8 +1996,14 @@
         function closeConfigModal() { document.getElementById('config-modal').classList.add('hidden'); }
         function testAndSaveApiUrl() {
             const url = document.getElementById('cfg-api-url').value.trim();
-            if (!url) return alert('Vui lòng nhập Google Apps Script Web App URL!');
-            if (typeof setGlobalApiUrl === 'function') { if (setGlobalApiUrl(url) === false) return alert('Link không hợp lệ. Link phải có dạng https://script.google.com/macros/s/.../exec'); } else { localStorage.setItem('kv_api_url', url); }
+            if (!url) return alert('Vui lòng nhập link Web App của kho E-Learning!');
+            if (typeof getGlobalApiUrl === 'function' && url === getGlobalApiUrl()) {
+                return alert('Đây là link backend Trainer OS (khóa học, MasterDB...). Master Data Hub cần link Web App của kho E-Learning (Apps Script gắn với Sheet masterdata e-learning).');
+            }
+            if (typeof setHubApiUrl !== 'function' || setHubApiUrl(url) === false) {
+                return alert('Link không hợp lệ. Link phải có dạng https://script.google.com/macros/s/.../exec');
+            }
+            localStorage.removeItem('kv_doc_hub_db'); // Nguồn mới -> bỏ dữ liệu đệm cũ
             closeConfigModal();
             syncGoogleSheetsData();
         }
@@ -2105,6 +2122,7 @@
                 .replace(/'/g, '&#039;');
         }
     </script>
+    <script src="knowledge-hub-academic.js"></script>
     <script src="sop-drawer.js"></script>
     <script src="sidebar-nav.js"></script>
 </body>

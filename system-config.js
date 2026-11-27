@@ -61,6 +61,32 @@
     window.dispatchEvent(new CustomEvent('kv_api_url_changed', { detail: { url: window.getGlobalApiUrl() } }));
   };
 
+  // 4b. LINK KHO E-LEARNING CHO MASTER DATA HUB (27/11/2026)
+  // Hub đọc kho tri thức sản phẩm E-Learning (Apps Script "KNOWLEDGE HUB MULTI-SHEET ENGINE" gắn với Sheet
+  // masterdata e-learning), KHÔNG phải backend Trainer OS. Trước đây Hub dùng chung kv_api_url với Trainer OS
+  // nên hiện nhầm các sheet MasterDB / KetQuaHocVien... Link Hub lưu riêng ở kv_hub_api_url.
+  // Web App chỉ ĐỌC Sheet "Masterdata E-Learning - V1" (nội dung đào tạo công khai, không có lệnh ghi) -> đặt sẵn để mọi máy tự kết nối
+  const DEFAULT_HUB_API_URL = 'https://script.google.com/macros/s/AKfycbzWOdSvFRGrEcPIO0EDuDWAqRgOum7AAcU6-oeA5JMOizC7R6GfjfWtWXlSbjSShRWmEQ/exec';
+  const HUB_KEY = 'kv_hub_api_url';
+  window.getHubApiUrl = function () {
+    try {
+      const custom = localStorage.getItem(HUB_KEY);
+      if (custom && isValidApiUrl(custom)) return custom.trim();
+    } catch (e) {}
+    return DEFAULT_HUB_API_URL;
+  };
+  // Trả về true nếu lưu thành công. Link rỗng = quay về link mặc định của Hub.
+  window.setHubApiUrl = function (newUrl) {
+    const clean = (typeof newUrl === 'string') ? newUrl.trim() : '';
+    if (clean && !isValidApiUrl(clean)) return false;
+    if (clean && clean === window.getGlobalApiUrl()) return false; // Không cho trỏ Hub vào backend Trainer OS
+    try {
+      if (clean && clean !== DEFAULT_HUB_API_URL) localStorage.setItem(HUB_KEY, clean);
+      else localStorage.removeItem(HUB_KEY);
+    } catch (e) {}
+    return true;
+  };
+
   // 5. DỌN DẸP: link cũ bị lưu sai định dạng hoặc trùng mặc định -> xóa để luôn dùng link chuẩn
   try {
     const existing = localStorage.getItem('kv_api_url');
@@ -72,8 +98,11 @@
   // 6. TỰ ĐỘNG ĐÍNH KÈM TOKEN cho mọi request tới Web App Apps Script
   //    - GET: thêm ?token=...
   //    - POST (body JSON dạng chuỗi): thêm trường "token"
+  // Chỉ request tới ĐÚNG backend Trainer OS mới được gắn token (không gửi token sang Apps Script khác như kho E-Learning)
   function isApiRequest(url) {
-    return typeof url === 'string' && url.indexOf('https://script.google.com/macros/s/') === 0;
+    if (typeof url !== 'string') return false;
+    const api = window.getGlobalApiUrl();
+    return url === api || url.indexOf(api + '?') === 0;
   }
 
   // 7. TRẠNG THÁI KẾT NỐI CHUNG (Sprint 2) - mọi trang/sidebar/header cùng đọc 1 nguồn
