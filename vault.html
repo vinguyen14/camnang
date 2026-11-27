@@ -333,6 +333,7 @@
         let currentFolderId = null;
         let isViewingPinnedOnly = false; 
         let selectedTrashItems = new Set();
+        let searchDebounceTimer = null; // debounce ô tìm kiếm
 
         function escapeHtml(str) {
             return String(str ?? '')
@@ -361,7 +362,8 @@
             'fa-folder', 'fa-folder-open', 'fa-book', 'fa-file-alt', 'fa-laptop', 
             'fa-robot', 'fa-gamepad', 'fa-brain', 'fa-chart-pie', 'fa-box',
             'fa-bullseye', 'fa-star', 'fa-crown', 'fa-bolt', 'fa-users',
-            'fa-project-diagram', 'fa-sitemap', 'fa-shield-alt', 'fa-link', 'fa-video'
+            'fa-project-diagram', 'fa-sitemap', 'fa-shield-alt', 'fa-link', 'fa-video',
+            'fa-desktop'
         ];
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-collapsed'); }
@@ -371,20 +373,29 @@
             else { menu.style.maxHeight = menu.scrollHeight + 'px'; icon.style.transform = 'rotate(90deg)'; }
         }
 
-        const tooltip = document.getElementById('global-tooltip');
-        const tooltipText = document.getElementById('tooltip-text');
-        document.querySelectorAll('.nav-item[data-title]').forEach(item => {
-            item.addEventListener('mouseenter', (e) => {
-                if (document.getElementById('sidebar').classList.contains('sidebar-collapsed')) {
-                    const rect = item.getBoundingClientRect();
-                    tooltipText.innerText = item.getAttribute('data-title');
-                    tooltip.style.top = (rect.top + (rect.height / 2) - 14) + 'px'; 
-                    tooltip.style.left = (rect.right + 12) + 'px'; 
-                    tooltip.style.opacity = '1';
-                }
-            });
-            item.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; });
-        });
+        // (Đã bỏ code tooltip .nav-item[data-title]: chạy trước khi sidebar-nav.js dựng sidebar nên không bao giờ gắn được; sidebar-nav.js tự có tooltip riêng)
+
+        // Tham số JS an toàn để chèn vào thuộc tính onclick="fn(...)": JSON.stringify (escape cho JS) rồi escapeHtml (escape cho HTML)
+        function jsArg(v) { return escapeHtml(JSON.stringify(String(v ?? ''))); }
+
+        // Chỉ chấp nhận class icon dạng fa-xxx, tránh chèn class/HTML lạ từ dữ liệu lưu trữ
+        function safeIcon(icon) { return /^fa-[a-z0-9-]+$/i.test(String(icon || '')) ? String(icon) : 'fa-folder'; }
+
+        // Thông báo nhỏ góc màn hình (không chặn thao tác như alert)
+        function showVaultToast(msg, isError = true) {
+            let box = document.getElementById('vault-toast-box');
+            if (!box) {
+                box = document.createElement('div');
+                box.id = 'vault-toast-box';
+                box.className = 'fixed bottom-4 right-4 z-[100001] flex flex-col gap-2 max-w-sm';
+                document.body.appendChild(box);
+            }
+            const t = document.createElement('div');
+            t.className = `px-4 py-3 rounded-lg shadow-xl text-xs font-semibold text-white ${isError ? 'bg-rose-600' : 'bg-slate-800'}`;
+            t.textContent = msg;
+            box.appendChild(t);
+            setTimeout(() => t.remove(), 8000);
+        }
 
         window.onload = () => {
             // Profile is automatically hydrated by sidebar-nav.js
@@ -395,36 +406,95 @@
             renderIconPicker();
         };
 
-        function loadVaultData() {
-            const fData = localStorage.getItem('kv_vault_folders');
-            const iData = localStorage.getItem('kv_vault_items');
-            const tData = localStorage.getItem('kv_vault_trash');
+        // Các key bị hỏng nhưng KHÔNG sao lưu được -> cấm ghi đè để không mất chuỗi gốc
+        const vaultBlockedKeys = new Set();
 
-            try { vaultFolders = fData ? JSON.parse(fData) : null; } catch(e) { vaultFolders = null; }
-            if (!Array.isArray(vaultFolders)) vaultFolders = [
+        function vaultStamp() {
+            const d = new Date(); const p = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
+        }
+
+        // Đọc 1 key: trả về { status: 'ok' | 'missing' | 'corrupt', data }
+        // Key hỏng (JSON lỗi hoặc không phải mảng) -> sao lưu chuỗi gốc sang '<key>_corrupt_<yyyymmdd-hhmm>' TRƯỚC
+        function readVaultKey(key) {
+            let raw = null;
+            try { raw = localStorage.getItem(key); } catch (e) { return { status: 'missing', data: null }; }
+            if (raw === null) return { status: 'missing', data: null };
+            try {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) return { status: 'ok', data: parsed };
+            } catch (e) { /* rơi xuống nhánh hỏng */ }
+
+            const backupKey = `${key}_corrupt_${vaultStamp()}`;
+            let backedUp = false;
+            try { localStorage.setItem(backupKey, raw); backedUp = localStorage.getItem(backupKey) === raw; } catch (e) { backedUp = false; }
+            if (backedUp) {
+                console.warn(`[Vault] Dữ liệu ${key} bị hỏng, đã sao lưu sang ${backupKey}`);
+                showVaultToast(`Dữ liệu "${key}" bị hỏng. Đã sao lưu bản gốc sang "${backupKey}" và bắt đầu lại danh sách trống.`);
+            } else {
+                vaultBlockedKeys.add(key);
+                console.error(`[Vault] Dữ liệu ${key} bị hỏng và KHÔNG sao lưu được; tạm khóa ghi key này.`);
+                showVaultToast(`Dữ liệu "${key}" bị hỏng và không sao lưu được (bộ nhớ đầy?). Tạm KHÔNG lưu mục này để tránh mất dữ liệu gốc.`);
+            }
+            return { status: 'corrupt', data: null };
+        }
+
+        function loadVaultData() {
+            const fRes = readVaultKey('kv_vault_folders');
+            const iRes = readVaultKey('kv_vault_items');
+            const tRes = readVaultKey('kv_vault_trash');
+
+            // Dữ liệu mẫu CHỈ dùng khi key chưa từng tồn tại; key hỏng -> mảng rỗng (bản gốc đã sao lưu)
+            vaultFolders = fRes.status === 'ok' ? fRes.data : (fRes.status === 'corrupt' ? [] : null);
+            if (vaultFolders === null) vaultFolders = [
                 { id: 'f-1', parentId: null, name: 'Tài nguyên Chung', icon: 'fa-folder', isExpanded: true, order: 1 },
                 { id: 'f-2', parentId: 'f-1', name: 'Mẫu Slide Giảng dạy', icon: 'fa-desktop', isExpanded: false, order: 1 },
                 { id: 'f-3', parentId: null, name: 'Prompts Trợ lý AI', icon: 'fa-robot', isExpanded: true, order: 2 },
                 { id: 'f-4', parentId: null, name: 'Games & LMS', icon: 'fa-gamepad', isExpanded: false, order: 3 }
             ];
 
-            try { vaultItems = iData ? JSON.parse(iData) : null; } catch(e) { vaultItems = null; }
-            if (!Array.isArray(vaultItems)) vaultItems = [
+            vaultItems = iRes.status === 'ok' ? iRes.data : (iRes.status === 'corrupt' ? [] : null);
+            if (vaultItems === null) vaultItems = [
                 { id: 'i-1', folderId: 'f-3', title: 'Prompt Tóm tắt Khảo sát', type: 'text', content: 'Hãy đóng vai chuyên gia L&D. Phân tích data khảo sát sau và đưa ra: 1. Đánh giá chung. 2. Điểm tốt. 3. Cần cải thiện.', note: 'Copy và paste vào ChatGPT cùng với file Excel kết quả Form', tags: 'ai, khao-sat', createdAt: new Date().getTime(), isPinned: true, order: 1 },
                 { id: 'i-2', folderId: 'f-4', title: 'Game Gamification B1', type: 'link', content: 'https://vinguyen14.github.io/camnang/gamification', note: 'Link game dùng cho Buổi 1 SP Retail', tags: 'game, kv1', createdAt: new Date().getTime(), isPinned: false, order: 2 }
             ];
 
-            try { vaultTrash = tData ? JSON.parse(tData) : []; } catch(e) { vaultTrash = []; }
-            if (!Array.isArray(vaultTrash)) vaultTrash = [];
-            saveData();
+            vaultTrash = tRes.status === 'ok' ? tRes.data : [];
+
+            // Chỉ ghi lại khi cần (seed dữ liệu mẫu / key hỏng đã sao lưu); saveData tự bỏ qua key bị khóa
+            if ([fRes, iRes, tRes].some(r => r.status !== 'ok')) saveData();
+            else updateIndicators();
             renderTree();
         }
 
+        function isQuotaError(e) {
+            return !!e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014);
+        }
+
         function saveData() {
-            localStorage.setItem('kv_vault_folders', JSON.stringify(vaultFolders));
-            localStorage.setItem('kv_vault_items', JSON.stringify(vaultItems));
-            localStorage.setItem('kv_vault_trash', JSON.stringify(vaultTrash));
+            const entries = [
+                ['kv_vault_folders', vaultFolders],
+                ['kv_vault_items', vaultItems],
+                ['kv_vault_trash', vaultTrash]
+            ];
+            let ok = true;
+            for (const [key, val] of entries) {
+                if (vaultBlockedKeys.has(key)) { ok = false; continue; }
+                try {
+                    localStorage.setItem(key, JSON.stringify(val));
+                } catch (e) {
+                    ok = false;
+                    showVaultToast(isQuotaError(e)
+                        ? 'Bộ nhớ trình duyệt đã đầy, KHÔNG lưu được thay đổi. Hãy dọn thùng rác hoặc xóa bớt tài nguyên lớn.'
+                        : 'Không lưu được dữ liệu: ' + (e && e.message ? e.message : e));
+                    break;
+                }
+            }
+            if (vaultBlockedKeys.size > 0) {
+                showVaultToast('Một số dữ liệu đang bị khóa ghi do lỗi đọc (chưa sao lưu được). Thay đổi chưa được lưu đầy đủ.');
+            }
             updateIndicators();
+            return ok;
         }
 
         function updateIndicators() {
@@ -478,8 +548,9 @@
             if(parentSelect) parentSelect.innerHTML = optionsHtml + flatTreeHtml;
             if(resFolderSelect) resFolderSelect.innerHTML = flatTreeHtml; 
             
-            if(!currentFolderId && vaultFolders.length > 0) selectFolder(vaultFolders[0].id);
-            else if (currentFolderId) selectFolder(currentFolderId);
+            // Re-render cây: giữ nguyên từ khóa tìm kiếm và chế độ Ghim
+            if(!currentFolderId && vaultFolders.length > 0) selectFolder(vaultFolders[0].id, true);
+            else if (currentFolderId) selectFolder(currentFolderId, true);
         }
 
         function buildTreeHtml(parentId, level) {
@@ -490,19 +561,19 @@
             children.forEach(f => {
                 const hasChildren = vaultFolders.some(child => child.parentId === f.id);
                 const isActive = f.id === currentFolderId ? 'active' : '';
-                let toggleHtml = hasChildren ? `<i class="fas fa-caret-${f.isExpanded ? 'down' : 'right'} toggle-icon" onclick="toggleFolderExpand('${f.id}', event)"></i>` : `<span class="inline-block w-5"></span>`;
+                let toggleHtml = hasChildren ? `<i class="fas fa-caret-${f.isExpanded ? 'down' : 'right'} toggle-icon" onclick="toggleFolderExpand(${jsArg(f.id)}, event)"></i>` : `<span class="inline-block w-5"></span>`;
 
                 html += `
                     <li>
-                        <div class="tree-node group ${isActive}" id="node-${f.id}" onclick="selectFolder('${f.id}')">
+                        <div class="tree-node group ${isActive}" id="node-${escapeHtml(f.id)}" onclick="selectFolder(${jsArg(f.id)})">
                             <div class="flex items-center flex-grow truncate">
                                 ${toggleHtml}
-                                <i class="fas ${escapeHtml(f.icon)} text-purple-400 mx-1.5 text-[14px]"></i>
+                                <i class="fas ${escapeHtml(safeIcon(f.icon))} text-purple-400 mx-1.5 text-[14px]"></i>
                                 <span class="truncate">${escapeHtml(f.name)}</span>
                             </div>
                             <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition pl-2">
-                                <i class="fas fa-edit text-[11px] text-slate-400 hover:text-blue-500" onclick="openFolderModal('${f.id}', event)"></i>
-                                <i class="fas fa-trash-alt text-[11px] text-slate-400 hover:text-rose-500" onclick="deleteFolder('${f.id}', event)"></i>
+                                <i class="fas fa-edit text-[11px] text-slate-400 hover:text-blue-500" onclick="openFolderModal(${jsArg(f.id)}, event)"></i>
+                                <i class="fas fa-trash-alt text-[11px] text-slate-400 hover:text-rose-500" onclick="deleteFolder(${jsArg(f.id)}, event)"></i>
                             </div>
                         </div>
                         ${buildTreeHtml(f.id, level + 1)}
@@ -519,9 +590,17 @@
             if(folder) { folder.isExpanded = !folder.isExpanded; saveData(); renderTree(); }
         }
 
-        function selectFolder(id) {
-            currentFolderId = id; isViewingPinnedOnly = false;
-            document.getElementById('btnPinFilter').classList.remove('bg-amber-50', 'border-amber-200', 'text-amber-600');
+        // preserveView = true khi chỉ re-render (renderTree): giữ từ khóa tìm kiếm và chế độ Ghim.
+        // Người dùng chủ động bấm chọn thư mục -> thoát chế độ Ghim và xóa ô tìm.
+        function selectFolder(id, preserveView = false) {
+            currentFolderId = id;
+            if (!preserveView) {
+                isViewingPinnedOnly = false;
+                document.getElementById('btnPinFilter').classList.remove('bg-amber-50', 'border-amber-200', 'text-amber-600');
+                const searchInput = document.getElementById('globalSearchInput');
+                if (searchInput) searchInput.value = '';
+                clearTimeout(searchDebounceTimer);
+            }
             document.querySelectorAll('.tree-node').forEach(el => el.classList.remove('active'));
             const activeNode = document.getElementById(`node-${id}`);
             if(activeNode) activeNode.classList.add('active');
@@ -529,33 +608,49 @@
             const folder = vaultFolders.find(f => f.id === id);
             if(folder) {
                 document.getElementById('currentFolderName').innerText = folder.name;
-                document.getElementById('currentFolderIcon').className = `fas ${folder.icon} text-2xl text-purple-500`;
+                document.getElementById('currentFolderIcon').className = `fas ${safeIcon(folder.icon)} text-2xl text-purple-500`;
                 document.getElementById('btnAddResource').classList.remove('hidden');
-                document.getElementById('currentFolderCount').innerText = `${vaultItems.filter(i => i.folderId === id).length} tài nguyên`;
             }
-            renderResourceList();
+            renderResourceList(); // renderResourceList tự cập nhật số đếm
         }
 
+        // Cập nhật nhãn "x tài nguyên" của thư mục đang chọn
+        function updateFolderCount() {
+            const el = document.getElementById('currentFolderCount');
+            if (!el || !currentFolderId) return;
+            el.innerText = `${vaultItems.filter(i => i.folderId === currentFolderId).length} tài nguyên`;
+        }
+
+        function iconBoxHtml(icon) {
+            return `<div class="icon-box" id="icon-${escapeHtml(icon)}" onclick="selectIcon(${jsArg(icon)})"><i class="fas ${escapeHtml(icon)}"></i></div>`;
+        }
         function renderIconPicker() {
-            const grid = document.getElementById('iconPickerGrid'); grid.innerHTML = '';
-            ICONS_LIST.forEach(icon => {
-                grid.innerHTML += `<div class="icon-box" id="icon-${icon}" onclick="selectIcon('${icon}')"><i class="fas ${icon}"></i></div>`;
-            });
+            const grid = document.getElementById('iconPickerGrid');
+            grid.innerHTML = ICONS_LIST.map(iconBoxHtml).join('');
         }
         function selectIcon(iconClass) {
+            iconClass = safeIcon(iconClass);
+            let box = document.getElementById(`icon-${iconClass}`);
+            if (!box) {
+                // Icon của thư mục không có trong ICONS_LIST -> thêm tạm vào picker (mất khi mở lại modal)
+                const grid = document.getElementById('iconPickerGrid');
+                if (grid) { grid.insertAdjacentHTML('beforeend', iconBoxHtml(iconClass)); box = document.getElementById(`icon-${iconClass}`); }
+            }
             document.querySelectorAll('.icon-box').forEach(el => el.classList.remove('active'));
-            document.getElementById(`icon-${iconClass}`).classList.add('active');
+            if (box) box.classList.add('active');
             document.getElementById('folderIconInput').value = iconClass;
         }
 
         function openFolderModal(id = null, event = null) {
             if(event) event.stopPropagation();
+            renderIconPicker(); // dọn icon tạm của lần mở trước
             const parentSelect = document.getElementById('folderParentSelect');
             Array.from(parentSelect.options).forEach(opt => {
                 opt.disabled = id ? isDescendantFolder(opt.value, id) : false;
             });
             if(id) {
                 const f = vaultFolders.find(x => x.id === id);
+                if(!f) return;
                 document.getElementById('folderModalTitle').innerHTML = '<i class="fas fa-edit text-purple-600 mr-2"></i>Sửa Thư Mục';
                 document.getElementById('folderIdInput').value = f.id;
                 document.getElementById('folderNameInput').value = f.name;
@@ -673,38 +768,44 @@
             renderResourceList();
         }
 
-        function renderResourceList(query = '') {
+        // Luôn đọc từ khóa hiện tại trong ô tìm -> re-render sau ghim/xóa/thêm không làm mất kết quả tìm
+        function renderResourceList() {
             const tbody = document.getElementById('resourceListBody');
             const emptyState = document.getElementById('emptyState');
             const table = document.getElementById('resourceTable');
-            tbody.innerHTML = '';
+            updateFolderCount();
 
-            const qLower = String(query || '').toLowerCase();
+            const searchInput = document.getElementById('globalSearchInput');
+            const qLower = String(searchInput ? searchInput.value.trim() : '').toLowerCase();
+            const matchQuery = i => String(i.title || '').toLowerCase().includes(qLower) || String(i.tags || '').toLowerCase().includes(qLower) || String(i.note || '').toLowerCase().includes(qLower);
             let items = isViewingPinnedOnly
-                ? vaultItems.filter(i => i.isPinned)
+                ? vaultItems.filter(i => i.isPinned && (!qLower || matchQuery(i)))
                 : (qLower
-                    ? vaultItems.filter(i => String(i.title || '').toLowerCase().includes(qLower) || String(i.tags || '').toLowerCase().includes(qLower) || String(i.note || '').toLowerCase().includes(qLower))
+                    ? vaultItems.filter(matchQuery)
                     : vaultItems.filter(i => i.folderId === currentFolderId));
 
             if(items.length === 0) {
+                tbody.innerHTML = '';
                 table.classList.add('hidden'); emptyState.classList.replace('hidden', 'flex'); return;
             }
             table.classList.remove('hidden'); emptyState.classList.replace('flex', 'hidden');
 
-            items.sort((a,b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0)).forEach((item, index) => {
+            // Gom chuỗi rồi gán innerHTML 1 lần (tránh innerHTML += trong vòng lặp)
+            tbody.innerHTML = items.sort((a,b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0)).map((item, index) => {
                 let typeIcon = item.type === 'link' ? 'fa-link text-blue-500 bg-blue-50' : (item.type === 'file' ? 'fa-file-alt text-emerald-500 bg-emerald-50' : 'fa-align-left text-purple-500 bg-purple-50');
                 const tagStr = String(item.tags ?? '');
                 let tagsHtml = tagStr ? tagStr.split(',').filter(t => t.trim()).map(t => `<span class="tag-badge">${escapeHtml(t.trim())}</span>`).join('') : '';
+                const idArg = jsArg(item.id);
 
-                tbody.innerHTML += `
+                return `
                     <tr class="group hover:bg-slate-50 transition border-l-4 border-transparent hover:border-l-purple-500">
                         <td class="text-center text-xs text-slate-400 font-bold">${index + 1}</td>
-                        <td class="text-center cursor-pointer" onclick="togglePin('${item.id}')">${item.isPinned ? '<i class="fas fa-star text-amber-400"></i>' : '<i class="far fa-star text-slate-300"></i>'}</td>
+                        <td class="text-center cursor-pointer" onclick="togglePin(${idArg})">${item.isPinned ? '<i class="fas fa-star text-amber-400"></i>' : '<i class="far fa-star text-slate-300"></i>'}</td>
                         <td>
                             <div class="flex items-start gap-3">
                                 <div class="w-8 h-8 rounded flex items-center justify-center border shrink-0 ${typeIcon}"><i class="fas ${typeIcon.split(' ')[0]} text-xs"></i></div>
                                 <div>
-                                    <h4 class="font-bold text-[13px] text-slate-800 hover:text-purple-600 cursor-pointer" onclick="openResourceDetail('${item.id}')">${escapeHtml(item.title)}</h4>
+                                    <h4 class="font-bold text-[13px] text-slate-800 hover:text-purple-600 cursor-pointer" onclick="openResourceDetail(${idArg})">${escapeHtml(item.title)}</h4>
                                     <p class="text-[11px] text-slate-500 mt-0.5 truncate max-w-md">${escapeHtml(item.note || 'Không có mô tả')}</p>
                                     <div class="mt-1">${tagsHtml}</div>
                                 </div>
@@ -713,14 +814,14 @@
                         <td class="text-center text-xs text-slate-500">${formatDate(item.createdAt)}</td>
                         <td class="text-center">
                             <div class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition">
-                                <button onclick="quickAction('${item.id}')" class="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600 hover:text-purple-600 shadow-sm">${item.type === 'link' ? 'Open' : 'Copy'}</button>
-                                <button onclick="openResourceModal('${item.id}')" class="text-slate-400 hover:text-blue-500"><i class="fas fa-edit"></i></button>
-                                <button onclick="deleteResource('${item.id}')" class="text-slate-400 hover:text-rose-500"><i class="fas fa-trash-alt"></i></button>
+                                <button onclick="quickAction(${idArg})" class="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600 hover:text-purple-600 shadow-sm">${item.type === 'link' ? 'Open' : 'Copy'}</button>
+                                <button onclick="openResourceModal(${idArg})" class="text-slate-400 hover:text-blue-500"><i class="fas fa-edit"></i></button>
+                                <button onclick="deleteResource(${idArg})" class="text-slate-400 hover:text-rose-500"><i class="fas fa-trash-alt"></i></button>
                             </div>
                         </td>
                     </tr>
                 `;
-            });
+            }).join('');
         }
 
         function togglePin(id) { const i = vaultItems.find(x => x.id === id); if(i) { i.isPinned = !i.isPinned; saveData(); renderResourceList(); } }
@@ -731,10 +832,20 @@
                 else navigator.clipboard.writeText(i.content).then(() => alert("Đã Copy Prompt!"));
             }
         }
-        function searchVault() { renderResourceList(document.getElementById('globalSearchInput').value.trim()); }
+        // Debounce ~200ms; renderResourceList tự đọc giá trị ô tìm
+        function searchVault() {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(renderResourceList, 200);
+        }
         function initCtrlF() {
             document.addEventListener('keydown', (e) => {
-                if(e.ctrlKey && e.key === 'f') { e.preventDefault(); document.getElementById('globalSearchInput').focus(); }
+                const key = String(e.key || '').toLowerCase();
+                if((e.ctrlKey || e.metaKey) && key === 'f') { e.preventDefault(); document.getElementById('globalSearchInput').focus(); return; }
+                if(key === 'escape') {
+                    // Đóng modal đang mở trên cùng (phần tử .modal.active cuối cùng trong DOM)
+                    const openModals = document.querySelectorAll('.modal.active');
+                    if (openModals.length > 0) { e.preventDefault(); closeModal(openModals[openModals.length - 1].id); }
+                }
             });
         }
 
@@ -768,11 +879,11 @@
             if (countEl) countEl.innerText = '0';
             const masterCb = document.getElementById('masterTrashCheckbox');
             if (masterCb) masterCb.checked = false;
-            const tbody = document.getElementById('trashVaultBody'); tbody.innerHTML = '';
+            const tbody = document.getElementById('trashVaultBody');
             if(vaultTrash.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400 italic">Thùng rác trống</td></tr>`; }
             else {
-                vaultTrash.forEach(item => {
-                    tbody.innerHTML += `
+                // Gom chuỗi rồi gán 1 lần
+                tbody.innerHTML = vaultTrash.map(item => `
                         <tr class="hover:bg-rose-50/50 transition">
                             <td class="text-center"><input type="checkbox" value="${escapeHtml(item.id)}" class="trash-cb accent-rose-500" onchange="updateSelectedTrash(this)"></td>
                             <td class="text-center"><i class="fas fa-trash text-rose-400"></i></td>
@@ -780,11 +891,10 @@
                             <td class="text-xs text-rose-600 italic">"${escapeHtml(item.deleteReason)}"</td>
                             <td class="text-center text-xs text-slate-500">${formatDate(item.deletedAt)}</td>
                             <td class="text-center">
-                                <button onclick="restoreVaultItem('${escapeHtml(item.id)}')" class="btn-outline !py-1 text-xs text-emerald-600"><i class="fas fa-undo"></i></button>
+                                <button onclick="restoreVaultItem(${jsArg(item.id)})" class="btn-outline !py-1 text-xs text-emerald-600"><i class="fas fa-undo"></i></button>
                             </td>
                         </tr>
-                    `;
-                });
+                    `).join('');
             }
             document.getElementById('trashVaultModal').classList.add('active');
         }
