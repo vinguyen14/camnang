@@ -262,3 +262,13 @@ Ngày giờ theo giờ địa phương, ngày lễ Việt Nam theo từng năm (
 - **Lỗi:** Master Data Hub vốn là kho tri thức sản phẩm E-Learning (Apps Script "KNOWLEDGE HUB MULTI-SHEET ENGINE" gắn với Sheet masterdata e-learning), nhưng dùng chung ô lưu link `kv_api_url` với Trainer OS. Từ khi gom cấu hình (v2.1), Hub hiển thị nhầm các sheet MasterDB / KetQuaHocVien / NhanSu… của Trainer OS.
 - **Sửa:** Hub dùng link riêng `kv_hub_api_url` (`getHubApiUrl` / `setHubApiUrl` trong `system-config.js`), **mặc định đặt sẵn** Web App kho "Masterdata E-Learning - V1" (chỉ đọc, nội dung đào tạo) → mọi máy tự kết nối, không cần dán link; không cho dán nhầm link Trainer OS; bỏ dữ liệu đệm khi nguồn thay đổi.
 - **Bảo mật:** API Token chỉ gắn vào request tới đúng backend Trainer OS, không gửi sang Apps Script khác (kho E-Learning, game).
+
+## 9. Master Data Hub giao diện học thuật & thẻ báo cáo học liệu (27/11/2026)
+- **`knowledge-hub-academic.js`** (mới): lớp giao diện "thư viện học liệu" đồng bộ Aurora (tự đổi Sáng/Tối), font tiêu đề serif; panel trái thành "Mục lục học liệu"; trên điện thoại mục lục là ngăn kéo mở bằng nút "Mục lục".
+- Hiển thị riêng từng loại bảng (chế độ Lưới thẻ; chế độ Bảng giữ nguyên):
+  - **Thư viện giáo trình** (Masterdata E-Learning): chương theo khóa, thanh % học liệu đầy đủ, mỗi bài có ảnh video + 4 huy hiệu HDSD / Infographic / Video / Quiz (viền đứt = còn thiếu).
+  - **Ngân hàng đề thi** (MCQ Master): nhóm theo ngành nhận diện từ tên khóa, thẻ đề thi có nút Làm bài / Sao chép link / Sửa đề.
+  - **Case study** (Database Tình Huống): Ngày 1–3 × Buổi sáng/chiều, thẻ lật "Xem gợi ý".
+  - **Sổ tay bài tập** (MasterExercises): Ngành → Buổi (thu gọn), mỗi bài có Yêu cầu, Hướng dẫn từng bước (thu gọn), Tiêu chí xác nhận.
+- Mở thẳng danh sách đã lọc qua link `knowledge-hub.html?sheet=…&course=…&gap=video|quiz`.
+- **`elearning-report.js`** (mới): thẻ "Sức khỏe kho học liệu E-Learning" trên Dashboard — mức sẵn sàng (cùng công thức với Hub), % video / quiz, số đề / tình huống / bài tập, mức sẵn sàng theo ngành, 4 khóa cần bổ sung nhiều nhất (bấm để mở danh sách thiếu trong Hub). Lưu tóm tắt 60 phút, có nút Làm mới.
