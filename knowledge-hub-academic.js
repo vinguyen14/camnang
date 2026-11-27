@@ -99,7 +99,7 @@
   .kh-toc-count { margin-left: auto; font: 600 10.5px 'Fira Code', monospace; color: var(--kh-muted); background: var(--kh-paper); border: 1px solid var(--kh-line); border-radius: 999px; padding: 1px 7px; }
 
   /* ===== Thành phần chung ===== */
-  .kh-wrap { display: flex; flex-direction: column; gap: 22px; }
+  .kh-wrap { display: flex; flex-direction: column; gap: 22px; max-width: 1240px; margin: 0 auto; width: 100%; }
   .kh-intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-bottom: 14px; border-bottom: 1px solid var(--kh-line); }
   .kh-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--kh-accent-ink); }
   .kh-h1 { font-family: var(--kh-serif); font-size: 26px; font-weight: 600; color: var(--kh-ink); line-height: 1.15; margin-top: 4px; }
@@ -193,9 +193,11 @@
   /* ===== 3. Case study ===== */
   .kh-day-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
   .kh-day-head h3 { font-family: var(--kh-serif); font-size: 20px; font-weight: 600; color: var(--kh-ink); }
-  .kh-sessions { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .kh-sessions { display: flex; flex-direction: column; gap: 18px; }
+  .kh-case-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 14px; align-items: stretch; }
   .kh-session-label { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: var(--kh-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .06em; }
-  .kh-case { padding: 16px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .kh-case { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .kh-case > .flex:last-child { margin-top: auto; }
   .kh-case-top { display: flex; gap: 10px; align-items: flex-start; }
   .kh-case-no { font-family: var(--kh-serif); font-weight: 700; font-size: 13px; color: var(--kh-accent-ink); background: var(--kh-accent-soft); border-radius: 9px; min-width: 34px; height: 34px; display: grid; place-items: center; flex-shrink: 0; }
   .kh-case-title { font-size: 13px; font-weight: 650; color: var(--kh-ink); line-height: 1.35; }
@@ -236,7 +238,14 @@
     html.kh-toc-open body::after { content: ''; position: fixed; inset: 0; background: rgba(10,10,25,.35); z-index: 65; }
     .kh-toc-toggle { display: inline-flex; }
     html.kh-academic #local-search-wrapper, html.kh-academic #view-mode-split span { display: none !important; }
-    html.kh-academic main > header { padding-left: 10px !important; padding-right: 10px !important; }
+    html.kh-academic main > header { padding-left: 10px !important; padding-right: 10px !important; gap: 8px; }
+    html.kh-academic #section-icon, html.kh-academic main > header .text-\\[11px\\] { display: none !important; }
+    html.kh-academic #section-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 42vw; }
+    html.kh-academic #view-mode-table, html.kh-academic #view-mode-split { display: none !important; }
+    html.kh-academic #items-grid { padding: 14px 12px !important; }
+    .kh-case-grid, .kh-exam-grid { grid-template-columns: 1fr; }
+    .kh-intro { padding-bottom: 10px; } .kh-h1 { font-size: 21px; } .kh-stat { min-width: 0; flex: 1; }
+    .kh-course > summary { padding: 12px; gap: 10px; } .kh-lesson { padding: 12px; }
   }
   @media (max-width: 900px) {
     .kh-lesson { grid-template-columns: 26px 1fr; }
@@ -616,12 +625,12 @@
       ['morning', 'afternoon', ...[...sessions.keys()].filter(k => k !== 'morning' && k !== 'afternoon')].forEach(sk => {
         if (!sessions.has(sk)) return;
         const lab = SESSION_LABEL[sk] || [sk, 'fa-clock'];
-        html += `<div><div class="kh-session-label"><i class="fa-solid ${lab[1]}"></i>${esc(lab[0])}</div>`;
+        html += `<div><div class="kh-session-label"><i class="fa-solid ${lab[1]}"></i>${esc(lab[0])} • ${sessions.get(sk).length} tình huống</div><div class="kh-case-grid">`;
         sessions.get(sk).forEach(it => {
           globalNo++;
           const rawTitle = val(it, ['Title']) || 'Tình huống';
           const m = rawTitle.match(/^\s*Tình huống\s*(\d+)\s*[-–:]\s*(.*)$/i);
-          const no = m ? m[1] : String(globalNo).padStart(2, '0');
+          const no = (sk === 'morning' ? 'S' : sk === 'afternoon' ? 'C' : '') + (m ? m[1] : String(globalNo).padStart(2, '0')); // S = sáng, C = chiều (số trong tên lặp lại giữa 2 buổi)
           const title = m ? m[2] : rawTitle;
           const q = val(it, ['Question']), a = val(it, ['Answer']), rm = val(it, ['Roadmap']);
           html += `<article class="kh-card kh-case">
@@ -636,7 +645,7 @@
             </div>
           </article>`;
         });
-        html += `</div>`;
+        html += `</div></div>`; // đóng .kh-case-grid và khối buổi
       });
       html += `</div></section>`;
     });
@@ -681,6 +690,14 @@
     });
     container.innerHTML = html;
   };
+
+  // Điện thoại: dạng Bảng quá chật -> luôn dùng dạng thẻ
+  const mobileMQ = window.matchMedia('(max-width: 767px)');
+  function forceGridOnMobile() {
+    if (mobileMQ.matches && AppState.viewMode === 'table' && typeof switchViewMode === 'function') switchViewMode('grid');
+  }
+  forceGridOnMobile();
+  (mobileMQ.addEventListener ? mobileMQ.addEventListener('change', forceGridOnMobile) : mobileMQ.addListener(forceGridOnMobile));
 
   // Mở thẳng từ Dashboard: knowledge-hub.html?sheet=...&course=...&gap=video|quiz
   (function openFromLink() {

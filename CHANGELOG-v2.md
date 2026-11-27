@@ -272,3 +272,8 @@ Ngày giờ theo giờ địa phương, ngày lễ Việt Nam theo từng năm (
   - **Sổ tay bài tập** (MasterExercises): Ngành → Buổi (thu gọn), mỗi bài có Yêu cầu, Hướng dẫn từng bước (thu gọn), Tiêu chí xác nhận.
 - Mở thẳng danh sách đã lọc qua link `knowledge-hub.html?sheet=…&course=…&gap=video|quiz`.
 - **`elearning-report.js`** (mới): thẻ "Sức khỏe kho học liệu E-Learning" trên Dashboard — mức sẵn sàng (cùng công thức với Hub), % video / quiz, số đề / tình huống / bài tập, mức sẵn sàng theo ngành, 4 khóa cần bổ sung nhiều nhất (bấm để mở danh sách thiếu trong Hub). Lưu tóm tắt 60 phút, có nút Làm mới.
+
+## 10. Giao diện điện thoại & căn lề Master Data Hub (27/11/2026)
+- **Điện thoại (< 768px), `sidebar-nav.js`:** trước đây menu trái luôn chiếm một cột làm nội dung bị ép, gần như không xem được. Nay menu ẩn hẳn, trượt ra dạng ngăn kéo khi bấm nút ☰ ở header (hoặc nút tròn góc dưới trái ở trang không có nút ☰), luôn hiện đủ chữ kể cả khi trên máy tính đang thu gọn; bấm ra ngoài / chọn trang thì tự đóng. Máy tính giữ nguyên như cũ.
+- Thanh "Kỳ báo cáo" trên Dashboard xuống dòng thay vì tràn ngang trên điện thoại.
+- **Master Data Hub:** nội dung căn giữa, rộng tối đa 1240px; thẻ Case study xếp lưới đều theo từng buổi (mã S1/C1…), nút cuối thẻ thẳng hàng; trên điện thoại ẩn breadcrumb / nút đổi chế độ xem và luôn hiển thị dạng thẻ 1 cột.
