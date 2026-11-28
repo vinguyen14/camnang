@@ -82,6 +82,39 @@
         input[type="color"] { -webkit-appearance: none; border: none; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; padding: 0; }
         input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
         input[type="color"]::-webkit-color-swatch { border: 1px solid #cbd5e1; border-radius: 4px; }
+
+        /* Đếm số bài, chip vai trò, khung mindmap */
+        .k-count { min-width: 20px; height: 18px; padding: 0 6px; border-radius: 9px; font-size: 10px; font-weight: 800; background: #ede9fe; color: #6d28d9; display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+        .k-count.zero { background: #f1f5f9; color: #94a3b8; }
+        .role-chip { padding: 5px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; color: #475569; background: #fff; border: 1px solid #e2e8f0; cursor: pointer; transition: all .15s; }
+        .role-chip b { margin-left: 4px; font-size: 10px; color: #94a3b8; }
+        .role-chip:hover { background: #f8fafc; }
+        .role-chip.active { background: #f5f3ff; color: #6d28d9; border-color: #ddd6fe; }
+        .role-chip.active b { color: #7c3aed; }
+        .mm-box { height: 600px; }
+        #mindmapCard:fullscreen { border-radius: 0; }
+        #mindmapCard:fullscreen .mm-box, #mindmapCard.mm-pseudo-full .mm-box { height: auto; flex: 1; }
+        #mindmapCard.mm-pseudo-full { position: fixed; inset: 0; z-index: 9000; margin: 0; border-radius: 0; }
+        .wp-content table { border-collapse: collapse; margin: 12px 0; }
+        .wp-content td, .wp-content th { border: 1px solid #e2e8f0; padding: 6px 10px; }
+        .wp-content a { color: #2563eb; text-decoration: underline; }
+        .wp-content ul { list-style: disc; padding-left: 22px; }
+        .wp-content ol { list-style: decimal; padding-left: 22px; }
+        .wp-content h1, .wp-content h2 { font-size: 16px; font-weight: 800; margin: 16px 0 8px; color: #1e293b; }
+        .wp-content h3, .wp-content h4 { font-size: 14px; font-weight: 700; margin: 14px 0 6px; color: #334155; }
+        .wp-content p { margin: 6px 0; }
+
+        /* Điện thoại */
+        @media (max-width: 767px) {
+            .kn-header { padding: 0 12px !important; gap: 8px; }
+            .content-area { padding: 16px 12px 90px; }
+            #industryPills { flex-wrap: nowrap; overflow-x: auto; gap: 8px; padding: 8px; }
+            .industry-pill { flex-shrink: 0; white-space: nowrap; padding: 7px 12px; }
+            .mm-box { height: 380px; }
+            .widget-panel { width: calc(100vw - 24px); right: 12px; bottom: 76px; height: 72vh; }
+            .floating-tool { right: 14px; bottom: 18px; }
+            #drawToolbar { gap: 8px; padding: 8px; }
+        }
     </style>
     <script src="system-config.js"></script>
 </head>
@@ -93,19 +126,19 @@
 
         <!-- MAIN LAYOUT -->
         <div class="flex-1 flex flex-col overflow-hidden relative">
-            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 shrink-0 shadow-sm">
-                <div class="flex items-center gap-4">
-                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-purple-50 hover:text-purple-600 transition border border-slate-200"><i class="fas fa-bars"></i></button>
-                    <div class="relative w-96">
+            <header class="kn-header h-16 bg-white border-b border-slate-200 flex items-center justify-between gap-3 px-6 z-40 shrink-0 shadow-sm">
+                <div class="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-purple-50 hover:text-purple-600 transition border border-slate-200 shrink-0"><i class="fas fa-bars"></i></button>
+                    <div class="relative w-full max-w-sm min-w-0">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input type="text" id="knowledgeSearchInput" oninput="filterKnowledgeDocs(this.value)" placeholder="Tìm kiếm tài liệu..." class="saas-input !pl-10 bg-slate-50 border-transparent text-sm">
+                        <input type="search" id="knowledgeSearchInput" oninput="filterKnowledgeDocs(this.value)" placeholder="Tìm bài học (không cần dấu)..." class="saas-input !pl-10 bg-slate-50 border-transparent text-sm">
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
-                    <button onclick="syncFromGoogleSheets()" class="bg-blue-50 text-blue-600 px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-sm border border-blue-100 hover:bg-blue-600 hover:text-white transition flex items-center gap-1.5">
-                        <i id="syncIcon" class="fas fa-sync-alt"></i> Đồng bộ với Google Sheets
+                <div class="flex items-center gap-2 md:gap-3 shrink-0">
+                    <button onclick="syncFromGoogleSheets()" class="bg-blue-50 text-blue-600 px-3 md:px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-sm border border-blue-100 hover:bg-blue-600 hover:text-white transition flex items-center gap-1.5" title="Đồng bộ với Google Sheets">
+                        <i id="syncIcon" class="fas fa-sync-alt"></i> <span class="hidden md:inline">Đồng bộ với Google Sheets</span>
                     </button>
-                    <span class="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-emerald-200 flex items-center gap-1.5"><i class="fas fa-server"></i> <span id="docCount">0</span> Bài học</span>
+                    <span class="bg-emerald-50 text-emerald-600 px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-bold border border-emerald-200 flex items-center gap-1.5" title="Tổng số bài học"><i class="fas fa-server"></i> <span id="docCount">0</span><span class="hidden md:inline"> Bài học</span></span>
                 </div>
             </header>
 
@@ -156,8 +189,8 @@
     </div>
 
     <!-- MODAL IMPORT BẰNG LINK -->
-    <div id="wpImportModal" class="fixed inset-0 bg-slate-900/60 z-[9999] hidden items-center justify-center backdrop-blur-sm">
-        <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-[fadeUp_0.2s_ease]">
+    <div id="wpImportModal" class="fixed inset-0 bg-slate-900/60 z-[9999] hidden items-center justify-center backdrop-blur-sm p-3" onclick="if(event.target===this)closeWPModal()">
+        <div class="bg-white w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-2xl shadow-2xl flex flex-col animate-[fadeUp_0.2s_ease]">
             <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
                 <h3 class="font-bold text-slate-800 text-lg"><i class="fas fa-link text-blue-600 mr-2"></i> Nhập dữ liệu Bài Học</h3>
                 <button onclick="closeWPModal()" class="text-slate-400 hover:text-rose-500 text-xl"><i class="fas fa-times"></i></button>
@@ -171,7 +204,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4 border-b border-slate-100 pb-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 border-b border-slate-100 pb-4">
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">1. Ngành hàng</label>
                         <select id="wpDocIndustry" class="saas-input w-full font-bold text-blue-600">
@@ -221,8 +254,8 @@
     </div>
 
     <!-- MODAL TÓM TẮT BƯỚC -->
-    <div id="summaryModal" class="fixed inset-0 bg-slate-900/40 z-[9999] hidden items-center justify-center backdrop-blur-sm" onclick="closeSummaryModal()">
-        <div class="bg-white w-[500px] rounded-2xl shadow-2xl flex flex-col transform scale-95 transition-transform overflow-hidden" onclick="event.stopPropagation()">
+    <div id="summaryModal" class="fixed inset-0 bg-slate-900/40 z-[9999] hidden items-center justify-center backdrop-blur-sm p-3" onclick="closeSummaryModal()">
+        <div class="bg-white w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl flex flex-col transform scale-95 transition-transform" onclick="event.stopPropagation()">
             <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                 <h3 id="sumModalTitle" class="font-bold text-slate-800 text-lg flex items-center gap-2"><i class="fas fa-bolt text-amber-500"></i> <span id="sumModalTitleText">Tiêu đề</span></h3>
                 <button onclick="closeSummaryModal()" class="text-slate-400 hover:text-rose-500"><i class="fas fa-times"></i></button>
@@ -244,12 +277,20 @@
     </div>
 
     <script>
+        /* ==========================================================================
+           SƠ ĐỒ VẬN HÀNH (knowledge.html) — nâng cấp 28/11/2026
+           - Bảo mật: nội dung bài cào từ web được lọc sạch (bỏ script, sự kiện on*, link javascript:, iframe lạ,
+             id/class gây đè giao diện) trước khi hiển thị; mã bài không còn nhét vào onclick.
+           - Đồng bộ báo đúng lỗi Cloud (thiếu token, lỗi mạng…), lưu thời điểm đồng bộ gần nhất.
+           - Tìm không dấu trên toàn bộ sơ đồ, đếm số bài theo ngành / giai đoạn, lọc vai trò,
+             ghi nhớ vị trí đang xem (#nganh/giai-doan), nút Vừa khung / Toàn màn hình cho mindmap.
+           ========================================================================== */
         const INDUSTRIES = {
-            "retail": { title: "Cơ bản - Retail", icon: "fa-shopping-bag" },
-            "fnb": { title: "Chuyên ngành FNB", icon: "fa-utensils" },
-            "salon": { title: "Chuyên ngành Salon", icon: "fa-spa" },
-            "hotel": { title: "Chuyên ngành Hotel", icon: "fa-hotel" },
-            "tax": { title: "Kế toán - Thuế", icon: "fa-file-invoice-dollar" }
+            "retail": { title: "Cơ bản - Retail", short: "Retail", icon: "fa-shopping-bag" },
+            "fnb": { title: "Chuyên ngành FNB", short: "F&B", icon: "fa-utensils" },
+            "salon": { title: "Chuyên ngành Salon", short: "Salon", icon: "fa-spa" },
+            "hotel": { title: "Chuyên ngành Hotel", short: "Hotel", icon: "fa-hotel" },
+            "tax": { title: "Kế toán - Thuế", short: "Thuế", icon: "fa-file-invoice-dollar" }
         };
 
         const LIFECYCLES = {
@@ -260,11 +301,18 @@
             "reports": { title: "5. Báo cáo Phân tích", icon: "fa-chart-pie" }
         };
 
+        const DOCS_KEY = 'kv_wp_docs_v2';
+        const LAST_SYNC_KEY = 'kv_knowledge_last_sync';
+        const VIEW_KEY = 'kv_knowledge_view';
+        const DOC_FORMAT = 2; // tăng khi đổi cách lọc nội dung để dữ liệu cũ được xử lý lại
+
         let activeIndustry = "retail";
-        let activeKnowledgeNode = "setup"; 
+        let activeKnowledgeNode = "setup";
+        let activeRole = "all";
         let currentTargetDocId = null;
         let globalDocs = [];
         let knowledgeSearchQuery = "";
+        let mmInstance = null;
 
         function escapeHtml(str) {
             return String(str ?? '')
@@ -274,109 +322,247 @@
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
         }
+        // So khớp không dấu: "nhap hang" tìm ra "Nhập hàng"
+        function fold(s) {
+            return String(s ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd');
+        }
+        function domIdOf(id) { return 'd' + String(id ?? '').replace(/[^A-Za-z0-9_-]/g, '_'); }
+        function findDoc(id) { return globalDocs.find(d => String(d.id) === String(id)); }
 
-        function filterKnowledgeDocs(val) {
-            knowledgeSearchQuery = (val || '').trim().toLowerCase();
-            renderNodeDetail(activeKnowledgeNode);
-        } 
+        // ---------- LỌC NỘI DUNG BÀI CÀO TỪ WEB ----------
+        const SAFE_IFRAME_HOST = /^(www\.)?(youtube\.com|youtube-nocookie\.com|player\.vimeo\.com|drive\.google\.com|docs\.google\.com)$/i;
+        const DROP_TAGS = 'script,style,link,meta,base,title,object,embed,form,input,button,textarea,select,option,noscript,template,nav,footer,aside,svg,math,frame,frameset,applet,canvas,dialog';
+        const JUNK_SELECTORS = '[id*="comment"],[class*="comment"],[class*="breadcrumb"],[class*="sidebar"],[class*="widget"],[class*="share"],[class*="related"],[role="navigation"],[aria-hidden="true"]';
+        const KEEP_ATTRS = { '*': ['title'], a: ['href'], img: ['src', 'alt'], video: ['src', 'poster'], source: ['src', 'type'], td: ['colspan', 'rowspan'], th: ['colspan', 'rowspan'], ol: ['start'] };
 
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-collapsed'); }
-        function toggleAccordion(menuId, iconId) {
-            const menu = document.getElementById(menuId); const icon = document.getElementById(iconId);
-            if (menu.style.maxHeight && menu.style.maxHeight !== '0px') { menu.style.maxHeight = '0px'; icon.style.transform = 'rotate(0deg)'; } 
-            else { menu.style.maxHeight = menu.scrollHeight + 'px'; icon.style.transform = 'rotate(90deg)'; }
+        function safeLink(v, base) {
+            const raw = String(v || '').trim();
+            if (!raw || /^data:/i.test(raw)) return '';
+            try {
+                const u = new URL(raw, base || undefined);
+                return /^(https?:|mailto:|tel:)$/i.test(u.protocol) ? u.href : '';
+            } catch (e) { return ''; }
         }
 
-        const tooltip = document.getElementById('global-tooltip');
-        const tooltipText = document.getElementById('tooltip-text');
-        document.querySelectorAll('.nav-item[data-title]').forEach(item => {
-            item.addEventListener('mouseenter', (e) => {
-                if (document.getElementById('sidebar').classList.contains('sidebar-collapsed')) {
-                    const rect = item.getBoundingClientRect();
-                    tooltipText.innerText = item.getAttribute('data-title');
-                    tooltip.style.top = (rect.top + (rect.height / 2) - 14) + 'px'; 
-                    tooltip.style.left = (rect.right + 12) + 'px'; 
-                    tooltip.style.opacity = '1';
-                }
-            });
-            item.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; });
-        });
+        function sanitizeDocHtml(html, baseUrl) {
+            const parsed = new DOMParser().parseFromString(String(html || ''), 'text/html');
+            const root = parsed.querySelector('.entry-content, article, main, [role="main"]') || parsed.body;
+            root.querySelectorAll(DROP_TAGS).forEach(el => el.remove());
+            root.querySelectorAll(JUNK_SELECTORS).forEach(el => { if (el !== root) el.remove(); });
 
-        function showToast(msg) {
+            root.querySelectorAll('iframe').forEach(el => {
+                const src = safeLink(el.getAttribute('src') || el.getAttribute('data-src'), baseUrl);
+                let ok = false;
+                try { ok = !!src && /^https:/i.test(src) && SAFE_IFRAME_HOST.test(new URL(src).hostname); } catch (e) {}
+                if (!ok) { el.remove(); return; }
+                [...el.attributes].forEach(a => el.removeAttribute(a.name));
+                el.setAttribute('src', src);
+                el.setAttribute('loading', 'lazy');
+                el.setAttribute('allowfullscreen', '');
+                el.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+                el.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-popups');
+            });
+
+            root.querySelectorAll('*').forEach(el => {
+                const tag = el.tagName.toLowerCase();
+                if (tag === 'iframe') return;
+                // Ảnh WordPress lười tải: chuyển data-src thành src thật
+                if (tag === 'img') {
+                    const lazy = el.getAttribute('data-lazy-src') || el.getAttribute('data-src') || el.getAttribute('data-original');
+                    if (lazy && (!el.getAttribute('src') || /^data:/i.test(el.getAttribute('src')))) el.setAttribute('src', lazy);
+                }
+                const keep = (KEEP_ATTRS[tag] || []).concat(KEEP_ATTRS['*']);
+                [...el.attributes].forEach(a => {
+                    const n = a.name.toLowerCase();
+                    if (!keep.includes(n)) { el.removeAttribute(a.name); return; }
+                    if (n === 'href' || n === 'src' || n === 'poster') {
+                        const v = safeLink(a.value, baseUrl);
+                        if (v) el.setAttribute(a.name, v); else el.removeAttribute(a.name);
+                    }
+                });
+                if (tag === 'img') {
+                    if (!el.getAttribute('src')) { el.remove(); return; }
+                    el.setAttribute('loading', 'lazy');
+                    el.setAttribute('referrerpolicy', 'no-referrer');
+                }
+                if (tag === 'a' && el.getAttribute('href')) { el.setAttribute('target', '_blank'); el.setAttribute('rel', 'noopener noreferrer'); }
+                if (tag === 'video') el.setAttribute('controls', '');
+            });
+            return root.innerHTML.trim();
+        }
+
+        // Chuẩn hóa 1 dòng dữ liệu: lọc HTML, rút bước tóm tắt, tạo chữ không dấu để tìm kiếm
+        function prepareDoc(row) {
+            const url = String(row.url || '').trim();
+            const safe = sanitizeDocHtml(row.html || '', url) || '<p>Chưa có dữ liệu HTML</p>';
+            const plain = new DOMParser().parseFromString(safe, 'text/html').body.textContent.replace(/\s+/g, ' ').trim();
+            return {
+                id: String(row.id ?? ''),
+                industry: String(row.industry || 'retail').trim().toLowerCase(),
+                node: String(row.node || 'setup').trim().toLowerCase(),
+                role: String(row.role || 'Tất cả').trim() || 'Tất cả',
+                title: String(row.title || '(Chưa đặt tên)').trim(),
+                url,
+                html: safe,
+                summary: aiExtractStepsFromHTML(safe),
+                search: fold([row.title, row.role, plain].join(' ')),
+                fmt: DOC_FORMAT
+            };
+        }
+
+        async function loadDocs() {
+            let saved = [];
+            try { saved = (await localforage.getItem(DOCS_KEY)) || []; } catch (e) { saved = []; }
+            if (!Array.isArray(saved)) saved = [];
+            // Dữ liệu lưu từ bản cũ chưa được lọc: xử lý lại một lần rồi ghi đè
+            if (saved.some(d => d && d.fmt !== DOC_FORMAT)) {
+                saved = saved.filter(Boolean).map(d => d.fmt === DOC_FORMAT ? d : prepareDoc(d));
+                try { await localforage.setItem(DOCS_KEY, saved); } catch (e) {}
+            }
+            globalDocs = saved;
+        }
+
+        // ---------- THÔNG BÁO ----------
+        let toastTimer = null;
+        function showToast(msg, type) {
             const t = document.getElementById('toast');
-            if(!t) return;
-            document.getElementById('toast-msg').innerHTML = `<i class="fas fa-check-circle text-emerald-400 mr-2"></i> ${msg}`;
+            if (!t) return;
+            const isErr = type === 'error';
+            const box = document.getElementById('toast-msg');
+            box.textContent = '';
+            const ic = document.createElement('i');
+            ic.className = 'fas mr-2 ' + (isErr ? 'fa-exclamation-circle text-rose-400' : 'fa-check-circle text-emerald-400');
+            box.appendChild(ic);
+            box.appendChild(document.createTextNode(String(msg)));
             t.classList.replace('opacity-0', 'opacity-100');
             t.classList.remove('pointer-events-none');
-            setTimeout(() => {
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
                 t.classList.replace('opacity-100', 'opacity-0');
                 t.classList.add('pointer-events-none');
-            }, 3000);
+            }, isErr ? 6000 : 3000);
         }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-collapsed'); }
 
         function getApiUrl() { return (typeof getGlobalApiUrl === 'function' ? getGlobalApiUrl() : localStorage.getItem('kv_api_url')) || ""; }
         localforage.config({ name: 'TrainerOS_Database', storeName: 'ld_knowledge_base' });
 
-        async function syncFromGoogleSheets() {
-            const apiUrl = getApiUrl();
-            if(!apiUrl) return alert("Vui lòng vào Cài đặt để điền Link API Google Apps Script trước!");
-            
-            const icon = document.getElementById('syncIcon'); icon.classList.add('fa-spin');
-            
-            try {
-                let response = await fetch(apiUrl); 
-                let json = await response.json();
-                if(json.knowledge) {
-                    let newDocs = [];
-                    json.knowledge.forEach(row => {
-                        let summary = aiExtractStepsFromHTML(row.html || "");
-                        newDocs.push({ 
-                            id: row.id, 
-                            industry: row.industry || 'retail',
-                            node: row.node, 
-                            role: row.role || 'Tất cả',
-                            title: row.title, 
-                            url: row.url, 
-                            html: row.html || "<p>Chưa có dữ liệu HTML</p>", 
-                            summary: summary 
-                        });
-                    });
-                    await localforage.setItem('kv_wp_docs_v2', newDocs);
-                    globalDocs = newDocs;
-                    showToast("Đồng bộ dữ liệu 3D Matrix thành công!"); 
-                    renderNodeDetail(activeKnowledgeNode);
-                }
-            } catch (err) { alert("Lỗi khi kết nối đến Google Sheets!"); }
-            icon.classList.remove('fa-spin');
+        function friendlyError(err) {
+            const m = (err && err.message) || '';
+            if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'Không kết nối được Cloud. Kiểm tra mạng hoặc Link API trong Cài đặt.';
+            return m || 'Lỗi không xác định';
+        }
+        async function postApi(payload) {
+            const response = await fetch(getApiUrl(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (typeof window.ensureApiSuccess === 'function') return window.ensureApiSuccess(result);
+            if (!result || result.status !== 'success') throw new Error((result && result.message) || 'Cloud không xác nhận thành công');
+            return result;
         }
 
+        let syncing = false;
+        async function syncFromGoogleSheets() {
+            const apiUrl = getApiUrl();
+            if (!apiUrl) return showToast("Chưa có Link API. Vào Cài đặt > Kết nối Cloud để điền.", 'error');
+            if (syncing) return;
+            syncing = true;
+            const icon = document.getElementById('syncIcon');
+            if (icon) icon.classList.add('fa-spin');
+            try {
+                const response = await fetch(apiUrl);
+                const json = await response.json();
+                if (json && json.status === 'error') throw new Error(json.message || 'Cloud báo lỗi');
+                if (!json || !Array.isArray(json.knowledge)) throw new Error('Cloud không trả về danh sách bài học.');
+                const newDocs = json.knowledge.map(prepareDoc);
+                await localforage.setItem(DOCS_KEY, newDocs);
+                globalDocs = newDocs;
+                try { localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString()); } catch (e) {}
+                showToast(`Đã đồng bộ ${newDocs.length} bài học từ Google Sheets.`);
+                renderNodeDetail(activeKnowledgeNode);
+            } catch (err) {
+                showToast('Đồng bộ thất bại: ' + friendlyError(err), 'error');
+            } finally {
+                syncing = false;
+                if (icon) icon.classList.remove('fa-spin');
+            }
+        }
+
+        function lastSyncText() {
+            let iso = null;
+            try { iso = localStorage.getItem(LAST_SYNC_KEY); } catch (e) {}
+            if (!iso) return 'Chưa đồng bộ lần nào';
+            const d = new Date(iso);
+            if (isNaN(d)) return 'Chưa đồng bộ lần nào';
+            const p = n => String(n).padStart(2, '0');
+            return `Đồng bộ lần cuối ${p(d.getHours())}:${p(d.getMinutes())} ${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
+        }
+
+        // ---------- LỌC / ĐẾM ----------
+        function matchesSearch(d) {
+            if (!knowledgeSearchQuery) return true;
+            const hay = d.search || fold(d.title + ' ' + d.role);
+            return knowledgeSearchQuery.split(/\s+/).every(t => hay.includes(t));
+        }
+        function docsAt(ind, node) { return globalDocs.filter(d => d.industry === ind && d.node === node && matchesSearch(d)); }
+
+        let searchTimer = null;
+        function filterKnowledgeDocs(val) {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                knowledgeSearchQuery = fold(val).trim();
+                renderNodeDetail(activeKnowledgeNode);
+            }, 200);
+        }
+
+        // ---------- GHI NHỚ VỊ TRÍ ĐANG XEM ----------
+        function saveView() {
+            const hash = `#${activeIndustry}/${activeKnowledgeNode}`;
+            if (location.hash !== hash) history.replaceState(null, '', hash);
+            try { localStorage.setItem(VIEW_KEY, hash); } catch (e) {}
+        }
+        function restoreView() {
+            let src = location.hash;
+            if (!src) { try { src = localStorage.getItem(VIEW_KEY) || ''; } catch (e) { src = ''; } }
+            const [ind, node] = String(src).replace(/^#/, '').split('/');
+            if (INDUSTRIES[ind]) activeIndustry = ind;
+            if (LIFECYCLES[node]) activeKnowledgeNode = node;
+        }
+
+        // ---------- GIAO DIỆN ----------
         function renderUI() {
             const container = document.getElementById('main-tab-container');
-            
-            let industryTabsHtml = Object.keys(INDUSTRIES).map(ind => `
+
+            const industryTabsHtml = Object.keys(INDUSTRIES).map(ind => `
                 <button onclick="switchIndustry('${ind}')" id="ind-tab-${ind}" class="industry-pill ${ind === activeIndustry ? 'active' : ''}">
-                    <i class="fas ${INDUSTRIES[ind].icon}"></i> ${INDUSTRIES[ind].title}
+                    <i class="fas ${INDUSTRIES[ind].icon}"></i> <span class="hidden sm:inline">${INDUSTRIES[ind].title}</span><span class="sm:hidden">${INDUSTRIES[ind].short}</span>
+                    <span class="k-count" id="ind-count-${ind}">0</span>
                 </button>
             `).join('');
 
             container.innerHTML = `
-                <div class="mb-4 flex justify-between items-end">
-                    <div>
-                        <h2 class="text-2xl font-bold text-slate-800">Sơ đồ Kiến thức Vận hành 3D</h2>
-                        <p class="text-sm text-slate-500 mt-1">Matrix: Ngành Hàng ➔ Vòng Đời ➔ Vai trò</p>
+                <div class="mb-4 flex flex-wrap justify-between items-end gap-3">
+                    <div class="min-w-0">
+                        <h2 class="text-xl md:text-2xl font-bold text-slate-800">Sơ đồ Kiến thức Vận hành 3D</h2>
+                        <p class="text-sm text-slate-500 mt-1">Ngành hàng ➔ Vòng đời ➔ Vai trò · <span id="lastSyncLabel" class="text-slate-400">${escapeHtml(lastSyncText())}</span></p>
                     </div>
-                    <button onclick="openWPModal()" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition shadow-md"><i class="fas fa-plus mr-2"></i> Nhập Bài viết URL</button>
+                    <button onclick="openWPModal()" class="px-4 md:px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition shadow-md shrink-0"><i class="fas fa-plus mr-2"></i> Nhập Bài viết URL</button>
                 </div>
-                
-                <div class="flex flex-wrap gap-3 mb-6 bg-white p-3 rounded-2xl shadow-sm border border-slate-200">
+
+                <div id="industryPills" class="flex flex-wrap gap-3 mb-6 bg-white p-3 rounded-2xl shadow-sm border border-slate-200">
                     ${industryTabsHtml}
                 </div>
 
-                <div class="saas-card p-6 mb-6 overflow-x-auto custom-scrollbar bg-white">
-                    <div class="min-w-[800px] flex items-center justify-between relative">
+                <div id="lifecycleScroller" class="saas-card p-4 md:p-6 mb-6 overflow-x-auto custom-scrollbar bg-white">
+                    <div class="min-w-[660px] md:min-w-[800px] flex items-center justify-between gap-2 relative">
                         <div class="absolute top-1/2 left-10 right-10 h-1 bg-slate-200 -translate-y-1/2 z-0"></div>
                         ${Object.keys(LIFECYCLES).map(k => `
-                            <div id="node-${k}" onclick="renderNodeDetail('${k}')" class="k-node relative z-10 w-44 flex flex-col items-center gap-3 cursor-pointer group bg-white border-2 border-slate-200 rounded-xl p-3 transition-all">
+                            <div id="node-${k}" onclick="renderNodeDetail('${k}')" class="k-node relative z-10 w-32 md:w-44 flex flex-col items-center gap-2 md:gap-3 cursor-pointer group bg-white border-2 border-slate-200 rounded-xl p-3 transition-all">
+                                <span class="k-count absolute -top-2 -right-2" id="node-count-${k}">0</span>
                                 <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-purple-100 group-hover:text-purple-600 transition shadow-sm"><i class="fas ${LIFECYCLES[k].icon}"></i></div>
                                 <span class="text-[11px] font-bold text-slate-700 text-center leading-tight">${LIFECYCLES[k].title}</span>
                             </div>
@@ -385,121 +571,210 @@
                 </div>
                 <div id="knowledge-content" class="min-h-[400px]"></div>
             `;
-            setTimeout(() => renderNodeDetail(activeKnowledgeNode), 50);
+            document.getElementById('knowledge-content').addEventListener('click', onContentClick);
+            renderNodeDetail(activeKnowledgeNode);
         }
 
-        window.switchIndustry = function(ind) {
+        window.switchIndustry = function (ind) {
+            if (!INDUSTRIES[ind]) return;
             activeIndustry = ind;
-            document.querySelectorAll('.industry-pill').forEach(el => el.classList.remove('active'));
-            document.getElementById(`ind-tab-${ind}`).classList.add('active');
+            activeRole = 'all';
             renderNodeDetail(activeKnowledgeNode);
         };
 
-        window.renderNodeDetail = async function(nodeId) {
+        function updateCounts() {
+            Object.keys(INDUSTRIES).forEach(ind => {
+                const el = document.getElementById(`ind-count-${ind}`);
+                const n = globalDocs.filter(d => d.industry === ind && matchesSearch(d)).length;
+                if (el) { el.textContent = n; el.classList.toggle('zero', n === 0); }
+                const pill = document.getElementById(`ind-tab-${ind}`);
+                if (pill) pill.classList.toggle('active', ind === activeIndustry);
+            });
+            Object.keys(LIFECYCLES).forEach(k => {
+                const el = document.getElementById(`node-count-${k}`);
+                const n = docsAt(activeIndustry, k).length;
+                if (el) { el.textContent = n; el.classList.toggle('zero', n === 0); }
+            });
+            const docCountEl = document.getElementById('docCount');
+            if (docCountEl) docCountEl.innerText = globalDocs.length;
+        }
+
+        // Khi đang tìm: liệt kê chỗ khác trong sơ đồ cũng có kết quả
+        function elsewhereHtml() {
+            if (!knowledgeSearchQuery) return '';
+            const spots = [];
+            Object.keys(INDUSTRIES).forEach(ind => Object.keys(LIFECYCLES).forEach(node => {
+                if (ind === activeIndustry && node === activeKnowledgeNode) return;
+                const n = docsAt(ind, node).length;
+                if (n) spots.push({ ind, node, n });
+            }));
+            if (!spots.length) return '';
+            return `<div class="saas-card bg-white p-4 mb-4 flex flex-wrap items-center gap-2 text-xs">
+                <span class="font-bold text-slate-500"><i class="fas fa-search mr-1"></i> Cũng có kết quả ở:</span>
+                ${spots.map(s => `<button data-act="jump" data-ind="${s.ind}" data-node="${s.node}" class="px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-100 font-semibold hover:bg-purple-100">${INDUSTRIES[s.ind].short} › ${LIFECYCLES[s.node].title.split('. ')[1]} (${s.n})</button>`).join('')}
+            </div>`;
+        }
+
+        window.renderNodeDetail = function (nodeId) {
+            if (!LIFECYCLES[nodeId]) nodeId = 'setup';
+            if (nodeId !== activeKnowledgeNode) activeRole = 'all';
             activeKnowledgeNode = nodeId;
             document.querySelectorAll('.k-node').forEach(el => { el.classList.remove('ring-4', 'ring-purple-200', 'scale-105', 'border-purple-500'); el.classList.add('border-slate-200'); });
             const activeEl = document.getElementById(`node-${nodeId}`);
-            if(activeEl) { activeEl.classList.remove('border-slate-200'); activeEl.classList.add('ring-4', 'ring-purple-200', 'scale-105', 'border-purple-500'); }
+            if (activeEl) {
+                activeEl.classList.remove('border-slate-200'); activeEl.classList.add('ring-4', 'ring-purple-200', 'scale-105', 'border-purple-500');
+                const sc = document.getElementById('lifecycleScroller');
+                if (sc && sc.scrollWidth > sc.clientWidth) sc.scrollTo({ left: activeEl.offsetLeft - sc.clientWidth / 2 + activeEl.offsetWidth / 2, behavior: 'smooth' });
+            }
+            saveView();
+            updateCounts();
 
-            let savedDocs = await localforage.getItem('kv_wp_docs_v2');
-            globalDocs = savedDocs || [];
+            const stageDocs = docsAt(activeIndustry, activeKnowledgeNode);
+            const roles = [...new Set(stageDocs.map(d => d.role))].sort((a, b) => a.localeCompare(b, 'vi'));
+            if (activeRole !== 'all' && !roles.includes(activeRole)) activeRole = 'all';
+            const nodeDocs = activeRole === 'all' ? stageDocs : stageDocs.filter(d => d.role === activeRole);
 
-            const docCountEl = document.getElementById('docCount');
-            if(docCountEl) docCountEl.innerText = globalDocs.length;
+            const roleChips = roles.length > 1 ? `<div class="flex flex-wrap gap-2 mb-4">
+                ${['all'].concat(roles).map(r => `<button data-act="role" data-role="${escapeHtml(r)}" class="role-chip ${r === activeRole ? 'active' : ''}">${r === 'all' ? 'Tất cả vai trò' : escapeHtml(r)} <b>${r === 'all' ? stageDocs.length : stageDocs.filter(d => d.role === r).length}</b></button>`).join('')}
+            </div>` : '';
 
-            let nodeDocs = globalDocs.filter(d => {
-                const matchNode = d.industry === activeIndustry && d.node === activeKnowledgeNode;
-                if (!matchNode) return false;
-                if (!knowledgeSearchQuery) return true;
-                return String(d.title || '').toLowerCase().includes(knowledgeSearchQuery) ||
-                       String(d.role || '').toLowerCase().includes(knowledgeSearchQuery) ||
-                       String(d.html || '').toLowerCase().includes(knowledgeSearchQuery);
-            });
-            
-            let wpDocsHtml = nodeDocs.map((doc) => {
-                const safeId = escapeHtml(doc.id);
-                const safeUrl = (doc.url && /^https?:\/\//i.test(String(doc.url).trim())) ? escapeHtml(String(doc.url).trim()) : '';
+            const wpDocsHtml = nodeDocs.map(doc => {
+                const did = domIdOf(doc.id);
+                const idAttr = escapeHtml(doc.id);
+                const safeUrl = /^https?:\/\//i.test(doc.url || '') ? escapeHtml(doc.url) : '';
                 return `
-                <div id="doc-wrapper-${safeId}" class="mb-3 border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm doc-drag-wrapper">
-                    <div class="bg-slate-50 px-4 py-2 flex justify-between items-center group">
-                        <div class="flex items-center gap-3 flex-grow">
-                            <button onclick="openSummaryModal('${safeId}')" class="px-2 py-1 text-[10px] bg-amber-100 text-amber-600 font-bold rounded hover:bg-amber-200 transition shrink-0"><i class="fas fa-bolt"></i> Tóm tắt</button>
-                            <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[9px] font-bold rounded uppercase tracking-wider">${escapeHtml(doc.role)}</span>
-                            <h4 class="font-bold text-slate-700 text-[13px] flex items-center gap-2 cursor-pointer hover:text-blue-600" onclick="document.getElementById('doc-${safeId}').classList.toggle('hidden')">
-                                <i class="fab fa-wordpress text-blue-500"></i> ${escapeHtml(doc.title)}
+                <div id="doc-wrapper-${did}" class="mb-3 border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                    <div class="bg-slate-50 px-3 md:px-4 py-2 flex flex-wrap md:flex-nowrap justify-between items-center gap-2">
+                        <div class="flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-3 flex-grow min-w-0">
+                            <button data-act="summary" data-id="${idAttr}" class="px-2 py-1 text-[10px] bg-amber-100 text-amber-600 font-bold rounded hover:bg-amber-200 transition shrink-0"><i class="fas fa-bolt"></i> Tóm tắt</button>
+                            <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[9px] font-bold rounded uppercase tracking-wider shrink-0">${escapeHtml(doc.role)}</span>
+                            <h4 data-act="toggle" data-id="${idAttr}" class="font-bold text-slate-700 text-[13px] flex items-center gap-2 cursor-pointer hover:text-blue-600 min-w-0">
+                                <i class="fab fa-wordpress text-blue-500 shrink-0"></i> <span class="truncate">${escapeHtml(doc.title)}</span>
                             </h4>
-                            ${safeUrl ? `<a href="${safeUrl}" target="_blank" class="text-[10px] text-slate-400 hover:text-blue-500"><i class="fas fa-external-link-alt"></i></a>` : ''}
+                            ${safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-[10px] text-slate-400 hover:text-blue-500 shrink-0" title="Mở bài gốc"><i class="fas fa-external-link-alt"></i></a>` : ''}
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button onclick="deleteDocViaAPI('${safeId}')" class="text-xs text-rose-500 hover:bg-rose-50 px-2 py-1 rounded transition"><i class="fas fa-trash"></i></button>
-                            <i class="fas fa-chevron-down text-slate-400 cursor-pointer p-1.5 hover:bg-slate-200 rounded-md" onclick="document.getElementById('doc-${safeId}').classList.toggle('hidden')"></i>
+                        <div class="flex items-center gap-1 ml-auto shrink-0">
+                            <button data-act="delete" data-id="${idAttr}" class="text-xs text-rose-500 hover:bg-rose-50 px-2 py-1 rounded transition" title="Xóa khỏi Google Sheets"><i class="fas fa-trash"></i></button>
+                            <button data-act="toggle" data-id="${idAttr}" class="text-slate-400 p-1.5 hover:bg-slate-200 rounded-md" title="Mở / thu gọn"><i class="fas fa-chevron-down"></i></button>
                         </div>
                     </div>
-                    <div id="doc-${safeId}" class="p-5 wp-content overflow-x-auto text-[13px] leading-relaxed text-slate-700 hidden bg-white border-t border-slate-100">${doc.html}</div>
-                </div>
-            `}).join('');
+                    <div id="doc-${did}" class="p-4 md:p-5 wp-content overflow-x-auto text-[13px] leading-relaxed text-slate-700 hidden bg-white border-t border-slate-100"></div>
+                </div>`;
+            }).join('');
+
+            const emptyMsg = !globalDocs.length
+                ? 'Chưa có dữ liệu trên máy này. Bấm "Đồng bộ với Google Sheets" ở trên để tải bài học.'
+                : knowledgeSearchQuery ? 'Không có bài nào khớp từ khóa ở giai đoạn này.' : 'Chưa có bài học nào cho giai đoạn này. Bấm "Nhập Bài viết URL" ở trên.';
 
             document.getElementById('knowledge-content').innerHTML = `
-                <div class="saas-card bg-white mb-6 shadow-sm overflow-hidden border-b-4 border-b-purple-500">
-                    <div class="px-6 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider"><i class="fas fa-sitemap mr-1"></i> Sơ đồ Phân quyền Vai Trò (AI Mindmap)</p>
+                ${elsewhereHtml()}
+                <div id="mindmapCard" class="saas-card bg-white mb-6 shadow-sm overflow-hidden border-b-4 border-b-purple-500 flex flex-col">
+                    <div class="px-4 md:px-6 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center gap-2">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider truncate"><i class="fas fa-sitemap mr-1"></i> Sơ đồ Vai trò (Mindmap)</p>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <button data-act="mm-fit" class="btn-outline !px-2.5" title="Vừa khung"><i class="fas fa-compress-arrows-alt"></i><span class="hidden sm:inline ml-1">Vừa khung</span></button>
+                            <button data-act="mm-full" class="btn-outline !px-2.5" title="Toàn màn hình"><i class="fas fa-expand"></i><span class="hidden sm:inline ml-1">Toàn màn hình</span></button>
+                        </div>
                     </div>
-                    <div class="w-full h-[600px] bg-[#f8fafc] relative p-4"><svg id="markmap-svg"></svg></div>
+                    <div class="mm-box w-full bg-[#f8fafc] relative p-2 md:p-4"><svg id="markmap-svg"></svg></div>
                 </div>
-                <div class="saas-card p-6 bg-white mb-10">
-                    <h3 class="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wider"><i class="fas fa-database text-blue-600 mr-2"></i> Tài liệu Gốc (Đồng bộ từ Google Sheets)</h3>
-                    ${wpDocsHtml || '<div class="text-center text-slate-400 text-xs italic py-10 border-2 border-dashed rounded-xl">Chưa có bài học nào cho giai đoạn này. Bấm nút Nhập Bài viết bằng Link URL ở trên.</div>'}
+                <div class="saas-card p-4 md:p-6 bg-white mb-10">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider"><i class="fas fa-database text-blue-600 mr-2"></i> Tài liệu Gốc <span class="text-slate-400 normal-case font-semibold">(${nodeDocs.length} bài)</span></h3>
+                        ${nodeDocs.length > 1 ? `<div class="flex gap-1.5"><button data-act="open-all" class="btn-outline">Mở tất cả</button><button data-act="close-all" class="btn-outline">Thu gọn</button></div>` : ''}
+                    </div>
+                    ${roleChips}
+                    ${wpDocsHtml || `<div class="text-center text-slate-400 text-xs italic py-10 px-4 border-2 border-dashed rounded-xl">${emptyMsg}</div>`}
                 </div>
             `;
-            setTimeout(() => renderAutoMindmap(activeKnowledgeNode, nodeDocs), 50);
+            setTimeout(() => renderAutoMindmap(activeKnowledgeNode, nodeDocs), 30);
         };
 
-        function renderAutoMindmap(nodeId, nodeDocs) {
-            try {
-                const { Transformer, Markmap } = window.markmap; 
-                const transformer = new Transformer(); 
-                const rootTitle = `${INDUSTRIES[activeIndustry].title} - ${LIFECYCLES[nodeId].title.split('. ')[1]}`;
-                let mdContent = `# ${rootTitle}\n`;
-                
-                if(nodeDocs.length === 0) { mdContent += `## (Trống)\n`; } 
-                else {
-                    let roleGroups = {};
-                    nodeDocs.forEach(doc => {
-                        let r = doc.role || 'Tất cả';
-                        if(!roleGroups[r]) roleGroups[r] = [];
-                        roleGroups[r].push(doc);
-                    });
+        // Mở / đóng nội dung bài: chỉ chèn HTML (đã lọc) khi mở lần đầu cho nhẹ trang
+        function setDocOpen(id, open) {
+            const doc = findDoc(id);
+            const body = document.getElementById('doc-' + domIdOf(id));
+            if (!doc || !body) return;
+            const willOpen = open === undefined ? body.classList.contains('hidden') : open;
+            if (willOpen && !body.dataset.filled) { body.innerHTML = doc.html || ''; body.dataset.filled = '1'; }
+            body.classList.toggle('hidden', !willOpen);
+        }
 
-                    for(let r in roleGroups) {
-                        mdContent += `## 👤 Vai trò: ${r}\n`;
+        function onContentClick(e) {
+            const el = e.target.closest('[data-act]');
+            if (!el) return;
+            const act = el.dataset.act, id = el.dataset.id;
+            if (act === 'toggle') setDocOpen(id);
+            else if (act === 'summary') openSummaryModal(id);
+            else if (act === 'delete') deleteDocViaAPI(id);
+            else if (act === 'role') { activeRole = el.dataset.role; renderNodeDetail(activeKnowledgeNode); }
+            else if (act === 'jump') { activeIndustry = el.dataset.ind; activeRole = 'all'; renderNodeDetail(el.dataset.node); }
+            else if (act === 'open-all' || act === 'close-all') document.querySelectorAll('#knowledge-content [id^="doc-wrapper-"] h4[data-id]').forEach(h => setDocOpen(h.dataset.id, act === 'open-all'));
+            else if (act === 'mm-fit') { if (mmInstance) mmInstance.fit(); }
+            else if (act === 'mm-full') toggleMindmapFullscreen();
+        }
+
+        function toggleMindmapFullscreen() {
+            const card = document.getElementById('mindmapCard');
+            if (!card) return;
+            if (document.fullscreenElement) document.exitFullscreen();
+            else if (card.requestFullscreen) card.requestFullscreen().catch(() => card.classList.toggle('mm-pseudo-full'));
+            else card.classList.toggle('mm-pseudo-full');
+            setTimeout(() => { if (mmInstance) mmInstance.fit(); }, 300);
+        }
+        document.addEventListener('fullscreenchange', () => setTimeout(() => { if (mmInstance) mmInstance.fit(); }, 200));
+
+        // Chữ đưa vào mindmap (markdown): bỏ ký tự đặc biệt để tiêu đề lạ không thành HTML / định dạng
+        function mdText(s) {
+            return String(s ?? '').replace(/[\r\n]+/g, ' ')
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/([\\`*_\[\]#|~])/g, '\\$1').trim();
+        }
+
+        function renderAutoMindmap(nodeId, nodeDocs) {
+            mmInstance = null;
+            try {
+                if (!window.markmap || !window.markmap.Transformer) throw new Error('Thư viện mindmap chưa tải được');
+                const { Transformer, Markmap } = window.markmap;
+                const transformer = new Transformer();
+                const rootTitle = `${INDUSTRIES[activeIndustry].title} - ${LIFECYCLES[nodeId].title.split('. ')[1]}`;
+                let mdContent = `# ${mdText(rootTitle)}\n`;
+
+                if (nodeDocs.length === 0) { mdContent += `## (Trống)\n`; }
+                else {
+                    const roleGroups = {};
+                    nodeDocs.forEach(doc => { (roleGroups[doc.role || 'Tất cả'] = roleGroups[doc.role || 'Tất cả'] || []).push(doc); });
+                    for (const r in roleGroups) {
+                        mdContent += `## 👤 Vai trò: ${mdText(r)}\n`;
                         roleGroups[r].forEach(doc => {
-                            mdContent += `### ${doc.title.replace(/\n/g, ' ')}\n`;
-                            if(Array.isArray(doc.summary) && doc.summary.length > 0) {
-                                doc.summary.forEach(item => {
-                                    if(item.type === 'note') mdContent += `#### 🌟 LƯU Ý: ${item.text.replace(/\n/g, ' ')}\n`;
-                                    else mdContent += `#### ${item.text.replace(/\n/g, ' ')}\n`;
-                                });
-                            }
+                            mdContent += `### ${mdText(doc.title)}\n`;
+                            (Array.isArray(doc.summary) ? doc.summary : []).forEach(item => {
+                                mdContent += item.type === 'note' ? `#### 🌟 LƯU Ý: ${mdText(item.text)}\n` : `#### ${mdText(item.text)}\n`;
+                            });
                         });
                     }
                 }
-                const { root } = transformer.transform(mdContent); 
+                const { root } = transformer.transform(mdContent);
                 const svgEl = document.querySelector('#markmap-svg');
-                if(svgEl) {
-                    svgEl.innerHTML = ''; 
-                    Markmap.create(svgEl, { autoFit: true, fitRatio: 0.9, spacingHorizontal: 80, spacingVertical: 15, maxWidth: 300 }, root);
-                    setTimeout(() => {
-                        d3.selectAll('#markmap-svg .markmap-node').each(function(d) {
-                            const node = d3.select(this); 
-                            if(d.depth === 0) { node.classed('markmap-node-root', true); } 
-                            else if (d.depth === 1) { node.classed('markmap-node-level-1', true); } 
-                            else if (d.depth === 2) { node.classed('markmap-node-level-2', true); }
-                            else { if(d.content.includes('🌟 LƯU Ý:')) node.classed('markmap-node-note', true); else node.classed('markmap-node-level-3', true); }
-                        });
-                        d3.selectAll('.markmap-link').style('stroke', '#cbd5e1').style('stroke-width', '2px');
-                    }, 200); 
-                }
-            } catch (error) { console.error(error); }
+                if (!svgEl) return;
+                svgEl.innerHTML = '';
+                mmInstance = Markmap.create(svgEl, { autoFit: true, fitRatio: 0.9, spacingHorizontal: 80, spacingVertical: 15, maxWidth: 300 }, root);
+                setTimeout(() => {
+                    d3.selectAll('#markmap-svg .markmap-node').each(function (d) {
+                        const node = d3.select(this);
+                        if (d.depth === 0) node.classed('markmap-node-root', true);
+                        else if (d.depth === 1) node.classed('markmap-node-level-1', true);
+                        else if (d.depth === 2) node.classed('markmap-node-level-2', true);
+                        else if (String(d.content || '').includes('🌟 LƯU Ý:')) node.classed('markmap-node-note', true);
+                        else node.classed('markmap-node-level-3', true);
+                    });
+                    d3.selectAll('.markmap-link').style('stroke', '#cbd5e1').style('stroke-width', '2px');
+                }, 200);
+            } catch (error) {
+                console.error(error);
+                const box = document.querySelector('#mindmapCard .mm-box');
+                if (box) box.innerHTML = '<div class="h-full flex items-center justify-center text-xs text-slate-400 italic">Không vẽ được mindmap (mất kết nối thư viện). Danh sách tài liệu bên dưới vẫn dùng được.</div>';
+            }
         }
 
         function aiExtractStepsFromHTML(html) {
@@ -507,137 +782,132 @@
             const parsedDoc = parser.parseFromString(html || "", "text/html");
             let tempDiv = parsedDoc.body;
             let results = [];
-            tempDiv.querySelectorAll('h2, h3, h4').forEach(h => { 
-                let t = h.textContent.toLowerCase(); 
-                if(t.includes('giới thiệu') || t.includes('lợi ích') || t.includes('tổng quan')) { 
-                    let next = h.nextElementSibling; 
-                    while(next && !next.tagName.match(/^H[1-6]$/)) { 
-                        let toDelete = next; next = next.nextElementSibling; toDelete.remove(); 
-                    } 
-                    h.remove(); 
-                } 
+            tempDiv.querySelectorAll('h2, h3, h4').forEach(h => {
+                let t = h.textContent.toLowerCase();
+                if (t.includes('giới thiệu') || t.includes('lợi ích') || t.includes('tổng quan')) {
+                    let next = h.nextElementSibling;
+                    while (next && !next.tagName.match(/^H[1-6]$/)) {
+                        let toDelete = next; next = next.nextElementSibling; toDelete.remove();
+                    }
+                    h.remove();
+                }
             });
             tempDiv.querySelectorAll('ol > li, ul > li, p > strong').forEach(el => {
                 let text = el.textContent.replace(/\s+/g, ' ').trim();
                 text = text.replace(/^(Tình huống|Thao tác( thực hiện)?( như sau)?|Mục đích|Để|Từ|Tại|Sau đó|Tiếp theo|Bạn cần( phải)?|Hệ thống sẽ|Vui lòng):?\s*/i, '').replace(/^(Bấm|Nhấn) (vào )?(nút|mục|tab)\s+/i, 'Chọn ').trim();
-                if(text.length > 0) text = text.charAt(0).toUpperCase() + text.slice(1);
-                if(text.length > 5) {
-                    if(text.toLowerCase().includes('lưu ý:') || text.toLowerCase().includes('chú ý:')) {
+                if (text.length > 0) text = text.charAt(0).toUpperCase() + text.slice(1);
+                if (text.length > 5) {
+                    if (text.toLowerCase().includes('lưu ý:') || text.toLowerCase().includes('chú ý:')) {
                         let parts = text.split(/lưu ý:|chú ý:/i);
-                        if(parts[0].trim().length > 5) results.push({ type: 'step', text: parts[0].trim() });
-                        if(parts[1] && parts[1].trim().length > 5) results.push({ type: 'note', text: parts[1].trim() });
+                        if (parts[0].trim().length > 5) results.push({ type: 'step', text: parts[0].trim() });
+                        if (parts[1] && parts[1].trim().length > 5) results.push({ type: 'note', text: parts[1].trim() });
                     } else {
                         let firstClause = text.split(/[.;]|\.(?=\s)/)[0].trim();
-                        if(el.tagName === 'LI' || el.tagName === 'STRONG') results.push({ type: 'step', text: firstClause });
+                        if (el.tagName === 'LI' || el.tagName === 'STRONG') results.push({ type: 'step', text: firstClause });
                     }
                 }
             });
             let uniqueResults = []; let seenText = new Set();
-            for(let item of results) { if(!seenText.has(item.text)) { seenText.add(item.text); uniqueResults.push(item); } }
+            for (let item of results) { if (!seenText.has(item.text)) { seenText.add(item.text); uniqueResults.push(item); } }
             return uniqueResults.slice(0, 10);
         }
 
-        function openWPModal() { 
+        function openWPModal() {
             document.getElementById('wpDocIndustry').value = activeIndustry;
             document.getElementById('wpDocNode').value = activeKnowledgeNode;
-            document.getElementById('wpImportModal').classList.remove('hidden'); 
-            document.getElementById('wpImportModal').classList.add('flex'); 
-            document.getElementById('aiLoadingOverlay').classList.add('hidden'); 
+            document.getElementById('wpImportModal').classList.remove('hidden');
+            document.getElementById('wpImportModal').classList.add('flex');
+            document.getElementById('aiLoadingOverlay').classList.add('hidden');
+            setTimeout(() => document.getElementById('wpDocTitle').focus(), 50);
         }
-        function closeWPModal() { 
-            document.getElementById('wpImportModal').classList.add('hidden'); 
-            document.getElementById('wpImportModal').classList.remove('flex'); 
+        function closeWPModal() {
+            document.getElementById('wpImportModal').classList.add('hidden');
+            document.getElementById('wpImportModal').classList.remove('flex');
         }
-        
+
+        let saving = false;
         async function saveDocViaAPI() {
-            const apiUrl = getApiUrl();
-            if(!apiUrl) return alert("Vui lòng vào Cài đặt để dán Link API Google Sheets trước!");
-            
+            if (!getApiUrl()) return showToast("Chưa có Link API. Vào Cài đặt > Kết nối Cloud để điền.", 'error');
+            if (saving) return;
+
             const industry = document.getElementById('wpDocIndustry').value;
-            const node = document.getElementById('wpDocNode').value; 
+            const node = document.getElementById('wpDocNode').value;
             const role = document.getElementById('wpDocRole').value;
-            const title = document.getElementById('wpDocTitle').value.trim(); 
+            const title = document.getElementById('wpDocTitle').value.trim();
             const url = document.getElementById('wpDocUrl').value.trim();
 
-            if(!title || !url) return alert("Vui lòng nhập Tên bài và Link URL WordPress!");
-            
-            document.getElementById('aiLoadingOverlay').classList.remove('hidden'); 
-            document.getElementById('aiLoadingOverlay').classList.add('flex');
+            if (!title || !url) return showToast("Vui lòng nhập Tên bài và Link bài viết.", 'error');
+            if (!/^https?:\/\/[^\s]+$/i.test(url)) return showToast("Link phải bắt đầu bằng http:// hoặc https://", 'error');
 
+            saving = true;
+            const overlay = document.getElementById('aiLoadingOverlay');
+            overlay.classList.remove('hidden'); overlay.classList.add('flex');
             try {
-                let response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: "add_knowledge", industry: industry, node: node, role: role, title: title, url: url })
-                });
-                let result = await response.json();
-                if(result.status === "success") { 
-                    closeWPModal(); 
-                    await syncFromGoogleSheets(); 
-                } else {
-                    alert("Lỗi từ Server: " + (result.message || "Không xác định"));
-                }
-            } catch (err) { 
-                alert("Lỗi đẩy lên Sheet!"); 
+                await postApi({ action: "add_knowledge", industry, node, role, title, url });
+                closeWPModal();
+                document.getElementById('wpDocTitle').value = '';
+                document.getElementById('wpDocUrl').value = '';
+                activeIndustry = industry; activeKnowledgeNode = node;
+                await syncFromGoogleSheets();
+            } catch (err) {
+                showToast('Không thêm được bài: ' + friendlyError(err), 'error');
             } finally {
-                document.getElementById('aiLoadingOverlay').classList.add('hidden');
-                document.getElementById('aiLoadingOverlay').classList.remove('flex');
+                saving = false;
+                overlay.classList.add('hidden'); overlay.classList.remove('flex');
             }
         }
 
         async function deleteDocViaAPI(docId) {
-            const apiUrl = getApiUrl();
-            if(!apiUrl) return alert("Vui lòng vào Cài đặt để dán Link API Google Sheets trước!");
-
-            if(!confirm("Bạn có chắc chắn muốn xóa bài học này khỏi Google Sheets?")) return;
+            if (!getApiUrl()) return showToast("Chưa có Link API. Vào Cài đặt > Kết nối Cloud để điền.", 'error');
+            const doc = findDoc(docId);
+            if (!confirm(`Xóa bài "${doc ? doc.title : docId}" khỏi Google Sheets?`)) return;
             try {
-                let response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: "delete_knowledge", id: docId })
-                });
-                let result = await response.json();
-                if(result.status === "success") { 
-                    await syncFromGoogleSheets(); 
-                }
-            } catch (err) { alert("Lỗi khi xóa!"); }
+                await postApi({ action: "delete_knowledge", id: docId });
+                showToast('Đã xóa bài học.');
+                await syncFromGoogleSheets();
+            } catch (err) { showToast('Không xóa được: ' + friendlyError(err), 'error'); }
         }
 
         function openSummaryModal(docId) {
-            let doc = globalDocs.find(d => String(d.id) === String(docId));
-            if(doc) {
-                currentTargetDocId = doc.id; 
-                document.getElementById('sumModalTitleText').innerText = doc.title;
-                let stepsHtml = '';
-                if(Array.isArray(doc.summary) && doc.summary.length > 0) {
-                    stepsHtml = doc.summary.map((step, idx) => `<div class="flex items-start gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100"><div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">${idx + 1}</div><span class="text-sm text-slate-700 font-medium leading-relaxed">${escapeHtml(step.text)}</span></div>`).join('');
-                } else { stepsHtml = `<div class="text-sm text-slate-500 italic p-3">Tài liệu không có cấu trúc chuẩn. Bot không phân tích được.</div>`; }
-                document.getElementById('sumModalContent').innerHTML = stepsHtml;
-                document.getElementById('summaryModal').classList.remove('hidden'); 
-                document.getElementById('summaryModal').classList.add('flex'); 
-                document.querySelector('#summaryModal > div').classList.remove('scale-95'); 
-                document.querySelector('#summaryModal > div').classList.add('scale-100');
-            }
+            const doc = findDoc(docId);
+            if (!doc) return;
+            currentTargetDocId = doc.id;
+            document.getElementById('sumModalTitleText').innerText = doc.title;
+            let stepsHtml = '';
+            if (Array.isArray(doc.summary) && doc.summary.length > 0) {
+                stepsHtml = doc.summary.map((step, idx) => `<div class="flex items-start gap-3 ${step.type === 'note' ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-100'} p-3 rounded-lg border"><div class="w-6 h-6 rounded-full ${step.type === 'note' ? 'bg-amber-200 text-amber-700' : 'bg-blue-100 text-blue-600'} flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">${step.type === 'note' ? '!' : idx + 1}</div><span class="text-sm text-slate-700 font-medium leading-relaxed">${escapeHtml(step.text)}</span></div>`).join('');
+            } else { stepsHtml = `<div class="text-sm text-slate-500 italic p-3">Tài liệu không có cấu trúc chuẩn nên chưa rút được các bước.</div>`; }
+            document.getElementById('sumModalContent').innerHTML = stepsHtml;
+            const m = document.getElementById('summaryModal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+            document.querySelector('#summaryModal > div').classList.remove('scale-95');
+            document.querySelector('#summaryModal > div').classList.add('scale-100');
         }
-        function closeSummaryModal() { 
+        function closeSummaryModal() {
             document.getElementById('summaryModal').classList.add('hidden');
             document.getElementById('summaryModal').classList.remove('flex');
             document.querySelector('#summaryModal > div').classList.remove('scale-100');
-            document.querySelector('#summaryModal > div').classList.add('scale-95'); 
+            document.querySelector('#summaryModal > div').classList.add('scale-95');
         }
-        function scrollToDoc() { 
-            closeSummaryModal(); 
-            if(currentTargetDocId) { 
-                const targetEl = document.getElementById(`doc-wrapper-${currentTargetDocId}`); 
-                const contentEl = document.getElementById(`doc-${currentTargetDocId}`); 
-                if(targetEl) { 
-                    contentEl.classList.remove('hidden'); 
-                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); 
-                    targetEl.classList.add('ring-4', 'ring-purple-300'); 
-                    setTimeout(() => targetEl.classList.remove('ring-4', 'ring-purple-300'), 1500); 
-                } 
-            } 
+        function scrollToDoc() {
+            closeSummaryModal();
+            if (currentTargetDocId == null) return;
+            const did = domIdOf(currentTargetDocId);
+            const targetEl = document.getElementById(`doc-wrapper-${did}`);
+            if (!targetEl) return;
+            setDocOpen(currentTargetDocId, true);
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            targetEl.classList.add('ring-4', 'ring-purple-300');
+            setTimeout(() => targetEl.classList.remove('ring-4', 'ring-purple-300'), 1500);
         }
+
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Escape') return;
+            if (!document.getElementById('summaryModal').classList.contains('hidden')) closeSummaryModal();
+            else if (!document.getElementById('wpImportModal').classList.contains('hidden')) closeWPModal();
+            else document.getElementById('mindmapCard')?.classList.remove('mm-pseudo-full');
+        });
+        window.addEventListener('hashchange', () => { restoreView(); activeRole = 'all'; renderNodeDetail(activeKnowledgeNode); });
 
         // --- WHITEBOARD FABRIC.JS ---
         let fCanvas = null;
@@ -751,10 +1021,19 @@
                 setTimeout(initFabric, 300); 
             }
         }
+        // Bảng vẽ co giãn theo cửa sổ
+        window.addEventListener('resize', () => {
+            if (!fCanvas) return;
+            const wrapper = document.getElementById('drawArea');
+            if (!wrapper || !wrapper.clientWidth) return;
+            fCanvas.setWidth(wrapper.clientWidth); fCanvas.setHeight(wrapper.clientHeight); fCanvas.renderAll();
+        });
 
-        window.onload = () => { 
+        window.onload = async () => {
             // Profile is automatically hydrated by sidebar-nav.js
-            renderUI(); 
+            restoreView();
+            await loadDocs();
+            renderUI();
         };
     </script>
     <script src="sop-drawer.js"></script>
