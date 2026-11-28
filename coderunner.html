@@ -8,6 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- CodeMirror 5 (tô màu cú pháp, số dòng, tìm/thay). JS được nạp động trong initCodeEditor(); lỗi CDN thì dùng textarea thường -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.css" rel="stylesheet">
 
     <style>
         html { scroll-behavior: smooth; }
@@ -224,6 +228,39 @@
         .device-frame.fullscreen-active { margin: 0 !important; }
         #btnFit.active { background-color: #2563eb; color: #ffffff; }
 
+        /* CODEMIRROR: phủ kín vùng editor, màu nền theo giao diện tối hiện tại */
+        .cr-editor-host .CodeMirror { position: absolute; inset: 0; height: auto; font-family: 'Fira Code', monospace; font-size: 13px; line-height: 1.65; background: #0f172a; color: #e2e8f0; }
+        .cr-editor-host .CodeMirror-gutters { background: #0f172a; border-right: 1px solid #1e293b; }
+        .cr-editor-host .CodeMirror-linenumber { color: #475569; }
+        .cr-editor-host .CodeMirror-lines { padding: 12px 0; }
+        .cr-editor-host .CodeMirror pre.CodeMirror-line, .cr-editor-host .CodeMirror pre.CodeMirror-line-like { padding: 0 12px; }
+        .cr-editor-host .CodeMirror-cursor { border-left-color: #e2e8f0; }
+        .cr-editor-host .CodeMirror-placeholder { color: #64748b !important; }
+        .cr-editor-host .CodeMirror-matchingbracket { color: #22d3ee !important; text-decoration: underline; }
+        .cr-editor-host .cm-searching { background: rgba(250, 204, 21, 0.3); }
+        .cr-editor-host .CodeMirror-dialog { background: #1e293b; color: #cbd5e1; font-family: 'Inter', sans-serif; font-size: 12px; padding: 6px 12px; }
+        .cr-editor-host .CodeMirror-dialog-top { border-bottom: 1px solid #334155; }
+        .cr-editor-host .CodeMirror-dialog input { color: #ffffff; font-family: 'Fira Code', monospace; }
+        .cr-editor-host .CodeMirror-dialog button { color: #e2e8f0; background: #334155; border: 1px solid #475569; border-radius: 4px; padding: 0 6px; margin-left: 4px; }
+        .cr-editor-host .CodeMirror-dialog .CodeMirror-search-hint { color: #64748b; }
+        .cr-line-flash { background: rgba(244, 63, 94, 0.2); }
+
+        /* Công tắc "Tự chạy" */
+        .cr-switch { position: relative; display: inline-block; width: 24px; height: 14px; border-radius: 999px; background: #334155; transition: background 0.2s; flex-shrink: 0; }
+        .cr-switch > span { position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; transition: transform 0.2s, background 0.2s; }
+        #btnAutoRun[aria-checked="true"] .cr-switch { background: #0891b2; }
+        #btnAutoRun[aria-checked="true"] .cr-switch > span { transform: translateX(10px); background: #ffffff; }
+
+        /* Menu "…": mục chỉ dành cho điện thoại (trên màn rộng các nút này đã hiện sẵn ở thanh công cụ) */
+        .cr-sm-only { display: none; }
+        .cr-menu-item { display: flex; width: 100%; align-items: center; gap: 8px; padding: 8px 12px; text-align: left; color: #cbd5e1; font-weight: 600; white-space: nowrap; }
+        .cr-menu-item:hover { background: #1e293b; color: #ffffff; }
+        .cr-console-link { cursor: pointer; }
+        .cr-console-link:hover { background: rgba(30, 41, 59, 0.7); }
+
+        /* Màn hẹp hơn 1600px: ẩn dòng gợi ý phím tắt, nút phụ chỉ còn icon (tên nằm trong title) */
+        @media (max-width: 1599px) { .cr-hint, .cr-lbl { display: none !important; } }
+
         /* ============ MÀN VỪA + ĐIỆN THOẠI (< 1024px) ============ */
         @media (max-width: 1023px) {
             .cr-subtitle, .cr-hide-md { display: none !important; }
@@ -277,6 +314,7 @@
             .cr-console-head { padding-left: 12px !important; padding-right: 12px !important; }
             .viewport-wrapper { padding: 10px; }
             .code-textarea { font-size: 13px; padding: 12px !important; }
+            .cr-sm-only { display: flex !important; }
         }
 
         /* ============ MÀN CẢM ỨNG: nút đủ lớn để bấm (>= 36px) ============ */
@@ -336,7 +374,7 @@
                 <!-- CỘT TRÁI: CODE EDITOR VỚI CONSOLE LOGS -->
                 <div class="editor-pane" id="editorPane">
                     <!-- Toolbar Editor -->
-                    <div class="cr-toolbar px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
+                    <div class="cr-toolbar px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex flex-wrap gap-x-2 gap-y-1.5 items-center justify-between shrink-0">
                         <div class="cr-toolbar-info flex items-center gap-2 text-xs font-mono-code">
                             <span class="text-slate-400 font-bold uppercase flex items-center gap-1.5">
                                 <i class="fas fa-code text-cyan-400"></i> INDEX.HTML
@@ -344,15 +382,46 @@
                             <span id="charCount" class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700">0 chars</span>
                             <!-- Ghi chú khi code quá dài: tắt tự render khi gõ, bấm để chạy thủ công -->
                             <span id="longCodeNote" onclick="runCodeNow()" class="hidden text-[10px] text-amber-400 cursor-pointer hover:underline" title="Bấm để chạy ngay">Code dài: bấm Chạy hoặc Ctrl+Enter</span>
-                            <span class="cr-hide-md text-[10px] text-slate-500 hidden sm:inline">• Tab: 4 spaces • Ctrl+S: Lưu • Ctrl+Enter: Chạy</span>
+                            <span class="cr-hide-md cr-hint text-[10px] text-slate-500 hidden sm:inline">• Tab: 4 spaces • Ctrl+S: Lưu • Ctrl+Enter: Chạy • Ctrl+F/H: Tìm/Thay</span>
                         </div>
-                        <div class="flex items-center gap-1.5">
+                        <div class="flex flex-wrap items-center justify-end gap-1.5">
+                            <!-- Chạy thủ công (Ctrl+Enter) -->
+                            <button onclick="runCodeNow()" id="btnRun" class="cr-touch cr-nowrap px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white border border-blue-500 text-xs font-bold transition" title="Chạy code (Ctrl+Enter)">
+                                <i class="fas fa-play mr-1 text-[10px]"></i> Chạy
+                            </button>
+                            <!-- Công tắc tự chạy khi gõ -->
+                            <button onclick="toggleAutoRun()" id="btnAutoRun" role="switch" aria-checked="true" class="cr-touch cr-nowrap px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition flex items-center gap-1.5" title="Bật/tắt tự chạy khi gõ">
+                                <span class="cr-switch"><span></span></span> Tự chạy
+                            </button>
+                            <!-- Nút phụ: trên điện thoại được gom vào menu "…" -->
+                            <button onclick="openFilePicker()" class="cr-hide-sm cr-touch cr-nowrap px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition" title="Mở file .html / .htm / .txt (hoặc kéo thả file vào editor)">
+                                <i class="fas fa-folder-open text-slate-400"></i><span class="cr-lbl ml-1">Mở file</span>
+                            </button>
+                            <button onclick="openHistoryModal()" class="cr-hide-sm cr-touch cr-nowrap px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition" title="Lịch sử phiên bản">
+                                <i class="fas fa-clock-rotate-left text-slate-400"></i><span class="cr-lbl ml-1">Lịch sử</span>
+                            </button>
+                            <button onclick="openPreviewInNewTab()" class="cr-hide-sm cr-touch cr-nowrap px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition" title="Mở bản xem thử ở tab mới">
+                                <i class="fas fa-up-right-from-square text-slate-400"></i><span class="cr-lbl ml-1">Tab mới</span>
+                            </button>
                             <button onclick="pasteCodeFromClipboard()" class="cr-touch cr-nowrap px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition" title="Dán mã từ Clipboard">
-                                <i class="fas fa-paste text-slate-400 mr-1"></i> Dán
+                                <i class="fas fa-paste text-slate-400"></i><span class="cr-lbl ml-1">Dán</span>
                             </button>
                             <button onclick="copyCodeToClipboard()" class="cr-touch cr-nowrap px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition" title="Sao chép toàn bộ code">
-                                <i class="fas fa-copy text-slate-400 mr-1"></i> Copy
+                                <i class="fas fa-copy text-slate-400"></i><span class="cr-lbl ml-1">Copy</span>
                             </button>
+                            <!-- Menu "…": Tìm/Thay (+ các nút phụ khi ở điện thoại) -->
+                            <div class="relative" id="moreMenuWrap">
+                                <button onclick="toggleMoreMenu(event)" id="btnMore" aria-haspopup="menu" aria-expanded="false" class="cr-touch px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition" title="Thêm">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                                <div id="moreMenu" role="menu" class="hidden absolute right-0 top-full mt-1 z-50 min-w-[190px] py-1 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl text-xs">
+                                    <button role="menuitem" onclick="editorSearch('find')" class="cr-menu-item"><i class="fas fa-magnifying-glass w-4 text-slate-400"></i> Tìm (Ctrl+F)</button>
+                                    <button role="menuitem" onclick="editorSearch('replace')" class="cr-menu-item"><i class="fas fa-right-left w-4 text-slate-400"></i> Thay thế (Ctrl+H)</button>
+                                    <button role="menuitem" onclick="openFilePicker()" class="cr-menu-item cr-sm-only"><i class="fas fa-folder-open w-4 text-slate-400"></i> Mở file</button>
+                                    <button role="menuitem" onclick="openHistoryModal()" class="cr-menu-item cr-sm-only"><i class="fas fa-clock-rotate-left w-4 text-slate-400"></i> Lịch sử phiên bản</button>
+                                    <button role="menuitem" onclick="openPreviewInNewTab()" class="cr-menu-item cr-sm-only"><i class="fas fa-up-right-from-square w-4 text-slate-400"></i> Xem thử ở tab mới</button>
+                                </div>
+                            </div>
                             <button onclick="clearCodeEditor()" class="cr-touch p-1.5 rounded hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 transition" title="Xóa trắng">
                                 <i class="fas fa-trash-alt text-xs"></i>
                             </button>
@@ -369,7 +438,12 @@
                     </div>
 
                     <!-- Textarea Code Input -->
-                    <div class="flex-1 relative overflow-hidden flex bg-slate-900">
+                    <div id="editorHost" class="cr-editor-host flex-1 relative overflow-hidden flex bg-slate-900">
+                        <!-- Lớp phủ khi kéo file vào editor -->
+                        <div id="dropOverlay" class="hidden absolute inset-0 z-20 m-2 rounded-xl border-2 border-dashed border-cyan-500 bg-slate-900/85 items-center justify-center text-cyan-300 text-sm font-bold pointer-events-none">
+                            <i class="fas fa-file-import mr-2"></i> Thả file .html / .htm / .txt để mở
+                        </div>
+                        <input type="file" id="fileInput" accept=".html,.htm,.txt,text/html,text/plain" class="hidden" onchange="loadCodeFile(this.files[0]); this.value='';">
                         <textarea id="codeEditor" oninput="handleCodeInput()" onkeydown="handleEditorKeyDown(event)" class="w-full h-full p-4 code-textarea custom-scrollbar" placeholder="Nhập hoặc dán mã HTML/JS vào đây để xem trực tiếp kết quả bên phải..."></textarea>
                     </div>
 
@@ -480,6 +554,21 @@
         <span id="tooltip-text" class="relative z-10"></span>
     </div>
 
+    <!-- Hộp thoại Lịch sử phiên bản -->
+    <div id="historyModal" class="hidden fixed inset-0 z-[99990] bg-black/60 items-center justify-center p-4" onclick="if (event.target === this) closeHistoryModal()">
+        <div class="w-full max-w-lg max-h-[80vh] flex flex-col bg-slate-900 border border-slate-700 rounded-xl shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+            <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+                <h2 id="historyTitle" class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-clock-rotate-left text-cyan-400"></i> Lịch sử phiên bản</h2>
+                <button onclick="closeHistoryModal()" class="cr-touch w-7 h-7 rounded hover:bg-slate-800 text-slate-400 hover:text-white" title="Đóng"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="historyList" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2 text-xs"></div>
+            <div class="px-4 py-2.5 border-t border-slate-800 flex items-center justify-between gap-3 text-[11px] text-slate-500">
+                <span>Tự lưu tối đa 10 bản khi bấm Chạy hoặc trước khi ghi đè.</span>
+                <button onclick="clearHistory()" class="cr-touch cr-nowrap text-slate-400 hover:text-rose-400"><i class="fas fa-trash-alt mr-1"></i>Xóa lịch sử</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-5 py-2.5 rounded-xl shadow-2xl font-mono-code text-xs z-[100000] opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-2 border border-slate-700">
         <span id="toast-msg"></span>
@@ -508,6 +597,324 @@
                 t.classList.add('pointer-events-none');
             }, duration);
         }
+
+        // ==========================================
+        // 0. TRÌNH SOẠN THẢO: CodeMirror 5 (tô màu cú pháp, số dòng, tìm/thay)
+        //    Nạp động từ CDN; nếu lỗi thì giữ nguyên textarea thường (trang vẫn chạy).
+        // ==========================================
+        let cm = null; // instance CodeMirror; null = đang dùng textarea thường
+        const CM_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/';
+        // Thứ tự quan trọng: htmlmixed cần xml/javascript/css; search cần searchcursor + dialog; closetag cần xml-fold
+        const CM_ADDONS = [
+            'mode/xml/xml.min.js', 'mode/javascript/javascript.min.js', 'mode/css/css.min.js', 'mode/htmlmixed/htmlmixed.min.js',
+            'addon/search/searchcursor.min.js', 'addon/dialog/dialog.min.js', 'addon/search/search.min.js',
+            'addon/fold/xml-fold.min.js', 'addon/edit/closetag.min.js', 'addon/edit/matchbrackets.min.js',
+            'addon/display/placeholder.min.js'
+        ];
+
+        // Đọc / ghi nội dung editor (dùng chung cho CodeMirror và textarea dự phòng)
+        function getCode() {
+            return cm ? cm.getValue() : document.getElementById('codeEditor').value;
+        }
+        function setCode(value) {
+            if (cm) cm.setValue(value);
+            else document.getElementById('codeEditor').value = value;
+        }
+
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = src;
+                s.async = false; // giữ đúng thứ tự thực thi giữa các addon
+                s.onload = resolve;
+                s.onerror = () => reject(new Error('Không tải được ' + src));
+                document.head.appendChild(s);
+            });
+        }
+
+        async function initCodeEditor() {
+            try {
+                await loadScript(CM_BASE + 'codemirror.min.js');
+                if (!window.CodeMirror) throw new Error('CodeMirror không khả dụng');
+                // Addon lỗi lẻ thì bỏ qua (chỉ mất tính năng đó), không chặn khởi tạo
+                await Promise.allSettled(CM_ADDONS.map(p => loadScript(CM_BASE + p)));
+            } catch (e) {
+                console.warn('[Code Studio] Dùng textarea thường vì không tải được CodeMirror:', e.message);
+                return;
+            }
+
+            const ta = document.getElementById('codeEditor');
+            const hadFocus = document.activeElement === ta;
+            const selStart = ta.selectionStart, selEnd = ta.selectionEnd;
+            const runKey = () => runCodeNow();
+
+            cm = CodeMirror.fromTextArea(ta, {
+                mode: 'htmlmixed',
+                theme: 'material-darker',
+                lineNumbers: true,
+                indentUnit: 4,
+                tabSize: 4,
+                indentWithTabs: false,
+                autoCloseTags: true,
+                matchBrackets: true,
+                extraKeys: {
+                    // Tab: chèn 4 dấu cách như cũ; đang chọn nhiều dòng thì thụt lề cả khối
+                    'Tab': (c) => c.somethingSelected() ? c.execCommand('indentMore') : c.replaceSelection('    '),
+                    'Shift-Tab': 'indentLess',
+                    'Ctrl-Enter': runKey,
+                    'Cmd-Enter': runKey,
+                    // Ctrl+F (tìm) và Shift+Ctrl+F (thay) có sẵn trong keymap mặc định; thêm Ctrl+H
+                    'Ctrl-H': 'replace'
+                    // Ctrl+S: để listener keydown toàn trang xử lý (tải file .html)
+                }
+            });
+            cm.on('change', () => handleCodeInput());
+
+            // Giữ vị trí con trỏ / focus nếu người dùng đã gõ vào textarea trong lúc chờ tải
+            try { cm.setSelection(cm.posFromIndex(selStart), cm.posFromIndex(selEnd)); } catch (e) {}
+            if (hadFocus) cm.focus();
+
+            // Vùng editor đổi kích thước (đóng/mở console, đổi tab, kéo thanh chia) -> vẽ lại
+            const host = document.getElementById('editorHost');
+            let raf = 0;
+            if (window.ResizeObserver) {
+                new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => cm.refresh()); }).observe(host);
+            }
+        }
+
+        // Mở hộp tìm / thay của CodeMirror (dùng cho menu "…", nhất là trên điện thoại)
+        function editorSearch(cmd) {
+            closeMoreMenu();
+            if (!cm || !window.CodeMirror || !CodeMirror.commands[cmd]) {
+                return showToast('Chưa có công cụ tìm/thay nâng cao, hãy dùng Ctrl+F của trình duyệt.');
+            }
+            if (MQ_PHONE.matches) switchMobileTab('code');
+            cm.focus();
+            cm.execCommand(cmd);
+        }
+
+        // Nhảy tới 1 dòng trong editor (bấm vào dòng lỗi trong console)
+        function jumpToEditorLine(line) {
+            if (MQ_PHONE.matches) switchMobileTab('code');
+            if (cm) {
+                const n = Math.min(Math.max(line, 1), cm.lineCount()) - 1;
+                cm.refresh();
+                cm.focus();
+                cm.setCursor({ line: n, ch: 0 });
+                cm.scrollIntoView({ line: n, ch: 0 }, 80);
+                const handle = cm.addLineClass(n, 'background', 'cr-line-flash');
+                setTimeout(() => cm.removeLineClass(handle, 'background', 'cr-line-flash'), 1800);
+            } else {
+                const ta = document.getElementById('codeEditor');
+                const lines = ta.value.split('\n');
+                const n = Math.min(Math.max(line, 1), lines.length) - 1;
+                let idx = 0;
+                for (let i = 0; i < n; i++) idx += lines[i].length + 1;
+                ta.focus();
+                ta.setSelectionRange(idx, idx + lines[n].length);
+                const lh = parseFloat(getComputedStyle(ta).lineHeight) || 21;
+                ta.scrollTop = Math.max(0, n * lh - ta.clientHeight / 3);
+            }
+        }
+
+        function getEditorLineCount() {
+            return cm ? cm.lineCount() : getCode().split('\n').length;
+        }
+
+        // ==========================================
+        // 0b. CÔNG TẮC "TỰ CHẠY" KHI GÕ
+        // ==========================================
+        const AUTORUN_KEY = 'kv_coderunner_autorun';
+        let autoRun = true;
+        try { autoRun = localStorage.getItem(AUTORUN_KEY) !== '0'; } catch (e) {}
+
+        function updateAutoRunUI() {
+            const btn = document.getElementById('btnAutoRun');
+            if (!btn) return;
+            btn.setAttribute('aria-checked', String(autoRun));
+            btn.title = autoRun ? 'Đang tự chạy khi gõ (bấm để tắt)' : 'Đã tắt tự chạy: bấm Chạy hoặc Ctrl+Enter để cập nhật (bấm để bật)';
+        }
+
+        function toggleAutoRun() {
+            autoRun = !autoRun;
+            try { localStorage.setItem(AUTORUN_KEY, autoRun ? '1' : '0'); } catch (e) {}
+            updateAutoRunUI();
+            if (autoRun) handleCodeInput(); // bật lại -> cập nhật xem trước theo code hiện tại
+            showToast(autoRun ? 'Đã bật Tự chạy khi gõ' : 'Đã tắt Tự chạy: bấm Chạy hoặc Ctrl+Enter');
+        }
+
+        // ==========================================
+        // 0c. LỊCH SỬ PHIÊN BẢN (localStorage, tối đa 10 bản)
+        // ==========================================
+        const HISTORY_KEY = 'kv_coderunner_history';
+        const HISTORY_MAX = 10;
+        const HISTORY_CODE_MAX = 200000; // bản quá dài thì không lưu snapshot
+
+        function readHistory() {
+            try {
+                const list = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+                return Array.isArray(list) ? list.filter(x => x && typeof x.code === 'string') : [];
+            } catch (e) { return []; }
+        }
+
+        // Lưu snapshot nếu khác bản mới nhất; hết dung lượng thì bỏ dần bản cũ nhất
+        function pushHistory(code) {
+            if (typeof code !== 'string' || !code.trim() || code.length > HISTORY_CODE_MAX) return;
+            const list = readHistory();
+            if (list[0] && list[0].code === code) return;
+            list.unshift({ t: Date.now(), code });
+            if (list.length > HISTORY_MAX) list.length = HISTORY_MAX;
+            while (list.length) {
+                try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); return; }
+                catch (e) { if (list.length <= 1) return; list.pop(); }
+            }
+        }
+
+        function openHistoryModal() {
+            closeMoreMenu();
+            renderHistoryList();
+            const m = document.getElementById('historyModal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+
+        function closeHistoryModal() {
+            const m = document.getElementById('historyModal');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+
+        function renderHistoryList() {
+            const box = document.getElementById('historyList');
+            const list = readHistory();
+            if (!list.length) {
+                box.innerHTML = '<div class="text-slate-500 italic p-2">Chưa có phiên bản nào. Lịch sử được lưu khi bấm Chạy / Ctrl+Enter hoặc trước khi ghi đè bằng mẫu, dán, mở file.</div>';
+                return;
+            }
+            const current = getCode();
+            box.innerHTML = list.map((item, i) => {
+                const time = new Date(item.t).toLocaleString('vi-VN');
+                const preview = item.code.replace(/\s+/g, ' ').trim().slice(0, 60);
+                const isCurrent = item.code === current;
+                return `<div class="flex items-center gap-3 p-2.5 rounded-lg border border-slate-800 bg-slate-950/60">
+                    <div class="flex-1 min-w-0">
+                        <div class="text-slate-300 font-semibold">${escapeHtml(time)} <span class="text-slate-500 font-normal">• ${item.code.length.toLocaleString('vi-VN')} ký tự</span>${isCurrent ? ' <span class="text-emerald-400 font-normal">• đang dùng</span>' : ''}</div>
+                        <div class="text-slate-500 font-mono-code truncate mt-0.5">${escapeHtml(preview)}</div>
+                    </div>
+                    <button onclick="restoreHistory(${i})" class="cr-touch cr-nowrap px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 font-semibold transition">Khôi phục</button>
+                </div>`;
+            }).join('');
+        }
+
+        function restoreHistory(index) {
+            const item = readHistory()[index];
+            if (!item) return;
+            if (item.code === getCode()) return showToast('Phiên bản này đang được dùng.');
+            const time = new Date(item.t).toLocaleString('vi-VN');
+            if (!confirm(`Khôi phục phiên bản lúc ${time}?\nCode hiện tại sẽ được lưu vào lịch sử.`)) return;
+            const saved = replaceEditorCode(item.code, null); // đã confirm ở trên
+            if (saved === null) return;
+            closeHistoryModal();
+            clearConsoleLogs();
+            showUndoToast('Đã khôi phục phiên bản cũ.', saved);
+        }
+
+        function clearHistory() {
+            if (!readHistory().length) return;
+            if (!confirm('Xóa toàn bộ lịch sử phiên bản? Không thể hoàn tác.')) return;
+            try { localStorage.removeItem(HISTORY_KEY); } catch (e) {}
+            renderHistoryList();
+        }
+
+        // ==========================================
+        // 0d. MỞ FILE (chọn file hoặc kéo thả vào editor)
+        // ==========================================
+        const FILE_MAX_BYTES = 5 * 1024 * 1024;
+
+        function openFilePicker() {
+            closeMoreMenu();
+            document.getElementById('fileInput').click();
+        }
+
+        async function loadCodeFile(file) {
+            if (!file) return;
+            if (!/\.(html?|txt)$/i.test(file.name)) return showToast('Chỉ hỗ trợ file .html, .htm, .txt');
+            if (file.size > FILE_MAX_BYTES) return alert('File quá lớn (tối đa 5 MB).');
+            let text;
+            try { text = await file.text(); } catch (e) { return alert('Không đọc được file này.'); }
+            const saved = replaceEditorCode(text, `Mở file "${file.name}" sẽ thay toàn bộ code hiện tại. Tiếp tục?`);
+            if (saved === null) return;
+            clearConsoleLogs();
+            showUndoToast(`Đã mở file ${escapeHtml(file.name)}`, saved);
+        }
+
+        function initFileDrop() {
+            const host = document.getElementById('editorHost');
+            const overlay = document.getElementById('dropOverlay');
+            const hasFiles = (e) => !!(e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files'));
+            const showOverlay = (on) => { overlay.classList.toggle('hidden', !on); overlay.classList.toggle('flex', on); };
+            let depth = 0;
+            // Dùng pha capture để chặn trước CodeMirror (mặc định CM chèn nội dung file vào vị trí thả)
+            host.addEventListener('dragenter', (e) => { if (!hasFiles(e)) return; e.preventDefault(); depth++; showOverlay(true); }, true);
+            host.addEventListener('dragover', (e) => {
+                if (!hasFiles(e)) return;
+                e.preventDefault(); e.stopPropagation();
+                e.dataTransfer.dropEffect = 'copy';
+            }, true);
+            host.addEventListener('dragleave', (e) => { if (!hasFiles(e)) return; depth = Math.max(0, depth - 1); if (!depth) showOverlay(false); }, true);
+            host.addEventListener('drop', (e) => {
+                if (!hasFiles(e)) return;
+                e.preventDefault(); e.stopPropagation();
+                depth = 0; showOverlay(false);
+                loadCodeFile(e.dataTransfer.files[0]);
+            }, true);
+            // Thả file lệch ra ngoài editor: không để trình duyệt mở file và rời trang
+            window.addEventListener('dragover', (e) => { if (hasFiles(e)) e.preventDefault(); });
+            window.addEventListener('drop', (e) => { if (hasFiles(e)) e.preventDefault(); });
+        }
+
+        // ==========================================
+        // 0e. MỞ BẢN XEM THỬ Ở TAB MỚI (Blob URL, thu hồi sau 60 giây)
+        // Bảo mật: Blob URL cùng origin với hệ thống, nên KHÔNG đặt code người dùng trực tiếp vào đó
+        // (sẽ đọc được localStorage / API Token). Tab mới chỉ chứa khung bọc của hệ thống, code người
+        // dùng chạy trong iframe sandbox (không allow-same-origin) giống khung xem trước.
+        // ==========================================
+        function openPreviewInNewTab() {
+            closeMoreMenu();
+            const code = getCode();
+            if (!code.trim()) return alert('Khung soạn thảo đang trống!');
+            const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const wrapper = '<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8">'
+                + '<meta name="viewport" content="width=device-width, initial-scale=1">'
+                + '<title>Xem thử | HTML Code Studio</title>'
+                + '<style>html,body{margin:0;height:100%;background:#fff}iframe{border:0;width:100%;height:100%;display:block}</style>'
+                + '</head><body><iframe sandbox="allow-scripts allow-modals allow-forms allow-popups" srcdoc="' + esc(code) + '"></iframe></body></html>';
+            const url = URL.createObjectURL(new Blob([wrapper], { type: 'text/html;charset=utf-8' }));
+            const win = window.open(url, '_blank');
+            if (win) { try { win.opener = null; } catch (e) {} }
+            else showToast('Trình duyệt đã chặn cửa sổ mới, hãy cho phép pop-up.');
+            setTimeout(() => URL.revokeObjectURL(url), 60000);
+        }
+
+        // ==========================================
+        // 0f. MENU "…"
+        // ==========================================
+        function toggleMoreMenu(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('moreMenu');
+            const open = menu.classList.contains('hidden');
+            menu.classList.toggle('hidden', !open);
+            document.getElementById('btnMore').setAttribute('aria-expanded', String(open));
+        }
+        function closeMoreMenu() {
+            const menu = document.getElementById('moreMenu');
+            if (!menu || menu.classList.contains('hidden')) return;
+            menu.classList.add('hidden');
+            document.getElementById('btnMore').setAttribute('aria-expanded', 'false');
+        }
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest || !e.target.closest('#moreMenuWrap')) closeMoreMenu();
+        });
 
         // --- SIDEBAR COLLAPSIBLE ---
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-collapsed'); }
@@ -609,6 +1016,8 @@
             btnPrev.setAttribute('aria-selected', String(!isCode));
             // Khi mở tab Xem trước: tính lại tỉ lệ "Vừa khung" vì vùng xem trước vừa hiện ra
             if (!isCode) requestAnimationFrame(applyZoom);
+            // CodeMirror cần vẽ lại sau khi vùng editor vừa hiện ra từ display:none
+            else if (cm) requestAnimationFrame(() => cm.refresh());
         }
 
         // ==========================================
@@ -643,7 +1052,9 @@
         // Chạy/render ngay lập tức (dùng cho Ctrl+Enter và ghi chú "Code dài")
         function runCodeNow() {
             clearTimeout(renderTimer);
-            validateAndRenderCode(document.getElementById('codeEditor').value, true);
+            const code = getCode();
+            pushHistory(code); // mỗi lần chạy thủ công -> lưu 1 phiên bản (nếu khác bản trước)
+            validateAndRenderCode(code, true);
             showToast("⚡ Đã cập nhật lại Preview!");
         }
 
@@ -658,11 +1069,11 @@
 
         function saveDraftNow() {
             clearTimeout(saveTimer);
-            try { localStorage.setItem('kv_coderunner_draft', document.getElementById('codeEditor').value); } catch(e) {}
+            try { localStorage.setItem('kv_coderunner_draft', getCode()); } catch(e) {}
         }
 
         function handleCodeInput() {
-            const code = document.getElementById('codeEditor').value;
+            const code = getCode();
             document.getElementById('charCount').innerText = `${code.length} chars`;
 
             // Lưu nháp có debounce (không ghi localStorage mỗi phím gõ)
@@ -673,9 +1084,10 @@
             const isLong = code.length > AUTO_RENDER_MAX;
             document.getElementById('longCodeNote').classList.toggle('hidden', !isLong);
             if (isLong) return; // Code dài: chỉ render khi bấm Chạy / Ctrl+Enter
+            if (!autoRun) return; // Đã tắt "Tự chạy": chỉ render khi bấm Chạy / Ctrl+Enter
 
             renderTimer = setTimeout(() => {
-                validateAndRenderCode(document.getElementById('codeEditor').value, false);
+                validateAndRenderCode(getCode(), false);
             }, RENDER_DELAY);
         }
 
@@ -776,10 +1188,12 @@
             try { return String(a); } catch (e2) { return '[Không hiển thị được]'; }
         }
     }
-    function send(type, args) {
+    function send(type, args, extra) {
         try {
             var msg = Array.prototype.map.call(args, fmt).join(' ');
-            parent.postMessage({ source: 'coderunner_console', type: type, msg: msg }, '*');
+            var data = { source: 'coderunner_console', type: type, msg: msg };
+            if (extra) { data.jsError = true; data.line = extra.line; data.file = extra.file; }
+            parent.postMessage(data, '*');
         } catch (e) {}
     }
     ['log', 'info', 'warn', 'error'].forEach(function(type) {
@@ -787,7 +1201,8 @@
         console[type] = function() { send(type, arguments); if (orig) orig.apply(console, arguments); };
     });
     window.addEventListener('error', function(ev) {
-        send('error', ['Lỗi JS dòng ' + (ev.lineno || '?') + ': ' + (ev.error ? fmt(ev.error) : ev.message)]);
+        // Số dòng gửi riêng; trang chính tự trừ số dòng interceptor chèn thêm rồi mới hiển thị
+        send('error', [ev.error ? fmt(ev.error) : ev.message], { line: ev.lineno || 0, file: String(ev.filename || '') });
     });
     window.addEventListener('unhandledrejection', function(ev) {
         send('error', ['Promise bị reject chưa xử lý: ' + fmt(ev.reason)]);
@@ -804,10 +1219,14 @@
                 finalHtml = consoleInterceptor + finalHtml;
             }
 
+            // Số dòng interceptor chèn thêm (chèn cùng dòng với DOCTYPE/đầu file nên lệch đúng bằng số ký tự xuống dòng)
+            renderLineOffset = (consoleInterceptor.match(/\n/g) || []).length;
+
             // Gán lại srcdoc mỗi lần render => mỗi lần chạy là một document mới tinh
             // (không còn biến let/const, setInterval... của lần chạy trước)
             iframe.srcdoc = finalHtml;
         }
+        let renderLineOffset = 0;
 
         // ==========================================
         // 4. LIVE IN-BROWSER CONSOLE LOGS HANDLER
@@ -817,12 +1236,35 @@
             // Chỉ nhận message đến từ chính iframe xem trước
             const iframe = document.getElementById('previewIframe');
             if (!iframe || e.source !== iframe.contentWindow) return;
-            if (e.data && e.data.source === 'coderunner_console') {
-                addConsoleEntry(String(e.data.type), String(e.data.msg));
+            const d = e.data;
+            if (!d || d.source !== 'coderunner_console') return;
+            let msg = String(d.msg);
+            // Tìm số dòng (theo srcdoc) rồi đổi về số dòng trong editor
+            let rawLine = null;
+            const isOwnDoc = !d.file || d.file === 'about:srcdoc';
+            if (d.jsError && isOwnDoc && Number(d.line) > 0) rawLine = Number(d.line);
+            else if (!d.jsError) {
+                const m = msg.match(/about:srcdoc:(\d+)/);
+                if (m) rawLine = parseInt(m[1], 10);
             }
+            let editorLine = rawLine !== null ? rawLine - renderLineOffset : null;
+            if (editorLine !== null && (editorLine < 1 || editorLine > getEditorLineCount())) editorLine = null;
+
+            // Đổi số dòng trong stack trace (about:srcdoc:N) về số dòng của editor cho dễ đối chiếu
+            msg = msg.replace(/about:srcdoc:(\d+)/g, (m0, n) => {
+                const l = parseInt(n, 10) - renderLineOffset;
+                return l > 0 ? 'dòng ' + l : m0;
+            });
+            if (d.jsError) {
+                let where = '';
+                if (editorLine !== null) where = ` dòng ${editorLine}`;
+                else if (!isOwnDoc && d.line) where = ` (${String(d.file).split('/').pop()}:${d.line})`;
+                msg = `Lỗi JS${where}: ${msg}`;
+            }
+            addConsoleEntry(String(d.type), msg, editorLine);
         });
 
-        function addConsoleEntry(type, msg) {
+        function addConsoleEntry(type, msg, editorLine = null) {
             const consoleBody = document.getElementById('consoleBody');
             const counter = document.getElementById('consoleCounter');
             
@@ -849,6 +1291,16 @@
                 ${icon}
                 <span class="${colorCls} flex-1 font-mono">${escapeHtml(msg)}</span>
             `;
+            // Dòng log có số dòng hợp lệ: bấm để nhảy tới dòng đó trong editor
+            if (editorLine !== null) {
+                row.classList.add('cr-console-link');
+                row.title = `Bấm để tới dòng ${editorLine} trong editor`;
+                row.tabIndex = 0;
+                row.setAttribute('role', 'button');
+                row.insertAdjacentHTML('beforeend', `<span class="shrink-0 text-[10px] text-cyan-400 underline">L${editorLine}</span>`);
+                row.addEventListener('click', () => jumpToEditorLine(editorLine));
+                row.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') jumpToEditorLine(editorLine); });
+            }
 
             consoleBody.appendChild(row);
             // Giới hạn số dòng log: xóa dòng cũ nhất khi vượt quá
@@ -1024,8 +1476,12 @@
         }
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && isFullscreen) {
-                toggleFullscreenPreview();
+            if (e.key === 'Escape') {
+                const hm = document.getElementById('historyModal');
+                const menu = document.getElementById('moreMenu');
+                if (hm && !hm.classList.contains('hidden')) closeHistoryModal();
+                else if (menu && !menu.classList.contains('hidden')) closeMoreMenu();
+                else if (isFullscreen) toggleFullscreenPreview();
             }
             // Phím CTRL + S: Tải file HTML về máy (hoạt động cả khi con trỏ không ở trong editor)
             if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 's') {
@@ -1038,7 +1494,7 @@
         // 6. SAO CHÉP, DÁN VÀ TẢI VỀ NOTEPAD (.HTML / .TXT)
         // ==========================================
         function downloadAsFile(ext) {
-            const code = document.getElementById('codeEditor').value;
+            const code = getCode();
             if (!code.trim()) return alert("Khung soạn thảo đang trống!");
 
             const mime = ext === 'html' ? 'text/html;charset=utf-8;' : 'text/plain;charset=utf-8;';
@@ -1053,7 +1509,7 @@
         }
 
         function copyCodeToClipboard() {
-            const code = document.getElementById('codeEditor').value;
+            const code = getCode();
             if (!code) return alert("Không có nội dung để copy!");
             navigator.clipboard.writeText(code).then(() => showToast("Đã copy toàn bộ mã vào Clipboard!"));
         }
@@ -1072,15 +1528,16 @@
 
         // Ghi đè toàn bộ code trong editor: hỏi xác nhận nếu đang có code, lưu bản cũ để Hoàn tác.
         // Trả về null nếu người dùng hủy; true nếu đã lưu bản cũ; false nếu không có gì để lưu.
-        function replaceEditorCode(newCode) {
-            const editor = document.getElementById('codeEditor');
-            const current = editor.value;
+        // confirmMsg = null: bỏ qua hỏi (nơi gọi đã tự confirm). Bản cũ cũng được lưu vào Lịch sử phiên bản.
+        function replaceEditorCode(newCode, confirmMsg = "Thay toàn bộ code hiện tại?") {
+            const current = getCode();
             let saved = false;
             if (current.trim() && current !== newCode) {
-                if (!confirm("Thay toàn bộ code hiện tại?")) return null;
+                if (confirmMsg !== null && !confirm(confirmMsg)) return null;
+                pushHistory(current);
                 try { localStorage.setItem('kv_coderunner_prev', current); saved = true; } catch(e) {}
             }
-            editor.value = newCode;
+            setCode(newCode);
             handleCodeInput();
             return saved;
         }
@@ -1096,9 +1553,9 @@
             let prev = null;
             try { prev = localStorage.getItem('kv_coderunner_prev'); } catch(e) {}
             if (prev === null) return showToast("Không có bản trước để khôi phục.");
-            const editor = document.getElementById('codeEditor');
-            const replaced = editor.value;
-            editor.value = prev;
+            const replaced = getCode();
+            pushHistory(replaced);
+            setCode(prev);
             // Đổi chỗ: bấm Hoàn tác lần nữa sẽ quay lại bản vừa thay
             try { localStorage.setItem('kv_coderunner_prev', replaced); } catch(e) {}
             handleCodeInput();
@@ -1107,7 +1564,8 @@
 
         function clearCodeEditor() {
             if (confirm("Xóa trắng toàn bộ mã nguồn đang soạn thảo?")) {
-                document.getElementById('codeEditor').value = '';
+                pushHistory(getCode()); // xóa nhầm vẫn khôi phục được từ Lịch sử
+                setCode('');
                 handleCodeInput();
                 clearConsoleLogs();
             }
@@ -1247,10 +1705,12 @@
 
             initSplitResizer();
             initResponsiveLayout();
+            initFileDrop();
+            updateAutoRunUI();
             let savedDraft = null;
             try { savedDraft = localStorage.getItem('kv_coderunner_draft'); } catch(e) {}
             if (savedDraft && savedDraft.trim()) {
-                document.getElementById('codeEditor').value = savedDraft;
+                setCode(savedDraft);
                 handleCodeInput();
                 // Render ngay lần đầu (kể cả khi code dài)
                 clearTimeout(renderTimer);
@@ -1258,6 +1718,8 @@
             } else {
                 insertSampleTemplate('email');
             }
+            // Nâng cấp textarea lên CodeMirror sau khi đã có nội dung (lỗi CDN -> giữ textarea)
+            initCodeEditor();
         };
     </script>
     <script src="sidebar-nav.js"></script>

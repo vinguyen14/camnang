@@ -1066,7 +1066,16 @@
       if (radarRaw) {
         const radarList = JSON.parse(radarRaw);
         if (Array.isArray(radarList)) {
-          const hasUrgent = radarList.some(f => f && f.status === 'Đã Launching' && (!f.cleared || f.videoStatus === 'Cần quay lại gấp')); // cùng công thức isUrgent của radar.html
+          // Mục nhập tay: cùng công thức isUrgent của radar.html.
+          // Mục lấy từ Cổng học tập (source 'portal'): chỉ báo khi là tính năng MỚI trong 14 ngày mà bạn chưa học
+          // (nếu tính cả mục "Cập nhật" thì chấm đỏ sẽ sáng mãi vì có hàng trăm mục).
+          const recentCut = Date.now() - 14 * 864e5;
+          const isRecent = (d) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d || '')); return !!m && new Date(+m[1], +m[2] - 1, +m[3]).getTime() >= recentCut; };
+          const hasUrgent = radarList.some(f => {
+            if (!f) return false;
+            if (f.source === 'portal') return f.type === 'NEW' && !f.cleared && isRecent(f.updateDate);
+            return f.status === 'Đã Launching' && (!f.cleared || f.videoStatus === 'Cần quay lại gấp');
+          });
           const dotEl = document.getElementById('sidebar-alert-dot');
           if (dotEl) dotEl.classList.toggle('hidden', !hasUrgent);
         }

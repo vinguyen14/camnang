@@ -345,10 +345,38 @@
     return report;
   }
 
+  // Dùng cho trang Product Radar (học cá nhân): ghép Cổng với danh sách bài TRONG khóa học (nếu có) bằng đúng merge() ở trên.
+  // Không ghi nhật ký, không đổi trạng thái của Hub. Không có danh sách khóa học → mọi bài gắn phạm vi 'unknown'.
+  async function buildLearningFeed(courseItems, force) {
+    const portal = await loadPortal(!!force);
+    const clean = Array.isArray(courseItems)
+      ? courseItems.filter(it => it && typeof it === 'object' && it.__scope !== 'out').map(it => {
+          const o = {}; Object.keys(it).forEach(k => { if (k.indexOf('__') !== 0) o[k] = it[k]; }); return o;
+        })
+      : [];
+    if (clean.length) {
+      const { merged, report } = merge(clean, portal);
+      return { portal, items: merged, report, hasCourse: true };
+    }
+    const metaItems = (portal.meta && portal.meta.items) || {};
+    const items = portal.items.map(p => {
+      const it = Object.assign({}, p);
+      delete it['Ngày'];
+      it.__scope = 'unknown';
+      if (p['Ngày']) it.__date = p['Ngày'];
+      const m = metaItems[quizPath(p['Github'])];
+      if (m) it.__meta = { type: m.type, label: m.typeLabel, date: m.commitDate, summary: m.summary };
+      return it;
+    });
+    return { portal, items, report: null, hasCourse: false };
+  }
+
   window.KhPortalSync = {
+    buildLearningFeed: (courseItems, force) => buildLearningFeed(courseItems, force),
     refresh: (force) => refresh(!!force),
     applyToDataset,
     bannerHtml,
+    getPortal: (force) => loadPortal(!!force), // Trang Product Radar: lấy dữ liệu Cổng (có cache 30 phút)
     get report() { return S.report; }
   };
 
