@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Studio | Trainer OS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; overflow: hidden; }
+        /* Khung chứa KiotViet Import Studio (games/import-menu-v10.html) chiếm toàn bộ vùng nội dung */
+        #studio-frame { border: 0; width: 100%; height: 100%; display: block; background: #fff; }
+        .studio-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 10px; color: #64748b; font-size: 13px; font-weight: 600; background: #f8fafc; }
+        @media (max-width: 767px) { .studio-sub { display: none; } }
+    </style>
+    <script src="system-config.js"></script>
+</head>
+<body>
+    <!--
+      IMPORT STUDIO (28/11/2026)
+      Trang khung để đưa "KiotViet Import Studio V10" (games/import-menu-v10.html — soạn file import hàng hóa,
+      nhóm hàng… từ thư viện dữ liệu mẫu) vào hệ thống quản trị, giữ menu trái chung (sidebar-nav.js).
+      Công cụ gốc giữ nguyên ở games/, trang này chỉ nhúng lại (cùng nguồn) nên dữ liệu đã lưu của công cụ không đổi.
+      Muốn đổi phiên bản công cụ: sửa STUDIO_SRC bên dưới.
+    -->
+    <div class="flex h-screen w-full">
+        <aside id="sidebar"></aside>
+
+        <div class="flex-1 flex flex-col min-w-0 relative">
+            <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between gap-3 px-4 shrink-0 shadow-sm z-10">
+                <div class="flex items-center gap-3 min-w-0">
+                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-purple-50 hover:text-purple-600 transition border border-slate-200 shrink-0" title="Đóng / Mở menu"><i class="fas fa-bars"></i></button>
+                    <div class="min-w-0">
+                        <h1 class="text-sm font-bold text-slate-800 truncate">KiotViet Import Studio</h1>
+                        <p class="studio-sub text-[11px] text-slate-400 truncate">Soạn file import hàng hóa, nhóm hàng… từ thư viện dữ liệu mẫu</p>
+                    </div>
+                </div>
+                <a id="studio-open" href="games/import-menu-v10.html" target="_blank" rel="noopener" class="shrink-0 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50 transition flex items-center gap-1.5" title="Mở công cụ ở tab riêng (toàn màn hình)">
+                    <i class="fas fa-up-right-from-square"></i><span class="hidden sm:inline">Mở tab riêng</span>
+                </a>
+            </header>
+
+            <main class="flex-1 min-h-0 relative">
+                <div id="studio-loading" class="studio-loading"><i class="fas fa-spinner fa-spin"></i> Đang mở Import Studio…</div>
+                <iframe id="studio-frame" title="KiotViet Import Studio"></iframe>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const STUDIO_SRC = 'games/import-menu-v10.html';
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-collapsed'); }
+        (function () {
+            const f = document.getElementById('studio-frame');
+            f.addEventListener('load', () => { const l = document.getElementById('studio-loading'); if (l) l.remove(); });
+            f.src = STUDIO_SRC;
+            document.getElementById('studio-open').href = STUDIO_SRC;
+        })();
+    </script>
+    <script src="sidebar-nav.js"></script>
+</body>
+</html>

@@ -163,6 +163,12 @@
           icon: picon('terminal', 20, 'sb-nav-svg')
         },
         {
+          id: 'import-studio',
+          file: 'import-studio.html',
+          label: 'Import Studio',
+          icon: picon('sheet', 20, 'sb-nav-svg')
+        },
+        {
           id: 'radar',
           file: 'radar.html',
           label: 'Radar Sản Phẩm Mới',
@@ -1145,6 +1151,7 @@
     'radar.html': 'radar',
     'vault.html': 'vault',
     'tools.html': 'bolt',
+    'import-studio.html': 'sheet',
     'settings.html': 'gear',
     'knowledge.html': 'mindmap',
     'knowledge-hub.html': 'database'

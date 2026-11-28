@@ -368,6 +368,7 @@
                             <button onclick="filterByReadiness('need_video')" id="btn-rd-video" class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 hover:bg-slate-100 shrink-0"><i class="fas fa-video text-rose-500 mr-1"></i>Cần Quay Video</button>
                             <button onclick="filterByReadiness('no_hdsd')" id="btn-rd-hdsd" class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 hover:bg-slate-100 shrink-0"><i class="fas fa-book text-blue-500 mr-1"></i>Chưa Có HDSD</button>
                             <button onclick="filterByReadiness('not_cleared')" id="btn-rd-notclear" class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 hover:bg-slate-100 shrink-0">⚠️ Chưa Clear</button>
+                            <button onclick="filterByReadiness('upcoming')" id="btn-rd-upcoming" class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 hover:bg-slate-100 shrink-0">📅 Sắp Demo</button>
                             <!-- Nhãn "Đang lọc" cho các bộ lọc mở từ huy hiệu nhưng không có nút riêng (Sắp Demo / Đã Clear) -->
                             <span id="rdFilterTag" class="hidden px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-800 text-white shrink-0 items-center gap-1.5">
                                 <span id="rdFilterTagText">Đang lọc</span>
@@ -383,9 +384,22 @@
                             <button onclick="filterByQuick('NEW')" id="btn-q-new" class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 hover:bg-slate-100 shrink-0">✨ Mới</button>
                             <button onclick="filterByQuick('UPDATE')" id="btn-q-update" class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 hover:bg-slate-100 shrink-0">🔄 Cập nhật</button>
                             <button onclick="filterByQuick('out')" id="btn-q-out" class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 hover:bg-slate-100 shrink-0">🧭 Ngoài khóa học</button>
-                            <select id="radarMonthFilter" onchange="filterByMonth(this.value)" class="ml-auto shrink-0 px-2 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-50 border border-slate-200 outline-none focus:border-purple-400" title="Lọc theo tháng của Ngày cập nhật">
+                        </div>
+
+                        <!-- TẦNG 2c (BKL-003, dùng chung 2 tab): THÁNG PHÁT HÀNH · MỨC ƯU TIÊN L&D · SOẠN TIN ZALO/EMAIL -->
+                        <div class="radar-chip-row flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 pt-1 border-t border-slate-100">
+                            <select id="radarMonthFilter" onchange="filterByMonth(this.value)" class="shrink-0 px-2 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-50 border border-slate-200 outline-none focus:border-purple-400" title="Tháng phát hành (tab Kiến thức mới: ngày cập nhật; tab thủ công: ngày launch / demo / cập nhật)">
                                 <option value="all">Mọi tháng</option>
                             </select>
+                            <select id="radarPriorityFilter" onchange="filterByPriority(this.value)" class="shrink-0 px-2 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-50 border border-slate-200 outline-none focus:border-purple-400" title="Mức độ ưu tiên L&D">
+                                <option value="all">Mọi mức ưu tiên</option>
+                                <option value="high">🔴 Ưu tiên cao</option>
+                                <option value="medium">🟠 Trung bình</option>
+                                <option value="low">⚪ Thấp</option>
+                            </select>
+                            <button type="button" onclick="openAnnounceModal()" class="ml-auto shrink-0 px-2.5 py-0.5 rounded-md text-[11px] font-bold text-purple-700 bg-purple-50 border border-purple-200 hover:bg-purple-100" title="Soạn sẵn tin nhắn Zalo / Email từ danh sách đang lọc">
+                                <i class="fas fa-paper-plane mr-1"></i>Soạn tin Zalo / Email
+                            </button>
                         </div>
 
                         <!-- TẦNG 3: THANH TÌM KIẾM TỨC THỜI -->
@@ -593,6 +607,8 @@
         let activeSelectedFeatureId = null;
         let currentTab = 'learn';        // 'learn' (Kiến thức mới - mục từ Cổng) | 'manual' (Theo dõi thủ công - mục nhập tay)
         let currentQuick = 'all';        // Tab học: 'all' | 'unlearned' | 'NEW' | 'UPDATE' | 'out'
+        let currentFilterPriority = 'all'; // BKL-003: 'all' | 'high' | 'medium' | 'low'
+        let lastFilteredList = [];         // Danh sách đang hiển thị (để soạn tin Zalo / Email)
         let currentFilterMonth = 'all';  // Tab học: 'all' | 'yyyy-mm' (theo Ngày cập nhật)
 
         // Mục học từ Cổng = có portalKey; còn lại là mục nhập tay
@@ -862,8 +878,9 @@
             const sel = document.getElementById('radarMonthFilter');
             if (!sel) return;
             const counts = {};
-            radarFeatures.filter(isPortalItem).forEach(f => {
-                const ym = /^\d{4}-\d{2}/.test(String(f.updateDate || '')) ? String(f.updateDate).slice(0, 7) : '';
+            const isLearnTab = currentTab === 'learn';
+            radarFeatures.filter(f => isPortalItem(f) === isLearnTab).forEach(f => {
+                const ym = releaseMonthOf(f);
                 if (ym) counts[ym] = (counts[ym] || 0) + 1;
             });
             const months = Object.keys(counts).sort().reverse();
@@ -941,9 +958,6 @@
                 if (currentQuick === 'unlearned') filtered = filtered.filter(f => !isClearedByMe(f));
                 else if (currentQuick === 'NEW' || currentQuick === 'UPDATE') filtered = filtered.filter(f => f.type === currentQuick);
                 else if (currentQuick === 'out') filtered = filtered.filter(f => f.scope === 'out');
-                if (currentFilterMonth !== 'all') {
-                    filtered = filtered.filter(f => String(f.updateDate || '').slice(0, 7) === currentFilterMonth);
-                }
             } else if (currentFilterReadiness === 'urgent') {
                 filtered = filtered.filter(isUrgentFeature);
             } else if (currentFilterReadiness === 'need_video') {
@@ -962,6 +976,10 @@
                 });
             }
 
+            // 2b. BKL-003: tháng phát hành + mức ưu tiên L&D (cả 2 tab)
+            if (currentFilterMonth !== 'all') filtered = filtered.filter(f => releaseMonthOf(f) === currentFilterMonth);
+            if (currentFilterPriority !== 'all') filtered = filtered.filter(f => priorityOf(f) === currentFilterPriority);
+
             // 3. Tìm kiếm từ khóa
             if (currentSearchQuery) {
                 const q = currentSearchQuery.toLowerCase();
@@ -970,6 +988,7 @@
                     || (Array.isArray(f.changes) && f.changes.some(has)));
             }
 
+            lastFilteredList = filtered; // Dùng cho "Soạn tin Zalo / Email"
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-16 px-4 bg-white rounded-2xl border border-dashed border-slate-300">
@@ -1530,6 +1549,7 @@
             const rd = document.getElementById('rdFilterRow');
             q.classList.toggle('hidden', !isLearn); q.classList.toggle('flex', isLearn);
             rd.classList.toggle('hidden', isLearn); rd.classList.toggle('flex', !isLearn);
+            refreshMonthOptions(); // Danh sách tháng theo tab đang xem
             ensureSelectionInTab();
         }
 
@@ -1548,6 +1568,100 @@
         function filterByMonth(ym) {
             currentFilterMonth = ym || 'all';
             renderFeatureList();
+        }
+
+        // ==========================================
+        // BKL-003: THÁNG PHÁT HÀNH · MỨC ƯU TIÊN L&D · SOẠN TIN ZALO / EMAIL
+        // ==========================================
+
+        // Tháng phát hành: mục từ Cổng = ngày cập nhật; mục thủ công = ngày launch → demo → cập nhật
+        function releaseMonthOf(f) {
+            const d = isPortalItem(f) ? f.updateDate : (f.launchDate || f.demoDate || f.updateDate);
+            return /^\d{4}-\d{2}/.test(String(d || '')) ? String(d).slice(0, 7) : '';
+        }
+
+        // Mức ưu tiên L&D (tính tự động, không cần nhập):
+        //  - Kiến thức mới: Cao = tính năng Mới chưa học · Trung bình = Cập nhật chưa học · Thấp = đã học
+        //  - Thủ công: Cao = khẩn cấp / cần quay video gấp · Trung bình = sắp demo trong 7 ngày hoặc chưa có HDSD · Thấp = còn lại
+        function priorityOf(f) {
+            if (isPortalItem(f)) {
+                if (isClearedByMe(f)) return 'low';
+                return f.type === 'NEW' ? 'high' : 'medium';
+            }
+            if (isUrgentFeature(f) || f.videoStatus === 'Cần quay lại gấp') return 'high';
+            const dd = f.demoDate && f.status !== 'Đã Launching' ? daysFromToday(f.demoDate) : null;
+            if ((dd !== null && dd >= 0 && dd <= 7) || f.hdsdStatus !== 'Đã cập nhật HDSD') return 'medium';
+            return 'low';
+        }
+
+        function filterByPriority(p) {
+            currentFilterPriority = p || 'all';
+            renderFeatureList();
+        }
+
+        function announceText(kind) {
+            const list = lastFilteredList.slice(0, 30);
+            const isLearn = currentTab === 'learn';
+            const month = currentFilterMonth !== 'all' ? `tháng ${currentFilterMonth.slice(5)}/${currentFilterMonth.slice(0, 4)}` : 'gần đây';
+            const title = isLearn ? `Cập nhật tính năng mới KiotViet ${month}` : `Lịch Demo / Launching tính năng ${month}`;
+            const line = (f, i) => {
+                const date = isLearn ? ymdToDmy(f.updateDate) : (f.demoDate ? 'Demo ' + ymdToDmy(f.demoDate) : (f.launchDate ? 'Launch ' + ymdToDmy(f.launchDate) : ''));
+                const tag = isLearn ? (f.type === 'NEW' ? '[Mới]' : '[Cập nhật]') : `[${f.status || ''}]`;
+                const link = safeUrl(f.hdsdUrl || f.iframeUrl);
+                const note = String(f.note || '').replace(/\s+/g, ' ').trim();
+                return `${i + 1}. ${tag} ${f.name || ''}${f.group ? ' – ' + f.group : ''}${date ? ' (' + date + ')' : ''}`
+                    + (note ? `\n   ${note.length > 160 ? note.slice(0, 157) + '…' : note}` : '')
+                    + (link ? `\n   ${kind === 'zalo' ? '👉 ' : 'Hướng dẫn: '}${link}` : '');
+            };
+            const body = list.length ? list.map(line).join('\n') : '(Danh sách đang lọc trống)';
+            const more = lastFilteredList.length > list.length ? `\n… và ${lastFilteredList.length - list.length} mục khác.` : '';
+            if (kind === 'zalo') {
+                return `📢 ${title.toUpperCase()}\n\n${body}${more}\n\nCả nhà dành thời gian xem và cập nhật kiến thức nhé! 💪`;
+            }
+            return `Tiêu đề: [L&D] ${title}\n\nChào anh/chị,\n\nL&D gửi danh sách ${list.length} tính năng cần lưu ý:\n\n${body}${more}\n\nAnh/chị vui lòng xem hướng dẫn và cập nhật kiến thức trước buổi demo/đào tạo.\n\nTrân trọng,\nL&D KiotViet`;
+        }
+
+        function openAnnounceModal() {
+            let m = document.getElementById('announceModal');
+            if (!m) {
+                m = document.createElement('div');
+                m.id = 'announceModal';
+                m.className = 'fixed inset-0 z-[120] bg-slate-900/50 flex items-center justify-center p-4';
+                m.innerHTML = `
+                    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+                        <div class="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+                            <h3 class="text-sm font-bold text-slate-800"><i class="fas fa-paper-plane text-purple-600 mr-1.5"></i>Soạn tin từ danh sách đang lọc <span id="announceCount" class="text-slate-400 font-semibold"></span></h3>
+                            <button type="button" onclick="closeAnnounceModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500" aria-label="Đóng"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="p-5 grid md:grid-cols-2 gap-4 overflow-y-auto">
+                            <div class="flex flex-col"><div class="flex items-center justify-between mb-1.5"><span class="text-xs font-bold text-slate-600"><i class="fas fa-comment-dots text-sky-500 mr-1"></i>Zalo</span>
+                                <button type="button" onclick="copyAnnounce('zalo')" class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100"><i class="far fa-copy mr-1"></i>Sao chép</button></div>
+                                <textarea id="announceZalo" class="w-full h-72 text-xs p-3 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:border-purple-400 resize-y"></textarea></div>
+                            <div class="flex flex-col"><div class="flex items-center justify-between mb-1.5"><span class="text-xs font-bold text-slate-600"><i class="fas fa-envelope text-rose-500 mr-1"></i>Email</span>
+                                <button type="button" onclick="copyAnnounce('email')" class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"><i class="far fa-copy mr-1"></i>Sao chép</button></div>
+                                <textarea id="announceEmail" class="w-full h-72 text-xs p-3 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:border-purple-400 resize-y"></textarea></div>
+                        </div>
+                        <p class="px-5 pb-4 text-[11px] text-slate-400">Nội dung lấy theo bộ lọc hiện tại (tối đa 30 mục). Tab thủ công: bấm "📅 Sắp Demo" trước để có danh sách sắp demo. Có thể sửa trực tiếp trước khi sao chép.</p>
+                    </div>`;
+                m.addEventListener('click', (e) => { if (e.target === m) closeAnnounceModal(); });
+                document.body.appendChild(m);
+            }
+            document.getElementById('announceZalo').value = announceText('zalo');
+            document.getElementById('announceEmail').value = announceText('email');
+            document.getElementById('announceCount').textContent = `(${lastFilteredList.length} mục)`;
+            m.classList.remove('hidden');
+        }
+
+        function closeAnnounceModal() {
+            const m = document.getElementById('announceModal');
+            if (m) m.classList.add('hidden');
+        }
+
+        function copyAnnounce(kind) {
+            const ta = document.getElementById(kind === 'zalo' ? 'announceZalo' : 'announceEmail');
+            const done = () => showToast(kind === 'zalo' ? 'Đã sao chép tin Zalo' : 'Đã sao chép nội dung Email');
+            if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(done, () => { ta.select(); document.execCommand('copy'); done(); });
+            else { ta.select(); document.execCommand('copy'); done(); }
         }
 
         // ==========================================
@@ -1651,7 +1765,7 @@
             // Huy hiệu / banner L&D thuộc tab Theo dõi thủ công
             if (rd !== 'all' && currentTab !== 'manual') switchRadarTab('manual');
             // Bộ lọc → nút tương ứng (giá trị lọc : id nút). 'upcoming' / 'cleared' không có nút riêng.
-            const RD_BUTTONS = { all: 'all', urgent: 'urgent', need_video: 'video', no_hdsd: 'hdsd', not_cleared: 'notclear' };
+            const RD_BUTTONS = { all: 'all', urgent: 'urgent', need_video: 'video', no_hdsd: 'hdsd', not_cleared: 'notclear', upcoming: 'upcoming' };
             const BASE = 'px-2.5 py-0.5 rounded-md text-[11px] shrink-0 ';
             const ACTIVE = BASE + 'font-bold bg-slate-800 text-white';
             const INACTIVE = {
@@ -1659,7 +1773,8 @@
                 urgent: BASE + 'font-bold text-rose-700 hover:bg-rose-50', // Không giữ nền hồng khi không chọn
                 video: BASE + 'font-semibold text-slate-600 hover:bg-slate-100',
                 hdsd: BASE + 'font-semibold text-slate-600 hover:bg-slate-100',
-                notclear: BASE + 'font-semibold text-slate-600 hover:bg-slate-100'
+                notclear: BASE + 'font-semibold text-slate-600 hover:bg-slate-100',
+                upcoming: BASE + 'font-semibold text-slate-600 hover:bg-slate-100'
             };
             const activeBtn = RD_BUTTONS[rd] || null;
             Object.keys(INACTIVE).forEach(r => {
