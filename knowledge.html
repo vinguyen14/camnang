@@ -65,11 +65,14 @@
         /* STYLE MINDMAP TỰ ĐỘNG XMIND */
         #markmap-svg { cursor: grab; width: 100%; height: 100%; font-family: 'Nunito', sans-serif !important; }
         #markmap-svg:active { cursor: grabbing; }
-        .markmap-node-root > foreignObject > div { background-color: #3b82f6 !important; color: white !important; padding: 8px 20px !important; border-radius: 12px !important; font-size: 18px !important; font-weight: 800 !important; border: 2px solid white !important; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3) !important; text-transform: uppercase; }
-        .markmap-node-level-1 > foreignObject > div { padding: 6px 16px !important; border-radius: 8px !important; font-size: 14px !important; font-weight: 800 !important; color: #334155 !important; background-color: #f1f5f9 !important; border-left: 4px solid #3b82f6 !important; border-top: 1px solid #e2e8f0 !important; border-right: 1px solid #e2e8f0 !important; border-bottom: 1px solid #e2e8f0 !important; }
-        .markmap-node-level-2 > foreignObject > div { padding: 5px 14px !important; border-radius: 6px !important; font-size: 14px !important; font-weight: 700 !important; color: #0f172a !important; background-color: #ffffff !important; border: 1px solid #cbd5e1 !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important; }
-        .markmap-node-level-3 > foreignObject > div { padding: 4px 12px !important; border-radius: 6px !important; font-size: 13px !important; font-weight: 500 !important; color: #475569 !important; background-color: transparent !important; }
-        .markmap-node-note > foreignObject > div { background-color: #fef3c7 !important; color: #b45309 !important; border: 1px dashed #f59e0b !important; font-size: 12px !important; padding: 6px 12px !important; border-radius: 8px !important; font-weight: 700 !important; }
+        /* Kiểu từng tầng nằm trên thẻ span trong nội dung (mm-d0…mm-note) nên markmap đo đúng kích thước -> không cắt chữ */
+        #markmap-svg foreignObject { overflow: visible; }
+        .mm-d0, .mm-d1, .mm-d2, .mm-d3, .mm-note { display: inline-block; font-family: 'Nunito', sans-serif; line-height: 1.35; white-space: inherit; }
+        .mm-d0 { background-color: #3b82f6; color: #fff; padding: 8px 20px; border-radius: 12px; font-size: 18px; font-weight: 800; border: 2px solid #fff; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); text-transform: uppercase; }
+        .mm-d1 { padding: 6px 16px; border-radius: 8px; font-size: 14px; font-weight: 800; color: #334155; background-color: #f1f5f9; border: 1px solid #e2e8f0; border-left: 4px solid #3b82f6; }
+        .mm-d2 { padding: 5px 14px; border-radius: 6px; font-size: 14px; font-weight: 700; color: #0f172a; background-color: #fff; border: 1px solid #cbd5e1; }
+        .mm-d3 { padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; color: #475569; }
+        .mm-note { background-color: #fef3c7; color: #b45309; border: 1px dashed #f59e0b; font-size: 12.5px; padding: 4px 10px; border-radius: 8px; font-weight: 700; }
 
         /* WIDGET BẢNG VẼ GLOBAL */
         .widget-panel { position: fixed; bottom: 80px; right: 30px; width: 450px; height: 600px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 35px -5px rgba(0,0,0,0.2); border: 1px solid #e2e8f0; z-index: 1000; transform: translateY(10px); opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; overflow: hidden; }
@@ -617,6 +620,7 @@
 
         window.renderNodeDetail = function (nodeId) {
             if (!LIFECYCLES[nodeId]) nodeId = 'setup';
+            if (!document.getElementById('knowledge-content')) { activeKnowledgeNode = nodeId; return; } // trang chưa dựng xong (đổi #… lúc đang tải)
             if (nodeId !== activeKnowledgeNode) activeRole = 'all';
             activeKnowledgeNode = nodeId;
             document.querySelectorAll('.k-node').forEach(el => { el.classList.remove('ring-4', 'ring-purple-200', 'scale-105', 'border-purple-500'); el.classList.add('border-slate-200'); });
@@ -673,6 +677,7 @@
                         <p class="text-xs font-bold text-slate-500 uppercase tracking-wider truncate"><i class="fas fa-sitemap mr-1"></i> Sơ đồ Vai trò (Mindmap)</p>
                         <div class="flex items-center gap-1.5 shrink-0">
                             <button data-act="mm-fit" class="btn-outline !px-2.5" title="Vừa khung"><i class="fas fa-compress-arrows-alt"></i><span class="hidden sm:inline ml-1">Vừa khung</span></button>
+                            <button data-act="mm-png" class="btn-outline !px-2.5" title="Tải ảnh PNG độ phân giải cao (dùng cho slide)"><i class="fas fa-image"></i><span class="hidden sm:inline ml-1">Tải PNG</span></button>
                             <button data-act="mm-full" class="btn-outline !px-2.5" title="Toàn màn hình"><i class="fas fa-expand"></i><span class="hidden sm:inline ml-1">Toàn màn hình</span></button>
                         </div>
                     </div>
@@ -712,6 +717,71 @@
             else if (act === 'open-all' || act === 'close-all') document.querySelectorAll('#knowledge-content [id^="doc-wrapper-"] h4[data-id]').forEach(h => setDocOpen(h.dataset.id, act === 'open-all'));
             else if (act === 'mm-fit') { if (mmInstance) mmInstance.fit(); }
             else if (act === 'mm-full') toggleMindmapFullscreen();
+            else if (act === 'mm-png') exportMindmapPng(el);
+        }
+
+        // ---------- XUẤT MINDMAP RA ẢNH PNG (BKL-004) ----------
+        // Chụp TOÀN BỘ sơ đồ (không phụ thuộc đang phóng to / kéo tới đâu), nền trắng, độ phân giải x3 cho slide.
+        const MM_STYLE_PROPS = ['background-color', 'color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+            'border-top', 'border-right', 'border-bottom', 'border-left', 'border-radius', 'box-shadow', 'font-family', 'font-size',
+            'font-weight', 'font-style', 'line-height', 'text-transform', 'white-space', 'display', 'width', 'max-width', 'overflow-wrap', 'word-break'];
+        async function exportMindmapPng(btn) {
+            const svg = document.getElementById('markmap-svg');
+            const g = svg && svg.querySelector(':scope > g');
+            if (!svg || !g) return showToast('Chưa có mindmap để xuất.', 'error');
+            if (btn) btn.disabled = true;
+            try {
+                const box = g.getBBox();
+                const pad = 40;
+                const w = Math.ceil(box.width + pad * 2), h = Math.ceil(box.height + pad * 2);
+                const clone = svg.cloneNode(true);
+                clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                clone.setAttribute('width', w);
+                clone.setAttribute('height', h);
+                clone.setAttribute('viewBox', `${box.x - pad} ${box.y - pad} ${w} ${h}`);
+                clone.removeAttribute('style');
+                clone.querySelector(':scope > g').removeAttribute('transform');
+                // Chép kiểu chữ / màu thật đang hiển thị vào từng ô (ảnh SVG không đọc được CSS của trang)
+                const liveEls = svg.querySelectorAll('foreignObject *');
+                clone.querySelectorAll('foreignObject *').forEach((el, i) => {
+                    const live = liveEls[i];
+                    if (!live) return;
+                    const cs = getComputedStyle(live);
+                    el.setAttribute('style', MM_STYLE_PROPS.map(p => `${p}:${cs.getPropertyValue(p)}`).join(';'));
+                    if (el.parentNode && el.parentNode.tagName && el.parentNode.tagName.toLowerCase() === 'foreignobject') el.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+                });
+                clone.querySelectorAll('foreignObject').forEach(fo => fo.setAttribute('style', 'overflow:visible'));
+                clone.querySelectorAll('.markmap-link').forEach(p => { p.setAttribute('stroke', '#cbd5e1'); p.setAttribute('stroke-width', '2'); p.setAttribute('fill', 'none'); });
+                const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                bg.setAttribute('x', box.x - pad); bg.setAttribute('y', box.y - pad);
+                bg.setAttribute('width', w); bg.setAttribute('height', h); bg.setAttribute('fill', '#ffffff');
+                clone.insertBefore(bg, clone.firstChild);
+
+                const xml = new XMLSerializer().serializeToString(clone);
+                const img = new Image();
+                img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+                await img.decode();
+                // x3 cho nét, nhưng giữ cạnh dài tối đa 8000px để trình duyệt không từ chối
+                const scale = Math.max(1, Math.min(3, 8000 / Math.max(w, h)));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(w * scale); canvas.height = Math.round(h * scale);
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const blob = await new Promise((res, rej) => canvas.toBlob(b => b ? res(b) : rej(new Error('Trình duyệt không tạo được ảnh')), 'image/png'));
+                const slug = s => fold(s).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `so-do-van-hanh-${slug(INDUSTRIES[activeIndustry].short)}-${slug(LIFECYCLES[activeKnowledgeNode].title.split('. ')[1])}.png`;
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+                showToast(`Đã tải ảnh mindmap ${canvas.width}×${canvas.height}px.`);
+            } catch (err) {
+                console.error(err);
+                showToast('Không xuất được ảnh: ' + (err && err.message ? err.message : 'lỗi không xác định') + '. Thử trình duyệt Chrome / Edge.', 'error');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
         }
 
         function toggleMindmapFullscreen() {
@@ -738,18 +808,22 @@
                 const { Transformer, Markmap } = window.markmap;
                 const transformer = new Transformer();
                 const rootTitle = `${INDUSTRIES[activeIndustry].title} - ${LIFECYCLES[nodeId].title.split('. ')[1]}`;
-                let mdContent = `# ${mdText(rootTitle)}\n`;
+                // Mỗi tầng bọc trong span có class riêng: chữ đã được mdText() thoát ký tự nên không chèn được HTML lạ
+                const tag = (cls, s) => `<span class="${cls}">${s}</span>`;
+                let mdContent = `# ${tag('mm-d0', mdText(rootTitle))}\n`;
 
-                if (nodeDocs.length === 0) { mdContent += `## (Trống)\n`; }
+                if (nodeDocs.length === 0) { mdContent += `## ${tag('mm-d1', '(Trống)')}\n`; }
                 else {
                     const roleGroups = {};
                     nodeDocs.forEach(doc => { (roleGroups[doc.role || 'Tất cả'] = roleGroups[doc.role || 'Tất cả'] || []).push(doc); });
                     for (const r in roleGroups) {
-                        mdContent += `## 👤 Vai trò: ${mdText(r)}\n`;
+                        mdContent += `## ${tag('mm-d1', '👤 Vai trò: ' + mdText(r))}\n`;
                         roleGroups[r].forEach(doc => {
-                            mdContent += `### ${mdText(doc.title)}\n`;
+                            mdContent += `### ${tag('mm-d2', mdText(doc.title))}\n`;
                             (Array.isArray(doc.summary) ? doc.summary : []).forEach(item => {
-                                mdContent += item.type === 'note' ? `#### 🌟 LƯU Ý: ${mdText(item.text)}\n` : `#### ${mdText(item.text)}\n`;
+                                mdContent += item.type === 'note'
+                                    ? `#### ${tag('mm-note', '🌟 LƯU Ý: ' + mdText(item.text))}\n`
+                                    : `#### ${tag('mm-d3', mdText(item.text))}\n`;
                             });
                         });
                     }
@@ -758,18 +832,8 @@
                 const svgEl = document.querySelector('#markmap-svg');
                 if (!svgEl) return;
                 svgEl.innerHTML = '';
-                mmInstance = Markmap.create(svgEl, { autoFit: true, fitRatio: 0.9, spacingHorizontal: 80, spacingVertical: 15, maxWidth: 300 }, root);
-                setTimeout(() => {
-                    d3.selectAll('#markmap-svg .markmap-node').each(function (d) {
-                        const node = d3.select(this);
-                        if (d.depth === 0) node.classed('markmap-node-root', true);
-                        else if (d.depth === 1) node.classed('markmap-node-level-1', true);
-                        else if (d.depth === 2) node.classed('markmap-node-level-2', true);
-                        else if (String(d.content || '').includes('🌟 LƯU Ý:')) node.classed('markmap-node-note', true);
-                        else node.classed('markmap-node-level-3', true);
-                    });
-                    d3.selectAll('.markmap-link').style('stroke', '#cbd5e1').style('stroke-width', '2px');
-                }, 200);
+                mmInstance = Markmap.create(svgEl, { autoFit: true, fitRatio: 0.9, spacingHorizontal: 80, spacingVertical: 15, maxWidth: 320 }, root);
+                setTimeout(() => { d3.selectAll('#markmap-svg .markmap-link').style('stroke', '#cbd5e1').style('stroke-width', '2px'); }, 200);
             } catch (error) {
                 console.error(error);
                 const box = document.querySelector('#mindmapCard .mm-box');

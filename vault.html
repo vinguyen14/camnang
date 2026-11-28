@@ -219,6 +219,36 @@
         .vault-menu-item i { width: 16px; text-align: center; }
         .vault-menu-sep { height: 1px; background: #f1f5f9; margin: 4px 0; }
         .vault-more-wrap { display: none; }
+        /* Kéo thả thư mục trên cây (BKL-004) */
+        .tree-node.vault-dragging { opacity: 0.45; }
+        .tree-node.folder-drop-before { box-shadow: inset 0 2px 0 #a855f7; }
+        .tree-node.folder-drop-after { box-shadow: inset 0 -2px 0 #a855f7; }
+        .tree-node.drop-invalid { cursor: no-drop; }
+        #folder-tree-container.folder-dragging::after { content: 'Thả vào vùng trống này để đưa ra thư mục gốc'; display: block; margin-top: 10px; padding: 12px 10px; text-align: center; font-size: 11px; font-weight: 600; color: #94a3b8; border: 1px dashed #cbd5e1; border-radius: 8px; }
+        #folder-tree-container.root-drop::after { color: #7e22ce; border-color: #a855f7; background: #faf5ff; }
+
+        /* Giao diện tối Aurora cho Kho lưu trữ */
+        html[data-aurora="dark"] .tree-children { border-left-color: rgba(255, 255, 255, 0.12); }
+        html.aurora-ui[data-aurora="dark"] .tree-node.drop-target,
+        html.aurora-ui[data-aurora="dark"] .tree-node.drop-target:hover { background: rgba(168, 85, 247, 0.24) !important; border: 1px dashed #a78bfa !important; color: #f5f3ff !important; }
+        html[data-aurora="dark"] .tree-node.folder-drop-before { box-shadow: inset 0 2px 0 #c4b5fd; }
+        html[data-aurora="dark"] .tree-node.folder-drop-after { box-shadow: inset 0 -2px 0 #c4b5fd; }
+        html[data-aurora="dark"] #resourceTable tr.drop-before > td { box-shadow: inset 0 2px 0 #c4b5fd; }
+        html[data-aurora="dark"] #resourceTable tr.drop-after > td { box-shadow: inset 0 -2px 0 #c4b5fd; }
+        html[data-aurora="dark"] #folder-tree-container.folder-dragging::after { border-color: rgba(255, 255, 255, 0.16); color: #94a3b8; }
+        html[data-aurora="dark"] #folder-tree-container.root-drop::after { border-color: #a78bfa; color: #ede9fe; background: rgba(139, 92, 246, 0.14); }
+        html[data-aurora="dark"] .vault-grip { color: #64748b; }
+        html[data-aurora="dark"] .vault-folder-bar { background: rgba(139, 92, 246, 0.12); border-bottom-color: rgba(167, 139, 250, 0.25); color: #ddd6fe; }
+        html[data-aurora="dark"] .vault-menu { background: #1b1d33; border-color: rgba(255, 255, 255, 0.10); box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.6); }
+        html[data-aurora="dark"] .vault-menu-item { color: #cbd5e1; }
+        html[data-aurora="dark"] .vault-menu-item:hover { background: rgba(139, 92, 246, 0.16); color: #ede9fe; }
+        html[data-aurora="dark"] .vault-menu-sep { background: rgba(255, 255, 255, 0.08); }
+        html[data-aurora="dark"] .vault-hl { background: rgba(250, 204, 21, 0.35); }
+        html[data-aurora="dark"] .vault-path { color: #94a3b8; }
+        html[data-aurora="dark"] .vault-path-seg { color: #c4b5fd; }
+        html[data-aurora="dark"] .vault-snippet { color: #94a3b8; }
+        html[data-aurora="dark"] .vault-thumb img { background: rgba(255, 255, 255, 0.06); }
+        @media (max-width: 767px) { html[data-aurora="dark"] .vault-sidebar { border-bottom-color: rgba(255, 255, 255, 0.10); } }
         /* Nút phụ chỉ hiện chữ khi màn đủ rộng (≥1536px), còn lại chỉ icon (có title) để tiêu đề không bị cắt */
         @media (max-width: 1535px) { .vault-extra-actions .btn-label { display: none; } }
         @media (max-width: 767px) {
@@ -536,6 +566,7 @@
         let searchDebounceTimer = null; // debounce ô tìm kiếm
         let activeTagFilter = null;     // Tag đang lọc toàn kho (chuỗi gốc để hiển thị)
         let draggedItemId = null;       // Tài nguyên đang được kéo (chuột)
+        let draggedFolderId = null;     // Thư mục đang được kéo trên cây (chuột)
         let pendingVaultImport = null;  // Dữ liệu file JSON đã kiểm tra, chờ chọn Gộp / Thay thế
 
         function escapeHtml(str) {
@@ -824,7 +855,7 @@
 
                 html += `
                     <li>
-                        <div class="tree-node group ${isActive}" id="node-${escapeHtml(f.id)}" data-folder-id="${escapeHtml(f.id)}" onclick="selectFolder(${jsArg(f.id)})">
+                        <div class="tree-node group ${isActive}" id="node-${escapeHtml(f.id)}" data-folder-id="${escapeHtml(f.id)}" draggable="${canMouseDrag() ? 'true' : 'false'}" title="${canMouseDrag() ? 'Kéo để đổi thứ tự hoặc thả vào thư mục khác' : ''}" onclick="selectFolder(${jsArg(f.id)})">
                             <div class="flex items-center flex-grow truncate">
                                 ${toggleHtml}
                                 <i class="fas ${escapeHtml(safeIcon(f.icon))} text-purple-400 mx-1.5 text-[14px]"></i>
@@ -1367,7 +1398,9 @@
         // ================= KÉO THẢ (chuột) =================
         function clearDropMarks() {
             document.querySelectorAll('#resourceTable tr.drop-before, #resourceTable tr.drop-after').forEach(el => el.classList.remove('drop-before', 'drop-after'));
-            document.querySelectorAll('.tree-node.drop-target').forEach(el => el.classList.remove('drop-target'));
+            document.querySelectorAll('.tree-node.drop-target, .tree-node.folder-drop-before, .tree-node.folder-drop-after, .tree-node.drop-invalid').forEach(el => el.classList.remove('drop-target', 'folder-drop-before', 'folder-drop-after', 'drop-invalid'));
+            const tree = document.getElementById('folder-tree-container');
+            if (tree) tree.classList.remove('root-drop');
         }
         function initDragDrop() {
             const tbody = document.getElementById('resourceListBody');
@@ -1414,6 +1447,77 @@
                 if (valid) reorderVaultItem(dragId, tr.dataset.itemId, after);
             });
 
+            // ---- Kéo thả THƯ MỤC trên cây: thả lên mép trên/dưới = đổi thứ tự, thả giữa = đưa vào trong,
+            //      thả vào vùng trống = đưa ra thư mục gốc ----
+            let expandTimer = null, expandTarget = null;
+            const cancelAutoExpand = () => { clearTimeout(expandTimer); expandTimer = null; expandTarget = null; };
+            tree.addEventListener('dragstart', (e) => {
+                const node = e.target.closest && e.target.closest('.tree-node[data-folder-id]');
+                if (!node || node.getAttribute('draggable') !== 'true') return;
+                draggedFolderId = node.dataset.folderId;
+                try {
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('application/x-vault-folder', draggedFolderId);
+                } catch (err) {}
+                node.classList.add('vault-dragging');
+                // Đợi trình duyệt chụp ảnh kéo xong rồi mới hiện gợi ý vùng gốc
+                setTimeout(() => { if (draggedFolderId) tree.classList.add('folder-dragging'); }, 0);
+            });
+            tree.addEventListener('dragend', () => {
+                draggedFolderId = null;
+                cancelAutoExpand();
+                clearDropMarks();
+                tree.classList.remove('folder-dragging');
+                tree.querySelectorAll('.tree-node.vault-dragging').forEach(el => el.classList.remove('vault-dragging'));
+            });
+            tree.addEventListener('dragover', (e) => {
+                if (!draggedFolderId) return;
+                const node = e.target.closest('.tree-node[data-folder-id]');
+                e.preventDefault();
+                clearDropMarks();
+                if (!node) { // vùng trống -> thư mục gốc
+                    tree.classList.add('root-drop');
+                    e.dataTransfer.dropEffect = 'move';
+                    cancelAutoExpand();
+                    return;
+                }
+                const zone = folderDropZone(node, e.clientY);
+                const ok = canDropFolder(draggedFolderId, node.dataset.folderId, zone);
+                e.dataTransfer.dropEffect = ok ? 'move' : 'none';
+                if (!ok) { node.classList.add('drop-invalid'); cancelAutoExpand(); return; }
+                node.classList.add(zone === 'inside' ? 'drop-target' : 'folder-drop-' + zone);
+                // Giữ chuột trên thư mục đang đóng ~0,7 giây -> tự mở ra để thả sâu hơn
+                if (zone === 'inside') {
+                    if (expandTarget !== node.dataset.folderId) {
+                        cancelAutoExpand();
+                        expandTarget = node.dataset.folderId;
+                        expandTimer = setTimeout(() => {
+                            const f = vaultFolders.find(x => x.id === expandTarget);
+                            const ul = node.parentElement && node.parentElement.querySelector(':scope > ul.tree-children');
+                            if (f && ul && !ul.classList.contains('open')) {
+                                f.isExpanded = true;
+                                ul.classList.add('open');
+                                const caret = node.querySelector('.toggle-icon');
+                                if (caret) caret.classList.replace('fa-caret-right', 'fa-caret-down');
+                            }
+                        }, 700);
+                    }
+                } else cancelAutoExpand();
+            });
+            tree.addEventListener('drop', (e) => {
+                if (!draggedFolderId) return;
+                e.preventDefault();
+                const node = e.target.closest('.tree-node[data-folder-id]');
+                const dragId = draggedFolderId;
+                const zone = node ? folderDropZone(node, e.clientY) : 'root';
+                // Cây sẽ vẽ lại nên phần tử đang kéo bị thay -> dọn trạng thái ngay tại đây (dragend có thể không tới)
+                draggedFolderId = null;
+                tree.classList.remove('folder-dragging');
+                cancelAutoExpand();
+                clearDropMarks();
+                moveFolder(dragId, node ? node.dataset.folderId : null, zone);
+            });
+
             // Thả vào thư mục trên cây -> chuyển thư mục
             tree.addEventListener('dragover', (e) => {
                 if (!draggedItemId) return;
@@ -1453,6 +1557,67 @@
             saveData();
             renderResourceList();
         }
+        // ---- Thư mục: vùng thả và di chuyển ----
+        function folderDropZone(node, clientY) {
+            const r = node.getBoundingClientRect();
+            const y = clientY - r.top;
+            if (y < r.height * 0.28) return 'before';
+            if (y > r.height * 0.72) return 'after';
+            return 'inside';
+        }
+        const parentKey = (p) => (p === undefined || p === null || p === '') ? null : p;
+        function canDropFolder(dragId, targetId, zone) {
+            if (!dragId || !targetId || dragId === targetId) return false;
+            // Không được thả vào chính thư mục con/cháu của nó
+            if (isDescendantFolder(targetId, dragId)) return false;
+            if (zone !== 'inside') {
+                const target = vaultFolders.find(f => f.id === targetId);
+                const newParent = target ? parentKey(target.parentId) : null;
+                if (newParent && isDescendantFolder(newParent, dragId)) return false;
+            }
+            return true;
+        }
+        function moveFolder(dragId, targetId, zone) {
+            const folder = vaultFolders.find(f => f.id === dragId);
+            if (!folder) return;
+            let newParent, insertAt = null;
+            if (zone === 'root' || !targetId) {
+                newParent = null;
+            } else {
+                if (!canDropFolder(dragId, targetId, zone)) {
+                    showVaultToast('Không thể đưa thư mục vào chính nó hoặc thư mục con của nó.');
+                    return;
+                }
+                const target = vaultFolders.find(f => f.id === targetId);
+                if (!target) return;
+                if (zone === 'inside') { newParent = target.id; target.isExpanded = true; }
+                else { newParent = parentKey(target.parentId); insertAt = { target, after: zone === 'after' }; }
+            }
+            const oldParent = parentKey(folder.parentId);
+            const siblings = vaultFolders
+                .filter(f => f !== folder && parentKey(f.parentId) === newParent)
+                .sort((a, b) => (a.order || 0) - (b.order || 0));
+            if (insertAt) siblings.splice(siblings.indexOf(insertAt.target) + (insertAt.after ? 1 : 0), 0, folder);
+            else siblings.push(folder);
+            const sameSpot = oldParent === newParent && siblings.map(f => f.id).join() === vaultFolders
+                .filter(f => parentKey(f.parentId) === newParent).sort((a, b) => (a.order || 0) - (b.order || 0)).map(f => f.id).join();
+            if (sameSpot) return;
+            folder.parentId = newParent;
+            siblings.forEach((f, k) => { f.order = k + 1; });
+            // Thu gọn số thứ tự ở thư mục cha cũ
+            if (oldParent !== newParent) {
+                vaultFolders.filter(f => parentKey(f.parentId) === oldParent)
+                    .sort((a, b) => (a.order || 0) - (b.order || 0))
+                    .forEach((f, k) => { f.order = k + 1; });
+            }
+            saveData();
+            renderTree();
+            const parentName = newParent ? (vaultFolders.find(f => f.id === newParent) || {}).name : null;
+            showVaultToast(oldParent === newParent
+                ? `Đã đổi vị trí thư mục "${folder.name}".`
+                : `Đã chuyển thư mục "${folder.name}" ${parentName ? `vào "${parentName}"` : 'ra thư mục gốc'}.`, false);
+        }
+
         function moveItemToFolder(itemId, folderId) {
             const item = vaultItems.find(i => String(i.id) === String(itemId));
             const folder = vaultFolders.find(f => f.id === folderId);
