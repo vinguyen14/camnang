@@ -191,6 +191,41 @@
             .tree-node .opacity-0, .v-table .opacity-0 { opacity: 1 !important; }
             .tree-node .fa-edit, .tree-node .fa-trash-alt { padding: 6px; font-size: 13px !important; }
         }
+
+        /* ================= NÂNG CẤP: TÌM KIẾM, TAG, XEM TRƯỚC, KÉO THẢ, MENU ================= */
+        .vault-hl { background: #fef08a; color: inherit; border-radius: 3px; padding: 0 1px; }
+        .tag-chip { cursor: pointer; transition: all 0.15s; }
+        .tag-chip:hover { background: #c7d2fe; border-color: #a5b4fc; }
+        .tag-chip.tag-active { background: #4338ca; color: #fff; border-color: #3730a3; }
+        .vault-path { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; font-size: 10.5px; color: #64748b; margin-bottom: 2px; }
+        .vault-path-seg { color: #7e22ce; font-weight: 600; background: none; border: 0; padding: 0; cursor: pointer; }
+        .vault-path-seg:hover { text-decoration: underline; }
+        .vault-snippet { font-size: 11px; color: #475569; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin-top: 2px; overflow-wrap: anywhere; }
+        .vault-thumb { width: 40px; height: 40px; position: relative; overflow: hidden; }
+        .vault-thumb-wide { width: 64px; height: 36px; }
+        .vault-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #f1f5f9; }
+        /* Kéo thả */
+        #resourceTable tr.vault-dragging { opacity: 0.4; }
+        #resourceTable tr.drop-before > td { box-shadow: inset 0 2px 0 #a855f7; }
+        #resourceTable tr.drop-after > td { box-shadow: inset 0 -2px 0 #a855f7; }
+        .tree-node.drop-target { background-color: #ede9fe; border: 1px dashed #a855f7; color: #6b21a8; }
+        .vault-grip { display: none; color: #94a3b8; cursor: grab; }
+        #resourceTable tr[draggable="true"]:hover .vault-grip { display: inline-block; }
+        #resourceTable tr[draggable="true"]:hover .vault-stt { display: none; }
+        /* Menu thả xuống (Đồng bộ Cloud, "…") */
+        .vault-menu { position: absolute; right: 0; top: calc(100% + 6px); min-width: 200px; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2); padding: 6px; z-index: 60; }
+        .vault-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; color: #475569; text-align: left; white-space: nowrap; }
+        .vault-menu-item:hover { background: #faf5ff; color: #7e22ce; }
+        .vault-menu-item i { width: 16px; text-align: center; }
+        .vault-menu-sep { height: 1px; background: #f1f5f9; margin: 4px 0; }
+        .vault-more-wrap { display: none; }
+        /* Nút phụ chỉ hiện chữ khi màn đủ rộng (≥1536px), còn lại chỉ icon (có title) để tiêu đề không bị cắt */
+        @media (max-width: 1535px) { .vault-extra-actions .btn-label { display: none; } }
+        @media (max-width: 767px) {
+            .vault-extra-actions { display: none !important; }
+            .vault-more-wrap { display: block; }
+            #resourceTable tr.drop-before, #resourceTable tr.drop-after { box-shadow: 0 0 0 2px #a855f7; }
+        }
     </style>
     <script src="system-config.js"></script>
 </head>
@@ -213,11 +248,35 @@
                 <div class="vault-header-actions flex items-center gap-4">
                     <div class="vault-search relative w-64 group">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-purple-500 transition"></i>
-                        <input type="text" id="globalSearchInput" oninput="searchVault()" placeholder="Tìm tài nguyên (Ctrl+F)" class="saas-input pl-9 bg-slate-50 border-slate-200 focus:bg-white text-xs">
+                        <input type="search" id="globalSearchInput" oninput="searchVault()" placeholder="Tìm toàn kho (/ hoặc Ctrl+K)" title="Tìm theo tên, ghi chú, tag, nội dung/link — không cần dấu, nhiều từ khóa" autocomplete="off" class="saas-input pl-9 bg-slate-50 border-slate-200 focus:bg-white text-xs">
                     </div>
                     <div class="vault-header-divider w-px h-6 bg-slate-200 shrink-0"></div>
                     <button onclick="togglePinnedView()" id="btnPinFilter" title="Tài nguyên đã ghim" class="vault-header-btn px-3 py-1.5 bg-white text-slate-500 rounded-lg text-xs font-bold border border-slate-200 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600 transition flex items-center gap-1.5"><i class="fas fa-star"></i> <span class="btn-label">Ghim (</span><span id="pinCount">0</span><span class="btn-label">)</span></button>
                     <button onclick="openTrashModal()" title="Thùng rác" class="vault-header-btn px-3 py-1.5 bg-rose-50 text-rose-600 rounded-lg text-xs font-bold border border-rose-100 hover:bg-rose-100 transition flex items-center gap-1.5"><i class="fas fa-trash-restore"></i> <span class="btn-label">Thùng rác (</span><span id="trashCount">0</span><span class="btn-label">)</span></button>
+                    <!-- Nút phụ (≥768px): Xuất / Nhập JSON, Đồng bộ Cloud -->
+                    <div class="vault-extra-actions flex items-center gap-2 shrink-0">
+                        <button type="button" onclick="exportVaultJson()" title="Xuất toàn bộ kho ra file JSON" class="vault-header-btn px-3 py-1.5 bg-white text-slate-500 rounded-lg text-xs font-bold border border-slate-200 hover:bg-purple-50 hover:border-purple-200 hover:text-purple-600 transition flex items-center gap-1.5"><i class="fas fa-file-export"></i> <span class="btn-label">Xuất</span></button>
+                        <button type="button" onclick="triggerVaultImport()" title="Nhập dữ liệu kho từ file JSON" class="vault-header-btn px-3 py-1.5 bg-white text-slate-500 rounded-lg text-xs font-bold border border-slate-200 hover:bg-purple-50 hover:border-purple-200 hover:text-purple-600 transition flex items-center gap-1.5"><i class="fas fa-file-import"></i> <span class="btn-label">Nhập</span></button>
+                        <div class="relative vault-menu-wrap">
+                            <button type="button" id="btnCloudMenu" onclick="toggleVaultMenu('cloudMenu', event)" aria-haspopup="menu" aria-expanded="false" title="Đồng bộ Kho lưu trữ với Cloud" class="vault-header-btn px-3 py-1.5 bg-white text-slate-500 rounded-lg text-xs font-bold border border-slate-200 hover:bg-sky-50 hover:border-sky-200 hover:text-sky-600 transition flex items-center gap-1.5"><i class="fas fa-cloud"></i> <span class="btn-label">Đồng bộ Cloud</span> <i class="fas fa-caret-down text-[10px]"></i></button>
+                            <div id="cloudMenu" class="vault-menu hidden" role="menu">
+                                <button type="button" role="menuitem" class="vault-menu-item" onclick="closeVaultMenus(); vaultPushCloud()"><i class="fas fa-cloud-upload-alt text-sky-500"></i> Đẩy lên Cloud</button>
+                                <button type="button" role="menuitem" class="vault-menu-item" onclick="closeVaultMenus(); vaultPullCloud()"><i class="fas fa-cloud-download-alt text-emerald-500"></i> Tải từ Cloud</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Điện thoại (<768px): gom nút phụ vào menu "…" -->
+                    <div class="vault-more-wrap vault-menu-wrap relative shrink-0">
+                        <button type="button" id="btnMoreMenu" onclick="toggleVaultMenu('moreMenu', event)" aria-haspopup="menu" aria-expanded="false" title="Thêm thao tác" class="vault-header-btn px-3 py-1.5 bg-white text-slate-500 rounded-lg text-xs font-bold border border-slate-200 hover:bg-purple-50 hover:text-purple-600 transition flex items-center"><i class="fas fa-ellipsis-h"></i></button>
+                        <div id="moreMenu" class="vault-menu hidden" role="menu">
+                            <button type="button" role="menuitem" class="vault-menu-item" onclick="closeVaultMenus(); exportVaultJson()"><i class="fas fa-file-export text-purple-500"></i> Xuất file JSON</button>
+                            <button type="button" role="menuitem" class="vault-menu-item" onclick="closeVaultMenus(); triggerVaultImport()"><i class="fas fa-file-import text-purple-500"></i> Nhập file JSON</button>
+                            <div class="vault-menu-sep"></div>
+                            <button type="button" role="menuitem" class="vault-menu-item" onclick="closeVaultMenus(); vaultPushCloud()"><i class="fas fa-cloud-upload-alt text-sky-500"></i> Đẩy lên Cloud</button>
+                            <button type="button" role="menuitem" class="vault-menu-item" onclick="closeVaultMenus(); vaultPullCloud()"><i class="fas fa-cloud-download-alt text-emerald-500"></i> Tải từ Cloud</button>
+                        </div>
+                    </div>
+                    <input type="file" id="vaultImportInput" accept=".json,application/json" class="hidden" onchange="handleVaultImportFile(this)">
                 </div>
             </header>
 
@@ -249,7 +308,10 @@
                             <i id="currentFolderIcon" class="fas fa-folder-open text-2xl text-purple-500"></i>
                             <div class="min-w-0">
                                 <h2 id="currentFolderName" class="text-xl font-bold text-slate-800">Tất cả Tài nguyên</h2>
-                                <p id="currentFolderCount" class="text-[11px] text-slate-500 font-medium">0 items</p>
+                                <div class="flex items-center flex-wrap gap-2">
+                                    <p id="currentFolderCount" class="text-[11px] text-slate-500 font-medium">0 items</p>
+                                    <span id="activeTagLabel" class="hidden items-center gap-1 text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full pl-2 pr-1 py-0.5"></span>
+                                </div>
                             </div>
                         </div>
                         <button onclick="openResourceModal()" id="btnAddResource" class="btn-primary shadow-md hidden whitespace-nowrap shrink-0"><i class="fas fa-plus mr-1"></i> Thêm Tài Nguyên</button>
@@ -270,8 +332,8 @@
                         </table>
                         <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-slate-400">
                             <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-4xl mb-4"><i class="fas fa-box-open"></i></div>
-                            <p class="font-medium text-sm">Thư mục này đang trống</p>
-                            <p class="text-xs mt-1">Bấm nút "Thêm Tài Nguyên" ở góc trên để bắt đầu lưu trữ.</p>
+                            <p id="emptyStateTitle" class="font-medium text-sm">Thư mục này đang trống</p>
+                            <p id="emptyStateHint" class="text-xs mt-1">Bấm nút "Thêm Tài Nguyên" ở góc trên để bắt đầu lưu trữ.</p>
                         </div>
                     </div>
                 </div>
@@ -435,6 +497,28 @@
         </div>
     </div>
 
+    <!-- MODAL 5: NHẬP DỮ LIỆU TỪ FILE JSON -->
+    <div id="importVaultModal" class="modal fixed inset-0 items-center justify-center p-4">
+        <div class="modal-content w-full max-w-lg shadow-2xl">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl shrink-0">
+                <h3 class="font-bold text-slate-800"><i class="fas fa-file-import text-purple-600 mr-2"></i>Nhập dữ liệu Kho lưu trữ</h3>
+                <button onclick="cancelVaultImport()" class="text-slate-400 hover:text-rose-500 text-xl"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 space-y-4 flex-grow overflow-y-auto custom-scrollbar text-[13px] text-slate-700">
+                <div id="importVaultSummary" class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-1"></div>
+                <div class="space-y-2">
+                    <p><b class="text-purple-700">Gộp:</b> chỉ thêm thư mục / tài nguyên / mục thùng rác có <i>id</i> chưa có trên máy. Dữ liệu hiện tại giữ nguyên.</p>
+                    <p><b class="text-rose-600">Thay thế:</b> xóa kho hiện tại và dùng dữ liệu trong file. Dữ liệu hiện tại được sao lưu trước vào localStorage (<code class="text-[11px]">&lt;key&gt;_before_import_&lt;thời gian&gt;</code>).</p>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-wrap justify-end gap-3 rounded-b-2xl shrink-0">
+                <button onclick="cancelVaultImport()" class="btn-outline">Hủy bỏ</button>
+                <button onclick="applyVaultImport('replace')" class="btn-primary bg-rose-600 border-rose-700 hover:bg-rose-700"><i class="fas fa-exchange-alt"></i> Thay thế</button>
+                <button onclick="applyVaultImport('merge')" class="btn-primary px-6"><i class="fas fa-object-group"></i> Gộp</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Global Tooltip -->
     <div id="global-tooltip" class="fixed bg-slate-800 text-white text-[12px] font-medium px-3 py-1.5 rounded-lg shadow-xl pointer-events-none opacity-0 transition-opacity duration-200 z-[100000] whitespace-nowrap flex items-center">
         <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
@@ -450,6 +534,9 @@
         let isViewingPinnedOnly = false; 
         let selectedTrashItems = new Set();
         let searchDebounceTimer = null; // debounce ô tìm kiếm
+        let activeTagFilter = null;     // Tag đang lọc toàn kho (chuỗi gốc để hiển thị)
+        let draggedItemId = null;       // Tài nguyên đang được kéo (chuột)
+        let pendingVaultImport = null;  // Dữ liệu file JSON đã kiểm tra, chờ chọn Gộp / Thay thế
 
         function escapeHtml(str) {
             return String(str ?? '')
@@ -520,6 +607,8 @@
             initResizer();
             initCtrlF();
             renderIconPicker();
+            initDragDrop();
+            initVaultMenus();
         };
 
         // Các key bị hỏng nhưng KHÔNG sao lưu được -> cấm ghi đè để không mất chuỗi gốc
@@ -720,6 +809,7 @@
             // Re-render cây: giữ nguyên từ khóa tìm kiếm và chế độ Ghim
             if(!currentFolderId && vaultFolders.length > 0) selectFolder(vaultFolders[0].id, true);
             else if (currentFolderId) selectFolder(currentFolderId, true);
+            else renderResourceList(); // Kho chưa có thư mục nào
         }
 
         function buildTreeHtml(parentId, level) {
@@ -734,7 +824,7 @@
 
                 html += `
                     <li>
-                        <div class="tree-node group ${isActive}" id="node-${escapeHtml(f.id)}" onclick="selectFolder(${jsArg(f.id)})">
+                        <div class="tree-node group ${isActive}" id="node-${escapeHtml(f.id)}" data-folder-id="${escapeHtml(f.id)}" onclick="selectFolder(${jsArg(f.id)})">
                             <div class="flex items-center flex-grow truncate">
                                 ${toggleHtml}
                                 <i class="fas ${escapeHtml(safeIcon(f.icon))} text-purple-400 mx-1.5 text-[14px]"></i>
@@ -765,6 +855,7 @@
             currentFolderId = id;
             if (!preserveView) {
                 isViewingPinnedOnly = false;
+                activeTagFilter = null;
                 document.getElementById('btnPinFilter').classList.remove('bg-amber-50', 'border-amber-200', 'text-amber-600');
                 const searchInput = document.getElementById('globalSearchInput');
                 if (searchInput) searchInput.value = '';
@@ -776,22 +867,50 @@
 
             const folder = vaultFolders.find(f => f.id === id);
             if(folder) {
-                document.getElementById('currentFolderName').innerText = folder.name;
-                document.getElementById('currentFolderIcon').className = `fas ${safeIcon(folder.icon)} text-2xl text-purple-500`;
                 document.getElementById('btnAddResource').classList.remove('hidden');
                 const barName = document.getElementById('vaultFolderBarName');
                 if (barName) barName.textContent = folder.name;
             }
             // Điện thoại: người dùng chọn thư mục -> thu gọn danh sách cây
             if (!preserveView && isMobileVault()) toggleMobileTree(false);
-            renderResourceList(); // renderResourceList tự cập nhật số đếm
+            renderResourceList(); // renderResourceList tự cập nhật tiêu đề + số đếm
         }
 
-        // Cập nhật nhãn "x tài nguyên" của thư mục đang chọn
-        function updateFolderCount() {
-            const el = document.getElementById('currentFolderCount');
-            if (!el || !currentFolderId) return;
-            el.innerText = `${vaultItems.filter(i => i.folderId === currentFolderId).length} tài nguyên`;
+        // Cập nhật tiêu đề/biểu tượng/số đếm vùng danh sách theo chế độ xem (thư mục hoặc toàn kho)
+        function updateListHeader(view, count) {
+            const nameEl = document.getElementById('currentFolderName');
+            const iconEl = document.getElementById('currentFolderIcon');
+            const countEl = document.getElementById('currentFolderCount');
+            const folder = vaultFolders.find(f => f.id === currentFolderId);
+            if (view.isGlobal) {
+                nameEl.innerText = isViewingPinnedOnly ? 'Tài nguyên đã ghim' : 'Kết quả trong toàn kho';
+                iconEl.className = isViewingPinnedOnly ? 'fas fa-star text-2xl text-amber-400' : 'fas fa-search text-2xl text-purple-500';
+                countEl.innerText = `${count} kết quả trong toàn kho`;
+            } else if (folder) {
+                nameEl.innerText = folder.name;
+                iconEl.className = `fas ${safeIcon(folder.icon)} text-2xl text-purple-500`;
+                countEl.innerText = `${count} tài nguyên`;
+            } else {
+                nameEl.innerText = 'Tất cả Tài nguyên';
+                iconEl.className = 'fas fa-folder-open text-2xl text-purple-500';
+                countEl.innerText = `${count} tài nguyên`;
+            }
+            const tagLabel = document.getElementById('activeTagLabel');
+            if (tagLabel) {
+                if (activeTagFilter) {
+                    tagLabel.innerHTML = `Đang lọc <span>#${escapeHtml(activeTagFilter)}</span><button type="button" onclick="clearTagFilter()" title="Bỏ lọc tag" class="w-4 h-4 rounded-full hover:bg-indigo-200 flex items-center justify-center leading-none">✕</button>`;
+                    tagLabel.classList.replace('hidden', 'inline-flex');
+                } else {
+                    tagLabel.innerHTML = '';
+                    tagLabel.classList.replace('inline-flex', 'hidden');
+                }
+            }
+            const t = document.getElementById('emptyStateTitle');
+            const h = document.getElementById('emptyStateHint');
+            if (t && h) {
+                t.textContent = view.isGlobal ? 'Không tìm thấy tài nguyên phù hợp' : 'Thư mục này đang trống';
+                h.textContent = view.isGlobal ? 'Thử bớt từ khóa, bỏ lọc tag hoặc tắt chế độ Ghim.' : 'Bấm nút "Thêm Tài Nguyên" ở góc trên để bắt đầu lưu trữ.';
+            }
         }
 
         function iconBoxHtml(icon) {
@@ -909,9 +1028,12 @@
 
             if(id) {
                 const i = vaultItems.find(x => x.id === id);
+                if (!i) return alert("Không tìm thấy tài nguyên (có thể đã bị xóa).");
+                const movedFolder = i.folderId !== folderId;
                 Object.assign(i, { title, type, content, note, tags, folderId, isPinned });
+                if (movedFolder) i.order = nextOrderInFolder(folderId, i.id); // Chuyển thư mục -> xếp cuối thư mục mới
             } else {
-                vaultItems.push({ id: 'i-' + Date.now(), folderId, title, type, content, note, tags, createdAt: Date.now(), isPinned, order: vaultItems.length + 1 });
+                vaultItems.push({ id: 'i-' + Date.now(), folderId, title, type, content, note, tags, createdAt: Date.now(), isPinned, order: nextOrderInFolder(folderId) });
             }
             saveData(); closeModal('resourceModal'); renderResourceList();
         }
@@ -931,7 +1053,10 @@
 
         function formatDate(timestamp) {
             if(!timestamp) return '--/--/----';
-            const d = new Date(timestamp);
+            // Dữ liệu tải từ Cloud có thể là chuỗi số ("1764...") -> đổi về số trước khi tạo Date
+            const n = Number(timestamp);
+            const d = new Date(Number.isFinite(n) ? n : timestamp);
+            if (isNaN(d.getTime())) return '--/--/----';
             return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
         }
 
@@ -941,21 +1066,204 @@
             renderResourceList();
         }
 
+        // ================= TÌM KIẾM TOÀN KHO (không dấu, nhiều từ khóa AND) =================
+        // Bỏ dấu tiếng Việt + chữ thường: "Mẫu Slide" -> "mau slide", "Đào" -> "dao"
+        function foldText(str) {
+            return String(str ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
+        }
+        // Bỏ dấu kèm bảng ánh xạ vị trí ký tự (chuỗi đã bỏ dấu -> chuỗi gốc) để tô đậm đúng chỗ trên chuỗi gốc
+        function foldWithMap(str) {
+            const src = String(str ?? '');
+            let norm = '';
+            const map = [];
+            for (let i = 0; i < src.length; i++) {
+                const f = foldText(src[i]);
+                for (let k = 0; k < f.length; k++) { norm += f[k]; map.push(i); }
+            }
+            return { norm, map, src };
+        }
+        // Từ khóa trong ô tìm -> mảng từ đã bỏ dấu (bỏ dấu # đầu từ để gõ "#ai" vẫn khớp tag "ai")
+        function getSearchTokens() {
+            const input = document.getElementById('globalSearchInput');
+            const q = foldText(input ? input.value : '').trim();
+            return q ? q.split(/\s+/).map(t => t.replace(/^#+/, '')).filter(Boolean) : [];
+        }
+        // Chuỗi gốc -> HTML đã escape, các đoạn khớp từ khóa bọc <mark>
+        function highlightText(str, tokens) {
+            const { norm, map, src } = foldWithMap(str);
+            if (!tokens.length || !src) return escapeHtml(src);
+            const marks = new Array(src.length).fill(false);
+            tokens.forEach(tok => {
+                let from = 0, idx;
+                while (tok && (idx = norm.indexOf(tok, from)) !== -1) {
+                    for (let k = idx; k < idx + tok.length; k++) marks[map[k]] = true;
+                    from = idx + tok.length;
+                }
+            });
+            let html = '', open = false;
+            for (let i = 0; i < src.length; i++) {
+                if (marks[i] && !open) { html += '<mark class="vault-hl">'; open = true; }
+                if (!marks[i] && open) { html += '</mark>'; open = false; }
+                html += escapeHtml(src[i]);
+            }
+            if (open) html += '</mark>';
+            return html;
+        }
+        // Trích đoạn quanh từ khóa đầu tiên khớp trong nội dung (để biết vì sao kết quả khớp)
+        function contentSnippetHtml(content, tokens) {
+            const { norm, map, src } = foldWithMap(content);
+            let pos = -1;
+            for (const tok of tokens) { const p = norm.indexOf(tok); if (p !== -1 && (pos === -1 || p < pos)) pos = p; }
+            if (pos === -1) return '';
+            const start = Math.max(0, map[pos] - 30);
+            const end = Math.min(src.length, map[pos] + 70);
+            const piece = src.slice(start, end).replace(/\s+/g, ' ');
+            return (start > 0 ? '…' : '') + highlightText(piece, tokens) + (end < src.length ? '…' : '');
+        }
+
+        // Tags: chấp nhận chuỗi "a, b" hoặc mảng
+        function parseTags(tags) {
+            const arr = Array.isArray(tags) ? tags : String(tags ?? '').split(',');
+            const seen = new Set();
+            return arr.map(t => String(t ?? '').trim()).filter(t => {
+                const k = foldText(t);
+                if (!t || seen.has(k)) return false;
+                seen.add(k); return true;
+            });
+        }
+        function tagChipsHtml(tags) {
+            const activeKey = activeTagFilter ? foldText(activeTagFilter) : null;
+            return parseTags(tags).map(t => `<button type="button" class="tag-badge tag-chip ${activeKey === foldText(t) ? 'tag-active' : ''}" title="Lọc toàn kho theo #${escapeHtml(t)}" onclick="filterByTag(${jsArg(t)}, event)">#${escapeHtml(t)}</button>`).join('');
+        }
+        function filterByTag(tag, event) {
+            if (event) event.stopPropagation();
+            const same = activeTagFilter && foldText(activeTagFilter) === foldText(tag);
+            activeTagFilter = same ? null : String(tag);
+            closeModal('detailModal');
+            renderResourceList();
+        }
+        function clearTagFilter() { activeTagFilter = null; renderResourceList(); }
+
+        // Đường dẫn thư mục: mảng thư mục từ gốc -> thư mục chứa (chống vòng lặp)
+        function getFolderPath(folderId) {
+            const path = [];
+            const seen = new Set();
+            let f = vaultFolders.find(x => x.id === folderId);
+            while (f && !seen.has(f.id)) { seen.add(f.id); path.unshift(f); f = f.parentId ? vaultFolders.find(x => x.id === f.parentId) : null; }
+            return path;
+        }
+        function folderPathHtml(folderId) {
+            const path = getFolderPath(folderId);
+            if (!path.length) return '<div class="vault-path"><i class="fas fa-folder text-[10px] mr-1"></i><span class="italic">(Không rõ thư mục)</span></div>';
+            return '<div class="vault-path"><i class="fas fa-folder text-[10px] mr-1 text-purple-300"></i>' + path.map(f =>
+                `<button type="button" class="vault-path-seg" title="Mở thư mục ${escapeHtml(f.name)}" onclick="goToFolder(${jsArg(f.id)})">${escapeHtml(f.name)}</button>`
+            ).join('<span class="mx-0.5 text-slate-400">›</span>') + '</div>';
+        }
+        // Chuyển tới thư mục: mở rộng các thư mục cha trên cây, chọn thư mục (thoát tìm kiếm / lọc tag / Ghim)
+        function goToFolder(id) {
+            if (!vaultFolders.some(f => f.id === id)) return;
+            let changed = false;
+            getFolderPath(id).slice(0, -1).forEach(f => { if (!f.isExpanded) { f.isExpanded = true; changed = true; } });
+            if (changed) saveData();
+            selectFolder(id);
+            renderTree();
+            const node = document.getElementById(`node-${id}`);
+            if (node && !isMobileVault()) node.scrollIntoView({ block: 'nearest' });
+        }
+
+        // Trạng thái xem hiện tại: toàn kho khi có từ khóa / lọc tag / chế độ Ghim
+        function getViewState() {
+            const tokens = getSearchTokens();
+            return { tokens, isGlobal: tokens.length > 0 || !!activeTagFilter || isViewingPinnedOnly };
+        }
+
+        // ================= XEM TRƯỚC LINK =================
+        function safeHttpUrl(v) {
+            const s = String(v ?? '').trim();
+            return /^https?:\/\/[^\s]+$/i.test(s) ? s : '';
+        }
+        function getYouTubeId(u, host) {
+            let id = '';
+            if (host === 'youtu.be') id = u.pathname.split('/')[1] || '';
+            else if (host === 'youtube.com' || host === 'music.youtube.com' || host === 'youtube-nocookie.com') {
+                if (u.pathname === '/watch') id = u.searchParams.get('v') || '';
+                else { const m = u.pathname.match(/^\/(?:shorts|embed|live|v)\/([^/?#]+)/); if (m) id = m[1]; }
+            }
+            return /^[A-Za-z0-9_-]{11}$/.test(id) ? id : '';
+        }
+        // Trả về { img, wide, fallback } hoặc { icon } hoặc null (dùng biểu tượng theo loại như cũ)
+        function getLinkPreview(item) {
+            if (item.type !== 'link' && item.type !== 'file') return null;
+            const url = safeHttpUrl(item.content);
+            if (!url) return null;
+            let u;
+            try { u = new URL(url); } catch (e) { return null; }
+            const host = u.hostname.toLowerCase().replace(/^(www|m)\./, '');
+            const yt = getYouTubeId(u, host);
+            if (yt) return { img: `https://i.ytimg.com/vi/${yt}/mqdefault.jpg`, wide: true, fallback: 'fab fa-youtube text-rose-600 bg-rose-50' };
+            if (/\.(png|jpe?g|webp|gif)$/i.test(u.pathname)) return { img: url, wide: false, fallback: 'fas fa-image text-sky-500 bg-sky-50' };
+            const p = u.pathname;
+            if (host === 'docs.google.com' || host === 'sheets.google.com' || host === 'slides.google.com') {
+                if (host === 'sheets.google.com' || p.startsWith('/spreadsheets')) return { icon: 'fas fa-file-excel text-emerald-600 bg-emerald-50', title: 'Google Sheets' };
+                if (host === 'slides.google.com' || p.startsWith('/presentation')) return { icon: 'fas fa-file-powerpoint text-amber-500 bg-amber-50', title: 'Google Slides' };
+                if (p.startsWith('/forms')) return { icon: 'fas fa-clipboard-list text-violet-600 bg-violet-50', title: 'Google Forms' };
+                if (p.startsWith('/document')) return { icon: 'fas fa-file-word text-blue-600 bg-blue-50', title: 'Google Docs' };
+            }
+            if (host === 'drive.google.com') return { icon: 'fab fa-google-drive text-emerald-600 bg-emerald-50', title: 'Google Drive' };
+            return null;
+        }
+        function previewBoxHtml(item, idArg) {
+            const typeIcon = item.type === 'link' ? 'fa-link text-blue-500 bg-blue-50' : (item.type === 'file' ? 'fa-file-alt text-emerald-500 bg-emerald-50' : 'fa-align-left text-purple-500 bg-purple-50');
+            const pv = getLinkPreview(item);
+            if (pv && pv.img) {
+                const [fam, ico, ...colors] = pv.fallback.split(' ');
+                // Lỗi tải ảnh -> xóa ảnh, lộ biểu tượng dự phòng bên dưới
+                return `<div class="vault-thumb ${pv.wide ? 'vault-thumb-wide' : ''} rounded border shrink-0 flex items-center justify-center cursor-pointer ${colors.join(' ')}" onclick="openResourceDetail(${idArg})"><i class="${fam} ${ico} text-xs"></i><img src="${escapeHtml(pv.img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" draggable="false" onerror="this.remove()"></div>`;
+            }
+            if (pv && pv.icon) {
+                const [fam, ico, ...colors] = pv.icon.split(' ');
+                return `<div class="w-8 h-8 rounded flex items-center justify-center border shrink-0 ${colors.join(' ')}" title="${escapeHtml(pv.title)}"><i class="${fam} ${ico} text-sm"></i></div>`;
+            }
+            return `<div class="w-8 h-8 rounded flex items-center justify-center border shrink-0 ${typeIcon}"><i class="fas ${typeIcon.split(' ')[0]} text-xs"></i></div>`;
+        }
+
+        // ================= THỨ TỰ (trường order) =================
+        function orderValue(it) { const n = Number(it && it.order); return Number.isFinite(n) ? n : Number.MAX_SAFE_INTEGER; }
+        // Ghim lên đầu, sau đó theo order, cuối cùng giữ thứ tự trong mảng (ổn định)
+        function sortVaultItems(arr) {
+            return arr.map((it, idx) => ({ it, idx })).sort((a, b) =>
+                ((b.it.isPinned ? 1 : 0) - (a.it.isPinned ? 1 : 0)) || (orderValue(a.it) - orderValue(b.it)) || (a.idx - b.idx)
+            ).map(x => x.it);
+        }
+        function nextOrderInFolder(folderId, excludeId) {
+            let max = 0;
+            vaultItems.forEach(i => { if (i.folderId === folderId && i.id !== excludeId) { const n = Number(i.order); if (Number.isFinite(n) && n > max) max = n; } });
+            return max + 1;
+        }
+        // Chuột thật (có hover + con trỏ chính xác) mới bật kéo thả; cảm ứng chuyển thư mục qua modal Sửa như cũ
+        const canMouseDrag = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
         // Luôn đọc từ khóa hiện tại trong ô tìm -> re-render sau ghim/xóa/thêm không làm mất kết quả tìm
         function renderResourceList() {
             const tbody = document.getElementById('resourceListBody');
             const emptyState = document.getElementById('emptyState');
             const table = document.getElementById('resourceTable');
-            updateFolderCount();
+            const view = getViewState();
+            const { tokens } = view;
+            const tagKey = activeTagFilter ? foldText(activeTagFilter) : null;
 
-            const searchInput = document.getElementById('globalSearchInput');
-            const qLower = String(searchInput ? searchInput.value.trim() : '').toLowerCase();
-            const matchQuery = i => String(i.title || '').toLowerCase().includes(qLower) || String(i.tags || '').toLowerCase().includes(qLower) || String(i.note || '').toLowerCase().includes(qLower);
-            let items = isViewingPinnedOnly
-                ? vaultItems.filter(i => i.isPinned && (!qLower || matchQuery(i)))
-                : (qLower
-                    ? vaultItems.filter(matchQuery)
-                    : vaultItems.filter(i => i.folderId === currentFolderId));
+            const matchQuery = i => {
+                if (!tokens.length) return true;
+                const hay = foldText([i.title, i.note, parseTags(i.tags).join(' '), i.content].join('\n'));
+                return tokens.every(t => hay.includes(t));
+            };
+            const matchTag = i => !tagKey || parseTags(i.tags).some(t => foldText(t) === tagKey);
+
+            let items = view.isGlobal
+                ? vaultItems.filter(i => (!isViewingPinnedOnly || i.isPinned) && matchTag(i) && matchQuery(i))
+                : vaultItems.filter(i => i.folderId === currentFolderId);
+
+            updateListHeader(view, items.length);
 
             if(items.length === 0) {
                 tbody.innerHTML = '';
@@ -963,24 +1271,28 @@
             }
             table.classList.remove('hidden'); emptyState.classList.replace('flex', 'hidden');
 
+            const draggable = canMouseDrag();
             // Gom chuỗi rồi gán innerHTML 1 lần (tránh innerHTML += trong vòng lặp)
-            tbody.innerHTML = items.sort((a,b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0)).map((item, index) => {
-                let typeIcon = item.type === 'link' ? 'fa-link text-blue-500 bg-blue-50' : (item.type === 'file' ? 'fa-file-alt text-emerald-500 bg-emerald-50' : 'fa-align-left text-purple-500 bg-purple-50');
-                const tagStr = String(item.tags ?? '');
-                let tagsHtml = tagStr ? tagStr.split(',').filter(t => t.trim()).map(t => `<span class="tag-badge">${escapeHtml(t.trim())}</span>`).join('') : '';
+            tbody.innerHTML = sortVaultItems(items).map((item, index) => {
                 const idArg = jsArg(item.id);
+                const titleHtml = highlightText(item.title, tokens);
+                // Chỉ hiện trích đoạn nội dung khi từ khóa không nằm hết trong tên
+                const foldedTitle = foldText(item.title);
+                const snippet = tokens.length && !tokens.every(t => foldedTitle.includes(t)) ? contentSnippetHtml(item.content, tokens) : '';
 
                 return `
-                    <tr class="group hover:bg-slate-50 transition border-l-4 border-transparent hover:border-l-purple-500">
-                        <td class="text-center text-xs text-slate-400 font-bold">${index + 1}</td>
+                    <tr class="group hover:bg-slate-50 transition border-l-4 border-transparent hover:border-l-purple-500" data-item-id="${escapeHtml(item.id)}" draggable="${draggable ? 'true' : 'false'}">
+                        <td class="text-center text-xs text-slate-400 font-bold" title="${draggable ? (view.isGlobal ? 'Kéo thả vào thư mục bên trái để chuyển' : 'Kéo để sắp xếp hoặc thả vào thư mục bên trái') : ''}"><span class="vault-stt">${index + 1}</span><i class="fas fa-grip-vertical vault-grip"></i></td>
                         <td class="text-center cursor-pointer" onclick="togglePin(${idArg})">${item.isPinned ? '<i class="fas fa-star text-amber-400"></i>' : '<i class="far fa-star text-slate-300"></i>'}</td>
                         <td>
                             <div class="flex items-start gap-3">
-                                <div class="w-8 h-8 rounded flex items-center justify-center border shrink-0 ${typeIcon}"><i class="fas ${typeIcon.split(' ')[0]} text-xs"></i></div>
-                                <div>
-                                    <h4 class="font-bold text-[13px] text-slate-800 hover:text-purple-600 cursor-pointer" onclick="openResourceDetail(${idArg})">${escapeHtml(item.title)}</h4>
-                                    <p class="text-[11px] text-slate-500 mt-0.5 truncate max-w-md">${escapeHtml(item.note || 'Không có mô tả')}</p>
-                                    <div class="mt-1">${tagsHtml}</div>
+                                ${previewBoxHtml(item, idArg)}
+                                <div class="min-w-0">
+                                    ${view.isGlobal ? folderPathHtml(item.folderId) : ''}
+                                    <h4 class="font-bold text-[13px] text-slate-800 hover:text-purple-600 cursor-pointer" onclick="openResourceDetail(${idArg})">${titleHtml}</h4>
+                                    <p class="text-[11px] text-slate-500 mt-0.5 truncate max-w-md">${tokens.length ? highlightText(item.note || 'Không có mô tả', tokens) : escapeHtml(item.note || 'Không có mô tả')}</p>
+                                    ${snippet ? `<p class="vault-snippet">${snippet}</p>` : ''}
+                                    <div class="mt-1 flex flex-wrap gap-y-1">${tagChipsHtml(item.tags)}</div>
                                 </div>
                             </div>
                         </td>
@@ -1010,16 +1322,460 @@
             clearTimeout(searchDebounceTimer);
             searchDebounceTimer = setTimeout(renderResourceList, 200);
         }
+        function isTypingTarget(el) {
+            if (!el) return false;
+            const tag = String(el.tagName || '').toUpperCase();
+            return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+        }
+        function focusVaultSearch() {
+            const input = document.getElementById('globalSearchInput');
+            if (!input) return;
+            input.focus();
+            input.select();
+        }
         function initCtrlF() {
             document.addEventListener('keydown', (e) => {
                 const key = String(e.key || '').toLowerCase();
-                if((e.ctrlKey || e.metaKey) && key === 'f') { e.preventDefault(); document.getElementById('globalSearchInput').focus(); return; }
+                const modalOpen = document.querySelectorAll('.modal.active').length > 0;
+                const typing = isTypingTarget(e.target);
+                // Ctrl+F (giữ như cũ), Ctrl+K hoặc "/" -> con trỏ vào ô tìm; không bắt khi đang gõ trong input/textarea hoặc đang mở modal
+                if ((e.ctrlKey || e.metaKey) && !e.altKey && (key === 'k' || key === 'f') && !modalOpen) {
+                    if (typing && e.target.id !== 'globalSearchInput') return;
+                    e.preventDefault(); focusVaultSearch(); return;
+                }
+                if (key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey && !typing && !modalOpen) {
+                    e.preventDefault(); focusVaultSearch(); return;
+                }
                 if(key === 'escape') {
+                    if (closeVaultMenus()) { e.preventDefault(); return; }
                     // Đóng modal đang mở trên cùng (phần tử .modal.active cuối cùng trong DOM)
                     const openModals = document.querySelectorAll('.modal.active');
-                    if (openModals.length > 0) { e.preventDefault(); closeModal(openModals[openModals.length - 1].id); }
+                    if (openModals.length > 0) {
+                        e.preventDefault();
+                        const top = openModals[openModals.length - 1].id;
+                        if (top === 'importVaultModal') cancelVaultImport(); else closeModal(top);
+                        return;
+                    }
+                    // Esc trong ô tìm: xóa từ khóa
+                    if (e.target && e.target.id === 'globalSearchInput' && e.target.value) {
+                        e.preventDefault(); e.target.value = ''; clearTimeout(searchDebounceTimer); renderResourceList();
+                    }
                 }
             });
+        }
+
+        // ================= KÉO THẢ (chuột) =================
+        function clearDropMarks() {
+            document.querySelectorAll('#resourceTable tr.drop-before, #resourceTable tr.drop-after').forEach(el => el.classList.remove('drop-before', 'drop-after'));
+            document.querySelectorAll('.tree-node.drop-target').forEach(el => el.classList.remove('drop-target'));
+        }
+        function initDragDrop() {
+            const tbody = document.getElementById('resourceListBody');
+            const tree = document.getElementById('folder-tree-container');
+
+            tbody.addEventListener('dragstart', (e) => {
+                const tr = e.target.closest && e.target.closest('tr[data-item-id]');
+                if (!tr || tr.getAttribute('draggable') !== 'true') return;
+                draggedItemId = tr.dataset.itemId;
+                try {
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('application/x-vault-item', draggedItemId);
+                } catch (err) {}
+                tr.classList.add('vault-dragging');
+            });
+            tbody.addEventListener('dragend', () => {
+                draggedItemId = null;
+                clearDropMarks();
+                tbody.querySelectorAll('tr.vault-dragging').forEach(el => el.classList.remove('vault-dragging'));
+            });
+            // Sắp xếp: chỉ khi đang xem 1 thư mục (không áp dụng cho kết quả tìm kiếm / lọc / Ghim)
+            tbody.addEventListener('dragover', (e) => {
+                if (!draggedItemId || getViewState().isGlobal) return;
+                const tr = e.target.closest('tr[data-item-id]');
+                if (!tr) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                const isSelf = tr.dataset.itemId === draggedItemId;
+                const rect = tr.getBoundingClientRect();
+                const after = e.clientY > rect.top + rect.height / 2;
+                tbody.querySelectorAll('tr.drop-before, tr.drop-after').forEach(el => { if (el !== tr) el.classList.remove('drop-before', 'drop-after'); });
+                tr.classList.toggle('drop-before', !isSelf && !after);
+                tr.classList.toggle('drop-after', !isSelf && after);
+            });
+            tbody.addEventListener('drop', (e) => {
+                if (!draggedItemId || getViewState().isGlobal) return;
+                const tr = e.target.closest('tr[data-item-id]');
+                if (!tr) return;
+                e.preventDefault();
+                const after = tr.classList.contains('drop-after');
+                const valid = tr.classList.contains('drop-before') || after;
+                const dragId = draggedItemId;
+                clearDropMarks();
+                if (valid) reorderVaultItem(dragId, tr.dataset.itemId, after);
+            });
+
+            // Thả vào thư mục trên cây -> chuyển thư mục
+            tree.addEventListener('dragover', (e) => {
+                if (!draggedItemId) return;
+                const node = e.target.closest('.tree-node[data-folder-id]');
+                document.querySelectorAll('.tree-node.drop-target').forEach(el => { if (el !== node) el.classList.remove('drop-target'); });
+                if (!node) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                node.classList.add('drop-target');
+            });
+            tree.addEventListener('dragleave', (e) => {
+                const node = e.target.closest && e.target.closest('.tree-node[data-folder-id]');
+                if (node && !node.contains(e.relatedTarget)) node.classList.remove('drop-target');
+            });
+            tree.addEventListener('drop', (e) => {
+                if (!draggedItemId) return;
+                const node = e.target.closest('.tree-node[data-folder-id]');
+                if (!node) return;
+                e.preventDefault();
+                const dragId = draggedItemId;
+                clearDropMarks();
+                moveItemToFolder(dragId, node.dataset.folderId);
+            });
+        }
+        function reorderVaultItem(dragId, targetId, placeAfter) {
+            const list = sortVaultItems(vaultItems.filter(i => i.folderId === currentFolderId));
+            const dragged = list.find(i => String(i.id) === String(dragId));
+            const target = list.find(i => String(i.id) === String(targetId));
+            if (!dragged || !target || dragged === target) return;
+            if (!!dragged.isPinned !== !!target.isPinned) {
+                showVaultToast('Chỉ sắp xếp được trong cùng nhóm (đã ghim / chưa ghim). Mục đã ghim luôn ở trên.', false);
+                return;
+            }
+            const rest = list.filter(i => i !== dragged);
+            rest.splice(rest.indexOf(target) + (placeAfter ? 1 : 0), 0, dragged);
+            rest.forEach((it, k) => { it.order = k + 1; });
+            saveData();
+            renderResourceList();
+        }
+        function moveItemToFolder(itemId, folderId) {
+            const item = vaultItems.find(i => String(i.id) === String(itemId));
+            const folder = vaultFolders.find(f => f.id === folderId);
+            if (!item || !folder || item.folderId === folder.id) return;
+            item.folderId = folder.id;
+            item.order = nextOrderInFolder(folder.id, item.id);
+            saveData();
+            renderResourceList();
+            showVaultToast(`Đã chuyển "${item.title}" tới thư mục "${folder.name}".`, false);
+        }
+
+        // ================= MENU THẢ XUỐNG (Đồng bộ Cloud, "…") =================
+        function closeVaultMenus() {
+            let closed = false;
+            document.querySelectorAll('.vault-menu').forEach(m => { if (!m.classList.contains('hidden')) { m.classList.add('hidden'); closed = true; } });
+            document.querySelectorAll('[aria-haspopup="menu"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+            return closed;
+        }
+        function toggleVaultMenu(menuId, event) {
+            if (event) event.stopPropagation();
+            const menu = document.getElementById(menuId);
+            if (!menu) return;
+            const willOpen = menu.classList.contains('hidden');
+            closeVaultMenus();
+            if (willOpen) {
+                menu.classList.remove('hidden');
+                const btn = event && event.currentTarget;
+                if (btn && btn.setAttribute) btn.setAttribute('aria-expanded', 'true');
+            }
+        }
+        function initVaultMenus() {
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest || !e.target.closest('.vault-menu-wrap')) closeVaultMenus();
+            });
+        }
+
+        // ================= CHUẨN HÓA / KIỂM TRA DỮ LIỆU (dùng cho Nhập JSON và Tải từ Cloud) =================
+        function normalizeFolder(f) {
+            if (!f || typeof f !== 'object') return null;
+            const id = String(f.id ?? '').trim();
+            const name = String(f.name ?? '').trim();
+            if (!id || !name) return null;
+            const pid = f.parentId === null || f.parentId === undefined ? '' : String(f.parentId).trim();
+            const order = Number(f.order);
+            return {
+                id, parentId: pid ? pid : null, name, icon: safeIcon(f.icon),
+                isExpanded: !(f.isExpanded === false || String(f.isExpanded).toLowerCase() === 'false'),
+                order: Number.isFinite(order) ? order : 0
+            };
+        }
+        function normalizeItem(i) {
+            if (!i || typeof i !== 'object') return null;
+            const id = String(i.id ?? '').trim();
+            const title = String(i.title ?? '').trim();
+            if (!id || !title) return null;
+            const created = Number(i.createdAt);
+            const order = Number(i.order);
+            const out = Object.assign({}, i, {
+                id, title,
+                folderId: String(i.folderId ?? '').trim(),
+                type: ['link', 'file', 'text'].includes(i.type) ? i.type : 'link',
+                content: String(i.content ?? ''),
+                note: String(i.note ?? ''),
+                tags: parseTags(i.tags).join(', '),
+                isPinned: i.isPinned === true || String(i.isPinned).toLowerCase() === 'true',
+                createdAt: Number.isFinite(created) && created > 0 ? created : (Date.parse(i.createdAt) || Date.now()),
+                order: Number.isFinite(order) ? order : 0
+            });
+            return out;
+        }
+        // Lọc mục hợp lệ + bỏ trùng id trong cùng danh sách; trả về { list, skipped }
+        function normalizeList(arr, fn) {
+            const seen = new Set();
+            const list = [];
+            let skipped = 0;
+            (Array.isArray(arr) ? arr : []).forEach(x => {
+                const n = fn(x);
+                if (!n || seen.has(n.id)) { skipped++; return; }
+                seen.add(n.id); list.push(n);
+            });
+            return { list, skipped };
+        }
+        // Sửa cây thư mục sau khi nhập: cha không tồn tại hoặc tạo vòng lặp -> đưa về gốc
+        function repairFolderTree(folders) {
+            const byId = new Map(folders.map(f => [f.id, f]));
+            folders.forEach(f => {
+                if (f.parentId && !byId.has(f.parentId)) f.parentId = null;
+            });
+            folders.forEach(f => {
+                const seen = new Set([f.id]);
+                let p = f.parentId ? byId.get(f.parentId) : null;
+                while (p) {
+                    if (seen.has(p.id)) { f.parentId = null; break; }
+                    seen.add(p.id);
+                    p = p.parentId ? byId.get(p.parentId) : null;
+                }
+            });
+        }
+        // Tài nguyên có thư mục không tồn tại -> chuyển vào thư mục đầu tiên (tạo thư mục "Dữ liệu nhập" nếu kho trống)
+        function repairOrphanItems() {
+            const ids = new Set(vaultFolders.map(f => f.id));
+            const orphans = vaultItems.filter(i => !ids.has(i.folderId));
+            if (!orphans.length) return 0;
+            if (!vaultFolders.length) vaultFolders.push({ id: 'f-' + Date.now(), parentId: null, name: 'Dữ liệu nhập', icon: 'fa-folder', isExpanded: true, order: 1 });
+            const target = vaultFolders[0].id;
+            orphans.forEach(i => { i.folderId = target; i.order = nextOrderInFolder(target, i.id); });
+            return orphans.length;
+        }
+        // Đọc dữ liệu kho từ object (file sao lưu hoặc payload Cloud); ném lỗi nếu sai cấu trúc
+        function parseVaultBundle(obj) {
+            if (!obj || typeof obj !== 'object' || Array.isArray(obj)) throw new Error('File không phải dữ liệu Kho lưu trữ (cần object JSON).');
+            const pick = (a, b) => {
+                let v = obj[a] !== undefined ? obj[a] : obj[b];
+                if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { throw new Error(`Trường "${a}" không phải JSON hợp lệ.`); } }
+                return v;
+            };
+            const folders = pick('folders', 'kv_vault_folders');
+            const items = pick('items', 'kv_vault_items');
+            const trash = pick('trash', 'kv_vault_trash');
+            if (!Array.isArray(folders) || !Array.isArray(items)) throw new Error('Thiếu danh sách "folders" hoặc "items" (phải là mảng).');
+            if (trash !== undefined && trash !== null && !Array.isArray(trash)) throw new Error('"trash" phải là mảng.');
+            const f = normalizeList(folders, normalizeFolder);
+            const it = normalizeList(items, normalizeItem);
+            const tr = normalizeList(trash || [], normalizeItem);
+            return { folders: f.list, items: it.list, trash: tr.list, skipped: f.skipped + it.skipped + tr.skipped, version: obj.version };
+        }
+        // Sao lưu chuỗi gốc 3 key vào '<key>_<suffix>_<ts>' TRƯỚC khi ghi đè. Thất bại -> dọn bản dở dang, trả về false
+        function backupVaultKeys(suffix) {
+            const ts = vaultStamp() + String(new Date().getSeconds()).padStart(2, '0');
+            const written = [];
+            try {
+                for (const key of ['kv_vault_folders', 'kv_vault_items', 'kv_vault_trash']) {
+                    const raw = localStorage.getItem(key);
+                    if (raw === null) continue;
+                    const bk = `${key}_${suffix}_${ts}`;
+                    localStorage.setItem(bk, raw);
+                    written.push(bk);
+                    if (localStorage.getItem(bk) !== raw) throw new Error('verify');
+                }
+                return { ok: true, keys: written };
+            } catch (e) {
+                written.forEach(k => { try { localStorage.removeItem(k); } catch (err) {} });
+                return { ok: false, quota: isQuotaError(e) };
+            }
+        }
+        // Ghi dữ liệu mới vào bộ nhớ + localStorage; lỗi lưu -> trả lại dữ liệu cũ
+        function commitVaultState(folders, items, trash) {
+            const prev = { folders: vaultFolders, items: vaultItems, trash: vaultTrash };
+            vaultFolders = folders; vaultItems = items; vaultTrash = trash;
+            repairFolderTree(vaultFolders);
+            repairOrphanItems();
+            if (!saveData()) {
+                vaultFolders = prev.folders; vaultItems = prev.items; vaultTrash = prev.trash;
+                saveData();
+                renderTree();
+                return false;
+            }
+            if (!vaultFolders.some(f => f.id === currentFolderId)) currentFolderId = null;
+            renderTree();
+            return true;
+        }
+
+        // ================= XUẤT / NHẬP JSON =================
+        function exportVaultJson() {
+            const d = new Date();
+            const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+            const data = { version: 1, app: 'trainer-os-vault', exportedAt: d.toISOString(), folders: vaultFolders, items: vaultItems, trash: vaultTrash };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `vault-backup-${ymd}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 2000);
+            showVaultToast(`Đã xuất ${vaultFolders.length} thư mục, ${vaultItems.length} tài nguyên, ${vaultTrash.length} mục thùng rác.`, false);
+        }
+        function triggerVaultImport() {
+            const input = document.getElementById('vaultImportInput');
+            if (!input) return;
+            input.value = '';
+            input.click();
+        }
+        function handleVaultImportFile(input) {
+            const file = input.files && input.files[0];
+            input.value = '';
+            if (!file) return;
+            if (file.size > 20 * 1024 * 1024) return alert('File quá lớn (tối đa 20MB).');
+            const reader = new FileReader();
+            reader.onload = () => {
+                let bundle;
+                try { bundle = parseVaultBundle(JSON.parse(String(reader.result || ''))); }
+                catch (e) { return alert('Không nhập được file: ' + (e instanceof SyntaxError ? 'nội dung không phải JSON hợp lệ.' : e.message)); }
+                pendingVaultImport = bundle;
+                const folderIds = new Set(vaultFolders.map(f => f.id));
+                const itemIds = new Set(vaultItems.concat(vaultTrash).map(i => String(i.id)));
+                const newF = bundle.folders.filter(f => !folderIds.has(f.id)).length;
+                const newI = bundle.items.filter(i => !itemIds.has(i.id)).length;
+                const newT = bundle.trash.filter(i => !itemIds.has(i.id)).length;
+                document.getElementById('importVaultSummary').innerHTML = `
+                    <p class="font-bold text-slate-800 truncate"><i class="fas fa-file-code text-purple-500 mr-1"></i>${escapeHtml(file.name)}</p>
+                    <p>Trong file: <b>${bundle.folders.length}</b> thư mục · <b>${bundle.items.length}</b> tài nguyên · <b>${bundle.trash.length}</b> mục thùng rác</p>
+                    <p>Hiện tại: <b>${vaultFolders.length}</b> thư mục · <b>${vaultItems.length}</b> tài nguyên · <b>${vaultTrash.length}</b> mục thùng rác</p>
+                    <p class="text-purple-700">Nếu Gộp sẽ thêm: ${newF} thư mục · ${newI} tài nguyên · ${newT} mục thùng rác</p>
+                    ${bundle.skipped ? `<p class="text-amber-600">Bỏ qua ${bundle.skipped} mục thiếu id/tên hoặc trùng id trong file.</p>` : ''}`;
+                document.getElementById('importVaultModal').classList.add('active');
+            };
+            reader.onerror = () => alert('Không đọc được file.');
+            reader.readAsText(file);
+        }
+        function cancelVaultImport() {
+            pendingVaultImport = null;
+            closeModal('importVaultModal');
+        }
+        function applyVaultImport(mode) {
+            const bundle = pendingVaultImport;
+            if (!bundle) return closeModal('importVaultModal');
+            if (mode === 'replace') {
+                if (!confirm(`THAY THẾ toàn bộ Kho lưu trữ trên máy bằng dữ liệu trong file?\nDữ liệu hiện tại sẽ được sao lưu vào localStorage trước.`)) return;
+                const bk = backupVaultKeys('before_import');
+                if (!bk.ok) return alert(bk.quota ? 'Bộ nhớ trình duyệt đầy, không sao lưu được dữ liệu hiện tại nên CHƯA thay thế. Hãy bấm "Xuất" để lưu file trước, dọn bớt dữ liệu rồi thử lại.' : 'Không sao lưu được dữ liệu hiện tại nên CHƯA thay thế.');
+                bk.keys.forEach(k => vaultBlockedKeys.delete(k.replace(/_before_import_.*$/, ''))); // bản gốc đã an toàn -> cho ghi lại
+                if (commitVaultState(bundle.folders, bundle.items, bundle.trash)) {
+                    currentFolderId = null; renderTree();
+                    showVaultToast(`Đã thay thế kho bằng dữ liệu file. Bản cũ: ${bk.keys.join(', ') || '(trống)'}`, false);
+                } else showVaultToast('Không lưu được dữ liệu nhập (bộ nhớ đầy?). Kho giữ nguyên như cũ.');
+            } else {
+                const folderIds = new Set(vaultFolders.map(f => f.id));
+                const itemIds = new Set(vaultItems.concat(vaultTrash).map(i => String(i.id)));
+                const folders = vaultFolders.concat(bundle.folders.filter(f => !folderIds.has(f.id)));
+                const newItems = sortVaultItems(bundle.items.filter(i => !itemIds.has(i.id)));
+                newItems.forEach(i => itemIds.add(i.id));
+                const newTrash = bundle.trash.filter(i => !itemIds.has(i.id));
+                const items = vaultItems.slice();
+                // Mục mới xếp cuối thư mục đích, giữ thứ tự tương đối trong file
+                newItems.forEach(i => {
+                    let max = 0;
+                    items.forEach(x => { if (x.folderId === i.folderId) { const n = Number(x.order); if (Number.isFinite(n) && n > max) max = n; } });
+                    i.order = max + 1;
+                    items.push(i);
+                });
+                if (commitVaultState(folders, items, vaultTrash.concat(newTrash))) {
+                    showVaultToast(`Đã gộp: +${folders.length - folderIds.size} thư mục, +${newItems.length} tài nguyên, +${newTrash.length} mục thùng rác.`, false);
+                } else showVaultToast('Không lưu được dữ liệu nhập (bộ nhớ đầy?). Kho giữ nguyên như cũ.');
+            }
+            pendingVaultImport = null;
+            closeModal('importVaultModal');
+        }
+
+        // ================= ĐỒNG BỘ CLOUD (chỉ 3 key Kho lưu trữ) =================
+        // Backend sync_up GỘP theo key: key không gửi lên giữ nguyên trên Cloud; danh sách rỗng cũng giữ nguyên.
+        // Token được system-config.js tự gắn vào request (không đọc/in token ở đây).
+        function getVaultApiUrl() {
+            if (typeof getGlobalApiUrl === 'function') return getGlobalApiUrl();
+            try { return localStorage.getItem('kv_api_url') || ''; } catch (e) { return ''; }
+        }
+        let vaultCloudBusy = false;
+        async function vaultPushCloud() {
+            if (vaultCloudBusy) return;
+            const url = getVaultApiUrl();
+            if (!url) return alert('Chưa có Link API. Vui lòng cấu hình ở trang Cài đặt.');
+            if (vaultBlockedKeys.size > 0) return alert('Một số dữ liệu Kho đang bị khóa ghi do lỗi đọc. Không đẩy lên Cloud để tránh ghi đè bằng dữ liệu thiếu.');
+            const warnEmpty = (!vaultFolders.length || !vaultItems.length) ? '\n- Danh sách đang TRỐNG trên máy sẽ GIỮ NGUYÊN bản trên Cloud (không xóa).' : '';
+            if (!confirm(`ĐẨY KHO LƯU TRỮ LÊN CLOUD:\n- ${vaultFolders.length} thư mục, ${vaultItems.length} tài nguyên, ${vaultTrash.length} mục thùng rác.\n- Kho lưu trữ trên Cloud sẽ được THAY bằng dữ liệu máy này; các thiết lập khác trên Cloud giữ nguyên.${warnEmpty}\n- Gợi ý: bấm "Xuất" để lưu file dự phòng trước.\n\nĐồng ý tiếp tục?`)) return;
+            vaultCloudBusy = true;
+            showVaultToast('Đang đẩy Kho lưu trữ lên Cloud...', false);
+            try {
+                const payload = JSON.stringify({
+                    kv_vault_folders: JSON.stringify(vaultFolders),
+                    kv_vault_items: JSON.stringify(vaultItems),
+                    kv_vault_trash: JSON.stringify(vaultTrash)
+                });
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'sync_up', payload })
+                });
+                const data = await res.json();
+                if (!data || data.status !== 'success') throw new Error((data && data.message) || 'Lỗi Server');
+                const l = data.lists || {};
+                const fmt = v => typeof v === 'number' ? v : (v === 'kept' ? 'giữ nguyên' : String(v || '?'));
+                showVaultToast(`Đã đẩy lên Cloud: thư mục ${fmt(l.vaultFolders)}, tài nguyên ${fmt(l.vaultItems)}${data.backup ? ' • Bản sao Settings cũ: ' + data.backup : ''}`, false);
+            } catch (e) {
+                showVaultToast('Lỗi đồng bộ lên Cloud: ' + (e && e.message ? e.message : e));
+            } finally {
+                vaultCloudBusy = false;
+            }
+        }
+        async function vaultPullCloud() {
+            if (vaultCloudBusy) return;
+            const url = getVaultApiUrl();
+            if (!url) return alert('Chưa có Link API. Vui lòng cấu hình ở trang Cài đặt.');
+            if (!confirm('TẢI KHO LƯU TRỮ TỪ CLOUD:\n- Chỉ cập nhật Kho lưu trữ (thư mục, tài nguyên, thùng rác); dữ liệu khác trên máy giữ nguyên.\n- Kho hiện tại trên máy sẽ được sao lưu vào localStorage (<key>_before_cloud_<thời gian>) trước khi thay.\n\nĐồng ý tiếp tục?')) return;
+            vaultCloudBusy = true;
+            showVaultToast('Đang tải Kho lưu trữ từ Cloud...', false);
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'sync_down' })
+                });
+                const data = await res.json();
+                if (!data || data.status !== 'success') throw new Error((data && data.message) || 'Lỗi Server');
+                const cloud = typeof data.payload === 'string' ? JSON.parse(data.payload || '{}') : (data.payload || {});
+                const has = k => cloud[k] !== undefined && cloud[k] !== null && cloud[k] !== '';
+                if (!has('kv_vault_folders') && !has('kv_vault_items')) throw new Error('Cloud chưa có dữ liệu Kho lưu trữ.');
+                // Key nào Cloud không có -> giữ bản trên máy
+                const bundle = parseVaultBundle({
+                    folders: has('kv_vault_folders') ? cloud.kv_vault_folders : vaultFolders,
+                    items: has('kv_vault_items') ? cloud.kv_vault_items : vaultItems,
+                    trash: has('kv_vault_trash') ? cloud.kv_vault_trash : vaultTrash
+                });
+                const bk = backupVaultKeys('before_cloud');
+                if (!bk.ok) throw new Error(bk.quota ? 'Bộ nhớ trình duyệt đầy, không sao lưu được kho hiện tại nên CHƯA tải về. Hãy "Xuất" file rồi dọn bớt dữ liệu.' : 'Không sao lưu được kho hiện tại nên CHƯA tải về.');
+                bk.keys.forEach(k => vaultBlockedKeys.delete(k.replace(/_before_cloud_.*$/, '')));
+                if (!commitVaultState(bundle.folders, bundle.items, bundle.trash)) throw new Error('Không lưu được dữ liệu tải về (bộ nhớ đầy?). Kho giữ nguyên như cũ.');
+                showVaultToast(`Đã tải từ Cloud: ${vaultFolders.length} thư mục, ${vaultItems.length} tài nguyên, ${vaultTrash.length} mục thùng rác.`, false);
+            } catch (e) {
+                showVaultToast('Lỗi tải từ Cloud: ' + (e && e.message ? e.message : e));
+            } finally {
+                vaultCloudBusy = false;
+            }
         }
 
         function openResourceDetail(id) {
@@ -1035,12 +1791,7 @@
                     : (item.type === 'file' ? 'fas fa-file-alt text-emerald-400' : 'fas fa-align-left text-purple-400');
             }
             const detTags = document.getElementById('detTags');
-            if (detTags) {
-                const tagStr = String(item.tags ?? '');
-                detTags.innerHTML = tagStr
-                    ? tagStr.split(',').filter(t => t.trim()).map(t => `<span class="tag-badge">${escapeHtml(t.trim())}</span>`).join('')
-                    : '';
-            }
+            if (detTags) detTags.innerHTML = tagChipsHtml(item.tags); // Bấm chip -> đóng popup, lọc toàn kho theo tag
             document.getElementById('detCopyBtn').onclick = () => navigator.clipboard.writeText(item.content).then(() => alert("Đã copy!"));
             document.getElementById('detEditBtn').onclick = () => { closeModal('detailModal'); openResourceModal(item.id); };
             document.getElementById('detailModal').classList.add('active');
@@ -1078,6 +1829,7 @@
             if (!vaultFolders.some(f => f.id === item.folderId)) {
                 item.folderId = currentFolderId || (vaultFolders[0] ? vaultFolders[0].id : 'f-1');
             }
+            item.order = nextOrderInFolder(item.folderId, item.id); // Khôi phục -> xếp cuối thư mục
             return item;
         }
         function restoreVaultItem(id) {

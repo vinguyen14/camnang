@@ -232,6 +232,7 @@
             .radar-header-right { width: 100%; justify-content: space-between; margin-left: 0; }
             .radar-filter-box { padding: 12px !important; }
             #radarFeatureList { padding: 12px; }
+            #radarStatsBar { padding-left: 12px; padding-right: 12px; }
             .feature-card { padding: 14px; }
             .ui-tip-box { max-width: min(280px, 80vw); }
 
@@ -307,6 +308,11 @@
                         </div>
                     </div>
 
+                    <!-- Đồng bộ tính năng Mới / Cập nhật từ Cổng học tập E-Learning (bỏ qua cache 30 phút) -->
+                    <button id="portalSyncBtn" type="button" onclick="syncFromPortal(true)" class="shrink-0 whitespace-nowrap px-3 py-2 bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5" title="Lấy tính năng Mới / Cập nhật từ Cổng học tập E-Learning">
+                        <i id="portalSyncIcon" class="fas fa-cloud-arrow-down"></i> <span class="hidden sm:inline">Đồng bộ Cổng</span><span class="sm:hidden">Cổng</span>
+                    </button>
+
                     <button onclick="openFeatureModal()" class="shrink-0 whitespace-nowrap px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5">
                         <i class="fas fa-plus"></i> <span class="hidden md:inline">Thêm Cập Nhật Mới</span><span class="md:hidden">Thêm</span>
                     </button>
@@ -330,6 +336,16 @@
                         </button>
                     </div>
 
+                    <!-- 2 TAB: KIẾN THỨC MỚI (học cá nhân, mặc định) / THEO DÕI THỦ CÔNG (mục nhập tay) -->
+                    <div class="flex items-end gap-1 px-4 pt-2 bg-white border-b border-slate-200 shrink-0 overflow-x-auto custom-scrollbar">
+                        <button type="button" id="tab-learn" onclick="switchRadarTab('learn')" class="radar-tab shrink-0 whitespace-nowrap px-3 py-2 text-xs font-bold border-b-2 border-purple-600 text-purple-700 flex items-center gap-1.5">
+                            <i class="fas fa-graduation-cap"></i> Kiến thức mới <span id="tabCountLearn" class="px-1.5 rounded-md bg-purple-100 text-purple-700 text-[10px] font-mono-code">0</span>
+                        </button>
+                        <button type="button" id="tab-manual" onclick="switchRadarTab('manual')" class="radar-tab shrink-0 whitespace-nowrap px-3 py-2 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-1.5">
+                            <i class="fas fa-clipboard-list"></i> Theo dõi thủ công <span id="tabCountManual" class="px-1.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-mono-code">0</span>
+                        </button>
+                    </div>
+
                     <!-- BỘ LỌC ĐA TẦNG NÂNG CAO -->
                     <div class="radar-filter-box p-4 border-b border-slate-200 bg-white space-y-3 shrink-0">
                         <!-- TẦNG 1: LỌC PHÂN HỆ SẢN PHẨM -->
@@ -345,7 +361,7 @@
                         </div>
 
                         <!-- TẦNG 2: LỌC THEO TRẠNG THÁI NGHIỆP VỤ L&D -->
-                        <div class="radar-chip-row flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 pt-1 border-t border-slate-100">
+                        <div id="rdFilterRow" class="radar-chip-row hidden items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 pt-1 border-t border-slate-100">
                             <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">L&D:</span>
                             <button onclick="filterByReadiness('all')" id="btn-rd-all" class="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-800 text-white shrink-0">Tất Cả</button>
                             <button onclick="filterByReadiness('urgent')" id="btn-rd-urgent" class="px-2.5 py-0.5 rounded-md text-[11px] font-bold text-rose-700 hover:bg-rose-50 shrink-0">🔴 Khẩn Cấp</button>
@@ -359,10 +375,35 @@
                             </span>
                         </div>
 
+                        <!-- TẦNG 2b (TAB KIẾN THỨC MỚI): LỌC NHANH CHƯA HỌC / MỚI / CẬP NHẬT / NGOÀI KHÓA HỌC + THEO THÁNG -->
+                        <div id="quickFilterRow" class="radar-chip-row flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 pt-1 border-t border-slate-100">
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">Học:</span>
+                            <button onclick="filterByQuick('all')" id="btn-q-all" class="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-800 text-white shrink-0">Tất Cả</button>
+                            <button onclick="filterByQuick('unlearned')" id="btn-q-unlearned" class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 hover:bg-slate-100 shrink-0">📌 Chưa học</button>
+                            <button onclick="filterByQuick('NEW')" id="btn-q-new" class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 hover:bg-slate-100 shrink-0">✨ Mới</button>
+                            <button onclick="filterByQuick('UPDATE')" id="btn-q-update" class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 hover:bg-slate-100 shrink-0">🔄 Cập nhật</button>
+                            <button onclick="filterByQuick('out')" id="btn-q-out" class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 hover:bg-slate-100 shrink-0">🧭 Ngoài khóa học</button>
+                            <select id="radarMonthFilter" onchange="filterByMonth(this.value)" class="ml-auto shrink-0 px-2 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 bg-slate-50 border border-slate-200 outline-none focus:border-purple-400" title="Lọc theo tháng của Ngày cập nhật">
+                                <option value="all">Mọi tháng</option>
+                            </select>
+                        </div>
+
                         <!-- TẦNG 3: THANH TÌM KIẾM TỨC THỜI -->
                         <div class="relative">
                             <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                             <input type="text" id="radarSearchInput" oninput="searchRadarFeatures(this.value)" placeholder="Tìm kiếm theo tên tính năng, video bài giảng, ghi chú..." class="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:bg-white focus:border-purple-400 transition">
+                        </div>
+                    </div>
+
+                    <!-- THỐNG KÊ NHỎ: THÁNG NÀY + TRẠNG THÁI ĐỒNG BỘ CỔNG -->
+                    <div id="radarStatsBar" class="px-5 py-2 border-b border-slate-200 bg-slate-50 text-[11px] text-slate-500 shrink-0 space-y-1.5">
+                        <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                            <span id="radarMonthStats" class="font-semibold text-slate-600"></span>
+                            <span id="portalSyncInfo" class="font-mono-code text-[10px] text-slate-400"></span>
+                        </div>
+                        <!-- Thanh tiến độ học tháng này -->
+                        <div id="radarProgressWrap" class="h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                            <div id="radarProgressBar" class="h-full rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 transition-all" style="width:0%"></div>
                         </div>
                     </div>
 
@@ -550,6 +591,70 @@
         let currentFilterReadiness = 'all';
         let currentSearchQuery = '';
         let activeSelectedFeatureId = null;
+        let currentTab = 'learn';        // 'learn' (Kiến thức mới - mục từ Cổng) | 'manual' (Theo dõi thủ công - mục nhập tay)
+        let currentQuick = 'all';        // Tab học: 'all' | 'unlearned' | 'NEW' | 'UPDATE' | 'out'
+        let currentFilterMonth = 'all';  // Tab học: 'all' | 'yyyy-mm' (theo Ngày cập nhật)
+
+        // Mục học từ Cổng = có portalKey; còn lại là mục nhập tay
+        function isPortalItem(f) { return !!(f && f.portalKey); }
+
+        // ==========================================
+        // 0. NGƯỜI DÙNG HIỆN TẠI & "ĐÃ NẮM" THEO TỪNG TRAINER
+        // clearedBy: { '<email hoặc tên>': 'yyyy-mm-dd' }. Dữ liệu cũ chỉ có cleared===true → coi như 'Chung' đã nắm.
+        // Trường `cleared` vẫn được giữ = trạng thái của người dùng hiện tại (sidebar-nav.js đọc trường này để bật chấm đỏ).
+        // ==========================================
+        function getCurrentTrainer() {
+            try {
+                const p = JSON.parse(localStorage.getItem('kv_trainer_profile') || 'null');
+                if (p && typeof p === 'object') {
+                    const v = String(p.email || p.name || '').trim();
+                    if (v) return v;
+                }
+            } catch (e) { /* profile hỏng → dùng mặc định */ }
+            return 'Tôi';
+        }
+        const CURRENT_TRAINER = getCurrentTrainer();
+
+        function todayYmd() {
+            const d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+        function hasClearedByMap(f) {
+            return !!(f && f.clearedBy && typeof f.clearedBy === 'object' && !Array.isArray(f.clearedBy));
+        }
+        // Bản sao danh sách người đã nắm (kể cả 'Chung' cho dữ liệu cũ)
+        function getClearedMap(f) {
+            const m = {};
+            if (hasClearedByMap(f)) Object.keys(f.clearedBy).forEach(k => { m[k] = String(f.clearedBy[k] || ''); });
+            else if (f && f.cleared === true) m['Chung'] = '';
+            return m;
+        }
+        function isClearedByMe(f) {
+            if (!f) return false;
+            if (hasClearedByMap(f)) return Object.prototype.hasOwnProperty.call(f.clearedBy, CURRENT_TRAINER);
+            return f.cleared === true; // Dữ liệu cũ
+        }
+        function setClearedByMe(f, on) {
+            const m = getClearedMap(f);
+            if (on) m[CURRENT_TRAINER] = m[CURRENT_TRAINER] || todayYmd(); else delete m[CURRENT_TRAINER];
+            f.clearedBy = m;
+            f.cleared = !!on;
+        }
+        // Khẩn cấp (theo người dùng hiện tại): đã Launch nhưng BẠN chưa nắm hoặc video cần quay lại
+        function isUrgentFeature(f) {
+            return (f.status === 'Đã Launching') && (!isClearedByMe(f) || f.videoStatus === 'Cần quay lại gấp');
+        }
+
+        // Link ngoài chỉ chấp nhận http/https
+        function safeUrl(u) {
+            const s = String(u || '').trim();
+            return /^https?:\/\//i.test(s) ? s : '';
+        }
+        // 'yyyy-mm-dd' → 'dd/mm/yyyy' để hiển thị
+        function ymdToDmy(s) {
+            const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
+            return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
+        }
 
         function showToast(msg) {
             const t = document.getElementById('toast');
@@ -670,13 +775,8 @@
             // Không còn tự ghi dữ liệu mẫu: chưa có dữ liệu thì hiển thị trạng thái trống
 
             updateAlertBadgesAndBanner();
-            renderFeatureList();
-
-            if (radarFeatures.length > 0 && !activeSelectedFeatureId) {
-                selectFeatureToTest(radarFeatures[0].id);
-            } else if (radarFeatures.length === 0) {
-                selectFeatureToTest(null);
-            }
+            // Chọn thẻ đầu tiên của tab đang mở (hoặc màn trống nếu tab chưa có mục)
+            ensureSelectionInTab();
         }
 
         function saveRadarData() {
@@ -685,6 +785,8 @@
                 updateAlertBadgesAndBanner();
                 return false;
             }
+            // Giữ `cleared` = trạng thái của người dùng hiện tại (để chấm đỏ sidebar ở các trang khác vẫn đúng)
+            radarFeatures.forEach(f => { if (hasClearedByMap(f)) f.cleared = isClearedByMe(f); });
             try {
                 localStorage.setItem(RADAR_STORAGE_KEY, JSON.stringify(radarFeatures));
             } catch (e) {
@@ -707,10 +809,10 @@
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            radarFeatures.forEach(f => {
-                // 1. Khẩn cấp: Đã Launch khách dùng nhưng Trainer CHƯA CLEAR hoặc VIDEO CHƯA SỬA
-                const isUrgent = (f.status === 'Đã Launching') && (!f.cleared || f.videoStatus === 'Cần quay lại gấp');
-                if (isUrgent) urgentCount++;
+            // Bộ 3 huy hiệu + banner đỏ: chỉ tính mục THEO DÕI THỦ CÔNG (mục học từ Cổng dùng thanh tiến độ riêng)
+            radarFeatures.filter(f => !isPortalItem(f)).forEach(f => {
+                // 1. Khẩn cấp: Đã Launch khách dùng nhưng BẠN CHƯA NẮM hoặc VIDEO CHƯA SỬA
+                if (isUrgentFeature(f)) urgentCount++;
 
                 // 2. Sắp Demo trong 7 ngày tới
                 if (f.demoDate) {
@@ -718,9 +820,12 @@
                     if (diffDays !== null && diffDays >= 0 && diffDays <= 7 && f.status !== 'Đã Launching') upcomingCount++;
                 }
 
-                // 3. Đã Clear
-                if (f.cleared) clearedCount++;
+                // 3. Đã Clear (bởi người dùng hiện tại)
+                if (isClearedByMe(f)) clearedCount++;
             });
+
+            refreshMonthOptions();
+            updateMonthStats();
 
             document.getElementById('badge-urgent').innerHTML = `<i class="fas fa-exclamation-triangle ${urgentCount > 0 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}"></i> <span>${urgentCount}<span class="badge-label"> Khẩn cấp</span></span>`;
             document.getElementById('badge-upcoming').innerHTML = `<i class="fas fa-clock text-amber-500"></i> <span>${upcomingCount}<span class="badge-label"> Sắp Demo</span></span>`;
@@ -738,9 +843,53 @@
                 }
             }
 
-            // Chấm đỏ Sidebar
+            // Chấm đỏ Sidebar: cùng công thức với sidebar-nav.js (tính trên TẤT CẢ mục, kể cả mục học từ Cổng)
             const dot = document.getElementById('sidebar-alert-dot');
-            if (dot) dot.classList.toggle('hidden', urgentCount === 0);
+            if (dot) dot.classList.toggle('hidden', !radarFeatures.some(isUrgentFeature));
+
+            // Số mục trên 2 tab
+            const nLearn = radarFeatures.filter(isPortalItem).length;
+            const tl = document.getElementById('tabCountLearn');
+            const tm = document.getElementById('tabCountManual');
+            if (tl) tl.innerText = nLearn;
+            if (tm) tm.innerText = radarFeatures.length - nLearn;
+        }
+
+        // ==========================================
+        // 2b. BỘ LỌC THÁNG + THỐNG KÊ HỌC THÁNG NÀY (TAB KIẾN THỨC MỚI)
+        // ==========================================
+        function refreshMonthOptions() {
+            const sel = document.getElementById('radarMonthFilter');
+            if (!sel) return;
+            const counts = {};
+            radarFeatures.filter(isPortalItem).forEach(f => {
+                const ym = /^\d{4}-\d{2}/.test(String(f.updateDate || '')) ? String(f.updateDate).slice(0, 7) : '';
+                if (ym) counts[ym] = (counts[ym] || 0) + 1;
+            });
+            const months = Object.keys(counts).sort().reverse();
+            if (currentFilterMonth !== 'all' && !counts[currentFilterMonth]) currentFilterMonth = 'all';
+            sel.innerHTML = '<option value="all">Mọi tháng</option>' + months.map(ym =>
+                `<option value="${escapeHtml(ym)}">Tháng ${escapeHtml(ym.slice(5))}/${escapeHtml(ym.slice(0, 4))} (${counts[ym]})</option>`
+            ).join('');
+            sel.value = currentFilterMonth;
+        }
+
+        function updateMonthStats() {
+            const el = document.getElementById('radarMonthStats');
+            const bar = document.getElementById('radarProgressBar');
+            const wrap = document.getElementById('radarProgressWrap');
+            if (!el) return;
+            const ym = todayYmd().slice(0, 7);
+            const items = radarFeatures.filter(f => isPortalItem(f) && String(f.updateDate || '').slice(0, 7) === ym);
+            const n = items.length;
+            const learned = items.filter(isClearedByMe).length;
+            const nNew = items.filter(f => f.type === 'NEW').length;
+            const nUpd = items.filter(f => f.type === 'UPDATE').length;
+            el.innerHTML = n
+                ? `Tháng này: <b class="text-slate-800">${nNew}</b> mới · <b class="text-slate-800">${nUpd}</b> cập nhật · bạn đã học <b class="text-purple-700">${learned}/${n}</b>`
+                : 'Tháng này chưa có tính năng mới / cập nhật từ Cổng học tập';
+            if (bar) bar.style.width = (n ? Math.round(learned * 100 / n) : 0) + '%';
+            if (wrap) { wrap.classList.toggle('hidden', !n); wrap.title = `Đã học ${learned}/${n} tính năng mới / cập nhật tháng này`; }
         }
 
         // ==========================================
@@ -750,8 +899,23 @@
             const container = document.getElementById('radarFeatureList');
             if (!container) return;
 
-            // Chưa có dữ liệu → trạng thái trống với nút thêm mới
-            if (radarFeatures.length === 0) {
+            const isLearn = currentTab === 'learn';
+            const tabItems = radarFeatures.filter(f => isPortalItem(f) === isLearn);
+
+            // Tab học chưa có dữ liệu → nhắc đồng bộ Cổng
+            if (isLearn && tabItems.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 px-4 bg-white rounded-2xl border border-dashed border-slate-300">
+                        <i class="fas fa-graduation-cap text-3xl text-slate-300 mb-2 block"></i>
+                        <h4 class="text-xs font-bold text-slate-700">${portalSyncState.loading ? 'Đang lấy kiến thức mới từ Cổng học tập…' : 'Chưa có kiến thức mới từ Cổng học tập'}</h4>
+                        <p class="text-[11px] text-slate-400 mt-1">Bấm "Đồng bộ Cổng" ở góc trên để lấy các tính năng Mới / Cập nhật.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Tab thủ công chưa có dữ liệu → trạng thái trống với nút thêm mới
+            if (tabItems.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-16 px-4 bg-white rounded-2xl border border-dashed border-slate-300">
                         <i class="fas fa-satellite-dish text-3xl text-slate-300 mb-2 block"></i>
@@ -765,24 +929,31 @@
                 return;
             }
 
-            let filtered = radarFeatures.slice();
+            let filtered = tabItems.slice();
 
             // 1. Lọc theo Phân hệ
             if (currentFilterIndustry !== 'all') {
                 filtered = filtered.filter(f => String(f.group || '').toLowerCase() === currentFilterIndustry.toLowerCase());
             }
 
-            // 2. Lọc theo Trạng thái Nghiệp vụ L&D
-            if (currentFilterReadiness === 'urgent') {
-                filtered = filtered.filter(f => (f.status === 'Đã Launching') && (!f.cleared || f.videoStatus === 'Cần quay lại gấp'));
+            // 2. Lọc theo Trạng thái Nghiệp vụ L&D (chỉ tab thủ công) / lọc nhanh + tháng (chỉ tab học)
+            if (isLearn) {
+                if (currentQuick === 'unlearned') filtered = filtered.filter(f => !isClearedByMe(f));
+                else if (currentQuick === 'NEW' || currentQuick === 'UPDATE') filtered = filtered.filter(f => f.type === currentQuick);
+                else if (currentQuick === 'out') filtered = filtered.filter(f => f.scope === 'out');
+                if (currentFilterMonth !== 'all') {
+                    filtered = filtered.filter(f => String(f.updateDate || '').slice(0, 7) === currentFilterMonth);
+                }
+            } else if (currentFilterReadiness === 'urgent') {
+                filtered = filtered.filter(isUrgentFeature);
             } else if (currentFilterReadiness === 'need_video') {
                 filtered = filtered.filter(f => f.videoStatus === 'Cần quay lại gấp');
             } else if (currentFilterReadiness === 'no_hdsd') {
                 filtered = filtered.filter(f => f.hdsdStatus !== 'Đã cập nhật HDSD');
             } else if (currentFilterReadiness === 'not_cleared') {
-                filtered = filtered.filter(f => !f.cleared);
+                filtered = filtered.filter(f => !isClearedByMe(f));
             } else if (currentFilterReadiness === 'cleared') {
-                filtered = filtered.filter(f => f.cleared);
+                filtered = filtered.filter(f => isClearedByMe(f));
             } else if (currentFilterReadiness === 'upcoming') {
                 filtered = filtered.filter(f => {
                     if (!f.demoDate || f.status === 'Đã Launching') return false;
@@ -795,7 +966,8 @@
             if (currentSearchQuery) {
                 const q = currentSearchQuery.toLowerCase();
                 const has = v => String(v || '').toLowerCase().includes(q);
-                filtered = filtered.filter(f => has(f.name) || has(f.note) || has(f.videoName));
+                filtered = filtered.filter(f => has(f.name) || has(f.note) || has(f.videoName) || has(f.course)
+                    || (Array.isArray(f.changes) && f.changes.some(has)));
             }
 
             if (filtered.length === 0) {
@@ -810,18 +982,34 @@
             }
 
             // Sắp xếp: Khẩn cấp lên đầu
-            filtered.sort((a, b) => {
-                const aUrgent = (a.status === 'Đã Launching') && (!a.cleared || a.videoStatus === 'Cần quay lại gấp');
-                const bUrgent = (b.status === 'Đã Launching') && (!b.cleared || b.videoStatus === 'Cần quay lại gấp');
-                if (aUrgent && !bUrgent) return -1;
-                if (!aUrgent && bUrgent) return 1;
+            const byDateDesc = (a, b) => {
                 const aDt = parseYmd(a.updateDate), bDt = parseYmd(b.updateDate);
                 return (bDt ? bDt.getTime() : 0) - (aDt ? aDt.getTime() : 0);
+            };
+            if (isLearn) {
+                // Tab học: Chưa học lên trước, rồi mới nhất trước
+                filtered.sort((a, b) => (isClearedByMe(a) - isClearedByMe(b)) || byDateDesc(a, b));
+                container.innerHTML = filtered.map(renderLearningCard).join('');
+                return;
+            }
+
+            // Tab thủ công: Khẩn cấp lên đầu
+            filtered.sort((a, b) => {
+                const aUrgent = isUrgentFeature(a);
+                const bUrgent = isUrgentFeature(b);
+                if (aUrgent && !bUrgent) return -1;
+                if (!aUrgent && bUrgent) return 1;
+                return byDateDesc(a, b);
             });
 
             container.innerHTML = filtered.map(f => {
                 const isSelected = f.id === activeSelectedFeatureId ? 'selected' : '';
-                const isUrgent = (f.status === 'Đã Launching') && (!f.cleared || f.videoStatus === 'Cần quay lại gấp');
+                const isUrgent = isUrgentFeature(f);
+                const mine = isClearedByMe(f);
+                const clearedNames = Object.keys(getClearedMap(f));
+                const clearedTitle = clearedByTitle(f, 'Đã nắm');
+                const typeBadge = typeBadgeHtml(f);
+                const linkRow = learnLinksHtml(f, false);
 
                 // 1. Badge Trạng thái Launch
                 let launchBadge = '';
@@ -922,6 +1110,7 @@
                         <div class="flex items-start justify-between gap-3 mb-2.5">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase bg-purple-100 text-purple-700 border border-purple-200 font-mono-code">${escapeHtml(f.group)}</span>
+                                ${typeBadge}
                                 ${launchBadge}
                                 ${isUrgent ? `
                                     <div class="ui-tip">
@@ -943,6 +1132,7 @@
                         
                         <!-- MÔ TẢ NGHIỆP VỤ -->
                         <p class="text-xs text-slate-500 leading-relaxed mb-3.5">${escapeHtml(f.note || 'Không có ghi chú thêm.')}</p>
+                        ${linkRow}
 
                         <!-- KHỐI HẬU KIỂM VIDEO & HDSD (HIỂN THỊ ĐẦY ĐỦ 100%, KHÔNG CẮT CHỮ) -->
                         <div class="bg-slate-50/90 p-3.5 rounded-xl border border-slate-200/90 mb-3.5 space-y-2.5">
@@ -980,19 +1170,384 @@
                                 <span>Launch: <b class="text-slate-700">${escapeHtml(f.launchDate) || '--'}</b></span>
                             </div>
 
-                            <div class="ui-tip">
-                                <label class="flex items-center gap-2 cursor-pointer font-bold text-xs select-none p-1.5 rounded-lg border transition ${f.cleared ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200'}">
-                                    <input type="checkbox" data-action="toggle-clear" data-id="${escapeHtml(f.id)}" ${f.cleared ? 'checked' : ''} class="w-4 h-4 accent-purple-600 cursor-pointer">
-                                    <span>${f.cleared ? 'ĐÃ CLEAR 100%' : 'Chưa Clear'}</span>
-                                </label>
-                                <div class="ui-tip-box">
-                                    <b>Trainer Readiness:</b> Đánh dấu khi bạn đã tự thao tác thành thạo tính năng này để sẵn sàng dạy học viên.
-                                </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-semibold text-slate-400 cursor-help" title="${escapeHtml(clearedTitle)}"><i class="fas fa-users mr-0.5"></i> ${clearedNames.length} người đã nắm</span>
+                                <button type="button" data-action="toggle-clear" data-id="${escapeHtml(f.id)}" class="flex items-center gap-1.5 font-bold text-xs select-none px-2.5 py-1.5 rounded-lg border transition ${mine ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100' : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200'}" title="${mine ? 'Bấm để bỏ đánh dấu' : 'Đánh dấu khi bạn đã tự thao tác thành thạo tính năng này'}">
+                                    ${mine ? 'Đã nắm ✓' : '<i class="far fa-square"></i> Tôi đã nắm'}
+                                </button>
                             </div>
                         </div>
                     </div>
                 `;
             }).join('');
+        }
+
+        // ==========================================
+        // 3b. THẺ HỌC "KIẾN THỨC MỚI" (MỤC TỪ CỔNG HỌC TẬP)
+        // ==========================================
+        const SCOPE_BADGES = {
+            in: ['Trong khóa học', 'bg-emerald-50 text-emerald-700 border-emerald-200', 'fas fa-check-double', 'Bài đã có trong giáo trình khóa học (Sheet Masterdata E-Learning).'],
+            out: ['Ngoài khóa học', 'bg-amber-50 text-amber-800 border-amber-200', 'fas fa-compass', 'Tính năng chỉ có trên Cổng học tập, chưa đưa vào giáo trình khóa học.'],
+            unknown: ['Chưa rõ phạm vi', 'bg-slate-100 text-slate-600 border-slate-200', 'fas fa-question', 'Chưa có dữ liệu khóa học từ Master Data Hub trên máy này — mở Master Hub một lần để Radar biết bài trong / ngoài khóa học.']
+        };
+
+        // Tooltip danh sách người đã nắm / đã học
+        function clearedByTitle(f, verb) {
+            const m = getClearedMap(f);
+            const names = Object.keys(m);
+            return names.length
+                ? verb + ': ' + names.map(n => n + (m[n] ? ` (${ymdToDmy(m[n])})` : '')).join(', ')
+                : 'Chưa ai đánh dấu';
+        }
+
+        // Nhãn Mới / Cập nhật + ngày
+        function typeBadgeHtml(f) {
+            if (f.type !== 'NEW' && f.type !== 'UPDATE') return '';
+            const isNew = f.type === 'NEW';
+            const dt = ymdToDmy(f.updateDate);
+            return `
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${isNew ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-indigo-50 text-indigo-700 border-indigo-200'}" title="${isNew ? 'Tính năng mới' : 'Tính năng được cập nhật'} trên Cổng học tập">
+                    ${isNew ? '✨ Mới' : '🔄 Cập nhật'}${dt ? ` · ${escapeHtml(dt)}` : ''}
+                </span>
+            `;
+        }
+
+        // Tên sheet khóa học trên Master Hub (dùng cho link "Mở trong Master Hub")
+        let hubSheetName = 'Masterdata E-Learning';
+
+        // Nút học: HDSD / Video / Học online (quiz) / Infographic / Mở trong Master Hub — mở tab mới, chỉ http/https
+        function learnLinksHtml(f, full) {
+            const defs = [
+                [safeUrl(f.hdsdUrl), 'fas fa-book-open text-blue-500', full ? 'Đọc HDSD' : 'HDSD'],
+                [safeUrl(f.videoUrl), 'fab fa-youtube text-rose-500', full ? 'Xem video' : 'Video'],
+                [safeUrl(f.quizUrl), 'fas fa-graduation-cap text-purple-500', 'Học online']
+            ];
+            if (full) {
+                defs.push([safeUrl(f.infographicUrl), 'fas fa-image text-amber-500', 'Infographic']);
+                if (f.course) {
+                    const hubUrl = `knowledge-hub.html?sheet=${encodeURIComponent(hubSheetName)}&course=${encodeURIComponent(f.course)}`;
+                    defs.push([hubUrl, 'fas fa-database text-slate-500', 'Mở trong Master Hub']);
+                }
+            }
+            const links = defs.filter(x => x[0]);
+            if (!links.length) return '';
+            return `
+                <div class="flex flex-wrap items-center gap-1.5 mb-3.5" data-action="none">
+                    ${links.map(([u, ic, label]) => `
+                        <a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer" class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-white text-slate-600 border border-slate-200 hover:border-purple-300 hover:text-purple-700 transition flex items-center gap-1">
+                            <i class="${ic} text-[10px]"></i> ${label} <i class="fas fa-arrow-up-right-from-square text-[8px] text-slate-400"></i>
+                        </a>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderLearningCard(f) {
+            const isSelected = f.id === activeSelectedFeatureId ? 'selected' : '';
+            const mine = isClearedByMe(f);
+            const learnedCount = Object.keys(getClearedMap(f)).length;
+            const sc = SCOPE_BADGES[f.scope] || SCOPE_BADGES.unknown;
+            const changes = Array.isArray(f.changes) ? f.changes.filter(Boolean) : [];
+            const whatsNew = (f.note || changes.length) ? `
+                ${f.note ? `<p class="text-xs text-slate-600 leading-relaxed">${escapeHtml(f.note)}</p>` : ''}
+                ${changes.length ? `<ul class="list-disc pl-4 ${f.note ? 'mt-1.5' : ''} space-y-0.5 text-[11px] text-slate-600">${changes.map(c => `<li class="break-words">${escapeHtml(c)}</li>`).join('')}</ul>` : ''}
+            ` : '<p class="text-xs text-slate-400 italic">Cổng học tập chưa ghi mô tả thay đổi.</p>';
+
+            return `
+                <div class="feature-card ${isSelected} ${mine ? '' : '!border-l-[6px] !border-l-purple-400'}" data-action="select" data-id="${escapeHtml(f.id)}">
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase bg-purple-100 text-purple-700 border border-purple-200 font-mono-code">${escapeHtml(f.group)}</span>
+                            ${typeBadgeHtml(f)}
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${sc[1]}" title="${escapeHtml(sc[3])}"><i class="${sc[2]} text-[9px]"></i> ${sc[0]}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5" data-action="none">
+                            <button type="button" data-action="edit" data-id="${escapeHtml(f.id)}" class="card-act-btn p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-slate-100 transition" title="Chỉnh sửa / ghi chú"><i class="fas fa-edit text-xs"></i></button>
+                        </div>
+                    </div>
+
+                    ${f.course ? `<p class="text-[11px] text-slate-400 font-medium mb-1 flex items-center gap-1.5"><i class="fas fa-layer-group text-[10px]"></i> <span class="break-words">${escapeHtml(f.course)}</span></p>` : ''}
+                    <h3 class="text-sm font-bold text-slate-900 leading-snug mb-2.5 hover:text-purple-600 transition">${escapeHtml(f.name)}</h3>
+
+                    <!-- CÓ GÌ MỚI -->
+                    <div class="bg-slate-50/90 p-3 rounded-xl border border-slate-200/90 mb-3">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-purple-700 flex items-center gap-1 mb-1"><i class="fas fa-bolt"></i> Có gì mới</span>
+                        ${whatsNew}
+                    </div>
+
+                    ${learnLinksHtml(f, true)}
+
+                    ${safeUrl(f.iframeUrl) ? `
+                        <button type="button" data-action="live" data-id="${escapeHtml(f.id)}" class="radar-live-only w-full mb-3 items-center justify-center gap-2 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition">
+                            <i class="fas fa-play-circle text-emerald-400"></i> Xem trực tiếp
+                        </button>
+                    ` : ''}
+
+                    <div class="radar-card-footer pt-3 border-t border-slate-100 flex items-center justify-between" data-action="none">
+                        <span class="text-[10px] font-semibold text-slate-400 cursor-help" title="${escapeHtml(clearedByTitle(f, 'Đã học'))}"><i class="fas fa-users mr-0.5"></i> ${learnedCount} người đã học</span>
+                        <button type="button" data-action="toggle-clear" data-id="${escapeHtml(f.id)}" class="flex items-center gap-1.5 font-bold text-xs select-none px-2.5 py-1.5 rounded-lg border transition ${mine ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100' : 'bg-purple-600 text-white border-purple-600 hover:bg-purple-700'}" title="${mine ? 'Bấm để chuyển về Chưa học' : 'Đánh dấu bạn đã học xong tính năng này'}">
+                            ${mine ? 'Đã học ✓' : '<i class="fas fa-check"></i> Đánh dấu đã học'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ==========================================
+        // 3c. ĐỒNG BỘ KIẾN THỨC MỚI TỪ CỔNG HỌC TẬP (qua elearning-sync.js)
+        // Chỉ cập nhật các trường lấy từ Cổng; giữ nguyên đã học/đã nắm, demo/launch, trạng thái người dùng tự chỉnh.
+        // Không bao giờ xóa mục nhập tay; mục từ Cổng mà Cổng không còn: giữ nguyên.
+        // ==========================================
+        const portalSyncState = { loading: false, at: 0, nNew: 0, nUpd: 0, total: 0, hasCourse: false, error: '' };
+        const PORTAL_FIELDS = ['name', 'group', 'course', 'scope', 'updateDate', 'note', 'changes', 'type', 'hdsdUrl', 'videoUrl', 'quizUrl', 'infographicUrl', 'iframeUrl'];
+        const GROUP_BY_SEGMENT = { retail: 'Retail', fnb: 'FNB', salon: 'Salon', hotel: 'Hotel', thuehkd: 'TAX' };
+        const CHANGE_LABELS = { 'Nội dung': 'Đổi tên bài', 'YouTube': 'Video mới', 'Github': 'Quiz / bài học online mới', 'Infographic': 'Infographic mới', 'HDSD': 'Link HDSD mới', 'Mô tả': 'Mô tả mới' };
+
+        // Cùng cách tính quizPath với elearning-sync.js
+        function portalQuizPath(u) {
+            const m = String(u || '').trim().match(/\/elearning\/(.+?)\/?$/i);
+            return m ? m[1].toLowerCase() : '';
+        }
+        function normText(s) {
+            return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9]+/g, ' ').trim();
+        }
+        // 'dd/mm/yyyy' (hoặc 'yyyy-mm-dd') → 'yyyy-mm-dd'
+        function dmyToYmd(s) {
+            const str = String(s || '').trim();
+            let m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(str);
+            if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+            m = /^(\d{4})-(\d{2})-(\d{2})/.exec(str);
+            return m ? `${m[1]}-${m[2]}-${m[3]}` : '';
+        }
+        // Băm ngắn (FNV-1a) cho id ổn định từ portalKey
+        function shortHash(str) {
+            let h = 0x811c9dc5;
+            for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+            return (h >>> 0).toString(36);
+        }
+        // Phân hệ: đoạn đầu quizPath; không xác định thì đoán từ tên khóa học; còn lại → Core
+        function portalGroup(key, course) {
+            const seg = String(key || '').split('/')[0];
+            if (GROUP_BY_SEGMENT[seg]) return GROUP_BY_SEGMENT[seg];
+            const c = normText(course);
+            if (/thue|hkd/.test(c)) return 'TAX';
+            if (/retail|ban le/.test(c)) return 'Retail';
+            if (/fnb|f b|nha hang|cafe/.test(c)) return 'FNB';
+            if (/salon|spa/.test(c)) return 'Salon';
+            if (/hotel|khach san/.test(c)) return 'Hotel';
+            return 'Core';
+        }
+        // Trạng thái tự suy ra từ dữ liệu Cổng (chỉ áp khi người dùng chưa tự chỉnh qua modal)
+        function autoStatuses(fields) {
+            return {
+                status: fields.type === 'NEW' ? 'Mới Demo' : 'Đã Launching',
+                hdsdStatus: fields.hdsdUrl ? 'Đã cập nhật HDSD' : 'Chưa có bài',
+                videoStatus: fields.videoUrl ? 'Đã cập nhật video' : 'Không ảnh hưởng'
+            };
+        }
+
+        // Danh sách bài TRONG khóa học từ cache của Master Data Hub (nếu máy này đã mở Hub)
+        function readHubCourseItems() {
+            try {
+                const db = JSON.parse(localStorage.getItem('kv_doc_hub_db') || 'null');
+                const sheets = db && db.sheets;
+                if (!sheets || typeof sheets !== 'object') return null;
+                const names = Array.isArray(db.sheetList) ? db.sheetList : Object.keys(sheets);
+                const ok = n => sheets[n] && Array.isArray(sheets[n].items) && sheets[n].items.length;
+                const name = ok('Masterdata E-Learning') ? 'Masterdata E-Learning' : names.find(n => /elearning|e-learning|masterdata/i.test(n) && ok(n));
+                return name ? { name, items: sheets[name].items } : null;
+            } catch (e) { return null; }
+        }
+
+        // Từ bộ dữ liệu đã ghép → các mục học: có meta Mới/Cập nhật, hoặc ngoài khóa học, hoặc bài trong khóa có thay đổi
+        function collectLearningEntries(feed) {
+            const out = [];
+            const seen = new Set();
+            (feed && Array.isArray(feed.items) ? feed.items : []).forEach(it => {
+                if (!it || !String(it['Nội dung'] || '').trim()) return;
+                const meta = it.__meta && (it.__meta.type === 'NEW' || it.__meta.type === 'UPDATE') ? it.__meta : null;
+                const rawChanges = Array.isArray(it.__changes) ? it.__changes : [];
+                const scope = it.__scope === 'in' ? 'in' : (it.__scope === 'out' ? 'out' : 'unknown');
+                if (!meta && scope !== 'out' && !rawChanges.length) return;
+
+                const qp = portalQuizPath(it['Github']);
+                const hd = String(it['HDSD'] || '').trim().toLowerCase().replace(/\/+$/, '');
+                const key = qp || (hd ? 'hdsd:' + hd : 'name:' + normText(it['Khóa học']) + '|' + normText(it['Nội dung']));
+                if (seen.has(key)) return;
+                seen.add(key);
+
+                const type = meta ? meta.type : (scope === 'out' ? 'NEW' : 'UPDATE');
+                const changes = rawChanges.map(ch => {
+                    const label = CHANGE_LABELS[ch.field] || ('Đổi ' + (ch.label || ch.field));
+                    return (ch.field === 'Nội dung' && ch.from) ? `${label} (trước: ${String(ch.from).slice(0, 80)})` : label;
+                });
+                const hdsdUrl = safeUrl(it['HDSD']);
+                out.push({
+                    key,
+                    fields: {
+                        name: String(it['Nội dung']).trim(),
+                        group: portalGroup(qp, it['Khóa học']),
+                        course: String(it['Khóa học'] || '').trim(),
+                        scope,
+                        updateDate: dmyToYmd(meta && meta.date) || dmyToYmd(it.__date) || '',
+                        note: String((meta && meta.summary) || it['Mô tả'] || '').trim(),
+                        changes,
+                        type,
+                        hdsdUrl,
+                        videoUrl: safeUrl(it['YouTube']),
+                        quizUrl: safeUrl(it['Github']),
+                        infographicUrl: safeUrl(it['Infographic']),
+                        iframeUrl: hdsdUrl
+                    }
+                });
+            });
+            return out;
+        }
+
+        // Ghép vào radarFeatures theo portalKey → { added, updated }
+        function applyLearningEntries(entries) {
+            const byKey = new Map();
+            radarFeatures.forEach(f => { if (f.portalKey) byKey.set(f.portalKey, f); });
+            let added = 0, updated = 0;
+            entries.forEach(({ key, fields }) => {
+                const f = byKey.get(key);
+                if (f) {
+                    let diff = false;
+                    PORTAL_FIELDS.forEach(k => {
+                        if (JSON.stringify(f[k] === undefined ? '' : f[k]) !== JSON.stringify(fields[k])) { f[k] = fields[k]; diff = true; }
+                    });
+                    if (!f.userEdited) {
+                        const st = autoStatuses(fields);
+                        Object.keys(st).forEach(k => { if (f[k] !== st[k]) { f[k] = st[k]; diff = true; } });
+                    }
+                    if (diff) updated++;
+                    return;
+                }
+                let id = 'rad-portal-' + shortHash(key);
+                while (radarFeatures.some(x => x.id === id)) id += 'x';
+                const nf = Object.assign({ id, portalKey: key, source: 'portal' }, fields, autoStatuses(fields), {
+                    demoDate: '', launchDate: '', videoName: '', cleared: false
+                });
+                radarFeatures.push(nf);
+                byKey.set(key, nf);
+                added++;
+            });
+            return { added, updated };
+        }
+
+        function setPortalSyncBusy(busy) {
+            const icon = document.getElementById('portalSyncIcon');
+            const btn = document.getElementById('portalSyncBtn');
+            if (icon) icon.className = busy ? 'fas fa-sync-alt fa-spin' : 'fas fa-cloud-arrow-down';
+            if (btn) btn.disabled = !!busy;
+        }
+
+        function renderPortalSyncInfo() {
+            const el = document.getElementById('portalSyncInfo');
+            if (!el) return;
+            const s = portalSyncState;
+            if (s.loading) { el.innerText = 'Đang đồng bộ Cổng học tập…'; el.title = ''; return; }
+            if (s.at) {
+                const d = new Date(s.at);
+                const p = n => String(n).padStart(2, '0');
+                el.innerText = `Đồng bộ lúc ${p(d.getHours())}:${p(d.getMinutes())} ${p(d.getDate())}/${p(d.getMonth() + 1)} · ${s.nNew} mới, ${s.nUpd} cập nhật`
+                    + (s.error ? ' · lỗi lần gần nhất' : '');
+                el.title = s.hasCourse
+                    ? `${s.total} mục học từ Cổng (đã ghép với khóa học của Master Hub)`
+                    : `${s.total} mục học từ Cổng — chưa có dữ liệu khóa học của Master Hub trên máy này nên phạm vi là "Chưa rõ"`;
+                return;
+            }
+            el.innerText = s.error ? 'Chưa đồng bộ được Cổng học tập' : '';
+            el.title = s.error || '';
+        }
+
+        async function syncFromPortal(force) {
+            const api = window.KhPortalSync;
+            if (!api || typeof api.buildLearningFeed !== 'function') {
+                portalSyncState.error = 'Không nạp được module đồng bộ';
+                renderPortalSyncInfo();
+                showToast('⚠️ Không nạp được module đồng bộ Cổng học tập.');
+                return;
+            }
+            if (portalSyncState.loading) return;
+            if (radarSaveBlocked) {
+                if (force) showToast('⚠️ Dữ liệu Radar đang bị khóa lưu nên chưa đồng bộ Cổng.');
+                return;
+            }
+            portalSyncState.loading = true;
+            portalSyncState.error = '';
+            setPortalSyncBusy(true);
+            renderPortalSyncInfo();
+            if (currentTab === 'learn' && !radarFeatures.some(isPortalItem)) renderFeatureList();
+            try {
+                const hub = readHubCourseItems();
+                const feed = await api.buildLearningFeed(hub ? hub.items : null, !!force);
+                if (hub) hubSheetName = hub.name;
+                const entries = collectLearningEntries(feed);
+                const res = applyLearningEntries(entries);
+                Object.assign(portalSyncState, {
+                    at: (feed.portal && feed.portal.fetchedAt) || Date.now(),
+                    nNew: entries.filter(e => e.fields.type === 'NEW').length,
+                    nUpd: entries.filter(e => e.fields.type === 'UPDATE').length,
+                    total: entries.length,
+                    hasCourse: !!feed.hasCourse
+                });
+                if (res.added || res.updated) saveRadarData(); else updateAlertBadgesAndBanner();
+                portalSyncState.loading = false;
+                ensureSelectionInTab();
+                if (force) showToast(`Đã đồng bộ Cổng: ${entries.length} mục học · thêm ${res.added}, cập nhật ${res.updated}`);
+            } catch (e) {
+                console.warn('[radar] Đồng bộ Cổng lỗi', e);
+                portalSyncState.error = (e && e.name === 'AbortError') ? 'Cổng học tập phản hồi quá lâu' : ((e && e.message) || 'Lỗi mạng');
+                showToast('⚠️ Không tải được Cổng học tập — đang dùng dữ liệu hiện có.');
+            } finally {
+                portalSyncState.loading = false;
+                setPortalSyncBusy(false);
+                renderPortalSyncInfo();
+                renderFeatureList();
+            }
+        }
+
+        // ==========================================
+        // 3d. CHUYỂN TAB & GIỮ THẺ ĐANG CHỌN THUỘC TAB HIỆN TẠI
+        // ==========================================
+        function ensureSelectionInTab() {
+            const cur = activeSelectedFeatureId ? radarFeatures.find(f => f.id === activeSelectedFeatureId) : null;
+            if (cur && isPortalItem(cur) === (currentTab === 'learn')) { renderFeatureList(); return; }
+            renderFeatureList();
+            const first = document.querySelector('#radarFeatureList .feature-card[data-id]');
+            selectFeatureToTest(first ? first.getAttribute('data-id') : null);
+        }
+
+        function switchRadarTab(tab) {
+            currentTab = tab === 'manual' ? 'manual' : 'learn';
+            const isLearn = currentTab === 'learn';
+            const ACTIVE = 'radar-tab shrink-0 whitespace-nowrap px-3 py-2 text-xs font-bold border-b-2 border-purple-600 text-purple-700 flex items-center gap-1.5';
+            const INACTIVE = 'radar-tab shrink-0 whitespace-nowrap px-3 py-2 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-1.5';
+            document.getElementById('tab-learn').className = isLearn ? ACTIVE : INACTIVE;
+            document.getElementById('tab-manual').className = isLearn ? INACTIVE : ACTIVE;
+            const q = document.getElementById('quickFilterRow');
+            const rd = document.getElementById('rdFilterRow');
+            q.classList.toggle('hidden', !isLearn); q.classList.toggle('flex', isLearn);
+            rd.classList.toggle('hidden', isLearn); rd.classList.toggle('flex', !isLearn);
+            ensureSelectionInTab();
+        }
+
+        function filterByQuick(q) {
+            currentQuick = q;
+            const MAP = { all: 'all', unlearned: 'unlearned', NEW: 'new', UPDATE: 'update', out: 'out' };
+            const ACTIVE = 'px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-800 text-white shrink-0';
+            const INACTIVE = 'px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-600 hover:bg-slate-100 shrink-0';
+            Object.keys(MAP).forEach(k => {
+                const btn = document.getElementById('btn-q-' + MAP[k]);
+                if (btn) btn.className = k === q ? ACTIVE : INACTIVE;
+            });
+            renderFeatureList();
+        }
+
+        function filterByMonth(ym) {
+            currentFilterMonth = ym || 'all';
+            renderFeatureList();
         }
 
         // ==========================================
@@ -1093,6 +1648,8 @@
 
         function filterByReadiness(rd) {
             currentFilterReadiness = rd;
+            // Huy hiệu / banner L&D thuộc tab Theo dõi thủ công
+            if (rd !== 'all' && currentTab !== 'manual') switchRadarTab('manual');
             // Bộ lọc → nút tương ứng (giá trị lọc : id nút). 'upcoming' / 'cleared' không có nút riêng.
             const RD_BUTTONS = { all: 'all', urgent: 'urgent', need_video: 'video', no_hdsd: 'hdsd', not_cleared: 'notclear' };
             const BASE = 'px-2.5 py-0.5 rounded-md text-[11px] shrink-0 ';
@@ -1130,10 +1687,16 @@
         function toggleFeatureCleared(featId, isChecked) {
             const feat = radarFeatures.find(f => f.id === featId);
             if (feat) {
-                feat.cleared = isChecked;
+                // Ghi theo người dùng hiện tại (clearedBy), `cleared` đi theo trạng thái của bạn
+                setClearedByMe(feat, !!isChecked);
                 const saved = saveRadarData();
                 renderFeatureList();
-                if (saved) showToast(isChecked ? '🎉 Đã xác nhận: Trainer đã Clear tính năng này!' : 'Đã đổi trạng thái: Chưa Clear');
+                if (saved) {
+                    const learn = isPortalItem(feat);
+                    showToast(isChecked
+                        ? (learn ? '🎉 Đã đánh dấu: bạn đã học tính năng này!' : '🎉 Đã xác nhận: bạn đã nắm tính năng này!')
+                        : (learn ? 'Đã chuyển về: Chưa học' : 'Đã bỏ đánh dấu đã nắm'));
+                }
             }
         }
 
@@ -1165,7 +1728,7 @@
                 document.getElementById('featVideoName').value = f.videoName || '';
                 document.getElementById('featVideoStatus').value = f.videoStatus || 'Không ảnh hưởng';
                 document.getElementById('featNote').value = f.note || '';
-                document.getElementById('featCleared').checked = !!f.cleared;
+                document.getElementById('featCleared').checked = isClearedByMe(f);
             } else {
                 document.getElementById('featId').value = '';
                 document.getElementById('featName').value = '';
@@ -1213,19 +1776,23 @@
                     renderFeatureList();
                     return;
                 }
-                Object.assign(f, { name, group, iframeUrl, updateDate, demoDate, launchDate, status, hdsdStatus, videoName, videoStatus, note, cleared });
+                // userEdited: lần đồng bộ Cổng sau sẽ không ghi đè status / hdsdStatus / videoStatus
+                Object.assign(f, { name, group, iframeUrl, updateDate, demoDate, launchDate, status, hdsdStatus, videoName, videoStatus, note, userEdited: true });
+                setClearedByMe(f, cleared);
             } else {
                 const newId = 'rad-' + Date.now();
-                radarFeatures.unshift({
-                    id: newId, name, group, iframeUrl, updateDate, demoDate, launchDate, status, hdsdStatus, videoName, videoStatus, note, cleared
-                });
+                const nf = { id: newId, name, group, iframeUrl, updateDate, demoDate, launchDate, status, hdsdStatus, videoName, videoStatus, note, cleared: false, userEdited: true };
+                setClearedByMe(nf, cleared);
+                radarFeatures.unshift(nf);
                 activeSelectedFeatureId = newId;
             }
 
             const saved = saveRadarData();
             closeFeatureModal();
+            // Mục mới nhập tay nằm ở tab Theo dõi thủ công
+            if (!id && currentTab !== 'manual') switchRadarTab('manual');
             renderFeatureList();
-            selectFeatureToTest(id || radarFeatures[0].id);
+            selectFeatureToTest(id || activeSelectedFeatureId);
             if (saved) showToast("Đã lưu thông tin tính năng thành công!");
         }
 
@@ -1234,12 +1801,13 @@
         function deleteFeature(id) {
             if (confirm("Xóa theo dõi tính năng này khỏi trạm Radar?")) {
                 radarFeatures = radarFeatures.filter(f => f.id !== id);
-                if (activeSelectedFeatureId === id) {
-                    activeSelectedFeatureId = radarFeatures.length > 0 ? radarFeatures[0].id : null;
-                    selectFeatureToTest(activeSelectedFeatureId);
-                }
                 const saved = saveRadarData();
-                renderFeatureList();
+                if (activeSelectedFeatureId === id) {
+                    activeSelectedFeatureId = null;
+                    ensureSelectionInTab();
+                } else {
+                    renderFeatureList();
+                }
                 if (saved) showToast("Đã xóa tính năng!");
             }
         }
@@ -1263,13 +1831,13 @@
                     case 'delete': deleteFeature(id); break;
                     case 'add': openFeatureModal(); break;
                     case 'live': openLivePane(id); break;
-                    default: break; // 'none' / 'toggle-clear': không chọn thẻ
-                }
-            });
-            container.addEventListener('change', (e) => {
-                const el = e.target;
-                if (el && el.matches && el.matches('input[data-action="toggle-clear"]')) {
-                    toggleFeatureCleared(el.getAttribute('data-id'), el.checked);
+                    case 'toggle-clear': {
+                        // Nút "Tôi đã nắm" / "Đánh dấu đã học": bấm lại để bỏ
+                        const feat = radarFeatures.find(f => f.id === id);
+                        if (feat) toggleFeatureCleared(id, !isClearedByMe(feat));
+                        break;
+                    }
+                    default: break; // 'none': không chọn thẻ
                 }
             });
         }
@@ -1298,8 +1866,12 @@
             initSplitResizer();
             initFeatureListEvents();
             loadRadarData();
+            // Tự đồng bộ kiến thức mới từ Cổng khi mở trang (dùng cache 30 phút của elearning-sync.js)
+            syncFromPortal(false);
         };
     </script>
+    <!-- Module đồng bộ Cổng học tập: ở trang này chỉ dùng KhPortalSync.getPortal (các hook của Hub không áp dụng) -->
+    <script src="elearning-sync.js"></script>
     <script src="sidebar-nav.js"></script>
 </body>
 </html>
